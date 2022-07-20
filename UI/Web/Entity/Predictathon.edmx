@@ -1,0 +1,2479 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="PredictathonModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Competition">
+          <Key>
+            <PropertyRef Name="CompetitionID" />
+          </Key>
+          <Property Name="CompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PrependNameWithThe" Type="bit" Nullable="false" />
+          <Property Name="StartDate" Type="date" Nullable="false" />
+          <Property Name="EndDate" Type="date" Nullable="false" />
+          <Property Name="DuplicateFixturesAllowed" Type="bit" Nullable="false" />
+          <Property Name="OpenForRegistration" Type="bit" Nullable="false" />
+          <Property Name="RegistrationAvailableOnLoginPage" Type="bit" Nullable="false" />
+          <Property Name="ShowInHallOfFame" Type="bit" Nullable="false" />
+          <Property Name="EntranceFee" Type="decimal" Precision="5" Scale="2" Nullable="false" />
+          <Property Name="PayPalPaymentAvailable" Type="bit" Nullable="false" />
+          <Property Name="Information" Type="varchar(max)" />
+          <Property Name="ImageFilename" Type="varchar" MaxLength="40" />
+          <Property Name="DefaultToNeutralGround" Type="bit" Nullable="false" />
+          <Property Name="AllowTwoPointers" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="HallOfFame">
+          <Key>
+            <PropertyRef Name="HallOfFameID" />
+          </Key>
+          <Property Name="HallOfFameID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionID" Type="uniqueidentifier" />
+          <Property Name="CompetitionName" Type="varchar" MaxLength="50" />
+          <Property Name="Winner" Type="varchar" MaxLength="50" />
+          <Property Name="WinnerUserID" Type="uniqueidentifier" />
+          <Property Name="SecondPlace" Type="varchar" MaxLength="50" />
+          <Property Name="SecondPlaceUserID" Type="uniqueidentifier" />
+          <Property Name="ThirdPlace" Type="varchar" MaxLength="50" />
+          <Property Name="ThirdPlaceUserID" Type="uniqueidentifier" />
+          <Property Name="EndDate" Type="date" Nullable="false" />
+          <Property Name="ImageFilename" Type="varchar" MaxLength="40" />
+        </EntityType>
+        <EntityType Name="Match">
+          <Key>
+            <PropertyRef Name="MatchID" />
+          </Key>
+          <Property Name="MatchID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MatchDateTime" Type="datetime" Nullable="false" />
+          <Property Name="HomeTeamID" Type="uniqueidentifier" />
+          <Property Name="AwayTeamID" Type="uniqueidentifier" />
+          <Property Name="MatchPlayed" Type="bit" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="int" />
+          <Property Name="AwayTeamGoals" Type="int" />
+          <Property Name="NeutralGround" Type="bit" Nullable="false" />
+          <Property Name="HomeTeamTBC" Type="varchar" MaxLength="50" />
+          <Property Name="AwayTeamTBC" Type="varchar" MaxLength="50" />
+          <Property Name="Description" Type="varchar" MaxLength="50" />
+          <Property Name="Knockout" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Message">
+          <Key>
+            <PropertyRef Name="MessageID" />
+          </Key>
+          <Property Name="MessageID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MessageThreadID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="PostedByUserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MessageDateTime" Type="datetime" Nullable="false" />
+          <Property Name="MessageContent" Type="nvarchar(max)" />
+          <Property Name="YouTubeVideoID" Type="char" MaxLength="11" />
+          <Property Name="HasLinkedImage" Type="bit" Nullable="false" />
+          <Property Name="UserTotalMessageboardPosts" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="MessageRating">
+          <Key>
+            <PropertyRef Name="MessageRatingID" />
+          </Key>
+          <Property Name="MessageRatingID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MessageID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Rating" Type="int" Nullable="false" />
+          <Property Name="RatedByUserID" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="MessageReaction">
+          <Key>
+            <PropertyRef Name="MessageReactionID" />
+          </Key>
+          <Property Name="MessageReactionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MessageID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="UserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="ReactionName" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="ImageUrl" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="CreationDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="MessageThread">
+          <Key>
+            <PropertyRef Name="MessageThreadID" />
+          </Key>
+          <Property Name="MessageThreadID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="ThreadSubject" Type="varchar" MaxLength="50" />
+          <Property Name="StartedByUserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="StartedDateTime" Type="datetime" Nullable="false" />
+          <Property Name="HiddenFromPublic" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="PaymentCredit">
+          <Key>
+            <PropertyRef Name="PaymentCreditID" />
+          </Key>
+          <Property Name="PaymentCreditID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="ExpectedUsername" Type="varchar" MaxLength="50" />
+          <Property Name="ForCompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="UniquePaymentCode" Type="varchar" MaxLength="10" Nullable="false" />
+          <Property Name="CreditUsed" Type="bit" Nullable="false" />
+          <Property Name="UsedByUserID" Type="uniqueidentifier" />
+          <Property Name="IssuedByUserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="IssueDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Prediction">
+          <Key>
+            <PropertyRef Name="PredictionID" />
+          </Key>
+          <Property Name="PredictionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="MatchID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="UserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="int" />
+          <Property Name="AwayTeamGoals" Type="int" />
+          <Property Name="Score" Type="int" />
+          <Property Name="GoalDifference" Type="int" />
+          <Property Name="PredictionHistoryID" Type="int" />
+          <Property Name="Invalid" Type="bit" Nullable="false" />
+          <Property Name="AutoUpdatedDueToLatePrediction" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="PredictionHistory">
+          <Key>
+            <PropertyRef Name="PredictionHistoryID" />
+          </Key>
+          <Property Name="PredictionHistoryID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PredictionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="int" />
+          <Property Name="AwayTeamGoals" Type="int" />
+          <Property Name="PredictionDateTime" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Team">
+          <Key>
+            <PropertyRef Name="TeamID" />
+          </Key>
+          <Property Name="TeamID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="TeamName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="ShortName" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="ImageName" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="TeamCompetition">
+          <Key>
+            <PropertyRef Name="TeamCompetitionID" />
+          </Key>
+          <Property Name="TeamCompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="TeamID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionID" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Transaction">
+          <Key>
+            <PropertyRef Name="TransactionID" />
+          </Key>
+          <Property Name="TransactionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionID" Type="uniqueidentifier" />
+          <Property Name="UserID" Type="uniqueidentifier" />
+          <Property Name="UserCompetitionID" Type="uniqueidentifier" />
+          <Property Name="Username" Type="varchar" MaxLength="50" />
+          <Property Name="Password" Type="varchar" MaxLength="25" />
+          <Property Name="EmailAddress" Type="varchar" MaxLength="128" />
+          <Property Name="Forenames" Type="varchar" MaxLength="50" />
+          <Property Name="Surname" Type="varchar" MaxLength="50" />
+          <Property Name="Amount" Type="decimal" Precision="5" Scale="2" Nullable="false" />
+          <Property Name="TransactionStatus" Type="varchar" MaxLength="50" />
+          <Property Name="ActualPaymentAmount" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="PayPalTransactionID" Type="char" MaxLength="19" />
+          <Property Name="PayPalFee" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="TransactionDateTime" Type="datetime" Nullable="false" />
+          <Property Name="Failed" Type="bit" />
+          <Property Name="ContainedInvalidData" Type="bit" />
+          <Property Name="Comments" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="UserID" />
+          </Key>
+          <Property Name="UserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Username" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Password" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="EmailAddress" Type="varchar" MaxLength="128" />
+          <Property Name="Forenames" Type="varchar" MaxLength="50" />
+          <Property Name="Surname" Type="varchar" MaxLength="50" />
+          <Property Name="FavouriteTeam" Type="varchar" MaxLength="50" />
+          <Property Name="Location" Type="varchar" MaxLength="50" />
+          <Property Name="Caption" Type="varchar" MaxLength="30" />
+          <Property Name="ProfileText" Type="varchar(max)" />
+          <Property Name="LastLoginDateTime" Type="datetime" />
+          <Property Name="MatchAdministrator" Type="bit" Nullable="false" />
+          <Property Name="UserAdministrator" Type="bit" Nullable="false" />
+          <Property Name="CompetitionAdministrator" Type="bit" Nullable="false" />
+          <Property Name="ImageUploaded" Type="bit" Nullable="false" />
+          <Property Name="LastViewedMessageboard" Type="datetime" />
+          <Property Name="TotalMessageboardPosts" Type="int" Nullable="false" />
+          <Property Name="EmailPredictionReminderDays" Type="int" />
+          <Property Name="CanViewHiddenMessageThreads" Type="bit" Nullable="false" />
+          <Property Name="CanViewMessageboard" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserCompetition">
+          <Key>
+            <PropertyRef Name="UserCompetitionID" />
+          </Key>
+          <Property Name="UserCompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="UserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="CompetitionID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="AmountPaid" Type="decimal" Precision="5" Scale="2" Nullable="false" />
+          <Property Name="PaymentProvider" Type="varchar" MaxLength="20" />
+          <Property Name="PaymentCreditID" Type="uniqueidentifier" />
+          <Property Name="IsDefaultCompetition" Type="bit" Nullable="false" />
+          <Property Name="LastEmailReminderSent" Type="datetime" />
+        </EntityType>
+        <Association Name="FK_HallOfFame_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="Self.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HallOfFame_User">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="Self.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="WinnerUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HallOfFame_User1">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="Self.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="SecondPlaceUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HallOfFame_User2">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="Self.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="ThirdPlaceUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Match_AwayTeam">
+          <End Role="Team" Type="Self.Team" Multiplicity="0..1" />
+          <End Role="Match" Type="Self.Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="AwayTeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Match_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="1" />
+          <End Role="Match" Type="Self.Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Match_HomeTeam">
+          <End Role="Team" Type="Self.Team" Multiplicity="0..1" />
+          <End Role="Match" Type="Self.Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="HomeTeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Message_MessageThread">
+          <End Role="MessageThread" Type="Self.MessageThread" Multiplicity="1" />
+          <End Role="Message" Type="Self.Message" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MessageThread">
+              <PropertyRef Name="MessageThreadID" />
+            </Principal>
+            <Dependent Role="Message">
+              <PropertyRef Name="MessageThreadID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Message_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Message" Type="Self.Message" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Message">
+              <PropertyRef Name="PostedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageRating_Message">
+          <End Role="Message" Type="Self.Message" Multiplicity="1" />
+          <End Role="MessageRating" Type="Self.MessageRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Message">
+              <PropertyRef Name="MessageID" />
+            </Principal>
+            <Dependent Role="MessageRating">
+              <PropertyRef Name="MessageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageRating_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="MessageRating" Type="Self.MessageRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageRating">
+              <PropertyRef Name="RatedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageReaction_Message">
+          <End Role="Message" Type="Self.Message" Multiplicity="1" />
+          <End Role="MessageReaction" Type="Self.MessageReaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Message">
+              <PropertyRef Name="MessageID" />
+            </Principal>
+            <Dependent Role="MessageReaction">
+              <PropertyRef Name="MessageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageReaction_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="MessageReaction" Type="Self.MessageReaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageReaction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageThread_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="MessageThread" Type="Self.MessageThread" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageThread">
+              <PropertyRef Name="StartedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PaymentCredit_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="1" />
+          <End Role="PaymentCredit" Type="Self.PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="ForCompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PaymentCredit_IssuedByUser">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="PaymentCredit" Type="Self.PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="IssuedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PaymentCredit_UsedByUser">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="PaymentCredit" Type="Self.PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="UsedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Prediction_Match">
+          <End Role="Match" Type="Self.Match" Multiplicity="1" />
+          <End Role="Prediction" Type="Self.Prediction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Match">
+              <PropertyRef Name="MatchID" />
+            </Principal>
+            <Dependent Role="Prediction">
+              <PropertyRef Name="MatchID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Prediction_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Prediction" Type="Self.Prediction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Prediction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_TeamCompetition_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="1" />
+          <End Role="TeamCompetition" Type="Self.TeamCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="TeamCompetition">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_TeamCompetition_Team">
+          <End Role="Team" Type="Self.Team" Multiplicity="1" />
+          <End Role="TeamCompetition" Type="Self.TeamCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="TeamCompetition">
+              <PropertyRef Name="TeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Transaction_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="0..1" />
+          <End Role="Transaction" Type="Self.Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Transaction_User">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="Transaction" Type="Self.Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Transaction_UserCompetition1">
+          <End Role="UserCompetition" Type="Self.UserCompetition" Multiplicity="0..1" />
+          <End Role="Transaction" Type="Self.Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="UserCompetition">
+              <PropertyRef Name="UserCompetitionID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="UserCompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCompetition_Competition">
+          <End Role="Competition" Type="Self.Competition" Multiplicity="1" />
+          <End Role="UserCompetition" Type="Self.UserCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="UserCompetition">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCompetition_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="UserCompetition" Type="Self.UserCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="UserCompetition">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="AverageScoreByTeamListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="date" Mode="In" />
+          <Parameter Name="DateTo" Type="date" Mode="In" />
+        </Function>
+        <Function Name="CompetitionRealLeagueTableGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="CompetitionUserLeagueTableGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="HallOfFameListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="LeagueTableGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="date" Mode="In" />
+          <Parameter Name="DateTo" Type="date" Mode="In" />
+          <Parameter Name="DateForComparison" Type="date" Mode="In" />
+        </Function>
+        <Function Name="MatchListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="datetime" Mode="In" />
+          <Parameter Name="DateTo" Type="datetime" Mode="In" />
+          <Parameter Name="UnprocessedOnly" Type="bit" Mode="In" />
+        </Function>
+        <Function Name="MatchPredictionAverageBiggestDifferencesGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="datetime" Mode="In" />
+          <Parameter Name="DateTo" Type="datetime" Mode="In" />
+          <Parameter Name="TeamID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="MatchPredictionListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MatchID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="MatchPredictionScoreSet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MatchID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="MatchResultListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="datetime" Mode="In" />
+          <Parameter Name="DateTo" Type="datetime" Mode="In" />
+          <Parameter Name="TeamID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="MessageThreadMessageListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MessageThreadID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="Statistics_CompetitionWinnerListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Statistics_HighestAllTimeScoreListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Statistics_HighestAverageScorePerPredictionsGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Statistics_HighestPercentageCorrectPredictionsGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="Statistics_MostMatchesPredictedUserListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="TeamCompetitionListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="ReturnTeamsNotInCompetition" Type="bit" Mode="In" />
+        </Function>
+        <Function Name="UserCompetitionLeagueHistoryListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="UserCompetitionLeagueHistorySet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="Date" Type="date" Mode="In" />
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="UserCompetitionRegistrationListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="UserMatchPredictionListGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="CompetitionID" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="DateFrom" Type="datetime" Mode="In" />
+          <Parameter Name="DateTo" Type="datetime" Mode="In" />
+          <Parameter Name="HidePastUnpredictedMatches" Type="bit" Mode="In" />
+        </Function>
+        <Function Name="UserOverduePredictionsGet" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <EntityContainer Name="PredictathonModelStoreContainer">
+          <EntitySet Name="Competition" EntityType="Self.Competition" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="HallOfFame" EntityType="Self.HallOfFame" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Match" EntityType="Self.Match" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Message" EntityType="Self.Message" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MessageRating" EntityType="Self.MessageRating" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MessageReaction" EntityType="Self.MessageReaction" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MessageThread" EntityType="Self.MessageThread" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PaymentCredit" EntityType="Self.PaymentCredit" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Prediction" EntityType="Self.Prediction" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PredictionHistory" EntityType="Self.PredictionHistory" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Team" EntityType="Self.Team" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TeamCompetition" EntityType="Self.TeamCompetition" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Transaction" EntityType="Self.Transaction" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserCompetition" EntityType="Self.UserCompetition" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_HallOfFame_Competition" Association="Self.FK_HallOfFame_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HallOfFame_User" Association="Self.FK_HallOfFame_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HallOfFame_User1" Association="Self.FK_HallOfFame_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HallOfFame_User2" Association="Self.FK_HallOfFame_User2">
+            <End Role="User" EntitySet="User" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Match_AwayTeam" Association="Self.FK_Match_AwayTeam">
+            <End Role="Team" EntitySet="Team" />
+            <End Role="Match" EntitySet="Match" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Match_Competition" Association="Self.FK_Match_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="Match" EntitySet="Match" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Match_HomeTeam" Association="Self.FK_Match_HomeTeam">
+            <End Role="Team" EntitySet="Team" />
+            <End Role="Match" EntitySet="Match" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Message_MessageThread" Association="Self.FK_Message_MessageThread">
+            <End Role="MessageThread" EntitySet="MessageThread" />
+            <End Role="Message" EntitySet="Message" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Message_User" Association="Self.FK_Message_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="Message" EntitySet="Message" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageRating_Message" Association="Self.FK_MessageRating_Message">
+            <End Role="Message" EntitySet="Message" />
+            <End Role="MessageRating" EntitySet="MessageRating" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageRating_User" Association="Self.FK_MessageRating_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="MessageRating" EntitySet="MessageRating" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageReaction_Message" Association="Self.FK_MessageReaction_Message">
+            <End Role="Message" EntitySet="Message" />
+            <End Role="MessageReaction" EntitySet="MessageReaction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageReaction_User" Association="Self.FK_MessageReaction_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="MessageReaction" EntitySet="MessageReaction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageThread_User" Association="Self.FK_MessageThread_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="MessageThread" EntitySet="MessageThread" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PaymentCredit_Competition" Association="Self.FK_PaymentCredit_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredit" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PaymentCredit_IssuedByUser" Association="Self.FK_PaymentCredit_IssuedByUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredit" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PaymentCredit_UsedByUser" Association="Self.FK_PaymentCredit_UsedByUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredit" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Prediction_Match" Association="Self.FK_Prediction_Match">
+            <End Role="Match" EntitySet="Match" />
+            <End Role="Prediction" EntitySet="Prediction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Prediction_User" Association="Self.FK_Prediction_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="Prediction" EntitySet="Prediction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TeamCompetition_Competition" Association="Self.FK_TeamCompetition_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="TeamCompetition" EntitySet="TeamCompetition" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TeamCompetition_Team" Association="Self.FK_TeamCompetition_Team">
+            <End Role="Team" EntitySet="Team" />
+            <End Role="TeamCompetition" EntitySet="TeamCompetition" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Transaction_Competition" Association="Self.FK_Transaction_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="Transaction" EntitySet="Transaction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Transaction_User" Association="Self.FK_Transaction_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="Transaction" EntitySet="Transaction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Transaction_UserCompetition1" Association="Self.FK_Transaction_UserCompetition1">
+            <End Role="UserCompetition" EntitySet="UserCompetition" />
+            <End Role="Transaction" EntitySet="Transaction" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCompetition_Competition" Association="Self.FK_UserCompetition_Competition">
+            <End Role="Competition" EntitySet="Competition" />
+            <End Role="UserCompetition" EntitySet="UserCompetition" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCompetition_User" Association="Self.FK_UserCompetition_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="UserCompetition" EntitySet="UserCompetition" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="PredictathonModel" Alias="Self" xmlns="http://schemas.microsoft.com/ado/2009/11/edm" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation">
+        <EntityContainer Name="PredictathonEntities" annotation:LazyLoadingEnabled="true" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation">
+          <EntitySet Name="HallOfFame" EntityType="PredictathonModel.HallOfFame" />
+          <EntitySet Name="Matches" EntityType="PredictathonModel.Match" />
+          <EntitySet Name="Predictions" EntityType="PredictathonModel.Prediction" />
+          <EntitySet Name="Teams" EntityType="PredictathonModel.Team" />
+          <EntitySet Name="Users" EntityType="PredictathonModel.User" />
+          <AssociationSet Name="FK_HallOfFame_User" Association="PredictathonModel.FK_HallOfFame_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HallOfFame_User1" Association="PredictathonModel.FK_HallOfFame_User1">
+            <End Role="User" EntitySet="Users" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HallOfFame_User2" Association="PredictathonModel.FK_HallOfFame_User2">
+            <End Role="User" EntitySet="Users" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Prediction_Match" Association="PredictathonModel.FK_Prediction_Match">
+            <End Role="Match" EntitySet="Matches" />
+            <End Role="Prediction" EntitySet="Predictions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Prediction_User" Association="PredictathonModel.FK_Prediction_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Prediction" EntitySet="Predictions" />
+          </AssociationSet>
+          <EntitySet Name="Competitions" EntityType="PredictathonModel.Competition" />
+          <EntitySet Name="UserCompetitions" EntityType="PredictathonModel.UserCompetition" />
+          <AssociationSet Name="FK_HallOfFame_Competition" Association="PredictathonModel.FK_HallOfFame_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="HallOfFame" EntitySet="HallOfFame" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Match_Competition" Association="PredictathonModel.FK_Match_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="Match" EntitySet="Matches" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCompetition_Competition" Association="PredictathonModel.FK_UserCompetition_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="UserCompetition" EntitySet="UserCompetitions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCompetition_User" Association="PredictathonModel.FK_UserCompetition_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="UserCompetition" EntitySet="UserCompetitions" />
+          </AssociationSet>
+          <EntitySet Name="TeamCompetitions" EntityType="PredictathonModel.TeamCompetition" />
+          <AssociationSet Name="FK_TeamCompetition_Team" Association="PredictathonModel.FK_TeamCompetition_Team">
+            <End Role="Team" EntitySet="Teams" />
+            <End Role="TeamCompetition" EntitySet="TeamCompetitions" />
+          </AssociationSet>
+          <FunctionImport Name="MatchListGet" ReturnType="Collection(PredictathonModel.MatchListGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+            <Parameter Name="UnprocessedOnly" Mode="In" Type="Boolean" />
+          </FunctionImport>
+          <FunctionImport Name="MatchPredictionScoreSet">
+          <Parameter Name="MatchID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="LeagueTableGet" ReturnType="Collection(PredictathonModel.LeagueTableGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+            <Parameter Name="DateForComparison" Mode="In" Type="DateTime" />
+          </FunctionImport>
+          <FunctionImport Name="MatchResultListGet" ReturnType="Collection(PredictathonModel.MatchResultListGet_Result)">
+            <Parameter Name="UserID" Mode="In" Type="Guid" />
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+            <Parameter Name="TeamID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="MatchPredictionListGet" ReturnType="Collection(PredictathonModel.MatchPredictionListGet_Result)">
+          <Parameter Name="MatchID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <EntitySet Name="PaymentCredits" EntityType="PredictathonModel.PaymentCredit" />
+          <AssociationSet Name="FK_PaymentCredit_Competition" Association="PredictathonModel.FK_PaymentCredit_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredits" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PaymentCredit_IssuedByUser" Association="PredictathonModel.FK_PaymentCredit_IssuedByUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredits" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PaymentCredit_UsedByUser" Association="PredictathonModel.FK_PaymentCredit_UsedByUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="PaymentCredit" EntitySet="PaymentCredits" />
+          </AssociationSet>
+          <EntitySet Name="Transactions" EntityType="PredictathonModel.Transaction" />
+          <AssociationSet Name="FK_Transaction_Competition" Association="PredictathonModel.FK_Transaction_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="Transaction" EntitySet="Transactions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Transaction_User" Association="PredictathonModel.FK_Transaction_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Transaction" EntitySet="Transactions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Transaction_UserCompetition1" Association="PredictathonModel.FK_Transaction_UserCompetition1">
+            <End Role="UserCompetition" EntitySet="UserCompetitions" />
+            <End Role="Transaction" EntitySet="Transactions" />
+          </AssociationSet>
+          <FunctionImport Name="HallOfFameListGet" EntitySet="HallOfFame" ReturnType="Collection(PredictathonModel.HallOfFame)" />
+          <EntitySet Name="Messages" EntityType="PredictathonModel.Message" />
+          <EntitySet Name="MessageRatings" EntityType="PredictathonModel.MessageRating" />
+          <EntitySet Name="MessageThreads" EntityType="PredictathonModel.MessageThread" />
+          <AssociationSet Name="FK_TeamCompetition_Competition" Association="PredictathonModel.FK_TeamCompetition_Competition">
+            <End Role="Competition" EntitySet="Competitions" />
+            <End Role="TeamCompetition" EntitySet="TeamCompetitions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Message_MessageThread" Association="PredictathonModel.FK_Message_MessageThread">
+            <End Role="MessageThread" EntitySet="MessageThreads" />
+            <End Role="Message" EntitySet="Messages" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Message_User" Association="PredictathonModel.FK_Message_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Message" EntitySet="Messages" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageRating_User" Association="PredictathonModel.FK_MessageRating_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="MessageRating" EntitySet="MessageRatings" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageThread_User" Association="PredictathonModel.FK_MessageThread_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="MessageThread" EntitySet="MessageThreads" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageRating_Message" Association="PredictathonModel.FK_MessageRating_Message">
+            <End Role="Message" EntitySet="Messages" />
+            <End Role="MessageRating" EntitySet="MessageRatings" />
+          </AssociationSet>
+          <FunctionImport Name="MessageThreadListGet" />
+          <FunctionImport Name="MessageThreadMessageListGet" ReturnType="Collection(PredictathonModel.MessageThreadMessageListGet_Result)">
+            <Parameter Name="MessageThreadID" Mode="In" Type="Guid" />
+            <Parameter Name="UserID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="UserCompetitionRegistrationListGet" ReturnType="Collection(PredictathonModel.UserCompetitionRegistrationListGet_Result)">
+          <Parameter Name="UserID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="UserMatchPredictionListGet" ReturnType="Collection(PredictathonModel.UserMatchPredictionListGet_Result)">
+            <Parameter Name="UserID" Mode="In" Type="Guid" />
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+            <Parameter Name="HidePastUnpredictedMatches" Mode="In" Type="Boolean" />
+          </FunctionImport>
+          <FunctionImport Name="TeamCompetitionListGet" ReturnType="Collection(PredictathonModel.TeamCompetitionListGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="ReturnTeamsNotInCompetition" Mode="In" Type="Boolean" />
+          </FunctionImport>
+          <FunctionImport Name="UserOverduePredictionsGet" ReturnType="Collection(PredictathonModel.UserOverduePredictionsGet_Result)" />
+          <FunctionImport Name="UserCompetitionLeagueHistorySet">
+            <Parameter Name="Date" Mode="In" Type="DateTime" />
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="UserCompetitionLeagueHistoryListGet" ReturnType="Collection(PredictathonModel.UserCompetitionLeagueHistoryListGet_Result)">
+            <Parameter Name="UserID" Mode="In" Type="Guid" />
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="AverageScoreByTeamListGet" ReturnType="Collection(PredictathonModel.AverageScoreByTeamListGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+          </FunctionImport>
+          <AssociationSet Name="FK_Match_AwayTeam" Association="PredictathonModel.FK_Match_AwayTeam">
+            <End Role="Team" EntitySet="Teams" />
+            <End Role="Match" EntitySet="Matches" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Match_HomeTeam" Association="PredictathonModel.FK_Match_HomeTeam">
+            <End Role="Team" EntitySet="Teams" />
+            <End Role="Match" EntitySet="Matches" />
+          </AssociationSet>
+          <FunctionImport Name="MatchPredictionAverageBiggestDifferencesGet" ReturnType="Collection(PredictathonModel.MatchPredictionAverageBiggestDifferencesGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="DateFrom" Mode="In" Type="DateTime" />
+            <Parameter Name="DateTo" Mode="In" Type="DateTime" />
+            <Parameter Name="TeamID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="CompetitionUserLeagueTableGet" ReturnType="Collection(PredictathonModel.CompetitionUserLeagueTableGet_Result)">
+            <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+            <Parameter Name="UserID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="CompetitionRealLeagueTableGet" ReturnType="Collection(PredictathonModel.CompetitionRealLeagueTableGet_Result)">
+          <Parameter Name="CompetitionID" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="Statistics_CompetitionWinnerListGet" ReturnType="Collection(PredictathonModel.Statistics_CompetitionWinnerListGet_Result)" />
+          <FunctionImport Name="Statistics_HighestAllTimeScoreListGet" ReturnType="Collection(PredictathonModel.Statistics_HighestAllTimeScoreListGet_Result)" />
+          <FunctionImport Name="Statistics_HighestAverageScorePerPredictionsGet" ReturnType="Collection(PredictathonModel.Statistics_HighestAverageScorePerPredictionsGet_Result)" />
+          <FunctionImport Name="Statistics_HighestPercentageCorrectPredictionsGet" ReturnType="Collection(PredictathonModel.Statistics_HighestPercentageCorrectPredictionsGet_Result)" />
+          <FunctionImport Name="Statistics_MostMatchesPredictedUserListGet" ReturnType="Collection(PredictathonModel.Statistics_MostMatchesPredictedUserListGet_Result)" />
+          <EntitySet Name="MessageReactions" EntityType="PredictathonModel.MessageReaction" />
+          <AssociationSet Name="FK_MessageReaction_Message" Association="PredictathonModel.FK_MessageReaction_Message">
+            <End Role="Message" EntitySet="Messages" />
+            <End Role="MessageReaction" EntitySet="MessageReactions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MessageReaction_User" Association="PredictathonModel.FK_MessageReaction_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="MessageReaction" EntitySet="MessageReactions" />
+          </AssociationSet>
+          <EntitySet Name="PredictionHistories" EntityType="PredictathonModel.PredictionHistory" />
+        </EntityContainer>
+        <EntityType Name="HallOfFame">
+          <Key>
+            <PropertyRef Name="HallOfFameID" />
+          </Key>
+          <Property Name="HallOfFameID" Type="Guid" Nullable="false" />
+          <Property Name="Winner" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="WinnerUserID" Type="Guid" />
+          <Property Name="SecondPlace" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="SecondPlaceUserID" Type="Guid" />
+          <Property Name="ThirdPlace" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="ThirdPlaceUserID" Type="Guid" />
+          <Property Name="EndDate" Type="DateTime" Nullable="false" Precision="0" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_HallOfFame_User" FromRole="HallOfFame" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="PredictathonModel.FK_HallOfFame_User1" FromRole="HallOfFame" ToRole="User" />
+          <NavigationProperty Name="User2" Relationship="PredictathonModel.FK_HallOfFame_User2" FromRole="HallOfFame" ToRole="User" />
+          <Property Type="Guid" Name="CompetitionID" />
+          <Property Type="String" Name="CompetitionName" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_HallOfFame_Competition" FromRole="HallOfFame" ToRole="Competition" />
+          <Property Type="String" Name="ImageFilename" MaxLength="40" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="Match">
+          <Key>
+            <PropertyRef Name="MatchID" />
+          </Key>
+          <Property Name="MatchID" Type="Guid" Nullable="false" />
+          <Property Name="MatchDateTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="HomeTeamID" Type="Guid" Nullable="true" />
+          <Property Name="AwayTeamID" Type="Guid" Nullable="true" />
+          <Property Name="MatchPlayed" Type="Boolean" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="Int32" />
+          <Property Name="AwayTeamGoals" Type="Int32" />
+          <NavigationProperty Name="Predictions" Relationship="PredictathonModel.FK_Prediction_Match" FromRole="Match" ToRole="Prediction" />
+          <Property Type="Guid" Name="CompetitionID" Nullable="false" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_Match_Competition" FromRole="Match" ToRole="Competition" />
+          <Property Type="Boolean" Name="NeutralGround" Nullable="false" />
+          <Property Type="String" Name="HomeTeamTBC" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="AwayTeamTBC" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="AwayTeam" Relationship="PredictathonModel.FK_Match_AwayTeam" FromRole="Match" ToRole="Team" />
+          <NavigationProperty Name="HomeTeam" Relationship="PredictathonModel.FK_Match_HomeTeam" FromRole="Match" ToRole="Team" />
+          <Property Type="Boolean" Name="Knockout" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Prediction">
+          <Key>
+            <PropertyRef Name="PredictionID" />
+          </Key>
+          <Property Name="PredictionID" Type="Guid" Nullable="false" />
+          <Property Name="MatchID" Type="Guid" Nullable="false" />
+          <Property Name="UserID" Type="Guid" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="Int32" />
+          <Property Name="AwayTeamGoals" Type="Int32" />
+          <Property Name="Score" Type="Int32" />
+          <NavigationProperty Name="Match" Relationship="PredictathonModel.FK_Prediction_Match" FromRole="Prediction" ToRole="Match" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_Prediction_User" FromRole="Prediction" ToRole="User" />
+          <Property Type="Int32" Name="GoalDifference" />
+          <Property Name="PredictionHistoryID" Type="Int32" />
+          <Property Name="Invalid" Type="Boolean" Nullable="false" />
+          <Property Name="AutoUpdatedDueToLatePrediction" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Team">
+          <Key>
+            <PropertyRef Name="TeamID" />
+          </Key>
+          <Property Name="TeamID" Type="Guid" Nullable="false" />
+          <Property Name="TeamName" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Type="String" Name="ImageName" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="ShortName" Nullable="false" MaxLength="20" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="TeamCompetitions" Relationship="PredictathonModel.FK_TeamCompetition_Team" FromRole="Team" ToRole="TeamCompetition" />
+          <NavigationProperty Name="Matches" Relationship="PredictathonModel.FK_Match_AwayTeam" FromRole="Team" ToRole="Match" />
+          <NavigationProperty Name="Matches1" Relationship="PredictathonModel.FK_Match_HomeTeam" FromRole="Team" ToRole="Match" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="UserID" />
+          </Key>
+          <Property Name="UserID" Type="Guid" Nullable="false" />
+          <Property Name="Username" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Password" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="EmailAddress" Type="String" MaxLength="128" Unicode="false" FixedLength="false" />
+          <Property Name="Forenames" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Surname" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Location" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Caption" Type="String" MaxLength="30" Unicode="false" FixedLength="false" />
+          <Property Name="ProfileText" Type="String" MaxLength="Max" Unicode="false" FixedLength="false" />
+          <Property Name="LastLoginDateTime" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="HallOfFameWinner" Relationship="PredictathonModel.FK_HallOfFame_User" FromRole="User" ToRole="HallOfFame" />
+          <NavigationProperty Name="HallOfFameSecond" Relationship="PredictathonModel.FK_HallOfFame_User1" FromRole="User" ToRole="HallOfFame" />
+          <NavigationProperty Name="HallOfFameThird" Relationship="PredictathonModel.FK_HallOfFame_User2" FromRole="User" ToRole="HallOfFame" />
+          <NavigationProperty Name="Predictions" Relationship="PredictathonModel.FK_Prediction_User" FromRole="User" ToRole="Prediction" />
+          <NavigationProperty Name="UserCompetitions" Relationship="PredictathonModel.FK_UserCompetition_User" FromRole="User" ToRole="UserCompetition" />
+          <Property Type="Boolean" Name="MatchAdministrator" Nullable="false" />
+          <Property Type="Boolean" Name="UserAdministrator" Nullable="false" />
+          <NavigationProperty Name="PaymentCreditIssuedByUser" Relationship="PredictathonModel.FK_PaymentCredit_IssuedByUser" FromRole="User" ToRole="PaymentCredit" />
+          <NavigationProperty Name="PaymentCreditUsedByUser" Relationship="PredictathonModel.FK_PaymentCredit_UsedByUser" FromRole="User" ToRole="PaymentCredit" />
+          <NavigationProperty Name="Transactions" Relationship="PredictathonModel.FK_Transaction_User" FromRole="User" ToRole="Transaction" />
+          <Property Type="Boolean" Name="ImageUploaded" Nullable="false" />
+          <Property Type="String" Name="FavouriteTeam" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="CompetitionAdministrator" Nullable="false" />
+          <NavigationProperty Name="Messages" Relationship="PredictathonModel.FK_Message_User" FromRole="User" ToRole="Message" />
+          <NavigationProperty Name="MessageRatings" Relationship="PredictathonModel.FK_MessageRating_User" FromRole="User" ToRole="MessageRating" />
+          <NavigationProperty Name="MessageThreads" Relationship="PredictathonModel.FK_MessageThread_User" FromRole="User" ToRole="MessageThread" />
+          <Property Type="DateTime" Name="LastViewedMessageboard" Precision="3" />
+          <Property Type="Int32" Name="TotalMessageboardPosts" Nullable="false" />
+          <Property Type="Int32" Name="EmailPredictionReminderDays" />
+          <Property Type="Boolean" Name="CanViewHiddenMessageThreads" Nullable="false" />
+          <NavigationProperty Name="MessageReactions" Relationship="PredictathonModel.FK_MessageReaction_User" FromRole="User" ToRole="MessageReaction" />
+          <Property Name="CanViewMessageboard" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_HallOfFame_User">
+          <End Role="User" Type="PredictathonModel.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="PredictathonModel.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="WinnerUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HallOfFame_User1">
+          <End Role="User" Type="PredictathonModel.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="PredictathonModel.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="SecondPlaceUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HallOfFame_User2">
+          <End Role="User" Type="PredictathonModel.User" Multiplicity="0..1" />
+          <End Role="HallOfFame" Type="PredictathonModel.HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="ThirdPlaceUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Prediction_Match">
+          <End Role="Match" Type="PredictathonModel.Match" Multiplicity="1" />
+          <End Role="Prediction" Type="PredictathonModel.Prediction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Match">
+              <PropertyRef Name="MatchID" />
+            </Principal>
+            <Dependent Role="Prediction">
+              <PropertyRef Name="MatchID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Prediction_User">
+          <End Role="User" Type="PredictathonModel.User" Multiplicity="1" />
+          <End Role="Prediction" Type="PredictathonModel.Prediction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Prediction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Competition">
+          <Key>
+            <PropertyRef Name="CompetitionID" />
+          </Key>
+          <Property Type="Guid" Name="CompetitionID" Nullable="false" />
+          <Property Type="String" Name="CompetitionName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="DateTime" Name="StartDate" Nullable="false" Precision="0" />
+          <Property Type="DateTime" Name="EndDate" Nullable="false" Precision="0" />
+          <NavigationProperty Name="HallOfFames" Relationship="PredictathonModel.FK_HallOfFame_Competition" FromRole="Competition" ToRole="HallOfFame" />
+          <NavigationProperty Name="Matches" Relationship="PredictathonModel.FK_Match_Competition" FromRole="Competition" ToRole="Match" />
+          <NavigationProperty Name="UserCompetitions" Relationship="PredictathonModel.FK_UserCompetition_Competition" FromRole="Competition" ToRole="UserCompetition" />
+          <Property Type="Boolean" Name="DuplicateFixturesAllowed" Nullable="false" />
+          <Property Type="Boolean" Name="OpenForRegistration" Nullable="false" />
+          <Property Type="Boolean" Name="RegistrationAvailableOnLoginPage" Nullable="false" />
+          <Property Type="Boolean" Name="ShowInHallOfFame" Nullable="false" />
+          <Property Type="Decimal" Name="EntranceFee" Nullable="false" Precision="5" Scale="2" />
+          <Property Type="String" Name="Information" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="PaymentCredits" Relationship="PredictathonModel.FK_PaymentCredit_Competition" FromRole="Competition" ToRole="PaymentCredit" />
+          <NavigationProperty Name="Transactions" Relationship="PredictathonModel.FK_Transaction_Competition" FromRole="Competition" ToRole="Transaction" />
+          <Property Type="Boolean" Name="PayPalPaymentAvailable" Nullable="false" />
+          <Property Type="Boolean" Name="PrependNameWithThe" Nullable="false" />
+          <Property Type="String" Name="ImageFilename" MaxLength="40" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="TeamCompetitions" Relationship="PredictathonModel.FK_TeamCompetition_Competition" FromRole="Competition" ToRole="TeamCompetition" />
+          <Property Type="Boolean" Name="DefaultToNeutralGround" Nullable="false" />
+          <Property Name="AllowTwoPointers" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserCompetition">
+          <Key>
+            <PropertyRef Name="UserCompetitionID" />
+          </Key>
+          <Property Type="Guid" Name="UserCompetitionID" Nullable="false" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Guid" Name="CompetitionID" Nullable="false" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_UserCompetition_Competition" FromRole="UserCompetition" ToRole="Competition" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_UserCompetition_User" FromRole="UserCompetition" ToRole="User" />
+          <Property Type="Decimal" Name="AmountPaid" Nullable="false" Precision="5" Scale="2" />
+          <Property Type="String" Name="PaymentProvider" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="IsDefaultCompetition" Nullable="false" />
+          <Property Type="Guid" Name="PaymentCreditID" />
+          <NavigationProperty Name="Transactions" Relationship="PredictathonModel.FK_Transaction_UserCompetition1" FromRole="UserCompetition" ToRole="Transaction" />
+          <Property Type="DateTime" Name="LastEmailReminderSent" Precision="3" />
+        </EntityType>
+        <Association Name="FK_HallOfFame_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="0..1" />
+          <End Type="PredictathonModel.HallOfFame" Role="HallOfFame" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="HallOfFame">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Match_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="1" />
+          <End Type="PredictathonModel.Match" Role="Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCompetition_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="1" />
+          <End Type="PredictathonModel.UserCompetition" Role="UserCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="UserCompetition">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCompetition_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.UserCompetition" Role="UserCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="UserCompetition">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="TeamCompetition">
+          <Key>
+            <PropertyRef Name="TeamCompetitionID" />
+          </Key>
+          <Property Type="Guid" Name="TeamCompetitionID" Nullable="false" />
+          <Property Type="Guid" Name="TeamID" Nullable="false" />
+          <Property Type="Guid" Name="CompetitionID" Nullable="false" />
+          <NavigationProperty Name="Team" Relationship="PredictathonModel.FK_TeamCompetition_Team" FromRole="TeamCompetition" ToRole="Team" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_TeamCompetition_Competition" FromRole="TeamCompetition" ToRole="Competition" />
+        </EntityType>
+        <Association Name="FK_TeamCompetition_Team">
+          <End Type="PredictathonModel.Team" Role="Team" Multiplicity="1" />
+          <End Type="PredictathonModel.TeamCompetition" Role="TeamCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="TeamCompetition">
+              <PropertyRef Name="TeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <ComplexType Name="MatchListGet_Result">
+          <Property Type="Guid" Name="MatchID" Nullable="false" />
+          <Property Type="DateTime" Name="MatchDateTime" Nullable="false" Precision="23" />
+          <Property Type="String" Name="HomeTeam" MaxLength="50" Nullable="true" />
+          <Property Type="Guid" Name="HomeTeamID" Nullable="true" />
+          <Property Type="String" Name="AwayTeam" MaxLength="50" Nullable="true" />
+          <Property Type="Guid" Name="AwayTeamID" Nullable="true" />
+          <Property Type="Boolean" Name="MatchPlayed" Nullable="false" />
+          <Property Type="Int32" Name="HomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="AwayTeamGoals" Nullable="true" />
+          <Property Type="String" Name="HomeTeamImage" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="AwayTeamImage" Nullable="true" MaxLength="50" />
+          <Property Type="Boolean" Name="NeutralGround" Nullable="false" />
+          <Property Type="String" Name="Description" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="HomeTeamTBC" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="AwayTeamTBC" Nullable="true" MaxLength="50" />
+          <Property Type="Boolean" Name="Knockout" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="LeagueTableGet_Result">
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Int32" Name="Score" Nullable="true" />
+          <Property Type="Int32" Name="ThreePointers" Nullable="true" />
+          <Property Type="Int32" Name="TwoPointers" Nullable="true" />
+          <Property Type="Int32" Name="OnePointers" Nullable="true" />
+          <Property Type="Int32" Name="NoPointers" Nullable="true" />
+          <Property Type="Int32" Name="NoPredictions" Nullable="true" />
+          <Property Type="Int64" Name="LeaguePosition" Nullable="true" />
+          <Property Type="String" Name="UserName" Nullable="false" MaxLength="50" />
+          <Property Type="Decimal" Name="AverageGoalDifference" Nullable="false" />
+          <Property Type="Int32" Name="PreviousLeaguePosition" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="MatchResultListGet_Result">
+          <Property Type="Guid" Name="MatchID" Nullable="false" />
+          <Property Type="DateTime" Name="MatchDateTime" Nullable="false" Precision="23" />
+          <Property Type="String" Name="HomeTeam" MaxLength="50" Nullable="true" />
+          <Property Type="String" Name="AwayTeam" MaxLength="50" Nullable="true" />
+          <Property Type="Int32" Name="HomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="AwayTeamGoals" Nullable="true" />
+          <Property Type="Decimal" Name="AveragePredictionScore" Nullable="true" Precision="38" Scale="6" />
+          <Property Type="Int32" Name="YourPredictionScore" Nullable="true" />
+          <Property Type="Int32" Name="PredictionHomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="PredictionAwayTeamGoals" Nullable="true" />
+          <Property Type="String" Name="HomeTeamShortName" MaxLength="20" Nullable="true" />
+          <Property Type="String" Name="AwayTeamShortName" MaxLength="20" Nullable="true" />
+          <Property Type="String" Name="Description" Nullable="true" MaxLength="50" />
+          <Property Type="Boolean" Name="Knockout" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="MatchPredictionListGet_Result">
+          <Property Type="Guid" Name="PredictionID" Nullable="false" />
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Int32" Name="HomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="AwayTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="Score" Nullable="true" />
+        </ComplexType>
+        <EntityType Name="PaymentCredit">
+          <Key>
+            <PropertyRef Name="PaymentCreditID" />
+          </Key>
+          <Property Type="Guid" Name="PaymentCreditID" Nullable="false" />
+          <Property Type="String" Name="ExpectedUsername" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Guid" Name="ForCompetitionID" Nullable="false" />
+          <Property Type="String" Name="UniquePaymentCode" Nullable="false" MaxLength="10" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="CreditUsed" Nullable="false" />
+          <Property Type="Guid" Name="UsedByUserID" />
+          <Property Type="Guid" Name="IssuedByUserID" Nullable="false" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_PaymentCredit_Competition" FromRole="PaymentCredit" ToRole="Competition" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_PaymentCredit_IssuedByUser" FromRole="PaymentCredit" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="PredictathonModel.FK_PaymentCredit_UsedByUser" FromRole="PaymentCredit" ToRole="User" />
+          <Property Type="DateTime" Name="IssueDate" Nullable="false" Precision="3" />
+        </EntityType>
+        <Association Name="FK_PaymentCredit_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="1" />
+          <End Type="PredictathonModel.PaymentCredit" Role="PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="ForCompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PaymentCredit_IssuedByUser">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.PaymentCredit" Role="PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="IssuedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PaymentCredit_UsedByUser">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="PredictathonModel.PaymentCredit" Role="PaymentCredit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="PaymentCredit">
+              <PropertyRef Name="UsedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Transaction">
+          <Key>
+            <PropertyRef Name="TransactionID" />
+          </Key>
+          <Property Type="Guid" Name="TransactionID" Nullable="false" />
+          <Property Type="Guid" Name="CompetitionID" />
+          <Property Type="Guid" Name="UserID" />
+          <Property Type="String" Name="Username" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Password" MaxLength="25" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="EmailAddress" MaxLength="128" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Forenames" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Surname" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Decimal" Name="Amount" Nullable="false" Precision="5" Scale="2" />
+          <Property Type="String" Name="TransactionStatus" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="Failed" />
+          <Property Type="Guid" Name="UserCompetitionID" />
+          <NavigationProperty Name="Competition" Relationship="PredictathonModel.FK_Transaction_Competition" FromRole="Transaction" ToRole="Competition" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_Transaction_User" FromRole="Transaction" ToRole="User" />
+          <NavigationProperty Name="UserCompetition" Relationship="PredictathonModel.FK_Transaction_UserCompetition1" FromRole="Transaction" ToRole="UserCompetition" />
+          <Property Type="Decimal" Name="PayPalFee" Precision="5" Scale="2" />
+          <Property Type="String" Name="PayPalTransactionID" MaxLength="19" FixedLength="true" Unicode="false" />
+          <Property Type="DateTime" Name="TransactionDateTime" Nullable="false" Precision="3" />
+          <Property Type="Decimal" Name="ActualPaymentAmount" Precision="5" Scale="2" />
+          <Property Type="Boolean" Name="ContainedInvalidData" />
+          <Property Type="String" Name="Comments" MaxLength="100" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <Association Name="FK_Transaction_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="0..1" />
+          <End Type="PredictathonModel.Transaction" Role="Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Transaction_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="PredictathonModel.Transaction" Role="Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Transaction_UserCompetition1">
+          <End Type="PredictathonModel.UserCompetition" Role="UserCompetition" Multiplicity="0..1" />
+          <End Type="PredictathonModel.Transaction" Role="Transaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="UserCompetition">
+              <PropertyRef Name="UserCompetitionID" />
+            </Principal>
+            <Dependent Role="Transaction">
+              <PropertyRef Name="UserCompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Message">
+          <Key>
+            <PropertyRef Name="MessageID" />
+          </Key>
+          <Property Type="Guid" Name="MessageID" Nullable="false" />
+          <Property Type="Guid" Name="MessageThreadID" Nullable="false" />
+          <Property Type="Guid" Name="PostedByUserID" Nullable="false" />
+          <Property Type="DateTime" Name="MessageDateTime" Nullable="false" Precision="3" />
+          <Property Type="String" Name="MessageContent" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="YouTubeVideoID" MaxLength="11" FixedLength="true" Unicode="false" />
+          <Property Type="Boolean" Name="HasLinkedImage" Nullable="false" />
+          <NavigationProperty Name="MessageThread" Relationship="PredictathonModel.FK_Message_MessageThread" FromRole="Message" ToRole="MessageThread" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_Message_User" FromRole="Message" ToRole="User" />
+          <NavigationProperty Name="MessageRatings" Relationship="PredictathonModel.FK_MessageRating_Message" FromRole="Message" ToRole="MessageRating" />
+          <Property Type="Int32" Name="UserTotalMessageboardPosts" Nullable="false" />
+          <NavigationProperty Name="MessageReactions" Relationship="PredictathonModel.FK_MessageReaction_Message" FromRole="Message" ToRole="MessageReaction" />
+        </EntityType>
+        <EntityType Name="MessageRating">
+          <Key>
+            <PropertyRef Name="MessageRatingID" />
+          </Key>
+          <Property Type="Guid" Name="MessageRatingID" Nullable="false" />
+          <Property Type="Int32" Name="Rating" Nullable="false" />
+          <Property Type="Guid" Name="RatedByUserID" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_MessageRating_User" FromRole="MessageRating" ToRole="User" />
+          <Property Type="Guid" Name="MessageID" Nullable="false" />
+          <NavigationProperty Name="Message" Relationship="PredictathonModel.FK_MessageRating_Message" FromRole="MessageRating" ToRole="Message" />
+        </EntityType>
+        <EntityType Name="MessageThread">
+          <Key>
+            <PropertyRef Name="MessageThreadID" />
+          </Key>
+          <Property Type="Guid" Name="MessageThreadID" Nullable="false" />
+          <Property Type="String" Name="ThreadSubject" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Guid" Name="StartedByUserID" Nullable="false" />
+          <Property Type="DateTime" Name="StartedDateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Messages" Relationship="PredictathonModel.FK_Message_MessageThread" FromRole="MessageThread" ToRole="Message" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_MessageThread_User" FromRole="MessageThread" ToRole="User" />
+          <Property Type="Boolean" Name="HiddenFromPublic" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_TeamCompetition_Competition">
+          <End Type="PredictathonModel.Competition" Role="Competition" Multiplicity="1" />
+          <End Type="PredictathonModel.TeamCompetition" Role="TeamCompetition" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Competition">
+              <PropertyRef Name="CompetitionID" />
+            </Principal>
+            <Dependent Role="TeamCompetition">
+              <PropertyRef Name="CompetitionID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Message_MessageThread">
+          <End Type="PredictathonModel.MessageThread" Role="MessageThread" Multiplicity="1" />
+          <End Type="PredictathonModel.Message" Role="Message" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MessageThread">
+              <PropertyRef Name="MessageThreadID" />
+            </Principal>
+            <Dependent Role="Message">
+              <PropertyRef Name="MessageThreadID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Message_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.Message" Role="Message" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="Message">
+              <PropertyRef Name="PostedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageRating_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.MessageRating" Role="MessageRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageRating">
+              <PropertyRef Name="RatedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageThread_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.MessageThread" Role="MessageThread" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageThread">
+              <PropertyRef Name="StartedByUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageRating_Message">
+          <End Type="PredictathonModel.Message" Role="Message" Multiplicity="1" />
+          <End Type="PredictathonModel.MessageRating" Role="MessageRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Message">
+              <PropertyRef Name="MessageID" />
+            </Principal>
+            <Dependent Role="MessageRating">
+              <PropertyRef Name="MessageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <ComplexType Name="MessageThreadMessageListGet_Result">
+          <Property Type="Guid" Name="MessageID" Nullable="false" />
+          <Property Type="String" Name="MessageContent" Nullable="false" />
+          <Property Type="DateTime" Name="MessageDateTime" Nullable="false" Precision="23" />
+          <Property Type="Boolean" Name="HasLinkedImage" Nullable="false" />
+          <Property Type="String" Name="YouTubeVideoID" Nullable="true" MaxLength="11" />
+          <Property Type="Guid" Name="PostedByUserID" Nullable="false" />
+          <Property Type="String" Name="PostedByUsername" Nullable="false" MaxLength="50" />
+          <Property Type="Boolean" Name="PostedByUserImageUploaded" Nullable="false" />
+          <Property Type="Int32" Name="PostedByUserTotalMessageboardPosts" Nullable="false" />
+          <Property Type="Int32" Name="UserTotalMessageboardPosts" Nullable="false" />
+          <Property Type="Guid" Name="MessageRatingID" Nullable="true" />
+          <Property Type="Int32" Name="Rating" Nullable="true" />
+          <Property Type="Decimal" Name="AverageRating" Nullable="true" />
+          <Property Type="Int32" Name="NumberOfRatings" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="UserCompetitionRegistrationListGet_Result">
+          <Property Type="Guid" Name="UserCompetitionID" Nullable="true" />
+          <Property Type="Guid" Name="CompetitionID" Nullable="false" />
+          <Property Type="String" Name="CompetitionName" Nullable="false" MaxLength="50" />
+          <Property Type="DateTime" Name="StartDate" Nullable="false" />
+          <Property Type="Decimal" Name="EntranceFee" Nullable="false" Precision="5" Scale="2" />
+          <Property Type="Boolean" Name="Registered" Nullable="true" />
+          <Property Type="String" Name="ImageFilename" Nullable="true" MaxLength="20" />
+        </ComplexType>
+        <ComplexType Name="UserMatchPredictionListGet_Result">
+          <Property Type="Guid" Name="MatchID" Nullable="false" />
+          <Property Type="Guid" Name="PredictionID" Nullable="true" />
+          <Property Type="DateTime" Name="MatchDateTime" Nullable="false" Precision="23" />
+          <Property Type="String" Name="HomeTeam" MaxLength="50" Nullable="true" />
+          <Property Type="String" Name="HomeTeamShortName" MaxLength="20" Nullable="true" />
+          <Property Type="String" Name="HomeTeamImage" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="AwayTeam" MaxLength="50" Nullable="true" />
+          <Property Type="String" Name="AwayTeamShortName" MaxLength="20" Nullable="true" />
+          <Property Type="String" Name="AwayTeamImage" Nullable="true" MaxLength="50" />
+          <Property Type="Int32" Name="HomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="AwayTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="ActualHomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="ActualAwayTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="Score" Nullable="true" />
+          <Property Type="String" Name="Description" Nullable="true" MaxLength="50" />
+          <Property Type="Boolean" Name="Knockout" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="TeamCompetitionListGet_Result">
+          <Property Type="Guid" Name="TeamCompetitionID" Nullable="true" />
+          <Property Type="Guid" Name="TeamID" Nullable="false" />
+          <Property Type="String" Name="TeamName" Nullable="false" MaxLength="50" />
+        </ComplexType>
+        <ComplexType Name="UserOverduePredictionsGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Guid" Name="UserCompetitionID" Nullable="false" />
+          <Property Type="String" Name="EmailAddress" Nullable="true" MaxLength="128" />
+          <Property Type="String" Name="CompetitionName" Nullable="false" MaxLength="50" />
+          <Property Type="DateTime" Name="NextPredictionDue" Nullable="true" Precision="23" />
+        </ComplexType>
+        <ComplexType Name="UserCompetitionLeagueHistoryListGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="DateTime" Name="Date" Nullable="false" />
+          <Property Type="Int32" Name="Score" Nullable="false" />
+          <Property Type="Int32" Name="LeaguePosition" Nullable="false" />
+        </ComplexType>
+        <ComplexType Name="AverageScoreByTeamListGet_Result">
+          <Property Type="Guid" Name="TeamID" Nullable="false" />
+          <Property Type="String" Name="ShortName" Nullable="false" MaxLength="20" />
+          <Property Type="String" Name="TeamName" Nullable="false" MaxLength="50" />
+          <Property Type="Decimal" Name="AverageScore" Nullable="true" Precision="38" Scale="6" />
+          <Property Type="String" Name="TeamImage" Nullable="true" MaxLength="50" />
+        </ComplexType>
+        <Association Name="FK_Match_AwayTeam">
+          <End Type="PredictathonModel.Team" Role="Team" Multiplicity="0..1" />
+          <End Type="PredictathonModel.Match" Role="Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="AwayTeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Match_HomeTeam">
+          <End Type="PredictathonModel.Team" Role="Team" Multiplicity="0..1" />
+          <End Type="PredictathonModel.Match" Role="Match" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Team">
+              <PropertyRef Name="TeamID" />
+            </Principal>
+            <Dependent Role="Match">
+              <PropertyRef Name="HomeTeamID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <ComplexType Name="MatchPredictionAverageBiggestDifferencesGet_Result">
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="MatchID" Nullable="false" />
+          <Property Type="DateTime" Name="MatchDateTime" Nullable="false" Precision="23" />
+          <Property Type="String" Name="HomeTeam" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="HomeTeamShortName" Nullable="false" MaxLength="20" />
+          <Property Type="String" Name="AwayTeam" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="AwayTeamShortName" Nullable="false" MaxLength="20" />
+          <Property Type="Int32" Name="HomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="AwayTeamGoals" Nullable="true" />
+          <Property Type="Decimal" Name="AveragePredictionScore" Nullable="false" Precision="38" Scale="6" />
+          <Property Type="Int32" Name="PredictionHomeTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="PredictionAwayTeamGoals" Nullable="true" />
+          <Property Type="Int32" Name="PredictionScore" Nullable="false" />
+          <Property Type="Decimal" Name="ScoreDifference" Nullable="true" Precision="38" Scale="6" />
+        </ComplexType>
+        <ComplexType Name="CompetitionUserLeagueTableGet_Result">
+          <Property Type="Guid" Name="TeamID" Nullable="false" />
+          <Property Type="Int64" Name="Position" Nullable="true" />
+          <Property Type="Int32" Name="Played" Nullable="true" />
+          <Property Type="Int32" Name="Won" Nullable="true" />
+          <Property Type="Int32" Name="Lost" Nullable="true" />
+          <Property Type="Int32" Name="Drawn" Nullable="true" />
+          <Property Type="String" Name="ShortName" Nullable="false" MaxLength="20" />
+          <Property Type="Int32" Name="Points" Nullable="true" />
+          <Property Type="Int32" Name="GoalsFor" Nullable="true" />
+          <Property Type="Int32" Name="GoalsAgainst" Nullable="true" />
+          <Property Type="Int32" Name="GoalDifference" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="CompetitionRealLeagueTableGet_Result">
+          <Property Type="Guid" Name="TeamID" Nullable="false" />
+          <Property Type="Int64" Name="Position" Nullable="true" />
+          <Property Type="Int32" Name="Played" Nullable="true" />
+          <Property Type="Int32" Name="Won" Nullable="true" />
+          <Property Type="Int32" Name="Lost" Nullable="true" />
+          <Property Type="Int32" Name="Drawn" Nullable="true" />
+          <Property Type="String" Name="ShortName" Nullable="false" MaxLength="20" />
+          <Property Type="Int32" Name="GoalsFor" Nullable="true" />
+          <Property Type="Int32" Name="GoalsAgainst" Nullable="true" />
+          <Property Type="Int32" Name="Points" Nullable="true" />
+          <Property Type="Int32" Name="GoalDifference" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Statistics_CompetitionWinnerListGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Int32" Name="Wins" Nullable="true" />
+          <Property Type="Int32" Name="SecondPlaces" Nullable="true" />
+          <Property Type="Int32" Name="ThirdPlaces" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Statistics_HighestAllTimeScoreListGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Int32" Name="TotalScore" Nullable="true" />
+        </ComplexType>
+        <ComplexType Name="Statistics_HighestAverageScorePerPredictionsGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Decimal" Name="AverageScore" Nullable="true" Precision="20" Scale="13" />
+        </ComplexType>
+        <ComplexType Name="Statistics_HighestPercentageCorrectPredictionsGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Decimal" Name="CorrectPredictionPercentage" Nullable="true" Precision="25" Scale="12" />
+        </ComplexType>
+        <ComplexType Name="Statistics_MostMatchesPredictedUserListGet_Result">
+          <Property Type="String" Name="Username" Nullable="false" MaxLength="50" />
+          <Property Type="Guid" Name="UserID" Nullable="false" />
+          <Property Type="Int32" Name="TotalPredictions" Nullable="true" />
+        </ComplexType>
+        <EntityType Name="MessageReaction">
+          <Key>
+            <PropertyRef Name="MessageReactionID" />
+          </Key>
+          <Property Name="MessageReactionID" Type="Guid" Nullable="false" />
+          <Property Name="MessageID" Type="Guid" Nullable="false" />
+          <Property Name="UserID" Type="Guid" Nullable="false" />
+          <Property Name="ReactionName" Type="String" Nullable="false" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="ImageUrl" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Message" Relationship="PredictathonModel.FK_MessageReaction_Message" FromRole="MessageReaction" ToRole="Message" />
+          <NavigationProperty Name="User" Relationship="PredictathonModel.FK_MessageReaction_User" FromRole="MessageReaction" ToRole="User" />
+          <Property Name="CreationDate" Type="DateTime" Nullable="false" Precision="3" />
+        </EntityType>
+        <Association Name="FK_MessageReaction_Message">
+          <End Type="PredictathonModel.Message" Role="Message" Multiplicity="1" />
+          <End Type="PredictathonModel.MessageReaction" Role="MessageReaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Message">
+              <PropertyRef Name="MessageID" />
+            </Principal>
+            <Dependent Role="MessageReaction">
+              <PropertyRef Name="MessageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MessageReaction_User">
+          <End Type="PredictathonModel.User" Role="User" Multiplicity="1" />
+          <End Type="PredictathonModel.MessageReaction" Role="MessageReaction" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="UserID" />
+            </Principal>
+            <Dependent Role="MessageReaction">
+              <PropertyRef Name="UserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="PredictionHistory">
+          <Key>
+            <PropertyRef Name="PredictionHistoryID" />
+          </Key>
+          <Property Name="PredictionHistoryID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PredictionID" Type="Guid" Nullable="false" />
+          <Property Name="HomeTeamGoals" Type="Int32" />
+          <Property Name="AwayTeamGoals" Type="Int32" />
+          <Property Name="PredictionDateTime" Type="DateTime" Nullable="false" Precision="3" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="PredictathonModelStoreContainer" CdmEntityContainer="PredictathonEntities">
+          <EntitySetMapping Name="HallOfFame"><EntityTypeMapping TypeName="PredictathonModel.HallOfFame"><MappingFragment StoreEntitySet="HallOfFame">
+            <ScalarProperty Name="ImageFilename" ColumnName="ImageFilename" />
+                <ScalarProperty Name="CompetitionName" ColumnName="CompetitionName" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="HallOfFameID" ColumnName="HallOfFameID" />
+            <ScalarProperty Name="Winner" ColumnName="Winner" />
+            <ScalarProperty Name="WinnerUserID" ColumnName="WinnerUserID" />
+            <ScalarProperty Name="SecondPlace" ColumnName="SecondPlace" />
+            <ScalarProperty Name="SecondPlaceUserID" ColumnName="SecondPlaceUserID" />
+            <ScalarProperty Name="ThirdPlace" ColumnName="ThirdPlace" />
+            <ScalarProperty Name="ThirdPlaceUserID" ColumnName="ThirdPlaceUserID" />
+            <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <EntitySetMapping Name="Matches"><EntityTypeMapping TypeName="PredictathonModel.Match"><MappingFragment StoreEntitySet="Match">
+            <ScalarProperty Name="Knockout" ColumnName="Knockout" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="AwayTeamTBC" ColumnName="AwayTeamTBC" />
+                <ScalarProperty Name="HomeTeamTBC" ColumnName="HomeTeamTBC" />
+                <ScalarProperty Name="NeutralGround" ColumnName="NeutralGround" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+            <ScalarProperty Name="MatchDateTime" ColumnName="MatchDateTime" />
+            <ScalarProperty Name="HomeTeamID" ColumnName="HomeTeamID" />
+            <ScalarProperty Name="AwayTeamID" ColumnName="AwayTeamID" />
+            <ScalarProperty Name="MatchPlayed" ColumnName="MatchPlayed" />
+            <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+            <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <EntitySetMapping Name="Predictions"><EntityTypeMapping TypeName="PredictathonModel.Prediction"><MappingFragment StoreEntitySet="Prediction">
+                <ScalarProperty Name="AutoUpdatedDueToLatePrediction" ColumnName="AutoUpdatedDueToLatePrediction" />
+                <ScalarProperty Name="Invalid" ColumnName="Invalid" />
+                <ScalarProperty Name="PredictionHistoryID" ColumnName="PredictionHistoryID" />
+                <ScalarProperty Name="GoalDifference" ColumnName="GoalDifference" />
+                <ScalarProperty Name="PredictionID" ColumnName="PredictionID" />
+            <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+            <ScalarProperty Name="UserID" ColumnName="UserID" />
+            <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+            <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+            <ScalarProperty Name="Score" ColumnName="Score" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <EntitySetMapping Name="Teams"><EntityTypeMapping TypeName="PredictathonModel.Team"><MappingFragment StoreEntitySet="Team">
+            <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="ImageName" ColumnName="ImageName" />
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+            <ScalarProperty Name="TeamName" ColumnName="TeamName" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <EntitySetMapping Name="Users"><EntityTypeMapping TypeName="PredictathonModel.User"><MappingFragment StoreEntitySet="User">
+                <ScalarProperty Name="CanViewMessageboard" ColumnName="CanViewMessageboard" />
+                <ScalarProperty Name="CanViewHiddenMessageThreads" ColumnName="CanViewHiddenMessageThreads" />
+                <ScalarProperty Name="EmailPredictionReminderDays" ColumnName="EmailPredictionReminderDays" />
+                <ScalarProperty Name="TotalMessageboardPosts" ColumnName="TotalMessageboardPosts" />
+                <ScalarProperty Name="LastViewedMessageboard" ColumnName="LastViewedMessageboard" />
+                <ScalarProperty Name="CompetitionAdministrator" ColumnName="CompetitionAdministrator" />
+                <ScalarProperty Name="FavouriteTeam" ColumnName="FavouriteTeam" />
+                <ScalarProperty Name="ImageUploaded" ColumnName="ImageUploaded" />
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserAdministrator" ColumnName="UserAdministrator" />
+                <ScalarProperty Name="MatchAdministrator" ColumnName="MatchAdministrator" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+            <ScalarProperty Name="Password" ColumnName="Password" />
+            <ScalarProperty Name="EmailAddress" ColumnName="EmailAddress" />
+            <ScalarProperty Name="Forenames" ColumnName="Forenames" />
+            <ScalarProperty Name="Surname" ColumnName="Surname" />
+            <ScalarProperty Name="Location" ColumnName="Location" />
+            <ScalarProperty Name="Caption" ColumnName="Caption" />
+            <ScalarProperty Name="ProfileText" ColumnName="ProfileText" />
+            <ScalarProperty Name="LastLoginDateTime" ColumnName="LastLoginDateTime" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <EntitySetMapping Name="Competitions">
+            <EntityTypeMapping TypeName="PredictathonModel.Competition">
+              <MappingFragment StoreEntitySet="Competition">
+                <ScalarProperty Name="AllowTwoPointers" ColumnName="AllowTwoPointers" />
+                <ScalarProperty Name="DefaultToNeutralGround" ColumnName="DefaultToNeutralGround" />
+                <ScalarProperty Name="ImageFilename" ColumnName="ImageFilename" />
+                <ScalarProperty Name="PrependNameWithThe" ColumnName="PrependNameWithThe" />
+                <ScalarProperty Name="PayPalPaymentAvailable" ColumnName="PayPalPaymentAvailable" />
+                <ScalarProperty Name="Information" ColumnName="Information" />
+                <ScalarProperty Name="EntranceFee" ColumnName="EntranceFee" />
+                <ScalarProperty Name="ShowInHallOfFame" ColumnName="ShowInHallOfFame" />
+                <ScalarProperty Name="RegistrationAvailableOnLoginPage" ColumnName="RegistrationAvailableOnLoginPage" />
+                <ScalarProperty Name="OpenForRegistration" ColumnName="OpenForRegistration" />
+                <ScalarProperty Name="DuplicateFixturesAllowed" ColumnName="DuplicateFixturesAllowed" />
+                <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="CompetitionName" ColumnName="CompetitionName" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserCompetitions">
+            <EntityTypeMapping TypeName="PredictathonModel.UserCompetition">
+              <MappingFragment StoreEntitySet="UserCompetition">
+                <ScalarProperty Name="LastEmailReminderSent" ColumnName="LastEmailReminderSent" />
+                <ScalarProperty Name="PaymentCreditID" ColumnName="PaymentCreditID" />
+                <ScalarProperty Name="IsDefaultCompetition" ColumnName="IsDefaultCompetition" />
+                <ScalarProperty Name="PaymentProvider" ColumnName="PaymentProvider" />
+                <ScalarProperty Name="AmountPaid" ColumnName="AmountPaid" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="UserCompetitionID" ColumnName="UserCompetitionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TeamCompetitions">
+            <EntityTypeMapping TypeName="PredictathonModel.TeamCompetition">
+              <MappingFragment StoreEntitySet="TeamCompetition">
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+                <ScalarProperty Name="TeamCompetitionID" ColumnName="TeamCompetitionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="MatchListGet" FunctionName="PredictathonModel.Store.MatchListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.MatchListGet_Result">
+                <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+                <ScalarProperty Name="MatchDateTime" ColumnName="MatchDateTime" />
+                <ScalarProperty Name="HomeTeam" ColumnName="HomeTeam" />
+                <ScalarProperty Name="HomeTeamID" ColumnName="HomeTeamID" />
+                <ScalarProperty Name="AwayTeam" ColumnName="AwayTeam" />
+                <ScalarProperty Name="AwayTeamID" ColumnName="AwayTeamID" />
+                <ScalarProperty Name="MatchPlayed" ColumnName="MatchPlayed" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="HomeTeamImage" ColumnName="HomeTeamImage" />
+                <ScalarProperty Name="AwayTeamImage" ColumnName="AwayTeamImage" />
+                <ScalarProperty Name="NeutralGround" ColumnName="NeutralGround" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="HomeTeamTBC" ColumnName="HomeTeamTBC" />
+                <ScalarProperty Name="AwayTeamTBC" ColumnName="AwayTeamTBC" />
+                <ScalarProperty Name="Knockout" ColumnName="Knockout" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="MatchPredictionScoreSet" FunctionName="PredictathonModel.Store.MatchPredictionScoreSet" />
+          <FunctionImportMapping FunctionImportName="LeagueTableGet" FunctionName="PredictathonModel.Store.LeagueTableGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.LeagueTableGet_Result">
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="Score" ColumnName="Score" />
+                <ScalarProperty Name="ThreePointers" ColumnName="ThreePointers" />
+                <ScalarProperty Name="TwoPointers" ColumnName="TwoPointers" />
+                <ScalarProperty Name="OnePointers" ColumnName="OnePointers" />
+                <ScalarProperty Name="NoPointers" ColumnName="NoPointers" />
+                <ScalarProperty Name="NoPredictions" ColumnName="NoPredictions" />
+                <ScalarProperty Name="LeaguePosition" ColumnName="LeaguePosition" />
+                <ScalarProperty Name="UserName" ColumnName="UserName" />
+                <ScalarProperty Name="AverageGoalDifference" ColumnName="AverageGoalDifference" />
+                <ScalarProperty Name="PreviousLeaguePosition" ColumnName="PreviousLeaguePosition" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="MatchResultListGet" FunctionName="PredictathonModel.Store.MatchResultListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.MatchResultListGet_Result">
+                <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+                <ScalarProperty Name="MatchDateTime" ColumnName="MatchDateTime" />
+                <ScalarProperty Name="HomeTeam" ColumnName="HomeTeam" />
+                <ScalarProperty Name="AwayTeam" ColumnName="AwayTeam" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="AveragePredictionScore" ColumnName="AveragePredictionScore" />
+                <ScalarProperty Name="YourPredictionScore" ColumnName="YourPredictionScore" />
+                <ScalarProperty Name="PredictionHomeTeamGoals" ColumnName="PredictionHomeTeamGoals" />
+                <ScalarProperty Name="PredictionAwayTeamGoals" ColumnName="PredictionAwayTeamGoals" />
+                <ScalarProperty Name="HomeTeamShortName" ColumnName="HomeTeamShortName" />
+                <ScalarProperty Name="AwayTeamShortName" ColumnName="AwayTeamShortName" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Knockout" ColumnName="Knockout" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="MatchPredictionListGet" FunctionName="PredictathonModel.Store.MatchPredictionListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.MatchPredictionListGet_Result">
+                <ScalarProperty Name="PredictionID" ColumnName="PredictionID" />
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="Score" ColumnName="Score" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <EntitySetMapping Name="PaymentCredits">
+            <EntityTypeMapping TypeName="PredictathonModel.PaymentCredit">
+              <MappingFragment StoreEntitySet="PaymentCredit">
+                <ScalarProperty Name="IssueDate" ColumnName="IssueDate" />
+                <ScalarProperty Name="IssuedByUserID" ColumnName="IssuedByUserID" />
+                <ScalarProperty Name="UsedByUserID" ColumnName="UsedByUserID" />
+                <ScalarProperty Name="CreditUsed" ColumnName="CreditUsed" />
+                <ScalarProperty Name="UniquePaymentCode" ColumnName="UniquePaymentCode" />
+                <ScalarProperty Name="ForCompetitionID" ColumnName="ForCompetitionID" />
+                <ScalarProperty Name="ExpectedUsername" ColumnName="ExpectedUsername" />
+                <ScalarProperty Name="PaymentCreditID" ColumnName="PaymentCreditID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Transactions">
+            <EntityTypeMapping TypeName="PredictathonModel.Transaction">
+              <MappingFragment StoreEntitySet="Transaction">
+                <ScalarProperty Name="Comments" ColumnName="Comments" />
+                <ScalarProperty Name="ContainedInvalidData" ColumnName="ContainedInvalidData" />
+                <ScalarProperty Name="ActualPaymentAmount" ColumnName="ActualPaymentAmount" />
+                <ScalarProperty Name="TransactionDateTime" ColumnName="TransactionDateTime" />
+                <ScalarProperty Name="PayPalTransactionID" ColumnName="PayPalTransactionID" />
+                <ScalarProperty Name="PayPalFee" ColumnName="PayPalFee" />
+                <ScalarProperty Name="UserCompetitionID" ColumnName="UserCompetitionID" />
+                <ScalarProperty Name="Failed" ColumnName="Failed" />
+                <ScalarProperty Name="TransactionStatus" ColumnName="TransactionStatus" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="Surname" ColumnName="Surname" />
+                <ScalarProperty Name="Forenames" ColumnName="Forenames" />
+                <ScalarProperty Name="EmailAddress" ColumnName="EmailAddress" />
+                <ScalarProperty Name="Password" ColumnName="Password" />
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="TransactionID" ColumnName="TransactionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="HallOfFameListGet" FunctionName="PredictathonModel.Store.HallOfFameListGet" />
+          <EntitySetMapping Name="Messages">
+            <EntityTypeMapping TypeName="PredictathonModel.Message">
+              <MappingFragment StoreEntitySet="Message">
+                <ScalarProperty Name="UserTotalMessageboardPosts" ColumnName="UserTotalMessageboardPosts" />
+                <ScalarProperty Name="HasLinkedImage" ColumnName="HasLinkedImage" />
+                <ScalarProperty Name="YouTubeVideoID" ColumnName="YouTubeVideoID" />
+                <ScalarProperty Name="MessageContent" ColumnName="MessageContent" />
+                <ScalarProperty Name="MessageDateTime" ColumnName="MessageDateTime" />
+                <ScalarProperty Name="PostedByUserID" ColumnName="PostedByUserID" />
+                <ScalarProperty Name="MessageThreadID" ColumnName="MessageThreadID" />
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MessageRatings">
+            <EntityTypeMapping TypeName="PredictathonModel.MessageRating">
+              <MappingFragment StoreEntitySet="MessageRating">
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="RatedByUserID" ColumnName="RatedByUserID" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="MessageRatingID" ColumnName="MessageRatingID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MessageThreads">
+            <EntityTypeMapping TypeName="PredictathonModel.MessageThread">
+              <MappingFragment StoreEntitySet="MessageThread">
+                <ScalarProperty Name="HiddenFromPublic" ColumnName="HiddenFromPublic" />
+                <ScalarProperty Name="StartedDateTime" ColumnName="StartedDateTime" />
+                <ScalarProperty Name="StartedByUserID" ColumnName="StartedByUserID" />
+                <ScalarProperty Name="ThreadSubject" ColumnName="ThreadSubject" />
+                <ScalarProperty Name="MessageThreadID" ColumnName="MessageThreadID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="MessageThreadMessageListGet" FunctionName="PredictathonModel.Store.MessageThreadMessageListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.MessageThreadMessageListGet_Result">
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="MessageContent" ColumnName="MessageContent" />
+                <ScalarProperty Name="MessageDateTime" ColumnName="MessageDateTime" />
+                <ScalarProperty Name="HasLinkedImage" ColumnName="HasLinkedImage" />
+                <ScalarProperty Name="YouTubeVideoID" ColumnName="YouTubeVideoID" />
+                <ScalarProperty Name="PostedByUserID" ColumnName="PostedByUserID" />
+                <ScalarProperty Name="PostedByUsername" ColumnName="PostedByUsername" />
+                <ScalarProperty Name="PostedByUserImageUploaded" ColumnName="PostedByUserImageUploaded" />
+                <ScalarProperty Name="PostedByUserTotalMessageboardPosts" ColumnName="PostedByUserTotalMessageboardPosts" />
+                <ScalarProperty Name="UserTotalMessageboardPosts" ColumnName="UserTotalMessageboardPosts" />
+                <ScalarProperty Name="MessageRatingID" ColumnName="MessageRatingID" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="AverageRating" ColumnName="AverageRating" />
+                <ScalarProperty Name="NumberOfRatings" ColumnName="NumberOfRatings" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="UserCompetitionRegistrationListGet" FunctionName="PredictathonModel.Store.UserCompetitionRegistrationListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.UserCompetitionRegistrationListGet_Result">
+                <ScalarProperty Name="UserCompetitionID" ColumnName="UserCompetitionID" />
+                <ScalarProperty Name="CompetitionID" ColumnName="CompetitionID" />
+                <ScalarProperty Name="CompetitionName" ColumnName="CompetitionName" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="EntranceFee" ColumnName="EntranceFee" />
+                <ScalarProperty Name="Registered" ColumnName="Registered" />
+                <ScalarProperty Name="ImageFilename" ColumnName="ImageFilename" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="UserMatchPredictionListGet" FunctionName="PredictathonModel.Store.UserMatchPredictionListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.UserMatchPredictionListGet_Result">
+                <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+                <ScalarProperty Name="PredictionID" ColumnName="PredictionID" />
+                <ScalarProperty Name="MatchDateTime" ColumnName="MatchDateTime" />
+                <ScalarProperty Name="HomeTeam" ColumnName="HomeTeam" />
+                <ScalarProperty Name="HomeTeamShortName" ColumnName="HomeTeamShortName" />
+                <ScalarProperty Name="HomeTeamImage" ColumnName="HomeTeamImage" />
+                <ScalarProperty Name="AwayTeam" ColumnName="AwayTeam" />
+                <ScalarProperty Name="AwayTeamShortName" ColumnName="AwayTeamShortName" />
+                <ScalarProperty Name="AwayTeamImage" ColumnName="AwayTeamImage" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="ActualHomeTeamGoals" ColumnName="ActualHomeTeamGoals" />
+                <ScalarProperty Name="ActualAwayTeamGoals" ColumnName="ActualAwayTeamGoals" />
+                <ScalarProperty Name="Score" ColumnName="Score" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Knockout" ColumnName="Knockout" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="TeamCompetitionListGet" FunctionName="PredictathonModel.Store.TeamCompetitionListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.TeamCompetitionListGet_Result">
+                <ScalarProperty Name="TeamCompetitionID" ColumnName="TeamCompetitionID" />
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+                <ScalarProperty Name="TeamName" ColumnName="TeamName" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="UserOverduePredictionsGet" FunctionName="PredictathonModel.Store.UserOverduePredictionsGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.UserOverduePredictionsGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="UserCompetitionID" ColumnName="UserCompetitionID" />
+                <ScalarProperty Name="EmailAddress" ColumnName="EmailAddress" />
+                <ScalarProperty Name="CompetitionName" ColumnName="CompetitionName" />
+                <ScalarProperty Name="NextPredictionDue" ColumnName="NextPredictionDue" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="UserCompetitionLeagueHistorySet" FunctionName="PredictathonModel.Store.UserCompetitionLeagueHistorySet" />
+          <FunctionImportMapping FunctionImportName="UserCompetitionLeagueHistoryListGet" FunctionName="PredictathonModel.Store.UserCompetitionLeagueHistoryListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.UserCompetitionLeagueHistoryListGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Score" ColumnName="Score" />
+                <ScalarProperty Name="LeaguePosition" ColumnName="LeaguePosition" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="AverageScoreByTeamListGet" FunctionName="PredictathonModel.Store.AverageScoreByTeamListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.AverageScoreByTeamListGet_Result">
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+                <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="TeamName" ColumnName="TeamName" />
+                <ScalarProperty Name="AverageScore" ColumnName="AverageScore" />
+                <ScalarProperty Name="TeamImage" ColumnName="TeamImage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="MatchPredictionAverageBiggestDifferencesGet" FunctionName="PredictathonModel.Store.MatchPredictionAverageBiggestDifferencesGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.MatchPredictionAverageBiggestDifferencesGet_Result">
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="MatchID" ColumnName="MatchID" />
+                <ScalarProperty Name="MatchDateTime" ColumnName="MatchDateTime" />
+                <ScalarProperty Name="HomeTeam" ColumnName="HomeTeam" />
+                <ScalarProperty Name="HomeTeamShortName" ColumnName="HomeTeamShortName" />
+                <ScalarProperty Name="AwayTeam" ColumnName="AwayTeam" />
+                <ScalarProperty Name="AwayTeamShortName" ColumnName="AwayTeamShortName" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="AveragePredictionScore" ColumnName="AveragePredictionScore" />
+                <ScalarProperty Name="PredictionHomeTeamGoals" ColumnName="PredictionHomeTeamGoals" />
+                <ScalarProperty Name="PredictionAwayTeamGoals" ColumnName="PredictionAwayTeamGoals" />
+                <ScalarProperty Name="PredictionScore" ColumnName="PredictionScore" />
+                <ScalarProperty Name="ScoreDifference" ColumnName="ScoreDifference" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="CompetitionUserLeagueTableGet" FunctionName="PredictathonModel.Store.CompetitionUserLeagueTableGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.CompetitionUserLeagueTableGet_Result">
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+                <ScalarProperty Name="Position" ColumnName="Position" />
+                <ScalarProperty Name="Played" ColumnName="Played" />
+                <ScalarProperty Name="Won" ColumnName="Won" />
+                <ScalarProperty Name="Lost" ColumnName="Lost" />
+                <ScalarProperty Name="Drawn" ColumnName="Drawn" />
+                <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="Points" ColumnName="Points" />
+                <ScalarProperty Name="GoalsFor" ColumnName="GoalsFor" />
+                <ScalarProperty Name="GoalsAgainst" ColumnName="GoalsAgainst" />
+                <ScalarProperty Name="GoalDifference" ColumnName="GoalDifference" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="CompetitionRealLeagueTableGet" FunctionName="PredictathonModel.Store.CompetitionRealLeagueTableGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.CompetitionRealLeagueTableGet_Result">
+                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+                <ScalarProperty Name="Position" ColumnName="Position" />
+                <ScalarProperty Name="Played" ColumnName="Played" />
+                <ScalarProperty Name="Won" ColumnName="Won" />
+                <ScalarProperty Name="Lost" ColumnName="Lost" />
+                <ScalarProperty Name="Drawn" ColumnName="Drawn" />
+                <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="GoalsFor" ColumnName="GoalsFor" />
+                <ScalarProperty Name="GoalsAgainst" ColumnName="GoalsAgainst" />
+                <ScalarProperty Name="Points" ColumnName="Points" />
+                <ScalarProperty Name="GoalDifference" ColumnName="GoalDifference" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Statistics_CompetitionWinnerListGet" FunctionName="PredictathonModel.Store.Statistics_CompetitionWinnerListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.Statistics_CompetitionWinnerListGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="Wins" ColumnName="Wins" />
+                <ScalarProperty Name="SecondPlaces" ColumnName="SecondPlaces" />
+                <ScalarProperty Name="ThirdPlaces" ColumnName="ThirdPlaces" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Statistics_HighestAllTimeScoreListGet" FunctionName="PredictathonModel.Store.Statistics_HighestAllTimeScoreListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.Statistics_HighestAllTimeScoreListGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="TotalScore" ColumnName="TotalScore" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Statistics_HighestAverageScorePerPredictionsGet" FunctionName="PredictathonModel.Store.Statistics_HighestAverageScorePerPredictionsGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.Statistics_HighestAverageScorePerPredictionsGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="AverageScore" ColumnName="AverageScore" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Statistics_HighestPercentageCorrectPredictionsGet" FunctionName="PredictathonModel.Store.Statistics_HighestPercentageCorrectPredictionsGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.Statistics_HighestPercentageCorrectPredictionsGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="CorrectPredictionPercentage" ColumnName="CorrectPredictionPercentage" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="Statistics_MostMatchesPredictedUserListGet" FunctionName="PredictathonModel.Store.Statistics_MostMatchesPredictedUserListGet">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="PredictathonModel.Statistics_MostMatchesPredictedUserListGet_Result">
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="TotalPredictions" ColumnName="TotalPredictions" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <EntitySetMapping Name="MessageReactions">
+            <EntityTypeMapping TypeName="PredictathonModel.MessageReaction">
+              <MappingFragment StoreEntitySet="MessageReaction">
+                <ScalarProperty Name="CreationDate" ColumnName="CreationDate" />
+                <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
+                <ScalarProperty Name="ReactionName" ColumnName="ReactionName" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="MessageReactionID" ColumnName="MessageReactionID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PredictionHistories">
+            <EntityTypeMapping TypeName="PredictathonModel.PredictionHistory">
+              <MappingFragment StoreEntitySet="PredictionHistory">
+                <ScalarProperty Name="PredictionDateTime" ColumnName="PredictionDateTime" />
+                <ScalarProperty Name="AwayTeamGoals" ColumnName="AwayTeamGoals" />
+                <ScalarProperty Name="HomeTeamGoals" ColumnName="HomeTeamGoals" />
+                <ScalarProperty Name="PredictionID" ColumnName="PredictionID" />
+                <ScalarProperty Name="PredictionHistoryID" ColumnName="PredictionHistoryID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer>
+    <edmx:Connection>
+      <edmx:DesignerInfoPropertySet>
+        <edmx:DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </edmx:DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <edmx:DesignerInfoPropertySet>
+        <edmx:DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <edmx:DesignerProperty Name="EnablePluralization" Value="True" />
+        <edmx:DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <edmx:DesignerProperty Name="UseLegacyProvider" Value="True" />
+        <edmx:DesignerProperty Name="CodeGenerationStrategy" Value="Default" />
+      </edmx:DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <edmx:Diagram Name="Predictathon" ZoomLevel="59">
+        <edmx:EntityTypeShape EntityType="PredictathonModel.HallOfFame" Width="1.5" PointX="3" PointY="2.75" Height="3.7109993489583317" IsExpanded="true" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Match" Width="1.5" PointX="5" PointY="7.75" Height="3.7109993489583335" IsExpanded="true" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Prediction" Width="1.5" PointX="6" PointY="3.25" Height="2.5571907552083335" IsExpanded="true" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Team" Width="1.5" PointX="2.25" PointY="8.125" Height="2.3648893229166656" IsExpanded="true" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.User" Width="1.5" PointX="0.5" PointY="2.875" Height="5.057109375" IsExpanded="true" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_HallOfFame_User" ManuallyRouted="false">
+          <edmx:ConnectorPoint PointX="2" PointY="4.7160750325520828" />
+          <edmx:ConnectorPoint PointX="2.5416666666666665" PointY="4.7160750325520819" />
+          <edmx:ConnectorPoint PointX="2.7708333333333335" PointY="4.7160750325520828" />
+          <edmx:ConnectorPoint PointX="3" PointY="4.7160750325520828" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_HallOfFame_User1" ManuallyRouted="false">
+          <edmx:ConnectorPoint PointX="2" PointY="3.7330375162760414" />
+          <edmx:ConnectorPoint PointX="2.5416666666666665" PointY="3.733037516276041" />
+          <edmx:ConnectorPoint PointX="2.7083333333333335" PointY="3.7330375162760414" />
+          <edmx:ConnectorPoint PointX="3" PointY="3.7330375162760414" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_HallOfFame_User2" ManuallyRouted="false">
+          <edmx:ConnectorPoint PointX="2" PointY="5.6104039780997681" />
+          <edmx:ConnectorPoint PointX="2.5416666666666665" PointY="5.6104039780997672" />
+          <edmx:ConnectorPoint PointX="2.7708333333333335" PointY="5.6104039780997681" />
+          <edmx:ConnectorPoint PointX="3" PointY="5.6104039780997681" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Prediction_Match" ManuallyRouted="false">
+          <edmx:ConnectorPoint PointX="6.25" PointY="7.75" />
+          <edmx:ConnectorPoint PointX="6.25" PointY="5.9994921875" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Prediction_User" ManuallyRouted="false">
+          <edmx:ConnectorPoint PointX="2" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="3.9166666666666665" PointY="7.326650390624998" />
+          <edmx:ConnectorPoint PointX="4.083333333333333" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="7.326650390624998" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="7.326650390624998" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="7.326650390624998" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="7.03125" PointY="7.3266503906249989" />
+          <edmx:ConnectorPoint PointX="7.03125" PointY="5.9994921875" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Competition" Width="1.5" PointX="8.375" PointY="2.875" Height="3.7109993489583317" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.UserCompetition" Width="1.5" PointX="8" PointY="7.125" Height="1.9802864583333317" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_HallOfFame_Competition">
+          <edmx:ConnectorPoint PointX="8.375" PointY="6.357646484375" />
+          <edmx:ConnectorPoint PointX="7.958333333333333" PointY="6.3576464843749987" />
+          <edmx:ConnectorPoint PointX="7.791666666666667" PointY="6.357646484375" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.3576464843749987" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.357646484375" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.3576464843749987" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.357646484375" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.3576464843749987" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.357646484375" />
+          <edmx:ConnectorPoint PointX="4.5" PointY="6.357646484375" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Match_Competition">
+          <edmx:ConnectorPoint PointX="8.375" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="7.958333333333333" PointY="6.5992261328124995" />
+          <edmx:ConnectorPoint PointX="7.791666666666667" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.5992261328124995" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.5992261328124995" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.5992261328124995" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="5.46875" PointY="6.5992261328125" />
+          <edmx:ConnectorPoint PointX="5.46875" PointY="7.75" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_UserCompetition_Competition">
+          <edmx:ConnectorPoint PointX="9.875" PointY="5.2112532552083328" />
+          <edmx:ConnectorPoint PointX="10.125" PointY="5.2112532552083328" />
+          <edmx:ConnectorPoint PointX="10.125" PointY="8.5958968098958337" />
+          <edmx:ConnectorPoint PointX="9.5" PointY="8.5958968098958337" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_UserCompetition_User">
+          <edmx:ConnectorPoint PointX="2" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="3.9166666666666665" PointY="7.5695751953124981" />
+          <edmx:ConnectorPoint PointX="4.083333333333333" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="7.5695751953124981" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="7.5695751953124981" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="7.5695751953124981" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="7.479166666666667" PointY="7.5695751953124981" />
+          <edmx:ConnectorPoint PointX="7.833333333333333" PointY="7.569575195312499" />
+          <edmx:ConnectorPoint PointX="8" PointY="7.569575195312499" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.TeamCompetition" Width="1.5" PointX="3" PointY="12" Height="1.9802864583333335" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_TeamCompetition_Team">
+          <edmx:ConnectorPoint PointX="3.375" PointY="10.489889322916666" />
+          <edmx:ConnectorPoint PointX="3.375" PointY="12" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.PaymentCredit" Width="1.5" PointX="6" PointY="11.375" Height="2.9417936197916674" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_PaymentCredit_Competition">
+          <edmx:ConnectorPoint PointX="8.375" PointY="5.0282150527343745" />
+          <edmx:ConnectorPoint PointX="7.958333333333333" PointY="5.0282150527343736" />
+          <edmx:ConnectorPoint PointX="7.791666666666667" PointY="5.0282150527343745" />
+          <edmx:ConnectorPoint PointX="7.75" PointY="5.0282150527343745" />
+          <edmx:ConnectorPoint PointX="7.75" PointY="6.2494921875" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.2494921874999987" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.2494921875" />
+          <edmx:ConnectorPoint PointX="6.796875" PointY="6.2494921875" />
+          <edmx:ConnectorPoint PointX="6.796875" PointY="11.375" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_PaymentCredit_IssuedByUser">
+          <edmx:ConnectorPoint PointX="1.21878314245224" PointY="9.4705208333333335" />
+          <edmx:ConnectorPoint PointX="1.21878314245224" PointY="14.159363606770832" />
+          <edmx:ConnectorPoint PointX="1.5573107378927868" PointY="14.159363606770832" />
+          <edmx:ConnectorPoint PointX="1.7239774045594534" PointY="14.159363606770832" />
+          <edmx:ConnectorPoint PointX="6" PointY="14.159363606770832" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_PaymentCredit_UsedByUser">
+          <edmx:ConnectorPoint PointX="1.64064407122612" PointY="9.4705208333333335" />
+          <edmx:ConnectorPoint PointX="1.64064407122612" PointY="14.365481829427083" />
+          <edmx:ConnectorPoint PointX="6" PointY="14.365481829427083" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Transaction" Width="1.5" PointX="10.75" PointY="5.25" Height="4.2879036458333335" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Transaction_Competition">
+          <edmx:ConnectorPoint PointX="9.875" PointY="6.3987532552083328" />
+          <edmx:ConnectorPoint PointX="10.041666666666666" PointY="6.3987532552083319" />
+          <edmx:ConnectorPoint PointX="10.208333333333334" PointY="6.3987532552083328" />
+          <edmx:ConnectorPoint PointX="10.75" PointY="6.3987532552083328" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Transaction_User">
+          <edmx:ConnectorPoint PointX="2" PointY="6.2709414884769377" />
+          <edmx:ConnectorPoint PointX="2.4791666666666665" PointY="6.2709414884769368" />
+          <edmx:ConnectorPoint PointX="2.7708333333333335" PointY="6.2709414884769377" />
+          <edmx:ConnectorPoint PointX="2.875" PointY="6.2709414884769377" />
+          <edmx:ConnectorPoint PointX="2.875" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="3.9166666666666665" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="4.083333333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="7.479166666666667" PointY="7.1533007812499987" />
+          <edmx:ConnectorPoint PointX="7.708333333333333" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="7.75" PointY="7.15330078125" />
+          <edmx:ConnectorPoint PointX="7.75" PointY="10.557109375" />
+          <edmx:ConnectorPoint PointX="11.5" PointY="10.557109375" />
+          <edmx:ConnectorPoint PointX="11.5" PointY="10.307109375" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Transaction_UserCompetition1">
+          <edmx:ConnectorPoint PointX="9.5" PointY="8.287796737656496" />
+          <edmx:ConnectorPoint PointX="10.041666666666666" PointY="8.287796737656496" />
+          <edmx:ConnectorPoint PointX="10.208333333333334" PointY="8.287796737656496" />
+          <edmx:ConnectorPoint PointX="10.75" PointY="8.287796737656496" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.Message" Width="1.5" PointX="9.25" PointY="10.875" Height="2.7494921875000031" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.MessageRating" Width="1.5" PointX="11.25" PointY="11" Height="1.7879850260416745" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.MessageThread" Width="1.5" PointX="15.25" PointY="11" Height="2.172587890624996" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_TeamCompetition_Competition">
+          <edmx:ConnectorPoint PointX="8.375" PointY="3.698783621093749" />
+          <edmx:ConnectorPoint PointX="7.875" PointY="3.698783621093749" />
+          <edmx:ConnectorPoint PointX="7.875" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="7.645833333333333" PointY="6.9033007812499987" />
+          <edmx:ConnectorPoint PointX="7.479166666666667" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.9033007812499987" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.9033007812499987" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.9033007812499987" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="6.9033007812499987" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="4" PointY="6.90330078125" />
+          <edmx:ConnectorPoint PointX="4" PointY="11.5" />
+          <edmx:ConnectorPoint PointX="3.968752" PointY="11.5" />
+          <edmx:ConnectorPoint PointX="3.968752" PointY="12" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Message_MessageThread">
+          <edmx:ConnectorPoint PointX="13.875" PointY="13.328837890624998" />
+          <edmx:ConnectorPoint PointX="10.75" PointY="13.328837890624998" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Message_User">
+          <edmx:ConnectorPoint PointX="2" PointY="5.2039898210272915" />
+          <edmx:ConnectorPoint PointX="2.4791666666666665" PointY="5.2039898210272906" />
+          <edmx:ConnectorPoint PointX="2.6458333333333335" PointY="5.2039898210272915" />
+          <edmx:ConnectorPoint PointX="2.6875" PointY="5.2039898210272915" />
+          <edmx:ConnectorPoint PointX="2.6875" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="2.7916666666666665" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="2.9583333333333335" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="7.479166666666667" PointY="6.9658007812499987" />
+          <edmx:ConnectorPoint PointX="7.645833333333333" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="7.6875" PointY="6.96580078125" />
+          <edmx:ConnectorPoint PointX="7.6875" PointY="10.524720052083332" />
+          <edmx:ConnectorPoint PointX="10" PointY="10.524720052083332" />
+          <edmx:ConnectorPoint PointX="10" PointY="10.875" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_MessageRating_User">
+          <edmx:ConnectorPoint PointX="2" PointY="4.0230489518257668" />
+          <edmx:ConnectorPoint PointX="2.625" PointY="4.0230489518257668" />
+          <edmx:ConnectorPoint PointX="2.625" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="2.7916666666666665" PointY="6.8408007812499987" />
+          <edmx:ConnectorPoint PointX="2.9583333333333335" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="6.8408007812499987" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.8408007812499987" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.8408007812499987" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.8408007812499987" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="7.625" PointY="6.84080078125" />
+          <edmx:ConnectorPoint PointX="7.625" PointY="10.619609375" />
+          <edmx:ConnectorPoint PointX="9.9166666666666661" PointY="10.619609375" />
+          <edmx:ConnectorPoint PointX="10.083333333333334" PointY="10.619609375" />
+          <edmx:ConnectorPoint PointX="12.25" PointY="10.619609375" />
+          <edmx:ConnectorPoint PointX="12.25" PointY="11" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_MessageThread_User">
+          <edmx:ConnectorPoint PointX="2" PointY="4.3649756990882382" />
+          <edmx:ConnectorPoint PointX="2.5625" PointY="4.3649756990882382" />
+          <edmx:ConnectorPoint PointX="2.5625" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="2.6041666666666665" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="2.7708333333333335" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="2.7916666666666665" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="2.9583333333333335" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="5.385416666666667" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="5.552083333333333" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="6.166666666666667" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="6.333333333333333" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="6.713541666666667" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="6.880208333333333" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="6.947916666666667" PointY="6.7783007812499987" />
+          <edmx:ConnectorPoint PointX="7.114583333333333" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="7.5625" PointY="6.77830078125" />
+          <edmx:ConnectorPoint PointX="7.5625" PointY="10.572734375" />
+          <edmx:ConnectorPoint PointX="14.625" PointY="10.572734375" />
+          <edmx:ConnectorPoint PointX="14.625" PointY="11.25" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_MessageRating_Message">
+          <edmx:ConnectorPoint PointX="10.75" PointY="12.0862939453125" />
+          <edmx:ConnectorPoint PointX="11.5" PointY="12.0862939453125" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Match_AwayTeam">
+          <edmx:ConnectorPoint PointX="3.75" PointY="9.3074446614583337" />
+          <edmx:ConnectorPoint PointX="3.9166666666666665" PointY="9.3074446614583337" />
+          <edmx:ConnectorPoint PointX="4.083333333333333" PointY="9.3074446614583337" />
+          <edmx:ConnectorPoint PointX="5" PointY="9.3074446614583337" />
+        </edmx:AssociationConnector>
+        <edmx:AssociationConnector Association="PredictathonModel.FK_Match_HomeTeam">
+          <edmx:ConnectorPoint PointX="3.75" PointY="8.6537223307291669" />
+          <edmx:ConnectorPoint PointX="3.9166666666666665" PointY="8.6537223307291669" />
+          <edmx:ConnectorPoint PointX="4.083333333333333" PointY="8.6537223307291669" />
+          <edmx:ConnectorPoint PointX="5" PointY="8.6537223307291669" />
+        </edmx:AssociationConnector>
+        <edmx:EntityTypeShape EntityType="PredictathonModel.MessageReaction" Width="1.5" PointX="13.25" PointY="11" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_MessageReaction_Message" />
+        <edmx:AssociationConnector Association="PredictathonModel.FK_MessageReaction_User" />
+        <edmx:EntityTypeShape EntityType="PredictathonModel.PredictionHistory" Width="1.5" PointX="10.375" PointY="0.75" />
+      </edmx:Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

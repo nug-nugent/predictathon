@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<%@ Master Language="VB" AutoEventWireup="false" CodeBehind="Main.master.vb" Inherits="Predictathon.Master.Main" %>
+<%@ Register Src="~/UserControls/Common/Header.ascx" TagName="Header" TagPrefix="uc1" %>
+<%@ Register Src="~/UserControls/Common/Footer.ascx" TagName="Footer" TagPrefix="uc1" %>
+<%@ Register Src="~/UserControls/Common/Navigation.ascx" TagName="Navigation" TagPrefix="uc1" %>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title id="Title1" runat="server">Predictathon</title>
+    <link id="lnkFavicon1" runat="server" rel="shortcut icon" href="~/images/favicon.ico" type="image/x-icon" />
+    <link id="lnkFavicon2" runat="server" rel="icon" href="~/images/favicon.ico" type="image/ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <asp:ScriptManager ID="ScriptManager1" runat="server">
+            <Scripts>
+                <asp:ScriptReference Path="~/Scripts/CommonFunctions.js" ScriptMode="Release" />
+                <asp:ScriptReference Path="~/Scripts/jquery.js" ScriptMode="Release" />
+                <asp:ScriptReference Path="~/Scripts/jquery-ui.min.js" ScriptMode="Release" />
+                <asp:ScriptReference Path="~/Scripts/jquery.plugin.min.js" ScriptMode="Release" />
+                <asp:ScriptReference Path="~/Scripts/jquery.timeentry.min.js" ScriptMode="Release" />
+                <asp:ScriptReference Path="~/Scripts/jquery.timeago.js" ScriptMode="Release" />
+            </Scripts>
+        </asp:ScriptManager>
+        <div style="width: 100%">
+            <uc1:Header ID="Header1" runat="server" />
+            <uc1:Navigation ID="Navigation1" runat="server" />       
+        </div>
+        <div class="ContentPane">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+        </div>
+        <div id="divFooter" runat="server" class="Footer">
+            <uc1:Footer ID="Footer1" runat="server" />
+        </div>
+        <asp:HiddenField ID="hdnCurrentServerDateTime" runat="server" />
+    </form>
+</body>
+</html>

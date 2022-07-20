@@ -1,0 +1,921 @@
+﻿Body
+{
+	font-size: 0.8em;
+	font-family: 'Open Sans', sans-serif, Arial;
+	background-image: url(../../Images/Branding/FootballBackground.jpg);
+	background-repeat: repeat;
+	margin-left: 0px;
+	margin-right: 0px;
+	margin-top: 0px;
+}
+
+.clearfix::after
+{
+	content: '';
+	display: table;
+	clear: both;
+}
+
+h1
+{
+	font-weight: bold;
+	font-size: large;
+	margin: 2px 2px 2px 0px;
+}
+
+h2
+{
+	color: #888;
+	font-size: medium;
+	margin: 2px 2px 2px 0px;
+	padding: 0px;
+}
+
+h3
+{
+	font-weight: bold;
+	font-size: medium;
+	margin: 2px 2px 2px 0px;
+}
+
+/* MASTER PAGE LAYOUT */
+.Header
+{
+	width: 484px;
+	height: 84px;
+	background: url(../../Images/Branding/Predictathon_HeaderStart.gif);
+	background-repeat: no-repeat;
+	background-position: left;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+.HeaderStart
+{
+	width: 20px;
+}
+
+.HeaderRepeat
+{
+	height: 84px;
+	background-image: url(../../Images/Branding/Predictathon_HeaderEnd.gif);
+	background-repeat: repeat-x;
+	overflow: hidden;
+	color: White;
+	font-size: x-large;
+	text-decoration: none;
+	font-weight: bold;
+	text-align: right;
+}
+
+	.HeaderRepeat a
+	{
+		text-decoration: none;
+		color: White;
+	}
+
+.ContentPane
+{
+	text-align: left;
+	margin-top: 0px;
+	padding: 2px;
+}
+
+.Footer
+{
+	text-align: center;
+	padding: 5px;
+	font-size: x-small;
+	color: #CCC;
+}
+
+/* // END OF MASTER PAGE LAYOUT // */
+
+/* OTHER LAYOUT AREAS */
+
+.LeftPane
+{
+	width: 500px;
+	float: left;
+}
+
+.RightPane
+{
+	margin-left: 510px;
+}
+
+/* / END OF OTHER LAYOUT AREAS */
+
+/* GRIDVIEW */
+
+.GridView
+{
+	width: 100%;
+	background-color: #FFFFFF;
+	margin: 0px;
+	border: solid 1px #5555AA;
+	border-collapse: collapse;
+	opacity: 0.8;
+	filter: alpha(opacity=80); /* For IE8 and earlier */
+}
+
+	.GridView td
+	{
+		padding: 2px;
+		border: 1px solid #226622;
+		color: #111111;
+	}
+
+.NoTransparency
+{
+	opacity: 1.0;
+	filter: none; /* For IE8 and earlier */
+}
+
+.NoBorder td, .NoBorder th
+{
+	border: 0px none white !important;
+}
+
+.GridView th
+{
+	padding: 4px 2px;
+	color: #FFFFFF;
+	border-left: solid 1px #0000FF;
+	background-image: url(../../Images/Branding/GridHeader.gif);
+	background-repeat: repeat;
+	font-size: 0.9em;
+}
+
+.GridView .GridViewRow
+{
+	background: #BBCCEE;
+}
+
+.GridView .GridViewRowAlt
+{
+	background: #CCDDFF;
+}
+
+.GridView .GridViewRow .GridViewRowAlt table
+{
+	margin: 5px 0;
+}
+
+.GridViewEmptyDataRow
+{
+	background-color: transparent;
+	text-align: center;
+}
+
+.GridViewRowHighlight
+{
+	background-color: #01CC2C;
+}
+
+.GridViewRowHover
+{
+	background-color: #00AAFF;
+	cursor: pointer;
+}
+
+.GridView .GridViewRow .GridViewRowAlt td
+{
+	border-width: 0;
+	padding: 0 6px;
+	border-left: 1px solid #000000;
+	font-weight: bold;
+	color: #FFFFFF;
+	line-height: 12px;
+}
+
+.GridView .GridViewRow .GridViewRowAlt a
+{
+	color: #222;
+	text-decoration: none;
+}
+
+	.GridView .GridViewRow .GridViewRowAlt a:hover
+	{
+		color: #000;
+		text-decoration: none;
+	}
+
+/* // END OF GRIDVIEW // */
+
+/* USER CONTROLS */
+
+.LoginInformation
+{
+	font-size: small;
+	text-align: right;
+	overflow: hidden;
+}
+
+/* // END OF USER CONTROLS // */
+
+/* NAVIGATION */
+#nav
+{
+	font-weight: 400;
+}
+
+	#nav ul
+	{
+		margin: 0;
+		padding: 0;
+	}
+
+	#nav > a
+	{
+		display: none;
+	}
+
+	#nav li
+	{
+		background: #3271FF; /* browsers with no gradient support */
+		background: -webkit-linear-gradient(top,#3271ff,#2261ef); /*Safari 5.1-6*/
+		background: -o-linear-gradient(top,#3271ff,#2261ef); /*Opera 11.1-12*/
+		background: -moz-linear-gradient(top,#3271ff,#2261ef); /*Fx 3.6-15*/
+		background: linear-gradient(to bottom, #3271ff, #2261ef); /*Standard*/
+		position: relative;
+		list-style: none;
+		z-index: 2000;
+	}
+
+		#nav li:hover
+		{
+			background: #038701; /* browsers with no gradient support */
+			background: -webkit-linear-gradient(top,#038701,#00fc4a); /*Safari 5.1-6*/
+			background: -o-linear-gradient(top,#038701,#00fc4a); /*Opera 11.1-12*/
+			background: -moz-linear-gradient(top,#038701,#00fc4a); /*Fx 3.6-15*/
+			background: linear-gradient(to bottom, #038701, #00fc4a); /*Standard*/
+		}
+
+		#nav li a
+		{
+			color: #FFF;
+			display: block;
+			text-decoration: none;
+		}
+
+			#nav li a:active
+			{
+				background-color: #002 !important;
+			}
+
+	/* first level */
+
+	#nav > ul > li
+	{
+		padding: 0;
+		margin: 0;
+		width: 20%;
+		height: 100%;
+		float: left;
+	}
+
+		#nav > ul > li > a
+		{
+			height: 100%;
+			font-size: 1.25em;
+			line-height: 2em;
+			text-align: center;
+		}
+
+		#nav > ul > li:not( :last-child ) > a
+		{
+			border-right: 1px solid #1251DF;
+		}
+
+	/* second level */
+
+	#nav li ul
+	{
+		display: none;
+		position: absolute;
+		top: 100%;
+	}
+
+	#nav li:hover ul
+	{
+		display: block;
+		left: 0;
+		right: 0;
+	}
+
+	#nav li:not( :first-child ):hover ul
+	{
+		left: -1px;
+	}
+
+	#nav li ul a
+	{
+		font-size: 1.25em;
+		border-top: 1px solid #1251DF;
+		padding: 0.75em;
+	}
+/* // END OF NAVIGATION // */
+
+/* MOBILE-FRIENDLY LAYOUTS */
+@media handheld and (orientation: portrait), screen and ( max-width: 800px )
+{
+	.Header:not(.HeaderLogin)
+	{
+		width: 50px;
+		background: url(../../Images/Branding/Predictathon_HeaderStartMobile.gif);
+	}
+
+	.HeaderLogin
+	{
+		width: 304px;
+		background: url(../../Images/Branding/Predictathon_HeaderStartMobileLogin.gif);
+		/*background: url(../../Images/Branding/Predictathon_HeaderEnd.gif);*/
+	}
+
+	.LeftPane
+	{
+		width: initial;
+		float: initial;
+	}
+
+	.RightPane
+	{
+		margin-left: initial;
+	}
+}
+
+@media handheld and (orientation: portrait), screen and ( max-width: 600px )
+{
+	.HeaderStart
+	{
+		width: 70px;
+	}
+
+	#nav > a
+	{
+		width: 50px;
+		height: 50px;
+		text-align: left;
+		text-indent: -9999px;
+		background-color: #1251DF;
+		position: absolute;
+		left: 10px;
+		top: 18px;
+	}
+
+		#nav > a:before, #nav > a:after
+		{
+			position: absolute;
+			border: 2px solid #FFF;
+			top: 35%;
+			left: 25%;
+			right: 25%;
+			content: '';
+		}
+
+		#nav > a:after
+		{
+			top: 60%;
+		}
+
+	#nav:not( :target ) > a:first-of-type,
+	#nav:target > a:last-of-type
+	{
+		display: block;
+	}
+
+	/* first level */
+
+	#nav > ul
+	{
+		height: auto;
+		display: none;
+		position: absolute;
+		left: 0;
+		right: 0;
+	}
+
+	#nav:target > ul
+	{
+		display: block;
+	}
+
+	#nav > ul > li
+	{
+		width: 100%;
+		float: none;
+	}
+
+		#nav > ul > li > a
+		{
+			height: auto;
+			text-align: left;
+			padding: 0 0.833em;
+		}
+
+		#nav > ul > li:not( :last-child ) > a
+		{
+			border-right: none;
+			border-bottom: 1px solid #1251DF;
+		}
+
+	/* second level */
+
+	#nav li ul
+	{
+		position: static;
+		padding: 1.25em;
+		padding-top: 0;
+	}
+}
+
+@media handheld and (orientation: portrait), screen and ( max-width: 420px )
+{
+	.HeaderHome
+	{
+		display: none;
+	}
+
+	.nonEssentialInfo
+	{
+		display: none;
+	}
+}
+/* // END OF MOBILE-FRIENDLY LAYOUTS // */
+
+
+.PopupWindow
+{
+	display: none;
+	position: absolute;
+	border: 2px outset #22CF44;
+	z-index: 1001;
+}
+
+.Close
+{
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
+	background-color: transparent;
+	z-index: 2000;
+	background-image: url(../../Images/Common/Close.gif);
+	background-repeat: no-repeat;
+}
+
+.Overlay
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1000;
+	opacity: 0.4;
+	filter: alpha(opacity=40); /* For IE8 and earlier */
+	width: 100%;
+	height: 100%;
+	color: white;
+	background-color: Black;
+}
+
+.PagerButton {
+	cursor: pointer;
+	padding: 0px 4px;
+}
+
+/* MESSAGEBOARD-SPECIFIC */
+
+.ThreadTitle
+{
+	font-size: 18px;
+	text-align: left;
+	font-weight: bold;
+	color: #0000BC;
+	margin-bottom: 2px;
+}
+
+.ThreadMessage {
+	position: relative;
+}
+
+.ThreadMessageProfileImage {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.ThreadMessageProfileImage img {
+	width: 117px;
+	height: 94px;
+}
+
+.ThreadMessageHeader {
+	margin-left: 122px;
+	overflow: auto;
+	background-color: #E5E5F5;
+	padding: 5px 5px 0px 5px;
+}
+
+.ThreadMessageHeader, .ThreadMessageFooter {
+	color: #777777;
+	border-bottom: 1px solid #BCBCEC;
+}
+
+.ThreadMessagePostedBy, .ThreadMessagePostedWhen {
+	padding-right: 5px;
+	float: left;
+	line-height: 26px;
+	height: 31px;
+}
+
+.ThreadMessagePostedBy > a {
+	font-weight: bold;
+}
+
+.ThreadMessageAddReaction {
+	float: right;
+	cursor: pointer;
+	background-image: url(../../Images/Message/add-reaction.svg);
+	background-size: 26px 26px;
+	width: 26px;
+	height: 26px;
+	margin: 0px 5px 5px 10px;
+}
+
+.ThreadMessageReaction {
+	float: right;
+	display: flex;
+	align-items: center;
+	padding: 3px;
+	margin: 0px 0px 5px 4px;
+	border-radius: 5px;
+	background: #EEEEEE;
+}
+
+.ThreadMessageReaction > img {
+	width: 20px;
+	height: 20px;
+	padding-right: 4px;
+}
+
+.ThreadMessageReaction.reacted {
+	font-weight: bold;
+	background: #F8F8F8;
+	color: #222222;
+}
+
+.ReactionTooltip {
+	width: 200px;
+	padding: 10px;
+}
+
+.ReactionTooltipImage {
+	float: left;
+}
+
+.ReactionTooltipImage > img {
+	width: 30px;
+	height: 30px;
+}
+
+.ReactionTooltipClose {
+	position: absolute;
+	right: 15px;
+	top: 20px;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+}
+.ReactionTooltipClose:before, .ReactionTooltipClose:after {
+	position: absolute;
+	left: 10px;
+	content: ' ';
+	height: 15px;
+	width: 2px;
+	background-color: #333333;
+}
+.ReactionTooltipClose:before {
+	transform: rotate(45deg);
+}
+.ReactionTooltipClose:after {
+	transform: rotate(-45deg);
+}
+
+.ReactionTooltipButton {
+	float: right;
+	margin-right: 30px;
+}
+
+.ReactionTooltipButton > button {
+	width: 100px;
+	height: 30px;
+	background-color: #FFFFFF;
+	border: 1px solid #777777;
+	cursor: pointer;
+}
+
+.ReactionTooltipTitle {
+	clear: both;
+	padding: 10px 0px;
+	font-weight: bold;
+}
+
+.ThreadMessageText {
+	margin-left: 122px;
+	overflow: auto;
+	background-color: #FFFFFF;
+	padding: 5px;
+	clear: both;
+}
+
+.ThreadMessageText > p:first-of-type {
+	margin-top: 0
+}
+
+.ThreadMessageLinkedImage, .ThreadMessageLinkedVideo {
+	margin-left: 5px;
+	margin-bottom: 5px;
+	float: right;
+}
+
+.ThreadMessageLinkedImage img {
+	max-width: 100%;
+}
+
+.ThreadMessageLinkedVideo iframe {
+	max-width: 100%;
+	width: 400px;
+	height: 240px;
+}
+
+.ThreadMessageFooter {
+	margin-left: 122px;
+	background-color: #FFFFFF;
+	font-size: 12px;
+	padding: 0px 5px 5px 5px;
+}
+
+/* MOBILE MESSAGEBOARD THREAD */
+
+@media handheld and (orientation: portrait), screen and ( max-width: 600px ) {
+	.ThreadMessageLinkedImage, .ThreadMessageLinkedVideo {
+		margin-left: 0px;
+		float: none;
+		text-align: right;
+	}
+
+	.ThreadMessageLinkedVideo iframe {
+		height: 200px;
+	}
+}
+
+@media handheld and (orientation: portrait), screen and ( max-width: 420px ) {
+	.ThreadMessagePostedBy, .ThreadMessagePostedWhen {
+		line-height: unset;
+		height: 22px;
+	}
+
+	.ThreadMessagePostedBy {
+		padding-right: 0px;
+	}
+
+	.ThreadMessagePostedWhen {
+		float: right;
+		padding: 0px 0px 0px 5px;
+	}
+
+	.ThreadMessageAddReaction {
+		clear: left;
+	}
+
+	.ThreadMessageProfileImage img {
+		width: 74px;
+		height: 59px;
+	}
+
+	.ThreadMessageHeader {
+		margin-left: 79px;
+		min-height: 53px;
+	}
+
+	.ThreadMessageText {
+		margin-left: 0px;
+	}
+
+	.ThreadMessageFooter {
+		margin-left: 0px;
+	}
+}
+
+/* //END OF MESSAGEBOARD-SPECIFIC // */
+
+/* GENERIC STYLES */
+
+.GridTitle
+{
+	width: 100%;
+	text-align: center;
+	font-style: italic;
+	font-weight: bold;
+	color: #999999;
+	margin-bottom: 2px;
+}
+
+.Score
+{
+	text-align: center;
+	font-size: large;
+	font-weight: 300;
+}
+
+.ThreePointer
+{
+	color: #009600 !important;
+}
+
+.TwoPointer
+{
+	color: #888800 !important;
+}
+
+.OnePointer
+{
+	color: #FF6600 !important;
+}
+
+.NoPointer
+{
+	color: #AA0000 !important;
+}
+
+.NoPrediction
+{
+	color: #FF0000 !important;
+}
+
+.InformationBlock
+{
+	background-color: #CCDDFF;
+	border: 1px solid #DDDDDD;
+	opacity: 0.8;
+	filter: alpha(opacity=80); /* For IE8 and earlier */
+}
+
+	.InformationBlock input, textarea
+	{
+		position: relative;
+		opacity: none !important;
+		filter: none !important; /* For IE8 and earlier */
+	}
+
+	.InformationBlock.NoHover:hover
+	{
+		background-color: #CCDDFF;
+	}
+
+	.InformationBlock:hover
+	{
+		background-color: #BBCCEE;
+	}
+
+.InputBlock
+{
+	background-color: #CCDDFF;
+}
+
+.TitleBar
+{
+	padding: 5px;
+	background-image: url(../../Images/Branding/GridHeader.gif);
+	background-repeat: repeat;
+	font-weight: bold;
+	color: #FFFFFF;
+	position: relative;
+}
+
+.SaveMessage
+{
+	font-weight: bold;
+}
+
+.EditInProgress
+{
+	color: Gray;
+}
+
+.SaveSuccessful
+{
+	color: Green;
+}
+
+.SaveFailed
+{
+	color: Red;
+}
+
+.SaveInProgress
+{
+	color: Orange;
+}
+
+.SubNote
+{
+	width: 100%;
+	text-align: center;
+	font-style: italic;
+	color: #676767;
+	font-size: small;
+	margin-top: 6px;
+	margin-bottom: 6px;
+}
+
+.HeaderText
+{
+	color: #333333;
+	font-weight: bold;
+}
+
+.Error
+{
+	color: #EE3600;
+	font-weight: bold;
+}
+
+.Information
+{
+	color: #333333;
+	font-style: italic
+}
+
+.Warning
+{
+	color: #DD7723;
+	font-weight: bold;
+}
+
+.Yes
+{
+	color: #00AF00;
+	font-weight: bold
+}
+
+.No
+{
+	color: #FF0000;
+	font-weight: bold
+}
+
+.HighlightedLink
+{
+	font-weight: bold;
+	color: #EF0;
+}
+
+.QuotationMark
+{
+	font-weight: bold;
+	font-size: 18px;
+	font-style: italic;
+	color: #000044
+}
+
+.Quote
+{
+	font-weight: bold;
+	font-size: 14px;
+	font-style: italic;
+	color: #000044
+}
+
+.QuoteSmall
+{
+	font-weight: bold;
+	font-size: 12px;
+	font-style: italic;
+	color: #000044
+}
+
+.FullWidth
+{
+	width: 100%;
+}
+
+.Centred 
+{
+    text-align: center;
+}
+
+.Clickable
+{
+	cursor: pointer;
+}
+
+.Clear
+{
+	clear: both;
+}
+
+/* // END OF GENERIC STYLES // */
