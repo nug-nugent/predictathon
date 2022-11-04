@@ -161,6 +161,7 @@
     <Content Include="Images\Competitions\WorldCup2006.gif" />
     <Content Include="Images\Competitions\WorldCup2010.gif" />
     <Content Include="Images\Competitions\WorldCup2014.gif" />
+    <Content Include="Images\Competitions\WorldCup2022.png" />
     <Content Include="Images\Competitions\WorldCupTrophy.gif" />
     <Content Include="Images\favicon.ico" />
     <Content Include="Images\Branding\FootballBackground.jpg" />
@@ -218,6 +219,7 @@
     <Content Include="Images\TeamCrests\International\Australia.gif" />
     <Content Include="Images\TeamCrests\International\Brazil.gif" />
     <Content Include="Images\TeamCrests\International\Cameroon.gif" />
+    <Content Include="Images\TeamCrests\International\Canada.gif" />
     <Content Include="Images\TeamCrests\International\Chile.gif" />
     <Content Include="Images\TeamCrests\International\Colombia.gif" />
     <Content Include="Images\TeamCrests\International\CostaRica.gif" />
@@ -286,6 +288,7 @@
     <Content Include="Images\TeamCrests\International\Nigeria.gif" />
     <Content Include="Images\TeamCrests\International\Panama.gif" />
     <Content Include="Images\TeamCrests\International\Peru.gif" />
+    <Content Include="Images\TeamCrests\International\Qatar.gif" />
     <Content Include="Images\TeamCrests\International\SaudiArabia.gif" />
     <Content Include="Images\TeamCrests\International\Senegal.gif" />
     <Content Include="Images\TeamCrests\International\SouthKorea.gif" />
