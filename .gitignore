@@ -398,3 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 Data/
+
+/UI/Web/Scripts/Dist/

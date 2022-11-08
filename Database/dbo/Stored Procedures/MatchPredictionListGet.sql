@@ -11,18 +11,17 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		Prediction.PredictionID
+		CASE WHEN Prediction.PredictionID IS NULL THEN CAST(0x0 AS UNIQUEIDENTIFIER) ELSE Prediction.PredictionID END AS PredictionID
 		, [User].Username
 		, [User].UserID
 		, Prediction.HomeTeamGoals
 		, Prediction.AwayTeamGoals
 		, Prediction.Score
 	FROM
-		Match
-		INNER JOIN Prediction ON Match.MatchID = Prediction.MatchID
-		INNER JOIN [User] ON Prediction.UserID = [User].UserID
-	WHERE
-		Match.MatchID = @MatchID
+		UserCompetition
+		INNER JOIN Match ON UserCompetition.CompetitionID = Match.CompetitionID AND Match.MatchID = @MatchID
+		INNER JOIN [User] ON [User].UserID = UserCompetition.UserID
+		LEFT JOIN Prediction ON Prediction.MatchID = Match.MatchID AND Prediction.UserID = [User].UserID AND Prediction.Invalid = 0
 	ORDER BY
 		Prediction.Score DESC
 		, Prediction.GoalDifference DESC -- GD is always 0 or negative; 0 is the optimal result

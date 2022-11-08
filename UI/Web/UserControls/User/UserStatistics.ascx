@@ -51,12 +51,12 @@
         </tr>
         <tr id="trNextPredictionDueIn" runat="server">
             <td>
-                <asp:Hyperlink ID="hypUserMatchPredictionList1" runat="server" NavigateUrl="~/Pages/Match/UserMatchPredictionList.aspx">
+                <asp:Hyperlink ID="hypUserMatchPredictionList1" runat="server" NavigateUrl="~/Pages/Match/Predictions.aspx">
                     <asp:Label ID="lblNextPredictionDueIn" runat="server" Text="Next prediction due in:" />
                 </asp:Hyperlink>
             </td>
             <td>
-                <asp:Hyperlink ID="hypUserMatchPredictionList2" runat="server" NavigateUrl="~/Pages/Match/UserMatchPredictionList.aspx" style="text-decoration: none">
+                <asp:Hyperlink ID="hypUserMatchPredictionList2" runat="server" NavigateUrl="~/Pages/Match/Predictions.aspx" style="text-decoration: none">
                     <asp:Label ID="lblNextPredictionDueInValue" runat="server" />
                 </asp:Hyperlink>
             </td>

@@ -5,7 +5,7 @@
     <a href="#" title="Hide navigation">Hide navigation</a>
     <ul>
         <li><a runat="server" href="~/Pages/Common/MainMenu.aspx">Home</a></li>
-        <li><a runat="server" href="~/Pages/Match/UserMatchPredictionList.aspx">Predictions</a></li>
+        <li><a runat="server" href="~/Pages/Match/Predictions.aspx">Predictions</a></li>
         <li><a runat="server" href="~/Pages/League/LeagueTable.aspx">League Table</a></li>
         <li><a runat="server" href="~/Pages/Match/MatchResultList.aspx">Results</a></li>
         <li id="liMessageboard" runat="server"><a runat="server" href="~/Pages/Message/Messageboard.aspx">Messageboard</a></li>

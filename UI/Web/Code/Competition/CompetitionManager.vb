@@ -116,5 +116,23 @@
                 Return objContext.CompetitionUserLeagueTableGet(CompetitionID, UserID).ToList
             End Using
         End Function
+
+        ''' <summary>
+        ''' Returns the list of dates that start all weeks in a competition (that contain matches).
+        ''' Weeks start on a Friday so the dates returned will alwaqys be a Friday.
+        ''' </summary>
+        Public Shared Function GetCompetitionWeeks(competitionId As Guid) As IEnumerable(Of Date)
+            Using objContext As New PredictathonModel.PredictathonEntities
+                Dim knownFriday = New Date(1990, 1, 5) ' Friday Jan 5th 1990
+
+                Return objContext.Matches.Where(Function(c) c.CompetitionID = competitionId).
+                    Select(Function(m) Objects.EntityFunctions.TruncateTime(m.MatchDateTime)).
+                    Distinct().
+                    Select(Function(d) Objects.EntityFunctions.AddDays(d, -(Objects.EntityFunctions.DiffDays(knownFriday, d) Mod 7)).Value).
+                    Distinct().
+                    OrderBy(Function(d) d).
+                    ToList()
+            End Using
+        End Function
     End Class
 End Namespace
