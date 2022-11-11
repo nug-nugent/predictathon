@@ -7,7 +7,7 @@
                     <asp:Label ID="lblUsername" runat="server" />
                 </td>
                 <td align="right">
-                    <asp:LinkButton ID="btnEditUser" runat="server" CssClass="HighlightedLink" Text="Edit User" />
+                    <asp:LinkButton ID="btnEditUser" runat="server" Text="Edit User" />
                 </td>
             </tr>
         </table>

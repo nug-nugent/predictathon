@@ -39,7 +39,7 @@
         </span>
     </div>
     <nug:GridView ID="gvLeagueTable" runat="server" AutoGenerateColumns="false" GridLines="None" AllowPaging="false" DataKeyNames="UserID"
-        CssClass="GridView FullWidth" RowStyle-CssClass="GridViewRow" AlternatingRowStyle-CssClass="GridViewRowAlt" RowHoverCssClass="GridViewRowHover" EnableRowClick="true" RowClickRowCommand="ViewRecord">
+        CssClass="GridView NoBorder FullWidth" RowStyle-CssClass="GridViewRow" AlternatingRowStyle-CssClass="GridViewRowAlt" RowHoverCssClass="GridViewRowHover" EnableRowClick="true" RowClickRowCommand="ViewRecord">
         <Columns>
             <%-- Be careful when adding, deleting, or moving columns - the 2-pointer column may be hidden in the code-behind --%>
             <asp:BoundField HeaderText="Pos" DataField="LeaguePosition" ItemStyle-Width="30px" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" />
@@ -49,13 +49,13 @@
                 </ItemTemplate>
             </asp:TemplateField>
             <asp:BoundField HeaderText="User" DataField="Username" />
-            <asp:BoundField HeaderText="3" DataField="ThreePointers" HeaderStyle-CssClass="nonEssentialInfo" ItemStyle-CssClass="ThreePointer nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
+            <asp:BoundField HeaderText="3" DataField="ThreePointers" HeaderStyle-CssClass="LeftBorder nonEssentialInfo" ItemStyle-CssClass="ThreePointer LeftBorder nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
             <asp:BoundField HeaderText="2" DataField="TwoPointers" HeaderStyle-CssClass="nonEssentialInfo" ItemStyle-CssClass="TwoPointer nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
             <asp:BoundField HeaderText="1" DataField="OnePointers" HeaderStyle-CssClass="nonEssentialInfo" ItemStyle-CssClass="OnePointer nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
             <asp:BoundField HeaderText="0" DataField="NoPointers" HeaderStyle-CssClass="nonEssentialInfo" ItemStyle-CssClass="NoPointer nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
             <asp:BoundField HeaderText="-" DataField="NoPredictions" HeaderStyle-CssClass="nonEssentialInfo" ItemStyle-CssClass="NoPrediction nonEssentialInfo" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
-            <asp:BoundField HeaderText="Points" DataField="Score" HeaderStyle-HorizontalAlign="Center" ItemStyle-CssClass="Score" />
-            <asp:BoundField HeaderText="AGD*" DataField="AverageGoalDifference" DataFormatString="{0:N2}" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
+            <asp:BoundField HeaderText="Points" DataField="Score" HeaderStyle-HorizontalAlign="Center" HeaderStyle-CssClass="LeftBorder" ItemStyle-CssClass="Score LeftBorder" />
+            <asp:BoundField HeaderText="AGD*" DataField="AverageGoalDifference" DataFormatString="{0:N2}" HeaderStyle-CssClass="LeftBorder" HeaderStyle-HorizontalAlign="Center" ItemStyle-CssClass="LeftBorder" ItemStyle-HorizontalAlign="Center" />
         </Columns>
     </nug:GridView>
     <div class="SubNote">* Average goal difference per prediction</div>

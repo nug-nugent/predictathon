@@ -2,7 +2,7 @@
 <div class="GridTitle">
     <asp:Label ID="lblGridTitle" runat="server" Text="Predictions" />
 </div>
-<nug:GridView ID="gvMatchPredictionList" runat="server" AutoGenerateColumns="false" GridLines="None" AllowPaging="false" CssClass="GridView" DataKeyNames="UserID"
+<nug:GridView ID="gvMatchPredictionList" runat="server" AutoGenerateColumns="false" GridLines="None" AllowPaging="false" CssClass="GridView NoBorder" DataKeyNames="UserID"
     RowStyle-CssClass="GridViewRow" EnableRowClick="true" AlternatingRowStyle-CssClass="GridViewRowAlt" RowHoverCssClass="GridViewRowHover" EmptyDataText="No predictions found">
     <Columns>
         <asp:BoundField DataField="Username" HeaderText="User" />

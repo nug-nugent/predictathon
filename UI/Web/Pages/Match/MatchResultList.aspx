@@ -2,7 +2,7 @@
 <%@ MasterType TypeName="Predictathon.Master.Main" %>
 
 <asp:Content runat="server" ContentPlaceHolderID="MainContent">
-    <nug:GridView ID="gvMatch" runat="server" AutoGenerateColumns="false" GridLines="None" AllowPaging="true" PageSize="20" CssClass="GridView FullWidth" DataKeyNames="MatchID"
+    <nug:GridView ID="gvMatch" runat="server" AutoGenerateColumns="false" GridLines="None" AllowPaging="true" PageSize="20" CssClass="GridView NoBorder FullWidth" DataKeyNames="MatchID"
         RowStyle-CssClass="GridViewRow" EnableRowClick="true" AlternatingRowStyle-CssClass="GridViewRowAlt" RowHoverCssClass="GridViewRowHover" EmptyDataText="No results found">
         <Columns>
             <asp:BoundField HeaderText="Date / time" DataField="MatchDateTime" DataFormatString="{0:dd/MM/yy HH:mm}" ItemStyle-HorizontalAlign="Center" />

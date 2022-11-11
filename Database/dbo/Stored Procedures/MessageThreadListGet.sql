@@ -29,8 +29,8 @@ BEGIN
 										ORDER BY
 											LastPostedMessage.MessageDateTime DESC)
 		, LastMessage = (SELECT TOP 1 
-								MessageContent = CASE WHEN LEN(LastPostedMessage.MessageContent) > 50 THEN 
-														LEFT(LastPostedMessage.MessageContent, 50) + '...' 
+								MessageContent = CASE WHEN LEN(LastPostedMessage.MessageContent) > 40 THEN 
+														LEFT(LastPostedMessage.MessageContent, 37) + '...' 
 													ELSE 
 														LastPostedMessage.MessageContent 
 													END

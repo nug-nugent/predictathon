@@ -138,20 +138,18 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_444444_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_555555_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_777620_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_777777_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_cc0000_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\Images\ui-icons_ffffff_256x240.png" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.css" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.min.css" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.structure.css" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.structure.min.css" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.theme.css" />
-    <Content Include="App_Themes\Predictatheme\jquery-ui.theme.min.css" />
-    <Content Include="App_Themes\Predictatheme\jquery.jcrop.css" />
-    <Content Include="App_Themes\Predictatheme\jquery.timeentry.css" />
+    <Content Include="Styles\Predictathon.css" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_444444_256x240.png" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_555555_256x240.png" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_777620_256x240.png" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_777777_256x240.png" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_cc0000_256x240.png" />
+    <Content Include="Styles\ThirdParty\Images\ui-icons_ffffff_256x240.png" />
+    <Content Include="Styles\ThirdParty\jquery-ui.css" />
+    <Content Include="Styles\ThirdParty\jquery-ui.structure.css" />
+    <Content Include="Styles\ThirdParty\jquery-ui.theme.css" />
+    <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
+    <Content Include="Styles\ThirdParty\jquery.timeentry.css" />
     <Content Include="Images\Branding\PredictathonBrain.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobile.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobileLogin.gif" />
@@ -333,7 +331,6 @@
     <Content Include="Images\TeamCrests\WestHam.gif" />
     <Content Include="Images\TeamCrests\Wigan.gif" />
     <Content Include="Images\TeamCrests\Wolves.gif" />
-    <Content Include="App_Themes\Predictatheme\Predictathon4.css" />
     <Content Include="Global.asax" />
     <Content Include="Images\ThirdParty\jcrop.gif" />
     <Content Include="Login.aspx" />
@@ -917,7 +914,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Themes\Predictatheme\Predictathon.skin" />
     <EntityDeploy Include="Entity\Predictathon.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>Predictathon.Designer.vb</LastGenOutput>

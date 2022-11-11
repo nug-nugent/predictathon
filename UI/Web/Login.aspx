@@ -11,6 +11,10 @@
     <link id="lnkFavicon1" runat="server" rel="shortcut icon" href="~/images/favicon.ico" type="image/x-icon" />
     <link id="lnkFavicon2" runat="server" rel="icon" href="~/images/favicon.ico" type="image/ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <asp:PlaceHolder runat="server">
+        <%: System.Web.Optimization.Styles.Render("~/Styles/predictathon") %>
+        <%: System.Web.Optimization.Styles.Render("~/Styles/ThirdParty/bundle") %>
+    </asp:PlaceHolder>
 </head>
 <body>
     <form id="form1" runat="server">

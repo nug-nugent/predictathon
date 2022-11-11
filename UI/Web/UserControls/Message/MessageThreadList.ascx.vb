@@ -23,7 +23,7 @@
                 End If
             End If
 
-			gvMessageThreadList.DataSource = Predictathon.MessageThreadManager.MessageThreadListGet(CDate(Session("UserFirstViewedMessageboard")), objUser.CanViewHiddenMessageThreads)
+            gvMessageThreadList.DataSource = Predictathon.MessageThreadManager.MessageThreadListGet(CDate(Session("UserFirstViewedMessageboard")), objUser.CanViewHiddenMessageThreads)
             gvMessageThreadList.DataBind()
 
             'set CurrentUser.LastViewedMessageboard to now
@@ -45,9 +45,5 @@
         Private Sub lnkNewMessageThread_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles lnkNewMessageThread.Click
             Response.Redirect("~/Pages/Message/NewMessageThread.aspx")
         End Sub
-
-        Protected Function UnreadImageURL(ByVal Unread As Boolean) As String
-            Return "~/Images/Message/" & If(Unread, "Unread.gif", "Read.gif").ToString
-        End Function
     End Class
 End Namespace
