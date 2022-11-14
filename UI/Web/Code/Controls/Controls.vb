@@ -364,6 +364,8 @@
             Public Class DatePicker
                 Inherits System.Web.UI.WebControls.TextBox
 
+                Private Const HTML_DATE_INPUT_FORMAT = "yyyy-MM-dd"
+
 #Region " Properties "
                 ''' <summary>
                 ''' Gets or sets the minimum selectable date value. Defaults to 1 year before the current date.
@@ -385,39 +387,44 @@
 
                 Public Property Value() As Date
                     Get
-                        If IsDate(Me.Text) Then
-                            Return CDate(Me.Text)
-                        Else
-                            Me.Text = String.Empty
-
-                            Return Date.MinValue
-                        End If
+                        Return If(StringToDate(Me.Text), Date.MinValue)
                     End Get
-                    Set(ByVal value As Date)
-                        If value > Date.MinValue Then
-                            Me.Text = value.ToString("dd/MM/yyyy")
+                    Set(val As Date)
+                        If (val > Date.MinValue) Then
+                            MyBase.Text = val.ToString(HTML_DATE_INPUT_FORMAT)
                         Else
-                            Me.Text = ""
+                            MyBase.Text = ""
+                        End If
+                    End Set
+                End Property
+
+                Public Overrides Property Text As String
+                    Get
+                        Return MyBase.Text
+                    End Get
+                    Set(val As String)
+                        Dim valueAsDate As Date? = StringToDate(val)
+                        If valueAsDate.HasValue Then
+                            MyBase.Text = valueAsDate.Value.ToString(HTML_DATE_INPUT_FORMAT)
                         End If
                     End Set
                 End Property
 #End Region
 
-                Protected Overrides Sub Render(ByVal writer As HtmlTextWriter)
-                    Dim strJScript As String = "$(document).ready(function() { $('#" & Me.ClientID & "').datepicker({ dateFormat: 'dd/mm/yy'" & Me.Options & "}); });"
-                    Page.ClientScript.RegisterStartupScript(GetType(DatePicker), "DatePicker_" & Me.UniqueID, strJScript, True)
-                    Me.Width = Unit.Parse("5em")
-                    MyBase.Render(writer)
-                End Sub
+                Private Function StringToDate(val As String) As Date?
+                    If Not String.IsNullOrEmpty(val) Then
+                        Dim returnValue As Date
+                        If Date.TryParse(val, returnValue) Then
+                            Return returnValue
+                        End If
+                    End If
 
-                Private Function Options() As String
-                    Dim strOptions As String = ""
-                    If Me.MinDate.HasValue Then strOptions &= ", minDate: new Date(" & Me.MinDate.Value.Year & ", " & Me.MinDate.Value.Month - 1 & ", " & Me.MinDate.Value.Day & ")"
-                    If Me.MaxDate.HasValue Then strOptions &= ", maxDate: new Date(" & Me.MaxDate.Value.Year & ", " & Me.MaxDate.Value.Month - 1 & ", " & Me.MaxDate.Value.Day & ")"
-                    If Me.ShowButtonPanel Then strOptions &= ", showButtonPanel: true"
-
-                    Return strOptions
+                    Return Nothing
                 End Function
+
+                Private Sub DatePicker_Init(sender As Object, e As EventArgs) Handles Me.Init
+                    Me.Attributes("type") = "date"
+                End Sub
 
                 Public Function HasValidValue() As Boolean
                     Dim blnValid As Boolean = True
@@ -467,11 +474,8 @@
                 End Property
 #End Region
 
-                Protected Overrides Sub Render(ByVal writer As HtmlTextWriter)
-                    Dim strJScript As String = "$(document).ready(function() { $('#" & Me.ClientID & "').timeEntry({show24Hours: true, showSeconds: false, noSeparatorEntry: true, spinnerImage: ''}); });"
-                    Page.ClientScript.RegisterStartupScript(GetType(TimePicker), "TimePicker_" & Me.UniqueID, strJScript, True)
-                    Me.Width = Unit.Parse("2.5em")
-                    MyBase.Render(writer)
+                Private Sub TimePicker_Init(sender As Object, e As EventArgs) Handles Me.Init
+                    Me.Attributes("type") = "time"
                 End Sub
 
                 Public Function HasValidValue() As Boolean

@@ -145,11 +145,7 @@
     <Content Include="Styles\ThirdParty\Images\ui-icons_777777_256x240.png" />
     <Content Include="Styles\ThirdParty\Images\ui-icons_cc0000_256x240.png" />
     <Content Include="Styles\ThirdParty\Images\ui-icons_ffffff_256x240.png" />
-    <Content Include="Styles\ThirdParty\jquery-ui.css" />
-    <Content Include="Styles\ThirdParty\jquery-ui.structure.css" />
-    <Content Include="Styles\ThirdParty\jquery-ui.theme.css" />
     <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
-    <Content Include="Styles\ThirdParty\jquery.timeentry.css" />
     <Content Include="Images\Branding\PredictathonBrain.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobile.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobileLogin.gif" />
@@ -368,13 +364,11 @@
     <Content Include="Scripts\CommonFunctions.js" />
     <Content Include="Scripts\Dist\match-list.bundle.js" />
     <Content Include="Scripts\emoji-button.js" />
-    <Content Include="Scripts\jquery-ui.min.js" />
     <Content Include="Scripts\jquery.auto-height.js" />
     <Content Include="Scripts\jquery.jcrop.min.js" />
     <Content Include="Scripts\jquery.js" />
     <Content Include="Scripts\jquery.plugin.min.js" />
     <Content Include="Scripts\jquery.timeago.js" />
-    <Content Include="Scripts\jquery.timeentry.min.js" />
     <Content Include="Scripts\PostReactions.js" />
     <Content Include="UserControls\Common\Navigation.ascx" />
     <Content Include="UserControls\Common\Footer.ascx" />

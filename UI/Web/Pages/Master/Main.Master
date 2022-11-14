@@ -22,9 +22,6 @@
             <Scripts>
                 <asp:ScriptReference Path="~/Scripts/CommonFunctions.js" ScriptMode="Release" />
                 <asp:ScriptReference Path="~/Scripts/jquery.js" ScriptMode="Release" />
-                <asp:ScriptReference Path="~/Scripts/jquery-ui.min.js" ScriptMode="Release" />
-                <asp:ScriptReference Path="~/Scripts/jquery.plugin.min.js" ScriptMode="Release" />
-                <asp:ScriptReference Path="~/Scripts/jquery.timeentry.min.js" ScriptMode="Release" />
                 <asp:ScriptReference Path="~/Scripts/jquery.timeago.js" ScriptMode="Release" />
             </Scripts>
         </asp:ScriptManager>
