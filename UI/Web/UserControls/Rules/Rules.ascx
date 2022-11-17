@@ -2,8 +2,8 @@
 <asp:HiddenField ID="hdnRandomTeam1" runat="server" />
 <asp:HiddenField ID="hdnRandomTeam2" runat="server" />
 
-<div id="divRules" runat="server" class="InformationBlock NoHover">
-    <div class="TitleBar">Rules of the game</div>
+<div id="divRules" runat="server" class="InformationBlock NoHover" style="text-align: center;">
+    <h1>Rules of the game</h1>
     <div style="margin: 6px">
         <p class="HeaderText" style="margin-top: 2px; margin-bottom: 2px">
             Scoring points

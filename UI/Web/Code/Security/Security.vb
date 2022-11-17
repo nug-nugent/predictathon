@@ -1,9 +1,12 @@
 ﻿Namespace Predictathon
 	Public Class Security
-		Public Shared Function Authenticate(ByVal Username As String, ByVal Password As String, Optional ByVal PersistentLogin As Boolean = False, Optional ByVal BypassPassword As Boolean = False) As Boolean
-			Dim objUser As PredictathonModel.User = Predictathon.UserManager.Load(Username)
+		Public Shared Function Authenticate(UsernameOrEmailAddress As String, Password As String, Optional PersistentLogin As Boolean = False, Optional BypassPassword As Boolean = False) As Boolean
+			Dim objUser As PredictathonModel.User = If(Validation.IsEmailAddress(UsernameOrEmailAddress),
+				UserManager.LoadByEmailAddress(UsernameOrEmailAddress),
+				UserManager.Load(UsernameOrEmailAddress)
+			)
 
-			If Not IsNothing(objUser) Then
+			If objUser IsNot Nothing Then
 				' We have a user - does the password match?
 				If BypassPassword OrElse Encryption.Decrypt(objUser.Password) = Password Then
 					'set the forms authentication cookie, with behaviour dependent on whether this should be a persistent cookie

@@ -24,15 +24,6 @@ Namespace Predictathon.UserControls.User
         Protected WithEvents pnlPasswordReset As Global.System.Web.UI.WebControls.Panel
 
         '''<summary>
-        '''lblUsernameOrEmail control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblUsernameOrEmail As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
         '''txtUsernameOrEmail control.
         '''</summary>
         '''<remarks>

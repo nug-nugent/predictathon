@@ -20,33 +20,36 @@
             txtUsername.Focus()
         End Sub
 
-        Private Sub Login_PreRender(sender As Object, e As EventArgs) Handles Me.PreRender
-            hdnCurrentServerDateTime.Value = CommonMethods.LongDateAndTimeString(Now)
-        End Sub
-
         Private Sub RebuildList()
-            gvCompetitions.DataSource = CompetitionManager.CompetitionListForLoginPageGet()
-            gvCompetitions.DataBind()
-            lblOpenForRegistration.Visible = gvCompetitions.Rows.Count > 0
+            rptCompetitions.DataSource = CompetitionManager.CompetitionListForLoginPageGet()
+            rptCompetitions.DataBind()
+
+            If rptCompetitions.Items.Count = 0 Then
+                lblNotOpenForRegistration.Visible = True
+                lblOpenForRegistration.Visible = False
+            Else
+                lblOpenForRegistration.Visible = True
+                lblNotOpenForRegistration.Visible = False
+            End If
         End Sub
 
         Private Function ValidateInput() As Boolean
             Dim blnValid As Boolean = True
 
-            'Username
-            If txtUsername.Text.Trim = String.Empty Then
-                lblUsernameError.Visible = True
+            ' Username
+            If String.IsNullOrWhiteSpace(txtUsername.Text) Then
+                txtUsername.CssClass = "InputError"
                 blnValid = False
             Else
-                lblUsernameError.Visible = False
+                txtUsername.CssClass = ""
             End If
 
-            'Password
-            If txtPassword.Text.Trim = String.Empty Then
-                lblPasswordError.Visible = True
+            ' Password
+            If String.IsNullOrWhiteSpace(txtPassword.Text) Then
+                txtPassword.CssClass = "InputError"
                 blnValid = False
             Else
-                lblPasswordError.Visible = False
+                txtPassword.CssClass = ""
             End If
 
             Return blnValid
@@ -54,37 +57,15 @@
 
         Private Sub AttemptLogin()
             If Predictathon.Security.Authenticate(txtUsername.Text, txtPassword.Text, chkRememberMe.Checked) Then
-                'login successful
+                ' Login successful
                 Response.Redirect("~/Pages/Common/MainMenu.aspx")
             Else
                 lblError.Visible = True
             End If
         End Sub
 
-        Private Sub gvCompetitions_RowCommand(ByVal sender As Object, ByVal e As GridViewCommandEventArgs) Handles gvCompetitions.RowCommand
-            If e.CommandName = "ViewRecord" Then
-                Response.Redirect("~/Pages/User/UserRegistration.aspx?CompetitionID=" & gvCompetitions.DataKeyValue(e).Value.ToString)
-            End If
-        End Sub
-
         Private Sub btnLogIn_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnLogIn.Click
             If ValidateInput() Then AttemptLogin()
-        End Sub
-
-        Private Sub gvCompetitions_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles gvCompetitions.RowDataBound
-            'check whether the competition's open for registration
-            If e.Row.RowType = DataControlRowType.DataRow Then
-                Dim objCompetition As PredictathonModel.Competition = DirectCast(e.Row.DataItem, PredictathonModel.Competition)
-                If String.IsNullOrEmpty(hdnCompetitionID.Value) Then hdnCompetitionID.Value = objCompetition.CompetitionID.ToString
-                Dim lblRegistrationStatus As Label = DirectCast(e.Row.FindControl("lblRegistrationStatus"), Label)
-                If objCompetition.OpenForRegistration Then
-                    lblRegistrationStatus.Text = "Registration open - sign up here"
-                    lblRegistrationStatus.CssClass = "Yes"
-                Else
-                    lblRegistrationStatus.Text = "Registration closed"
-                    lblRegistrationStatus.CssClass = "No"
-                End If
-            End If
         End Sub
 
         Protected Function ImageURL(ByVal ImageName As String) As String

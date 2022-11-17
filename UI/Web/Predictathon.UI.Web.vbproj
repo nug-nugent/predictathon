@@ -138,6 +138,7 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\Branding\Football.png" />
     <Content Include="Styles\Predictathon.css" />
     <Content Include="Styles\ThirdParty\Images\ui-icons_444444_256x240.png" />
     <Content Include="Styles\ThirdParty\Images\ui-icons_555555_256x240.png" />

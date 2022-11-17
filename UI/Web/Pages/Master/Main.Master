@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html>
 <%@ Master Language="VB" AutoEventWireup="false" CodeBehind="Main.master.vb" Inherits="Predictathon.Master.Main" %>
 <%@ Register Src="~/UserControls/Common/Header.ascx" TagName="Header" TagPrefix="uc1" %>
 <%@ Register Src="~/UserControls/Common/Footer.ascx" TagName="Footer" TagPrefix="uc1" %>
 <%@ Register Src="~/UserControls/Common/Navigation.ascx" TagName="Navigation" TagPrefix="uc1" %>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head runat="server">
     <title id="Title1" runat="server">Predictathon</title>
     <link id="lnkFavicon1" runat="server" rel="shortcut icon" href="~/images/favicon.ico" type="image/x-icon" />

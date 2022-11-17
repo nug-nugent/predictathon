@@ -60,49 +60,13 @@ Namespace Predictathon.Pages
         Protected WithEvents hdnCompetitionID As Global.System.Web.UI.WebControls.HiddenField
 
         '''<summary>
-        '''divContent control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents divContent As Global.System.Web.UI.HtmlControls.HtmlGenericControl
-
-        '''<summary>
-        '''pnlLogin control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents pnlLogin As Global.System.Web.UI.WebControls.Panel
-
-        '''<summary>
         '''divLogin control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents divLogin As Global.System.Web.UI.HtmlControls.HtmlGenericControl
-
-        '''<summary>
-        '''lblLogin control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblLogin As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
-        '''lblUsername control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblUsername As Global.System.Web.UI.WebControls.Label
+        Protected WithEvents divLogin As Global.System.Web.UI.WebControls.Panel
 
         '''<summary>
         '''txtUsername control.
@@ -114,24 +78,6 @@ Namespace Predictathon.Pages
         Protected WithEvents txtUsername As Global.System.Web.UI.WebControls.TextBox
 
         '''<summary>
-        '''lblUsernameError control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblUsernameError As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
-        '''lblPassword control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblPassword As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
         '''txtPassword control.
         '''</summary>
         '''<remarks>
@@ -141,15 +87,6 @@ Namespace Predictathon.Pages
         Protected WithEvents txtPassword As Global.System.Web.UI.WebControls.TextBox
 
         '''<summary>
-        '''lblPasswordError control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblPasswordError As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
         '''lblError control.
         '''</summary>
         '''<remarks>
@@ -157,15 +94,6 @@ Namespace Predictathon.Pages
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
         Protected WithEvents lblError As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
-        '''lblRememberMe control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblRememberMe As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
         '''chkRememberMe control.
@@ -213,13 +141,31 @@ Namespace Predictathon.Pages
         Protected WithEvents lnkHidePasswordReset As Global.System.Web.UI.WebControls.LinkButton
 
         '''<summary>
-        '''lblTheRules control.
+        '''lblOpenForRegistration control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents lblTheRules As Global.System.Web.UI.WebControls.Label
+        Protected WithEvents lblOpenForRegistration As Global.System.Web.UI.WebControls.Label
+
+        '''<summary>
+        '''lblNotOpenForRegistration control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents lblNotOpenForRegistration As Global.System.Web.UI.WebControls.Label
+
+        '''<summary>
+        '''rptCompetitions control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents rptCompetitions As Global.System.Web.UI.WebControls.Repeater
 
         '''<summary>
         '''lblThree control.
@@ -231,58 +177,22 @@ Namespace Predictathon.Pages
         Protected WithEvents lblThree As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
-        '''Label1 control.
+        '''lblTwo control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents Label1 As Global.System.Web.UI.WebControls.Label
+        Protected WithEvents lblTwo As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
-        '''Label2 control.
+        '''lblOne control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents Label2 As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
-        '''TwitterFeed1 control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents TwitterFeed1 As Global.Predictathon.UserControls.Twitter.TwitterFeed
-
-        '''<summary>
-        '''lblOpenForRegistration control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents lblOpenForRegistration As Global.System.Web.UI.WebControls.Label
-
-        '''<summary>
-        '''gvCompetitions control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents gvCompetitions As Global.Predictathon.Web.UI.WebControls.GridView
-
-        '''<summary>
-        '''hdnCurrentServerDateTime control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents hdnCurrentServerDateTime As Global.System.Web.UI.WebControls.HiddenField
+        Protected WithEvents lblOne As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
         '''divRules control.
