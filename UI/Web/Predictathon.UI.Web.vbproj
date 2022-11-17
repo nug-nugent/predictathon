@@ -383,7 +383,6 @@
     <Content Include="UserControls\Message\NewMessage.ascx" />
     <Content Include="UserControls\Message\NewMessageThread.ascx" />
     <Content Include="UserControls\Message\MessageThreadList.ascx" />
-    <Content Include="UserControls\Rules\HowToPlay.ascx" />
     <Content Include="UserControls\Rules\Rules.ascx" />
     <Content Include="UserControls\Statistics\CompetitionWinners.ascx" />
     <Content Include="UserControls\Statistics\MostPredictions.ascx" />
@@ -778,13 +777,6 @@
     </Compile>
     <Compile Include="UserControls\Message\MessageThreadList.ascx.vb">
       <DependentUpon>MessageThreadList.ascx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="UserControls\Rules\HowToPlay.ascx.designer.vb">
-      <DependentUpon>HowToPlay.ascx</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\Rules\HowToPlay.ascx.vb">
-      <DependentUpon>HowToPlay.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="UserControls\Rules\Rules.ascx.designer.vb">

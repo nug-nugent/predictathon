@@ -7,7 +7,6 @@
 'TODO - priority 4 - Contact us/feedback
 'TODO - priority 5 - Add fixture list to TeamDetail page.
 'TODO - priority 7 - 'As it stands' league table, for latest scores...!
-'TODO - priority 8 - Mobile site!
 
 Namespace Predictathon
     Public Class CommonMethods
