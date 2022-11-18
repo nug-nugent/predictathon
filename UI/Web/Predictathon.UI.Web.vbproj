@@ -140,12 +140,6 @@
   <ItemGroup>
     <Content Include="Images\Branding\Football.png" />
     <Content Include="Styles\Predictathon.css" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_444444_256x240.png" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_555555_256x240.png" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_777620_256x240.png" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_777777_256x240.png" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_cc0000_256x240.png" />
-    <Content Include="Styles\ThirdParty\Images\ui-icons_ffffff_256x240.png" />
     <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
     <Content Include="Images\Branding\PredictathonBrain.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobile.gif" />
@@ -368,7 +362,6 @@
     <Content Include="Scripts\jquery.auto-height.js" />
     <Content Include="Scripts\jquery.jcrop.min.js" />
     <Content Include="Scripts\jquery.js" />
-    <Content Include="Scripts\jquery.plugin.min.js" />
     <Content Include="Scripts\jquery.timeago.js" />
     <Content Include="Scripts\PostReactions.js" />
     <Content Include="UserControls\Common\Navigation.ascx" />
