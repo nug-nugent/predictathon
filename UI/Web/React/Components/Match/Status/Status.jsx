@@ -102,7 +102,7 @@ export const Status = ({ id, lastInGroup, matchStatus, predictionStatus, date,
                         <PredictionsContainer>
                             <Table data={predictionsList} boldCheckFn={(p) => p.isMe}
                                 columns={[
-                                    { name: "username" },
+                                    { name: "username", minWidth: "150px" },
                                     {
                                         name: "prediction", align: "center",
                                         format: (p) => `${p.homeGoals === null ? "L" : p.homeGoals} - ${p.awayGoals === null ? "L" : p.awayGoals}`

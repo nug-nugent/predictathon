@@ -16,6 +16,7 @@ export const HeaderColumn = styled.div`
     display: table-cell;
     border-bottom: ${theme.border};
     padding: 5px 20px;
+    min-width: ${({ minWidth }) => minWidth || "unset"};
 
     font-size: 0.9em;
     text-transform: uppercase;

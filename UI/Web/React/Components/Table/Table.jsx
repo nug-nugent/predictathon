@@ -19,7 +19,7 @@ export const Table = ({ columns, data, pageSize, keyColumn, groupColumn, boldChe
         <>
             <Container>
                 <Header>
-                    {columns.map((col) => <HeaderColumn key={col.name} align={col.headerAlign || col.align}>{col.name}</HeaderColumn>)}
+                    {columns.map((col) => <HeaderColumn key={col.name} align={col.headerAlign || col.align} minWidth={col.minWidth}>{col.name}</HeaderColumn>)}
                 </Header>
                 {pageData.map((row, index) => {
                     const lastInGroup = groupColumn && index !== (pageData.length - 1) && row[groupColumn] !== pageData[index + 1][groupColumn];
