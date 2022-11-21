@@ -195,7 +195,6 @@
     <Content Include="Images\Common\Save.gif" />
     <Content Include="Images\Common\White.png" />
     <Content Include="Images\Icons\football_sm.gif" />
-    <Content Include="Images\Message\add-reaction.svg" />
     <Content Include="Images\Message\Reactions\brewdog.png" />
     <Content Include="Images\Message\Reactions\guinness.png" />
     <Content Include="Images\Message\Reactions\ludo.png" />
@@ -358,12 +357,12 @@
     <Content Include="Pages\User\UserDetail.aspx" />
     <Content Include="Scripts\CommonFunctions.js" />
     <Content Include="Scripts\Dist\match-list.bundle.js" />
+    <Content Include="Scripts\Dist\message-list.bundle.js" />
     <Content Include="Scripts\emoji-button.js" />
     <Content Include="Scripts\jquery.auto-height.js" />
     <Content Include="Scripts\jquery.jcrop.min.js" />
     <Content Include="Scripts\jquery.js" />
     <Content Include="Scripts\jquery.timeago.js" />
-    <Content Include="Scripts\PostReactions.js" />
     <Content Include="UserControls\Common\Navigation.ascx" />
     <Content Include="UserControls\Common\Footer.ascx" />
     <Content Include="UserControls\Common\Header.ascx" />
@@ -414,6 +413,7 @@
     <Compile Include="Code\Message\MessageRatingManager.vb" />
     <Compile Include="Code\Message\MessageThreadManager.vb" />
     <Compile Include="Code\Message\MessageManager.vb" />
+    <Compile Include="Entity\Dto\ThreadPageDto.vb" />
     <Compile Include="Entity\Dto\ThreadMessageDto.vb" />
     <Compile Include="Entity\Dto\ThreadMessageReactionDto.vb" />
     <Compile Include="Code\Payment\PaymentCreditManager.vb" />

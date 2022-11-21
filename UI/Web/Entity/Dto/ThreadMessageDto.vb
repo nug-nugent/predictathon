@@ -21,4 +21,19 @@
 			_messageId = value
 		End Set
 	End Property
+
+	Public Function ToJsonObject(rootPath As String) As Object
+		Return New With {
+			.id = _messageId,
+			.authorImageUrl = rootPath + If(UserImageUploaded, "Uploads/Images/" + UserId.ToString + "_sm.jpg", "Images/Common/NoImageAvailable.gif"),
+			.authorUrl = rootPath + "Pages/User/UserDetail.aspx?UserID=" + UserId.ToString,
+			.authorName = Username,
+			.date = MessageDateTime.ToString("s"),
+			.text = MessageContent,
+			.smallImageUrl = If(HasLinkedImage, rootPath + "Uploads/Images/Message/" + _messageId.ToString + "_sm.jpg", Nothing),
+			.imageUrl = If(HasLinkedImage, rootPath + "Uploads/Images/Message/" + _messageId.ToString + ".jpg", Nothing),
+			.youTubeVideoId = YouTubeVideoId,
+			.reactions = Reactions
+		}
+	End Function
 End Class

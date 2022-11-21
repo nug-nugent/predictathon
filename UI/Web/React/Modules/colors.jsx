@@ -4,6 +4,7 @@ export const colors = Object.freeze({
     white: "#FFF",
     black: "#000",
     grey: "#AAA",
+    darkGrey: "#444",
     lightGrey: "#F6F6F6",
     lighterGrey: "#FAFAFA",
     red: "#EE0000",

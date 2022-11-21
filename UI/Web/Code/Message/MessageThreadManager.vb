@@ -46,6 +46,10 @@
         End Function
 
         Public Shared Sub UpdateLastReadForSession(ByVal MessageThreadID As Guid)
+            UpdateLastReadForSession(MessageThreadID, Date.Now)
+        End Sub
+
+        Public Shared Sub UpdateLastReadForSession(ByVal MessageThreadID As Guid, lastReadDate As Date)
             'this message thread has presumably been loaded because it's being read. Track this in the current session
             Dim dtblReadMessageThreads As New DataTable
             If Not IsNothing(HttpContext.Current.Session("MessageThreadsReadThisSession")) Then
@@ -59,17 +63,17 @@
             'we have a datatable of MessageThreadIDs and their last-read date/time. Add to it or update as necessary
             Dim dRowMessageThread() As DataRow = dtblReadMessageThreads.Select("UniqueID = '" & MessageThreadID.ToString & "'")
             If dRowMessageThread.GetLength(0) > 0 Then
-                dRowMessageThread(0)("DateAndTime") = Date.Now
+                dRowMessageThread(0)("DateAndTime") = lastReadDate
                 dRowMessageThread(0).AcceptChanges()
             Else
                 Dim dRowNew As DataRow = dtblReadMessageThreads.NewRow
                 dRowNew("UniqueID") = MessageThreadID
-                dRowNew("DateAndTime") = Date.Now
+                dRowNew("DateAndTime") = lastReadDate
                 dtblReadMessageThreads.Rows.Add(dRowNew)
             End If
         End Sub
 
-		Public Shared Function MessageThreadListGet(ByVal UserLastViewedMessageboard As Date, ByVal IncludeHiddenFromPublic As Boolean) As DataTable
+        Public Shared Function MessageThreadListGet(ByVal UserLastViewedMessageboard As Date, ByVal IncludeHiddenFromPublic As Boolean) As DataTable
 			If UserLastViewedMessageboard = Date.MinValue Then UserLastViewedMessageboard = Date.Parse("01/01/1900") 'arbitrary, nonsense... but it'll work
 
 			Dim lstParams As New List(Of System.Data.SqlClient.SqlParameter)

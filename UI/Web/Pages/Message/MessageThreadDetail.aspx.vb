@@ -8,15 +8,16 @@
 				Return New Guid(Request.QueryString("MessageThreadID"))
 			End Get
 		End Property
-
-		Public ReadOnly Property PageParameter() As Int32
-			Get
-				Dim PageNumber As Int32 = 0
-				Int32.TryParse(Request.QueryString("Page"), PageNumber)
-				Return PageNumber
-			End Get
-		End Property
 #End Region
+
+		Public ThreadId As String
+		Public ThreadTitle As String
+		Public MessagesJson As String
+		Public MessagesBefore As Integer
+		Public MessagesAfter As Integer
+		Public FirstUnreadMessageId As String
+
+		Private Const PageSize = 10
 
 		Private Sub MessageThreadDetail_Init(sender As Object, e As EventArgs) Handles Me.Init
 			' Should the current user be here? If not, go home...
@@ -27,19 +28,72 @@
 			Me.Master.TitleSuffix = "Message Thread"
 
 			If Not IsPostBack AndAlso Not CheckForCallBack() Then
-				lblThreadSubject.Text = Predictathon.MessageThreadManager.Load(Me.MessageThreadID).ThreadSubject
+				' load the thread details and set the first properties used by React
+				Dim thread = MessageThreadManager.Load(MessageThreadID)
+				ThreadId = thread.MessageThreadID.ToString
+				ThreadTitle = thread.ThreadSubject.Replace("""", "\""")
 
-				Dim PageNumber As Int32 = Me.PageParameter
-				If PageNumber > 0 Then
-					gvMessageList.PageIndex = PageNumber - 1
-					RebuildList(False)
-				Else
-					'rebuild the list and scroll to the first unread message
-					RebuildList(True)
+				' load the thread messages and figure out where to start from
+				Dim messages = MessageManager.LoadThread(MessageThreadID)
+				Dim lastReadDateTime = GetLastReadDate(MessageThreadID)
+				Dim firstUnreadMessage = GetFirstUnreadMessage(messages, lastReadDateTime)
+
+				' default to the last 10 messages of the thread
+				Dim messageCount = messages.Count
+				Dim messagesToSkip = messageCount - PageSize
+
+				If Not IsNothing(firstUnreadMessage) Then
+					FirstUnreadMessageId = firstUnreadMessage.MessageId.ToString
+					' start from 1 message behind the first unread if its earlier than the last 10
+					messagesToSkip = Math.Min(messages.IndexOf(firstUnreadMessage) - 1, messagesToSkip)
 				End If
-				Predictathon.MessageThreadManager.UpdateLastReadForSession(Me.MessageThreadID)
+
+				Dim threadPage As ThreadPageDto = Nothing
+
+				' if there isn't more than one page worth of messages just return them all
+				If messageCount <= PageSize Then
+					threadPage = New ThreadPageDto With {
+						.Messages = messages,
+						.MessagesBefore = 0,
+						.MessagesAfter = 0
+					}
+				Else
+					threadPage = GetMessagesAfter(messages, messagesToSkip)
+				End If
+
+				' set the remaining properties used by React
+				MessagesBefore = threadPage.MessagesBefore
+				MessagesAfter = threadPage.MessagesAfter
+
+				Dim websiteRoot = ResolveUrl("~/")
+				MessagesJson = (New Script.Serialization.JavaScriptSerializer) _
+					.Serialize(threadPage.Messages.Select(Function(m) m.ToJsonObject(websiteRoot)))
+
+				' update the last read time to the newest message being returned if its newer than the current value
+				Dim lastMessageDate = threadPage.Messages.Last.MessageDateTime
+				If lastReadDateTime.HasValue = False Or lastMessageDate > lastReadDateTime Then
+					MessageThreadManager.UpdateLastReadForSession(MessageThreadID, lastMessageDate)
+				End If
 			End If
 		End Sub
+
+		Private Function GetLastReadDate(threadId As Guid) As Date?
+			Dim dRowLastRead As DataRow = MessageThreadManager.MessageThreadsReadThisSession.Select("UniqueID = '" & threadId.ToString & "'").FirstOrDefault
+			If Not IsNothing(dRowLastRead) Then
+				Return CDate(dRowLastRead("DateAndTime"))
+			Else
+				Return CDate(Session("UserFirstViewedMessageboard"))
+			End If
+		End Function
+
+		Private Function GetFirstUnreadMessage(messages As List(Of ThreadMessageDto), lastReadDateTime As Date?) As ThreadMessageDto
+			If lastReadDateTime.HasValue Then
+				If CDate(Session("UserFirstViewedMessageboard")) > lastReadDateTime.Value Then lastReadDateTime = CDate(Session("UserFirstViewedMessageboard"))
+				Return messages.Where(Function(message) message.MessageDateTime > lastReadDateTime.Value).OrderBy(Function(message) message.MessageDateTime).FirstOrDefault
+			Else
+				Return Nothing
+			End If
+		End Function
 
 		Public Function CheckForCallBack() As Boolean
 			Dim strCallBack As String = Request.Params("CallBack")
@@ -49,6 +103,10 @@
 				AddPostReactionFromCallback()
 			ElseIf strCallBack = "RemoveReaction" Then
 				RemovePostReactionFromCallback()
+			ElseIf strCallBack = "GetOlderMessages" Then
+				GetMessagesBeforeFromCallback()
+			ElseIf strCallBack = "GetNewerMessages" Then
+				GetMessagesAfterFromCallback()
 			End If
 			Return True
 		End Function
@@ -80,87 +138,95 @@
 			Response.End()
 		End Sub
 
-		Protected Sub RebuildList(Optional ByVal MoveToFirstUnreadMessage As Boolean = False)
-			Dim lstMessageThreadMessage As List(Of ThreadMessageDto) = MessageManager.LoadThread(MessageThreadID)
-			Dim intScrollIndex As Integer?
+		Private Sub GetMessagesBeforeFromCallback()
+			Try
+				Dim threadId = New Guid(Request.Params("ThreadId"))
+				Dim beforeMessageId = New Guid(Request.Params("BeforeMessageId"))
+				Dim messages = MessageManager.LoadThread(threadId)
 
-			gvMessageList.DataSource = lstMessageThreadMessage
+				Dim beforeMessageIndex = messages.FindIndex(Function(m) m.MessageId = beforeMessageId)
+				Dim threadPage = GetMessagesBefore(messages, beforeMessageIndex)
 
-			If MoveToFirstUnreadMessage Then
-				Dim dteLastReadMessage As Date?
-				Dim dRowLastRead As DataRow = MessageThreadManager.MessageThreadsReadThisSession.Select("UniqueID = '" & Me.MessageThreadID.ToString & "'").FirstOrDefault
+				Dim websiteRoot = ResolveUrl("~/")
+				Dim jsonPage = New With {
+					.messagesBefore = threadPage.MessagesBefore,
+					.messages = threadPage.Messages.Select(Function(m) m.ToJsonObject(websiteRoot))
+				}
 
-				If Not IsNothing(dRowLastRead) Then
-					dteLastReadMessage = CDate(dRowLastRead("DateAndTime"))
-				Else
-					dteLastReadMessage = CDate(Session("UserFirstViewedMessageboard"))
-				End If
-
-				If dteLastReadMessage.HasValue Then
-					If CDate(Session("UserFirstViewedMessageboard")) > dteLastReadMessage.Value Then dteLastReadMessage = CDate(Session("UserFirstViewedMessageboard"))
-					Dim objMessage As ThreadMessageDto = lstMessageThreadMessage.Where(Function(message) message.MessageDateTime >= dteLastReadMessage.Value).OrderBy(Function(message) message.MessageDateTime).FirstOrDefault
-					Dim intIndex As Integer
-					If Not IsNothing(objMessage) Then
-						intIndex = lstMessageThreadMessage.IndexOf(objMessage)
-						'the index we have is actually of the last read message. We want the last _unread_ message, if there is one
-						If intIndex + 1 < (lstMessageThreadMessage.Count - 1) Then intIndex += 1
-					Else
-						'just move to the last message
-						intIndex = (lstMessageThreadMessage.Count - 1)
-					End If
-
-					'we finally know which item we're looking for... but which page is it on?
-					gvMessageList.PageIndex = CInt(Math.Truncate((intIndex) / gvMessageList.PageSize))
-
-					'...we'll need to scroll to a certain row once the grid's been databound...
-					intScrollIndex = intIndex - (gvMessageList.PageSize * gvMessageList.PageIndex)
-				Else
-					'just move to the last page
-					gvMessageList.PageIndex = CInt(Math.Truncate(lstMessageThreadMessage.Count / gvMessageList.PageSize))
-				End If
-			End If
-
-			gvMessageList.DataBind()
-
-			'...should we be scrolling to a certain record on the list?
-			If intScrollIndex.HasValue Then
-				gvMessageList.Rows(intScrollIndex.Value).Focus()
-			End If
+				Response.Write((New Script.Serialization.JavaScriptSerializer).Serialize(jsonPage))
+				Response.ContentType = "application/json"
+			Catch ex As Exception
+			End Try
+			Response.End()
 		End Sub
 
-		Private Sub gvMessageList_PageIndexChanging(ByVal sender As Object, ByVal e As GridViewPageEventArgs) Handles gvMessageList.PageIndexChanging
-			Response.Redirect("~/Pages/Message/MessageThreadDetail.aspx?MessageThreadID=" & MessageThreadID.ToString & "&Page=" & (e.NewPageIndex + 1))
+		Private Sub GetMessagesAfterFromCallback()
+			Try
+				Dim threadId = New Guid(Request.Params("ThreadId"))
+				Dim afterMessageId = New Guid(Request.Params("AfterMessageId"))
+				Dim messages = MessageManager.LoadThread(threadId)
+
+				Dim messagesToSkip = messages.FindIndex(Function(m) m.MessageId = afterMessageId) + 1
+				Dim threadPage = GetMessagesAfter(messages, messagesToSkip)
+
+				Dim lastReadDateTime = GetLastReadDate(threadId)
+				Dim firstUnreadMessage = GetFirstUnreadMessage(messages, lastReadDateTime)
+
+				Dim firstUnreadMessageId As Guid = Nothing
+				If Not IsNothing(firstUnreadMessage) Then
+					firstUnreadMessageId = firstUnreadMessage.MessageId
+				End If
+
+				Dim lastMessageDate = threadPage.Messages.Last.MessageDateTime
+				If lastReadDateTime.HasValue = False Or lastMessageDate > lastReadDateTime Then
+					MessageThreadManager.UpdateLastReadForSession(threadId, lastMessageDate)
+				End If
+
+				Dim websiteRoot = ResolveUrl("~/")
+				Dim jsonPage = New With {
+					.messagesAfter = threadPage.MessagesAfter,
+					.firstUnreadMessageId = firstUnreadMessageId,
+					.messages = threadPage.Messages.Select(Function(m) m.ToJsonObject(websiteRoot))
+				}
+
+				Response.Write((New Script.Serialization.JavaScriptSerializer).Serialize(jsonPage))
+				Response.ContentType = "application/json"
+			Catch ex As Exception
+			End Try
+			Response.End()
 		End Sub
 
-		Protected Function UserImageURL(ByVal ImageUploaded As Boolean, ByVal UserID As Guid) As String
-			If ImageUploaded Then
-				Return "~/Uploads/Images/" & UserID.ToString & "_sm.jpg"
-			Else
-				Return "~/Images/Common/NoImageAvailable.gif"
+		Private Function GetMessagesBefore(messages As List(Of ThreadMessageDto), beforeMessageIndex As Integer) As ThreadPageDto
+			Dim messageCount = messages.Count
+			Dim messagesToTake = PageSize
+
+			' if we're close to the start of the thread we may need to return less than 10 messages
+			If beforeMessageIndex < messagesToTake Then
+				messagesToTake = PageSize - (PageSize - beforeMessageIndex)
 			End If
+
+			Dim messagesToSkip = beforeMessageIndex - messagesToTake
+
+			Return New ThreadPageDto With {
+				.MessagesBefore = messagesToSkip,
+				.Messages = messages.Skip(messagesToSkip).Take(messagesToTake)
+			}
+		End Function
+
+		Private Function GetMessagesAfter(messages As List(Of ThreadMessageDto), messagesToSkip As Integer) As ThreadPageDto
+			Dim messagesSlice = messages.Skip(messagesToSkip).Take(PageSize)
+
+			Return New ThreadPageDto With {
+				.MessagesBefore = messagesToSkip,
+				.MessagesAfter = messages.Count - messagesToSkip - messagesSlice.Count,
+				.Messages = messagesSlice
+			}
 		End Function
 
 		Private Sub NewMessage1_NewMessageAdded() Handles NewMessage1.NewMessageAdded
 			Predictathon.MessageThreadManager.UpdateLastReadForSession(Me.MessageThreadID)
 			Response.Redirect(HttpContext.Current.Request.Url.AbsoluteUri, False)
 			HttpContext.Current.ApplicationInstance.CompleteRequest()
-		End Sub
-
-		Private Sub gvMessageList_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles gvMessageList.RowDataBound
-			If e.Row.RowType = DataControlRowType.DataRow Then
-				Dim message = DirectCast(e.Row.DataItem, ThreadMessageDto)
-				If message.HasLinkedImage Then
-					Dim divLinkedImage As HtmlGenericControl = DirectCast(e.Row.FindControl("divLinkedImage"), HtmlGenericControl)
-					divLinkedImage.Visible = True
-					'attach JavaScript to show larger image on click
-					divLinkedImage.Attributes("onclick") = String.Format("ShowPopup('{0}')", CommonMethods.CurrentURLRoot & "/Uploads/Images/Message/" & message.MessageId.ToString & ".jpg")
-					DirectCast(divLinkedImage.FindControl("imgMessage"), Image).ImageUrl = "~/Uploads/Images/Message/" & message.MessageId.ToString & "_sm.jpg"
-				ElseIf Not String.IsNullOrEmpty(message.YouTubeVideoId) Then
-					Dim divYouTubeVideo As HtmlGenericControl = DirectCast(e.Row.FindControl("divYouTubeVideo"), HtmlGenericControl)
-					divYouTubeVideo.Visible = True
-					divYouTubeVideo.InnerHtml = Predictathon.MessageManager.YouTubeVideoHTML(message.YouTubeVideoId)
-				End If
-			End If
 		End Sub
 	End Class
 End Namespace

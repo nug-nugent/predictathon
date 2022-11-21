@@ -42,9 +42,9 @@ BEGIN
 								LastPostedMessage.MessageDateTime DESC)
 		, ReplyCount = COUNT([Message].MessageID) - 1
 		, Unread = CASE WHEN ReadThreads.DateAndTime IS NOT NULL THEN 
-						CASE WHEN ReadThreads.DateAndTime <= MAX([Message].MessageDateTime) THEN 1 ELSE 0 END
+						CASE WHEN ReadThreads.DateAndTime < MAX([Message].MessageDateTime) THEN 1 ELSE 0 END
 					ELSE
-						CASE WHEN @UserLastViewedMessageboard <= MAX([Message].MessageDateTime) THEN 1 ELSE 0 END
+						CASE WHEN @UserLastViewedMessageboard < MAX([Message].MessageDateTime) THEN 1 ELSE 0 END
 					END
 	FROM
 		MessageThread

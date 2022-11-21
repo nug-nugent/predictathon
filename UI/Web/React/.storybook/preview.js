@@ -1,4 +1,4 @@
-import '../../App_Themes/Predictatheme/Predictathon4.css';
+import '../../Styles/Predictathon.css';
 
 const viewports = {
   iphone12: {

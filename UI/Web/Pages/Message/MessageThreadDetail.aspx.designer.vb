@@ -12,72 +12,27 @@ Option Explicit On
 
 Namespace Predictathon.Pages.Message
 
-	Partial Public Class MessageThreadDetail
+    Partial Public Class MessageThreadDetail
 
-		'''<summary>
-		'''divPopup control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents divPopup As Global.System.Web.UI.HtmlControls.HtmlGenericControl
+        '''<summary>
+        '''NewMessage1 control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents NewMessage1 As Global.Predictathon.UserControls.Message.NewMessage
 
-		'''<summary>
-		'''imgLarge control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents imgLarge As Global.System.Web.UI.WebControls.Image
-
-		'''<summary>
-		'''lblThreadSubject control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents lblThreadSubject As Global.System.Web.UI.WebControls.Label
-
-		'''<summary>
-		'''gvMessageList control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents gvMessageList As Global.Predictathon.Web.UI.WebControls.GridView
-
-		'''<summary>
-		'''lblReply control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents lblReply As Global.System.Web.UI.WebControls.Label
-
-		'''<summary>
-		'''NewMessage1 control.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated field.
-		'''To modify move field declaration from designer file to code-behind file.
-		'''</remarks>
-		Protected WithEvents NewMessage1 As Global.Predictathon.UserControls.Message.NewMessage
-
-		'''<summary>
-		'''Master property.
-		'''</summary>
-		'''<remarks>
-		'''Auto-generated property.
-		'''</remarks>
-		Public Shadows ReadOnly Property Master() As Predictathon.Master.Main
-			Get
-				Return CType(MyBase.Master, Predictathon.Master.Main)
-			End Get
-		End Property
-	End Class
+        '''<summary>
+        '''Master property.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated property.
+        '''</remarks>
+        Public Shadows ReadOnly Property Master() As Predictathon.Master.Main
+            Get
+                Return CType(MyBase.Master, Predictathon.Master.Main)
+            End Get
+        End Property
+    End Class
 End Namespace

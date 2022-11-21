@@ -1,4 +1,4 @@
-import { faAngleDown, faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight, faAngleUp, faArrowLeft, faArrowRight, faCheckCircle, faExclamationCircle, faExclamationTriangle, faInfoCircle, faList, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight, faAngleUp, faArrowDown, faArrowLeft, faArrowRight, faArrowUp, faCheckCircle, faExclamationCircle, faExclamationTriangle, faInfoCircle, faList, faSpinner, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const icons = Object.freeze({
@@ -17,8 +17,12 @@ export const icons = Object.freeze({
     chevronDoubleLeft: faAnglesLeft,
     chevronDoubleRight: faAnglesRight,
 
+    arrowDown: faArrowDown,
+    arrowUp: faArrowUp,
     arrowLeft: faArrowLeft,
-    arrowRight: faArrowRight
+    arrowRight: faArrowRight,
+
+    close: faXmark
 });
 
 export const Icon = FontAwesomeIcon;

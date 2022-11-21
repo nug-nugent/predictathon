@@ -608,168 +608,18 @@ h3 {
     text-align: right;
 }
 
-.ThreadMessage {
-    position: relative;
+.ReplyContainer {
+    max-width: 850px;
+    margin: auto;
+    padding: 20px 4px 0 4px;
 }
 
-.ThreadMessageProfileImage {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-    .ThreadMessageProfileImage img {
-        width: 117px;
-        height: 94px;
-    }
-
-.ThreadMessageHeader {
-    margin-left: 122px;
-    overflow: auto;
-    background-color: #E5E5F5;
-    padding: 5px 5px 0px 5px;
-}
-
-.ThreadMessageHeader, .ThreadMessageFooter {
-    color: #777777;
-    border-bottom: 1px solid #BCBCEC;
-}
-
-.ThreadMessagePostedBy, .ThreadMessagePostedWhen {
-    padding-right: 5px;
-    float: left;
-    line-height: 26px;
-    height: 31px;
-}
-
-    .ThreadMessagePostedBy > a {
-        font-weight: bold;
-    }
-
-.ThreadMessageAddReaction {
-    float: right;
-    cursor: pointer;
-    background-image: url(../Images/Message/add-reaction.svg);
-    background-size: 26px 26px;
-    width: 26px;
-    height: 26px;
-    margin: 0px 5px 5px 10px;
-}
-
-.ThreadMessageReaction {
-    float: right;
-    display: flex;
-    align-items: center;
-    padding: 3px;
-    margin: 0px 0px 5px 4px;
-    border-radius: 5px;
-    background: #EEEEEE;
-}
-
-    .ThreadMessageReaction > img {
-        width: 20px;
-        height: 20px;
-        padding-right: 4px;
-    }
-
-    .ThreadMessageReaction.reacted {
-        font-weight: bold;
-        background: #F8F8F8;
-        color: #222222;
-    }
-
-.ReactionTooltip {
-    width: 200px;
-    padding: 10px;
-}
-
-.ReactionTooltipImage {
-    float: left;
-}
-
-    .ReactionTooltipImage > img {
-        width: 30px;
-        height: 30px;
-    }
-
-.ReactionTooltipClose {
-    position: absolute;
-    right: 15px;
-    top: 20px;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-    .ReactionTooltipClose:before, .ReactionTooltipClose:after {
-        position: absolute;
-        left: 10px;
-        content: ' ';
-        height: 15px;
-        width: 2px;
-        background-color: #333333;
-    }
-
-    .ReactionTooltipClose:before {
-        transform: rotate(45deg);
-    }
-
-    .ReactionTooltipClose:after {
-        transform: rotate(-45deg);
-    }
-
-.ReactionTooltipButton {
-    float: right;
-    margin-right: 30px;
-}
-
-    .ReactionTooltipButton > button {
-        width: 100px;
-        height: 30px;
-        background-color: #FFFFFF;
-        border: 1px solid #777777;
-        cursor: pointer;
-    }
-
-.ReactionTooltipTitle {
-    clear: both;
-    padding: 10px 0px;
-    font-weight: bold;
-}
-
-.ThreadMessageText {
-    margin-left: 122px;
-    overflow: auto;
-    background-color: #FFFFFF;
-    padding: 5px;
-    clear: both;
-}
-
-    .ThreadMessageText > p:first-of-type {
-        margin-top: 0
-    }
-
-.ThreadMessageLinkedImage, .ThreadMessageLinkedVideo {
-    margin-left: 5px;
-    margin-bottom: 5px;
-    float: right;
-}
-
-    .ThreadMessageLinkedImage img {
-        max-width: 100%;
-    }
-
-    .ThreadMessageLinkedVideo iframe {
-        max-width: 100%;
-        width: 400px;
-        height: 240px;
-    }
-
-.ThreadMessageFooter {
-    margin-left: 122px;
-    background-color: #FFFFFF;
-    font-size: 12px;
-    padding: 0px 5px 5px 5px;
+.ReplyTextArea {
+    padding: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* MOBILE MESSAGEBOARD THREAD */
@@ -783,53 +633,12 @@ h3 {
         text-align: left;
     }
 
-    .ThreadMessageLinkedImage, .ThreadMessageLinkedVideo {
-        margin-left: 0px;
-        float: none;
-        text-align: right;
+    .ReplyTextArea {
+        font-size: 16px; /* to stop mobile zooming when focused */
     }
-
-        .ThreadMessageLinkedVideo iframe {
-            height: 200px;
-        }
 }
 
 @media handheld and (orientation: portrait), screen and ( max-width: 420px ) {
-    .ThreadMessagePostedBy, .ThreadMessagePostedWhen {
-        line-height: unset;
-        height: 22px;
-    }
-
-    .ThreadMessagePostedBy {
-        padding-right: 0px;
-    }
-
-    .ThreadMessagePostedWhen {
-        float: right;
-        padding: 0px 0px 0px 5px;
-    }
-
-    .ThreadMessageAddReaction {
-        clear: left;
-    }
-
-    .ThreadMessageProfileImage img {
-        width: 74px;
-        height: 59px;
-    }
-
-    .ThreadMessageHeader {
-        margin-left: 79px;
-        min-height: 53px;
-    }
-
-    .ThreadMessageText {
-        margin-left: 0px;
-    }
-
-    .ThreadMessageFooter {
-        margin-left: 0px;
-    }
 }
 
 /* //END OF MESSAGEBOARD-SPECIFIC // */

@@ -6,6 +6,7 @@ const sizes = {
 };
 
 const baseTheme = {
+    // general
     backgroundColor: colors.white,
     textColor: colors.black,
     textInverseColor: colors.white,
@@ -13,16 +14,22 @@ const baseTheme = {
     border: `1px solid ${colors.grey}`,
     boxShadow: `rgba(0, 0, 0, 0.3) 0px 5px 10px`,
 
-    matchListWidth: "850px",
+    // table
 
     headerBackgroundColor: colors.lightGrey,
     altRowBackgroundColor: colors.lighterGrey,
     footerButtonsColor: colors.lightBlue,
 
+    // button
+    
     buttonBgColor: colors.white,
     buttonTextColor: colors.black,
     buttonDisabledTextColor: colors.grey,
     buttonHoverBgColor: colors.lighterGrey,
+    
+    // match
+
+    matchListWidth: "850px",
 
     predictionsListButtonColor: colors.black,
     predictionsListButtonErrorColor: colors.darkRed,
@@ -42,7 +49,6 @@ const baseTheme = {
     warningMobileBgColor: colors.orange,
 
     savingIcon: icons.loading,
-
     savedIcon: icons.check,
     savedIconColor: colors.green,
     savedMobileBgColor: colors.green,
@@ -60,7 +66,24 @@ const baseTheme = {
         1: colors.darkOrange,
         2: colors.darkGreen,
         3: colors.green
-    })
+    }),
+
+    // message board
+
+    messageListWidth: "850px",
+    messageBottomMargin: "5px",
+    messageProfileImgSize: "60px",
+    messageHeaderBgColor: colors.lightGrey,
+    messageHeaderTextColor: colors.darkGrey,
+
+    reactionBgColor: colors.white,
+    reactionTextColor: colors.darkGrey,
+    reactionBorder: `1px solid ${colors.white}`,
+    reactionIsMeBgColor: colors.white,
+    reactionIsMeTextColor: colors.black,
+    reactionIsMeBorder: `1px solid ${colors.grey}`,
+
+    unreadSeparatorColor: colors.red,
 };
 
 export const theme = Object.freeze(baseTheme);

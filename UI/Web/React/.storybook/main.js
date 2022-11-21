@@ -9,7 +9,7 @@ module.exports = {
     "@storybook/addon-controls",
     "@storybook/addon-actions",
     "storybook-addon-mock",
-    "@a110/storybook-expand-all"
+    // "@a110/storybook-expand-all"
   ],
   "framework": "@storybook/react",
   "core": {

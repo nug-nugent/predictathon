@@ -3,8 +3,8 @@ const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
     entry: {
-        "match-list": path.resolve(__dirname, "Apps/match-list.jsx")
-        // more entrypoints can be added here to create other bundles to put on other pages
+        "match-list": path.resolve(__dirname, "Apps/match-list.jsx"),
+        "message-list": path.resolve(__dirname, "Apps/message-list.jsx")
     },
     output: {
         filename: "[name].bundle.js",
@@ -21,6 +21,15 @@ module.exports = {
                 use: {
                     loader: "babel-loader"
                 }
+            },
+            {
+                test: /\.svg$/,
+                use: {
+                    loader: 'svg-url-loader',
+                    options: {
+                      limit: 10000,
+                    },
+                },
             }
         ]
     },
