@@ -49,4 +49,4 @@
     <asp:Label ID="lblUploadFile" runat="server" Text="Select image to upload: " /><asp:FileUpload ID="FileUpload1" runat="server" Text="Attach image" onchange="FileChosen();" />
     <span id="spnUploadFromURL" runat="server"><asp:Label ID="lblUploadFromURL" runat="server" Text="... or upload from a URL: " /><asp:TextBox ID="txtUploadFromURL" runat="server" Width="20em" /></span>
 </div>
-<div style="width: 100%; text-align: center"><asp:Button ID="btnSubmit" runat="server" Text="Submit" OnClientClick="DisableButton()" UseSubmitBehavior="False" /></div>
+<div style="width: 100%; text-align: center"><asp:Button ID="btnSubmit" runat="server" Text="Submit" OnClientClick="DisableButton()" UseSubmitBehavior="False" CssClass="button" /></div>

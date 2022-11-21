@@ -15,13 +15,22 @@ Namespace Predictathon.UserControls
     Partial Public Class Header
 
         '''<summary>
-        '''tdMainMenu control.
+        '''HeaderText control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents tdMainMenu As Global.System.Web.UI.HtmlControls.HtmlTableCell
+        Protected WithEvents HeaderText As Global.System.Web.UI.HtmlControls.HtmlGenericControl
+
+        '''<summary>
+        '''LoginInformationHeader control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents LoginInformationHeader As Global.System.Web.UI.HtmlControls.HtmlGenericControl
 
         '''<summary>
         '''LoginInformation1 control.

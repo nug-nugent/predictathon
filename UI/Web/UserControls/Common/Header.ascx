@@ -3,21 +3,17 @@
 
 <script type="text/javascript">
     function HeaderClick() {
-        __doPostBack('<%=tdMainMenu.UniqueID %>', '');
+        __doPostBack('<%=HeaderText.UniqueID %>', '');
     }
 </script>
 
-<table style="width: 100%; border: 0;" border="0" cellpadding="0" cellspacing="0">
-    <tr>
-        <td class="HeaderRepeat HeaderStart">
-            &nbsp;
-        </td>
-        <td id="tdMainMenu" runat="server" class="Header HeaderHome" onclick="HeaderClick();">
-            &nbsp;
-        </td>
-        <td class="HeaderRepeat" style="padding-right: 20px">
-            <span class="Clickable" onclick="HeaderClick();">Predictathon</span><br />
-            <uc1:LoginInformation ID="LoginInformation1" runat="server" />   
-        </td>
-    </tr>
-</table>
+<div class="MainHeader FullWidth">
+    <div class="Logo">
+        <h1 id="HeaderText" runat="server" class="Clickable" onclick="HeaderClick();">Predictathon</h1>
+        <img runat="server" src="~/Images/Branding/Football.png" alt="Football" />
+    </div>
+    <div class="LoginInformation">
+        <span id="LoginInformationHeader" runat="server" class="LoginInformationHeader Clickable" onclick="HeaderClick();">Predictathon</span>
+        <uc1:LoginInformation ID="LoginInformation1" runat="server" />
+    </div>
+</div>

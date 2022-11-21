@@ -60,6 +60,15 @@ Namespace Predictathon.UserControls.Message
         Protected WithEvents rbYouTubeVideoLink As Global.System.Web.UI.WebControls.RadioButton
 
         '''<summary>
+        '''btnSubmit control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents btnSubmit As Global.System.Web.UI.WebControls.Button
+
+        '''<summary>
         '''divYouTubeVideoLink control.
         '''</summary>
         '''<remarks>
@@ -139,14 +148,5 @@ Namespace Predictathon.UserControls.Message
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
         Protected WithEvents txtUploadFromURL As Global.System.Web.UI.WebControls.TextBox
-
-        '''<summary>
-        '''btnSubmit control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents btnSubmit As Global.System.Web.UI.WebControls.Button
     End Class
 End Namespace

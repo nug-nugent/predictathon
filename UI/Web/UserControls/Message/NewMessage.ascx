@@ -35,7 +35,7 @@
     <asp:RadioButton ID="rbNone" runat="server" Text="No attachment" GroupName="rbAttachment" Checked="true" />
     <asp:RadioButton ID="rbUploadImage" runat="server" Text="Image" GroupName="rbAttachment" />
     <asp:RadioButton ID="rbYouTubeVideoLink" runat="server" Text="YouTube video" GroupName="rbAttachment" />
-    <asp:Button ID="btnSubmit" runat="server" Text="Submit" OnClientClick="DisableButton()" UseSubmitBehavior="False" style="float: right" />
+    <asp:Button ID="btnSubmit" runat="server" Text="Submit" OnClientClick="DisableButton()" UseSubmitBehavior="False" style="float: right" CssClass="button" />
 </div>
 <div id="divYouTubeVideoLink" runat="server" style="display: none">
     <asp:Label ID="lblYouTubeVideoLink" runat="server" Text="URL or 11-character YouTube video ID: " /><asp:TextBox ID="txtYouTubeVideoLink" runat="server" /><br />

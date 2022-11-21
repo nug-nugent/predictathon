@@ -152,7 +152,7 @@
             </tr>
             <tr>
                 <td align="center" colspan="2">
-                    <asp:Button ID="btnSubmitUserDetails" runat="server" Text="Submit " />
+                    <asp:Button ID="btnSubmitUserDetails" runat="server" Text="Submit " CssClass="button" />
                     <div id="divSaveConfirmed" runat="server" style="margin-top: 10px" visible="false">
                         <asp:Label ID="lblSaved" runat="server" CssClass="Yes" Text="Your changes have been saved." />
                     </div>
