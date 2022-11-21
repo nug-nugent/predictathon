@@ -7,6 +7,8 @@
         <%: System.Web.Optimization.Scripts.Render("~/js/messagelist") %> 
     </asp:PlaceHolder>
     <script type="text/javascript">
+        window.appPath = "<%= AppPath %>";
+        window.currentUserId = "<%= CurrentUserId %>";
         window.threadId = "<%= ThreadId %>";
         window.threadTitle = "<%= ThreadTitle %>";
         window.messagesBefore = <%= MessagesBefore %>;

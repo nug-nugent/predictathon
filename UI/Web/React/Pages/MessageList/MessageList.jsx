@@ -4,11 +4,15 @@ import { EmojiPicker } from "../../Modules/emoji-picker";
 import { Message } from "../../Components/Message/Message";
 import { BoardButton, LoadMoreButton, MessagesContainer, Separator, Title, TitleContainer } from "./style";
 import { Icon, icons } from "../../Modules/icons";
+import { SignalRManager } from "../../Modules/signalr-client";
 
-export const MessageList = ({ id, title, messages, firstUnreadMessageId, messagesBefore, messagesAfter, customReactionsPath }) => {
+export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, messages,
+    firstUnreadMessageId, messagesBefore, messagesAfter, customReactionsPath }) => {
+
     const [messageList, setMessageList, messageListRef] = useState(messages);
     const [olderMessageCount, setOlderMessageCount] = useState(messagesBefore);
     const [newerMessageCount, setNewerMessageCount] = useState(messagesAfter);
+    const [newMessagesPosted, setNewMessagesPosted] = useState(false);
     const [isLoadingOlder, setLoadingOlder] = useState(false);
     const [isLoadingNewer, setLoadingNewer] = useState(false);
     const messagesContainerRef = useRef(null);
@@ -16,8 +20,11 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
     const firstMessageDiv = useRef(null);
     const firstMessageScrollPosition = useRef(null);
     
-    // initial scroll position.  setTimeout() required to let the layout settle
     useEffect(() => {
+        useSignalR && new SignalRManager(appPath, currentUserId)
+            .registerMessageListeners(id, () => setNewMessagesPosted(true), onReactionsChanged);
+        
+        // initial scroll position.  setTimeout() required to let the layout settle
         history.scrollRestoration = "manual";
         setTimeout(() => {
             if (firstUnreadMessageId) {
@@ -42,6 +49,7 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
     
     const onAddReaction = async (messageId, name, url) => {
         callReactionsApi(messageId, "AddReaction", new URLSearchParams({
+            ThreadId: id,
             MessageId: messageId,
             Name: name,
             ImageUrl: url
@@ -50,18 +58,23 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
     
     const onRemoveReaction = (messageId, name) => {
         callReactionsApi(messageId, "RemoveReaction", new URLSearchParams({
+            ThreadId: id,
             MessageId: messageId,
             Name: name
         }));
     };
+    
+    const onReactionsChanged = (messageId) => {
+        callReactionsApi(messageId, "GetReactions");
+    }
     
     const callReactionsApi = async (messageId, action, requestBody) => {
         const message = messageListRef.current.find((m) => m.id == messageId);
         if (!message) return;
         
         try {
-            const response = await fetch(`MessageThreadDetail.aspx?CallBack=${action}`, {
-                method: "POST",
+            const response = await fetch(`MessageThreadDetail.aspx?CallBack=${action}${requestBody ? "" : `&MessageId=${messageId}`}`, {
+                method: requestBody ? "POST" : "GET",
                 body: requestBody
             });
             if (!response.ok) throw new Error(response.statusText);
@@ -105,6 +118,7 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
             const result = await response.json();
             setMessageList([...messageListRef.current, ...result.messages]);
             setNewerMessageCount(result.messagesAfter);
+            setNewMessagesPosted(false);
         } catch (e) {
             console.log("Reactions API error", e);
         }
@@ -112,6 +126,8 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
     }
 
     const [emojiPicker] = useState(new EmojiPicker(onAddReaction, customReactionsPath));
+
+    const newAndNewerMessages = newMessagesPosted && newerMessageCount > 0;
     
     return (
         <>
@@ -144,12 +160,17 @@ export const MessageList = ({ id, title, messages, firstUnreadMessageId, message
                     );
                 })}
 
-                {newerMessageCount > 0 && (
+                {newerMessageCount > 0 ? (
                     <LoadMoreButton isLoading={isLoadingNewer} onClick={getNewerMessages}>
                         {isLoadingNewer ? <Icon icon={icons.loading} pulse /> : <Icon icon={icons.arrowDown} />}
-                        <span>{newerMessageCount} newer message{newerMessageCount > 1 && "s"}</span>
+                        <span>{newerMessageCount}{newAndNewerMessages && "+"} newer message{(newerMessageCount > 1 || newAndNewerMessages) && "s"}</span>
                     </LoadMoreButton>
-                )}
+                ) : (newMessagesPosted ? (
+                    <LoadMoreButton isLoading={isLoadingNewer} newMessagesPosted={true} onClick={getNewerMessages}>
+                        {isLoadingNewer ? <Icon icon={icons.loading} pulse /> : <Icon icon={icons.arrowDown} bounce style={{ "--fa-bounce-height": "-4px" }} />}
+                        <span>new messages</span>
+                    </LoadMoreButton>
+                ) : <div style={{ height: "38px" }} />)}
             </MessagesContainer>
         </>
     );

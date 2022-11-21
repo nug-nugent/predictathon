@@ -84,6 +84,10 @@ const baseTheme = {
     reactionIsMeBorder: `1px solid ${colors.grey}`,
 
     unreadSeparatorColor: colors.red,
+
+    liveMessagesBgColor: colors.darkBlue,
+    liveMessagesHoverBgColor: colors.darkerBlue,
+    liveMessagesTextColor: colors.white
 };
 
 export const theme = Object.freeze(baseTheme);

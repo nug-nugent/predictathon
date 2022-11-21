@@ -10,6 +10,8 @@
 		End Property
 #End Region
 
+		Public AppPath As String
+		Public CurrentUserId As String
 		Public ThreadId As String
 		Public ThreadTitle As String
 		Public MessagesJson As String
@@ -28,6 +30,9 @@
 			Me.Master.TitleSuffix = "Message Thread"
 
 			If Not IsPostBack AndAlso Not CheckForCallBack() Then
+				AppPath = ResolveUrl("~/")
+				CurrentUserId = UserManager.CurrentUserID.ToString
+
 				' load the thread details and set the first properties used by React
 				Dim thread = MessageThreadManager.Load(MessageThreadID)
 				ThreadId = thread.MessageThreadID.ToString
@@ -48,26 +53,19 @@
 					messagesToSkip = Math.Min(messages.IndexOf(firstUnreadMessage) - 1, messagesToSkip)
 				End If
 
-				Dim threadPage As ThreadPageDto = Nothing
-
-				' if there isn't more than one page worth of messages just return them all
+				' if there's less than a page worth of messages always return them all
 				If messageCount <= PageSize Then
-					threadPage = New ThreadPageDto With {
-						.Messages = messages,
-						.MessagesBefore = 0,
-						.MessagesAfter = 0
-					}
-				Else
-					threadPage = GetMessagesAfter(messages, messagesToSkip)
+					messagesToSkip = 0
 				End If
+
+				Dim threadPage = GetMessagesAfter(messages, messagesToSkip)
 
 				' set the remaining properties used by React
 				MessagesBefore = threadPage.MessagesBefore
 				MessagesAfter = threadPage.MessagesAfter
 
-				Dim websiteRoot = ResolveUrl("~/")
 				MessagesJson = (New Script.Serialization.JavaScriptSerializer) _
-					.Serialize(threadPage.Messages.Select(Function(m) m.ToJsonObject(websiteRoot)))
+					.Serialize(threadPage.Messages.Select(Function(m) m.ToJsonObject(AppPath)))
 
 				' update the last read time to the newest message being returned if its newer than the current value
 				Dim lastMessageDate = threadPage.Messages.Last.MessageDateTime
@@ -99,6 +97,8 @@
 			Dim strCallBack As String = Request.Params("CallBack")
 			If String.IsNullOrEmpty(strCallBack) Then
 				Return False
+			ElseIf strCallBack = "GetReactions" Then
+				GetReactionsFromCallback()
 			ElseIf strCallBack = "AddReaction" Then
 				AddPostReactionFromCallback()
 			ElseIf strCallBack = "RemoveReaction" Then
@@ -111,13 +111,26 @@
 			Return True
 		End Function
 
+		Private Sub GetReactionsFromCallback()
+			Try
+				Dim messageId = New Guid(Request.Params("MessageId"))
+
+				Dim reactions = MessageReactionManager.Load(messageId)
+				Response.Write(MessageReactionManager.GetReactionsJson(reactions))
+				Response.ContentType = "application/json"
+			Catch ex As Exception
+			End Try
+			Response.End()
+		End Sub
+
 		Private Sub AddPostReactionFromCallback()
 			Try
+				Dim threadId = New Guid(Request.Params("ThreadId"))
 				Dim messageId = New Guid(Request.Params("MessageId"))
 				Dim name = Request.Params("Name")
 				Dim url = Request.Params("ImageUrl")
 
-				Dim reactions = MessageReactionManager.AddReaction(messageId, name, url)
+				Dim reactions = MessageReactionManager.AddReaction(threadId, messageId, name, url)
 				Response.Write(MessageReactionManager.GetReactionsJson(reactions))
 				Response.ContentType = "application/json"
 			Catch ex As Exception
@@ -127,10 +140,11 @@
 
 		Private Sub RemovePostReactionFromCallback()
 			Try
+				Dim threadId = New Guid(Request.Params("ThreadId"))
 				Dim messageId = New Guid(Request.Params("MessageId"))
 				Dim name = Request.Params("Name")
 
-				Dim reactions = MessageReactionManager.RemoveReaction(messageId, name, UserManager.CurrentUserID)
+				Dim reactions = MessageReactionManager.RemoveReaction(threadId, messageId, name, UserManager.CurrentUserID)
 				Response.Write(MessageReactionManager.GetReactionsJson(reactions))
 				Response.ContentType = "application/json"
 			Catch ex As Exception

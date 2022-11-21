@@ -81,7 +81,8 @@
                 End If
 
                 If blnUploadValid Then
-                    Predictathon.MessageManager.Save(objMessage)
+                    MessageManager.Save(objMessage)
+                    MessagesHub.NewMessage(MessageThreadID)
 
                     txtMessageContent.Text = String.Empty
                     rbUploadImage.Checked = False

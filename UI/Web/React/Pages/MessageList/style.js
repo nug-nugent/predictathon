@@ -54,6 +54,16 @@ export const MessagesContainer = styled.div`
 export const LoadMoreButton = styled(BoardButton)`
     width: 200px;
     margin: 10px auto;
+
+    ${({ newMessagesPosted }) => newMessagesPosted && `
+        background-color: ${theme.liveMessagesBgColor};
+        color: ${theme.liveMessagesTextColor};
+        font-weight: bold;
+
+        &:hover {
+            background-color: ${theme.liveMessagesHoverBgColor};
+        }
+    `}
 `;
 
 export const Separator = styled.div`
