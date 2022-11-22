@@ -107,6 +107,8 @@
 				GetMessagesBeforeFromCallback()
 			ElseIf strCallBack = "GetNewerMessages" Then
 				GetMessagesAfterFromCallback()
+			ElseIf strCallBack = "SyncMessages" Then
+				SyncMessagesFromCallback()
 			End If
 			Return True
 		End Function
@@ -146,6 +148,31 @@
 
 				Dim reactions = MessageReactionManager.RemoveReaction(threadId, messageId, name, UserManager.CurrentUserID)
 				Response.Write(MessageReactionManager.GetReactionsJson(reactions))
+				Response.ContentType = "application/json"
+			Catch ex As Exception
+			End Try
+			Response.End()
+		End Sub
+
+		Private Sub SyncMessagesFromCallback()
+			Try
+				Dim threadId = New Guid(Request.Params("ThreadId"))
+				Dim firstMessageId = New Guid(Request.Params("firstMessageId"))
+				Dim lastMessageId = New Guid(Request.Params("lastMessageId"))
+				Dim messages = MessageManager.LoadThread(threadId)
+
+				Dim messagesToSkip = messages.FindIndex(Function(m) m.MessageId = firstMessageId)
+				Dim messagesToTake = messages.FindIndex(Function(m) m.MessageId = lastMessageId) + 1 - messagesToSkip
+				Dim threadPage = GetMessagesBetween(messages, messagesToSkip, messagesToTake)
+
+				Dim websiteRoot = ResolveUrl("~/")
+				Dim jsonPage = New With {
+					.messagesBefore = threadPage.MessagesBefore,
+					.messagesAfter = threadPage.MessagesAfter,
+					.messages = threadPage.Messages.Select(Function(m) m.ToJsonObject(websiteRoot))
+				}
+
+				Response.Write((New Script.Serialization.JavaScriptSerializer).Serialize(jsonPage))
 				Response.ContentType = "application/json"
 			Catch ex As Exception
 			End Try
@@ -224,6 +251,16 @@
 			Return New ThreadPageDto With {
 				.MessagesBefore = messagesToSkip,
 				.Messages = messages.Skip(messagesToSkip).Take(messagesToTake)
+			}
+		End Function
+
+		Private Function GetMessagesBetween(messages As List(Of ThreadMessageDto), messagesToSkip As Integer, messagesToTake As Integer) As ThreadPageDto
+			Dim messagesSlice = messages.Skip(messagesToSkip).Take(messagesToTake)
+
+			Return New ThreadPageDto With {
+				.MessagesBefore = messagesToSkip,
+				.MessagesAfter = messages.Count - messagesToSkip - messagesSlice.Count,
+				.Messages = messagesSlice
 			}
 		End Function
 

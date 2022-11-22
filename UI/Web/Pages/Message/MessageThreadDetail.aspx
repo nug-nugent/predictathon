@@ -15,6 +15,7 @@
         window.messagesAfter = <%= MessagesAfter %>;
         window.firstUnreadMessageId = "<%= FirstUnreadMessageId %>";
         window.threadMessages = <%= MessagesJson %>;
+        window.messagesLoadedTime = new Date("<%= Date.Now.ToString("s") %>");
     </script>
 
     <div id="message-list"></div>

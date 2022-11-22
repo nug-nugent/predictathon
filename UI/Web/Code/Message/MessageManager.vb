@@ -60,16 +60,24 @@ Namespace Predictathon
 				Return YouTubeURLOrVideoID
 			Else
 				'an example URL would be youtube.com/watch?v=Qy0MUbq7Io8&feature=g-vrec&context=G2e865b9RVAAAAAAAAAA
-				'we only want the 11 characters after 'v='
+				' or youtu.be/Qy0MUbq7Io8
+				'we only want the 11 characters after 'v=' or 'youtu.be/'
 				Dim intVideoLinkIndex As Integer = YouTubeURLOrVideoID.IndexOf("?v=")
-				If intVideoLinkIndex = 0 Then intVideoLinkIndex = YouTubeURLOrVideoID.IndexOf("&v=")
+				If intVideoLinkIndex = -1 Then intVideoLinkIndex = YouTubeURLOrVideoID.IndexOf("&v=")
 
 				If intVideoLinkIndex > 0 AndAlso YouTubeURLOrVideoID.Length >= intVideoLinkIndex + 13 Then
 					Return YouTubeURLOrVideoID.Substring(intVideoLinkIndex + 3, 11)
 				Else
-					Return Nothing
+					' try the alt url format
+					intVideoLinkIndex = YouTubeURLOrVideoID.IndexOf("youtu.be/")
+
+					If intVideoLinkIndex > 0 AndAlso YouTubeURLOrVideoID.Length >= intVideoLinkIndex + 19 Then
+						Return YouTubeURLOrVideoID.Substring(intVideoLinkIndex + 9, 11)
+					End If
 				End If
 			End If
+
+			Return Nothing
 		End Function
 
 		Public Shared Function YouTubeVideoHTML(ByVal YouTubeVideoID As String) As String

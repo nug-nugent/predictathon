@@ -1,5 +1,5 @@
 import Popup from "reactjs-popup";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import addReactionImage from "../../Content/Images/add-reaction.svg";
 import { Icon } from "../../Modules/icons";
 import { media, theme } from "../../Modules/theme";
@@ -64,6 +64,25 @@ export const AddReactionIcon = styled.img.attrs({
     float: right;
 `;
 
+// (0%-16% does nothing to add a delay between iterations)
+const imgPan = keyframes`
+    0% {
+        object-position: 50% 50%;
+    }
+    16% {
+        object-position: 50% 50%;
+    }
+    38% {
+        object-position: 100% 100%;
+    }
+    79% {
+        object-position: 0% 0%;
+    }
+    100% {
+        object-position: 50% 50%;
+    }
+`;
+
 export const MediaContainer = styled.div`
     margin-left: 5px;
     float: right;
@@ -71,9 +90,10 @@ export const MediaContainer = styled.div`
 
     & img {
         cursor: pointer;
-        width: 300px;
-        height: 300px;
+        width: 250px;
+        height: 250px;
         object-fit: cover;
+        animation: 15s ease-in-out ${imgPan} infinite;
     }
 
     & iframe {
@@ -106,21 +126,22 @@ export const CloseIcon = styled(Icon)`
     cursor: pointer;
 `;
 
-export const ImagePopup = styled(Popup)`
+export const ImagePopup = styled(Popup).attrs({ overlayStyle: { zIndex: 3000 }})`
     &-overlay {
         background-color: rgba(70,70,70,0.7);
-        pointer-events: none;
     }
 
     &-content {
         cursor: pointer;
         position: relative;
-
-        & img {
-            max-width: 100vw;
-            max-height: 100vh;
-        }
     }
+`;
+
+export const FullPageImage = styled.img`
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    opacity: ${({ isLoaded }) => isLoaded ? `1` : `0`}
 `;
 
 export const TextContainer = styled.div`

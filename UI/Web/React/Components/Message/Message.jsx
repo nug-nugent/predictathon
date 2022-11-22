@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import { format, formatDistanceStrict } from "date-fns";
-import { AddReactionIcon, AuthorLink, CloseIcon, Container, DateContainer, HeaderContainer, ImagePopup, MarkdownContainer, MediaContainer, MessageContainer, ProfileImage, ProfileImageContainer, ReactionsContainer, TextContainer } from "./styles";
+import { AddReactionIcon, AuthorLink, CloseIcon, Container, DateContainer, FullPageImage, HeaderContainer, ImagePopup, MarkdownContainer, MediaContainer, MessageContainer, ProfileImage, ProfileImageContainer, ReactionsContainer, TextContainer } from "./styles";
 import { Reaction } from "./Reaction/Reaction";
 import { icons } from "../../Modules/icons";
 
@@ -12,6 +12,7 @@ export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
     const addReactionRef = useRef();
     const [messageDate] = useState(new Date(date));
     const [now, setNow] = useState(new Date());
+    const [isImageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
@@ -54,8 +55,8 @@ export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
                                 trigger={<img src={smallImageUrl} />}>
                                 {(close) => (
                                     <div onClick={close}>
-                                        <CloseIcon fixedWidth icon={icons.close} size="2x" />
-                                        <img src={imageUrl} />
+                                        {isImageLoaded && <CloseIcon fixedWidth icon={icons.close} size="3x" />}
+                                        <FullPageImage src={imageUrl} onLoad={() => setImageLoaded(true)} isLoaded={isImageLoaded} />
                                     </div>
                                 )}
                             </ImagePopup>
@@ -64,7 +65,7 @@ export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
 
                     {youTubeVideoId && (
                         <MediaContainer>
-                            <iframe type="text/html" src={`http://www.youtube.com/embed/${youTubeVideoId}`} frameBorder="0" />
+                            <iframe type="text/html" src={`//www.youtube.com/embed/${youTubeVideoId}`} frameBorder="0" />
                         </MediaContainer>
                     )}
 

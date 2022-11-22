@@ -2,27 +2,36 @@ import React, { Fragment, useEffect, useLayoutEffect, useRef } from "react";
 import useState from "react-usestateref";
 import { EmojiPicker } from "../../Modules/emoji-picker";
 import { Message } from "../../Components/Message/Message";
-import { BoardButton, LoadMoreButton, MessagesContainer, Separator, Title, TitleContainer } from "./style";
+import { BoardButton, ErrorContainer, ErrorIcon, GlobalStyles, LoadMoreButton, MessagesContainer, Separator, Title, TitleContainer } from "./style";
 import { Icon, icons } from "../../Modules/icons";
 import { SignalRManager } from "../../Modules/signalr-client";
+import { addSeconds } from "date-fns";
 
-export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, messages,
+export const MessageList = ({ appPath, currentUserId, liveUpdatesEnabled, id, title, messages, messagesLoadedTime,
     firstUnreadMessageId, messagesBefore, messagesAfter, customReactionsPath }) => {
 
     const [messageList, setMessageList, messageListRef] = useState(messages);
     const [olderMessageCount, setOlderMessageCount] = useState(messagesBefore);
-    const [newerMessageCount, setNewerMessageCount] = useState(messagesAfter);
+    const [newerMessageCount, setNewerMessageCount, newerMessagesCountRef] = useState(messagesAfter);
     const [newMessagesPosted, setNewMessagesPosted] = useState(false);
     const [isLoadingOlder, setLoadingOlder] = useState(false);
     const [isLoadingNewer, setLoadingNewer] = useState(false);
+    const [, setSyncTimer, syncTimerRef] = useState(false);
+    const [isConnectionError, setConnectionError] = useState(false);
     const messagesContainerRef = useRef(null);
     const separatorRef = useRef(null);
     const firstMessageDiv = useRef(null);
     const firstMessageScrollPosition = useRef(null);
-    
+
     useEffect(() => {
-        useSignalR && new SignalRManager(appPath, currentUserId)
-            .registerMessageListeners(id, () => setNewMessagesPosted(true), onReactionsChanged);
+        if (liveUpdatesEnabled) {
+            new SignalRManager(appPath, currentUserId, syncMessages)
+                .registerMessageListeners(id, onNewMessage, onReactionsChanged);
+
+            if (addSeconds(messagesLoadedTime, 45) < new Date()) syncMessages();
+
+            setSyncTimer(setInterval(syncMessages, 60000));
+        }
         
         // initial scroll position.  setTimeout() required to let the layout settle
         history.scrollRestoration = "manual";
@@ -36,6 +45,8 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
                     .scrollIntoView({ behavior: "smooth" });
             }
         }, 100);
+
+        return () => syncTimerRef.current && clearInterval(syncTimerRef.current);
     }, []);
 
     // keep scroll position after loading older messages
@@ -64,9 +75,15 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
         }));
     };
     
+    const onNewMessage = () => {
+        setConnectionError(false);
+        setNewMessagesPosted(true);
+    };
+
     const onReactionsChanged = (messageId) => {
+        setConnectionError(false);
         callReactionsApi(messageId, "GetReactions");
-    }
+    };
     
     const callReactionsApi = async (messageId, action, requestBody) => {
         const message = messageListRef.current.find((m) => m.id == messageId);
@@ -82,6 +99,27 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
             setMessageList([...messageListRef.current]);
         } catch (e) {
             console.log("Reactions API error", e);
+        }
+    };
+
+    const syncMessages = async () => {
+        const firstMessageId = messageListRef.current[0].id;
+        const lastMessageId = messageListRef.current[messageListRef.current.length - 1].id;
+
+        try {
+            const response = await fetch(`MessageThreadDetail.aspx?CallBack=SyncMessages&ThreadId=${id}&FirstMessageId=${firstMessageId}&LastMessageId=${lastMessageId}`);
+            if (!response.ok) throw new Error(response.statusText);
+            const result = await response.json();
+
+            setMessageList(result.messages);
+            setConnectionError(false);
+
+            setNewMessagesPosted(result.messagesAfter > newerMessagesCountRef.current);
+            if (newerMessagesCountRef.current) setNewerMessageCount(result.messagesAfter);
+            setOlderMessageCount(result.messagesBefore);
+        } catch (e) {
+            console.log("SyncMessaages API error", e);
+            setConnectionError(true);
         }
     };
 
@@ -101,7 +139,7 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
             setMessageList([...result.messages, ...messageListRef.current]);
             setOlderMessageCount(result.messagesBefore);
         } catch (e) {
-            console.log("Reactions API error", e);
+            console.log("OlderMessages API error", e);
         }
         setLoadingOlder(false);
     }
@@ -120,7 +158,7 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
             setNewerMessageCount(result.messagesAfter);
             setNewMessagesPosted(false);
         } catch (e) {
-            console.log("Reactions API error", e);
+            console.log("NewerMessages API error", e);
         }
         setLoadingNewer(false);
     }
@@ -131,6 +169,7 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
     
     return (
         <>
+            <GlobalStyles />
             <TitleContainer>
                 <a href={"Messageboard.aspx"}>
                     <BoardButton>
@@ -171,6 +210,13 @@ export const MessageList = ({ appPath, currentUserId, useSignalR, id, title, mes
                         <span>new messages</span>
                     </LoadMoreButton>
                 ) : <div style={{ height: "38px" }} />)}
+
+                {isConnectionError && (
+                    <ErrorContainer>
+                        <ErrorIcon icon={icons.error} />
+                        Live updates failed!  Refresh the page to retry.
+                    </ErrorContainer>
+                )}
             </MessagesContainer>
         </>
     );

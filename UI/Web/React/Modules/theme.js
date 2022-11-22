@@ -87,7 +87,8 @@ const baseTheme = {
 
     liveMessagesBgColor: colors.darkBlue,
     liveMessagesHoverBgColor: colors.darkerBlue,
-    liveMessagesTextColor: colors.white
+    liveMessagesTextColor: colors.white,
+    liveErrorIconColor: colors.darkRed
 };
 
 export const theme = Object.freeze(baseTheme);

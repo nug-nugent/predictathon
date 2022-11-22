@@ -1,5 +1,14 @@
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
+import { Icon } from "../../Modules/icons";
 import { media, theme } from "../../Modules/theme";
+
+export const GlobalStyles = createGlobalStyle`
+    ${media.mobile} {
+        .emoji-picker__search {
+            font-size: 16px; /* to stop mobile zooming when focused */
+        }
+    }
+`;
 
 export const Container = styled.div`
     display: flex;
@@ -94,4 +103,14 @@ export const Separator = styled.div`
         margin-left: 4px;
         margin-right: 4px;
     }
+`;
+
+export const ErrorContainer = styled.div`
+    text-align: center;
+    font-weight: bold;
+`;
+
+export const ErrorIcon = styled(Icon)`
+    margin-right: 5px;
+    color: ${theme.liveErrorIconColor};
 `;
