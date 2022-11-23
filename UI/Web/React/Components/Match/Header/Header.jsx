@@ -1,13 +1,17 @@
 import React from "react";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
+import enGB from "date-fns/locale/en-GB";
 import { Container, KickOffAndTeam1, KickOff, Team1, Prediction, Team2, PostMatch, Result, Points, Status } from "./styles";
 import { MatchStatus } from "../../../Modules/constants";
 
-export const Header = ({ date, matchStatus }) => (
+export const Header = ({ date, timeZone, matchStatus }) => (
     <Container>
         <KickOffAndTeam1>
             <KickOff>Kick-off&nbsp;</KickOff>
-            <div>{format(date, "HH:mm")}</div>
+            <div>{formatInTimeZone(date, timeZone,
+                timeZone === Intl.DateTimeFormat().resolvedOptions().timeZone ? "HH:mm" : "HH:mm zzz",
+                { locale: enGB })}
+            </div>
             <Team1>Home</Team1>
         </KickOffAndTeam1>
         <Prediction>Prediction</Prediction>

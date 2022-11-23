@@ -13,11 +13,19 @@
                 Dim weekStrings = competitionWeeks.Select(Function(d) d.ToString("s"))
                 CompetitionWeeksJson = (New Script.Serialization.JavaScriptSerializer).Serialize(weekStrings)
 
-                ' Show current week, or competition's first or last week if we're out of range
-                LoadedWeek = New Date() {
-                    New Date() {MatchManager.MatchWeekStartDate(Date.Today), competitionWeeks.First()}.Max(),
-                    competitionWeeks.Last()
-                }.Min()
+                ' Show current week (that has matches), or competition's first week if we're early
+                LoadedWeek = MatchManager.MatchWeekStartDate(Date.Today)
+                Dim nextWeek = competitionWeeks.FirstOrDefault(Function(week) week > LoadedWeek)
+                If nextWeek = Date.MinValue Then
+                    ' after the competition
+                    LoadedWeek = competitionWeeks.Last()
+                ElseIf nextWeek = competitionWeeks.First() Then
+                    ' before the competition
+                    LoadedWeek = nextWeek
+                Else
+                    ' in the middle somewhere
+                    LoadedWeek = competitionWeeks.ElementAt(competitionWeeks.IndexOf(nextWeek) - 1)
+                End If
 
                 ' Get the matches for the week
                 MatchesJson = GetMatchesJson(LoadedWeek)
@@ -141,6 +149,7 @@
             Dim mapped = matches.AsEnumerable().Select(Function(m) New With {
                 .id = m.MatchID,
                 .date = m.MatchDateTime.ToString("s"),
+                .timeZone = "Europe/London", ' we assume all dates are UK time
                 .description = m.Description,
                 .isKnockout = m.Knockout,
                 .homeTeam = m.HomeTeam,

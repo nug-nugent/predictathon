@@ -26,11 +26,19 @@ const getText = (matchStatus, predictionStatus, date, minutesToPredict) => {
     if (matchStatus !== MatchStatus.Pre) return "Awaiting result";
     if (predictionStatus === PredictionStatus.Saved) return "Prediction saved!";
     if (predictionStatus === PredictionStatus.SaveError) return "Failed to save prediction!";
-    let formats = ["minutes"];
-    if (minutesToPredict >= 60) {
-        formats = minutesToPredict >= 1440 ? ["days", "hours"] : ["hours"];
-    }
-    return `${formatDuration(intervalToDuration({ start: addMinutes(date, -minutesToPredict), end: date }), { format: formats })} to predict`;
+
+    const duration = intervalToDuration({ start: addMinutes(date, -minutesToPredict), end: date });
+    const formats = duration.years
+        ? ["years", "months"]
+        : duration.months
+            ? ["months", "days"]
+            : duration.days
+                ? ["days", "hours"]
+                : duration.hours
+                    ? ["hours", "minutes"]
+                    : ["minutes"];
+
+    return `${formatDuration(duration, { format: formats })} to predict`;
 };
 
 export const Status = ({ id, lastInGroup, matchStatus, predictionStatus, date,

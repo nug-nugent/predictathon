@@ -1,11 +1,12 @@
 import React, { Fragment, useEffect, useRef } from "react";
 import useState from 'react-usestateref';
-import { addMinutes, differenceInMilliseconds, differenceInMinutes, format, startOfMinute } from "date-fns";
+import { addMinutes, differenceInMilliseconds, differenceInMinutes, startOfMinute } from "date-fns";
 import { Match } from "../../Components/Match/Match";
 import { MatchStatus, PredictionsListStatus, PredictionStatus } from "../../Modules/constants";
 import { Container, DateHeader, KnockoutWarningContainer, TextContainer } from "./styles";
 import { WeekPicker } from "../../Components/WeekPicker/WeekPicker";
 import { Icon, icons } from "../../Modules/icons";
+import { toDate, formatInTimeZone } from "date-fns-tz";
 
 const PredictionSaveDisplayTime = 4000;
 
@@ -28,7 +29,7 @@ const mapMatches = (matches, imagesPath) => {
     return matches.map((m) => {
         const match = calculateTimeProps({
             ...m,
-            date: new Date(m.date),
+            date: toDate(m.date, { timeZone: m.timeZone }),
             homeImage: getTeamImage(imagesPath, m.homeImage),
             awayImage: getTeamImage(imagesPath, m.awayImage),
 
@@ -49,7 +50,7 @@ const mapMatches = (matches, imagesPath) => {
 }
 
 export const MatchList = ({ matches, weeks, loadedWeek, imagesPath }) => {
-    const [matchList, setMatchList, matchListRef] = useState(mapMatches(matches, imagesPath));
+    const [matchList, setMatchList, matchListRef] = useState(() => mapMatches(matches, imagesPath));
     const [isLoading, setLoading] = useState(false);
     const [showKnockoutWarning, setShowKnockoutWarning] = useState(false);
 
@@ -185,7 +186,7 @@ export const MatchList = ({ matches, weeks, loadedWeek, imagesPath }) => {
             ) : (
                 matchList.map((match, index) => {
                     let showDate = false;
-                    let date = format(match.date, "EEEE do MMMM yyyy");
+                    let date = formatInTimeZone(match.date, match.timeZone, "EEEE do MMMM yyyy");
                     if (!lastDate || date !== lastDate) {
                         showDate = true;
                         lastDate = date;

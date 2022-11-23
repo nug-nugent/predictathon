@@ -163,7 +163,7 @@ export const MessageList = ({ appPath, currentUserId, liveUpdatesEnabled, id, ti
         setLoadingNewer(false);
     }
 
-    const [emojiPicker] = useState(new EmojiPicker(onAddReaction, customReactionsPath));
+    const [emojiPicker] = useState(() => new EmojiPicker(onAddReaction, customReactionsPath));
 
     const newAndNewerMessages = newMessagesPosted && newerMessageCount > 0;
     
