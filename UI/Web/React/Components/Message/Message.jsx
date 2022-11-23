@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import { format, formatDistanceStrict } from "date-fns";
-import { AddReactionIcon, AuthorLink, CloseIcon, Container, DateContainer, FullPageImage, HeaderContainer, ImagePopup, MarkdownContainer, MediaContainer, MessageContainer, ProfileImage, ProfileImageContainer, ReactionsContainer, TextContainer } from "./styles";
+import { AddReactionIcon, AuthorLink, CloseIcon, Container, DateContainer, FullPageDiv, FullPageImage, HeaderContainer, ImagePopup, MarkdownContainer, MediaContainer, MessageContainer, ProfileImage, ProfileImageContainer, ReactionsContainer, SmallImage, TextContainer } from "./styles";
 import { Reaction } from "./Reaction/Reaction";
 import { icons } from "../../Modules/icons";
 
 export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
     reactions, onOpenEmojiPicker, onAddReaction, onRemoveReaction,
-    imageUrl, smallImageUrl, youTubeVideoId }) => {
+    imageUrl, smallImageUrl, imageObject, youTubeVideoId }) => {
     const addReactionRef = useRef();
     const [messageDate] = useState(new Date(date));
     const [now, setNow] = useState(new Date());
@@ -24,6 +24,13 @@ export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
         map[reaction.Name].push(reaction);
         return map;
     }, {});
+
+    const imageDimensions = useMemo(() => imageObject
+        ? {
+            width: Math.min(400, imageObject.width),
+            height: (imageObject.height / imageObject.width) * Math.min(400, imageObject.width)
+        }
+         : null, [imageObject]);
 
     return (
         <Container>
@@ -52,11 +59,13 @@ export const Message = ({ id, authorImageUrl, authorUrl, authorName, date, text,
                     {imageUrl && (
                         <MediaContainer>
                             <ImagePopup modal lockScroll
-                                trigger={<img src={smallImageUrl} />}>
+                                trigger={<SmallImage src={smallImageUrl} dimensions={imageDimensions} />}>
                                 {(close) => (
                                     <div onClick={close}>
                                         {isImageLoaded && <CloseIcon fixedWidth icon={icons.close} size="3x" />}
-                                        <FullPageImage src={imageUrl} onLoad={() => setImageLoaded(true)} isLoaded={isImageLoaded} />
+                                        <FullPageDiv>
+                                            <FullPageImage src={imageUrl} onLoad={() => setImageLoaded(true)} isLoaded={isImageLoaded} />
+                                        </FullPageDiv>
                                     </div>
                                 )}
                             </ImagePopup>

@@ -44,7 +44,7 @@ export const MessageList = ({ appPath, currentUserId, liveUpdatesEnabled, id, ti
                 messagesContainerRef.current.children[messagesContainerRef.current.children.length -1]
                     .scrollIntoView({ behavior: "smooth" });
             }
-        }, 100);
+        }, 200);
 
         return () => syncTimerRef.current && clearInterval(syncTimerRef.current);
     }, []);
@@ -136,6 +136,18 @@ export const MessageList = ({ appPath, currentUserId, liveUpdatesEnabled, id, ti
             const response = await fetch(`MessageThreadDetail.aspx?CallBack=GetOlderMessages&ThreadId=${id}&BeforeMessageId=${firstMessageId}`);
             if (!response.ok) throw new Error(response.statusText);
             const result = await response.json();
+
+            // preload any images so we can set dimensions before rendering
+            await Promise.all(result.messages.filter((m) => m.imageUrl).map((m) => new Promise((resolve) => {
+                const image = new Image();
+                image.onerror = resolve;
+                image.onload = () => {
+                    m.imageObject = image;
+                    resolve();
+                };
+                image.src = m.smallImageUrl;
+            })));
+
             setMessageList([...result.messages, ...messageListRef.current]);
             setOlderMessageCount(result.messagesBefore);
         } catch (e) {

@@ -64,37 +64,10 @@ export const AddReactionIcon = styled.img.attrs({
     float: right;
 `;
 
-// (0%-16% does nothing to add a delay between iterations)
-const imgPan = keyframes`
-    0% {
-        object-position: 50% 50%;
-    }
-    16% {
-        object-position: 50% 50%;
-    }
-    38% {
-        object-position: 100% 100%;
-    }
-    79% {
-        object-position: 0% 0%;
-    }
-    100% {
-        object-position: 50% 50%;
-    }
-`;
-
 export const MediaContainer = styled.div`
     margin-left: 5px;
     float: right;
     position: relative;
-
-    & img {
-        cursor: pointer;
-        width: 250px;
-        height: 250px;
-        object-fit: cover;
-        animation: 15s ease-in-out ${imgPan} infinite;
-    }
 
     & iframe {
         max-width: 100%;
@@ -106,15 +79,26 @@ export const MediaContainer = styled.div`
         margin-left: 0px;
 		float: none;
 
-        & img {
-            width: 100%;
-            height: unset;
-            aspect-ratio: 1 / 1;
-        }
-
         & iframe {
             height: 180px;
         }
+    }
+`;
+
+export const SmallImage = styled.img`
+    cursor: pointer;
+    max-width: 400px;
+
+    ${({ dimensions }) => dimensions && `
+        height: ${dimensions.height}px;
+    `}
+
+    ${media.mobile} {
+        width: 100%;
+        height: unset;        
+        ${({ dimensions }) => dimensions && `
+            aspect-ratio: ${dimensions.width} / ${dimensions.height};
+        `}
     }
 `;
 
@@ -128,7 +112,7 @@ export const CloseIcon = styled(Icon)`
 
 export const ImagePopup = styled(Popup).attrs({ overlayStyle: { zIndex: 3000 }})`
     &-overlay {
-        background-color: rgba(70,70,70,0.7);
+        background-color: rgba(70,70,70,0.6);
     }
 
     &-content {
@@ -137,11 +121,24 @@ export const ImagePopup = styled(Popup).attrs({ overlayStyle: { zIndex: 3000 }})
     }
 `;
 
-export const FullPageImage = styled.img`
+export const FullPageDiv = styled.div`
     width: 100vw;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+export const FullPageImage = styled.img`
+    min-width: 400px;
+    max-width: 100vw;
+    max-height: 100vh;
     object-fit: contain;
     opacity: ${({ isLoaded }) => isLoaded ? `1` : `0`}
+
+    ${media.mobile} {
+        min-width: unset;
+    }
 `;
 
 export const TextContainer = styled.div`
