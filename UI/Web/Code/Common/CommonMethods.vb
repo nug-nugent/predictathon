@@ -132,7 +132,7 @@ Namespace Predictathon
         ''' <param name="BCC">BCC recipient</param>
         ''' <param name="subject">Email subject</param>
         ''' <param name="body">Email body</param>
-        Public Shared Sub SendEmail(ByVal EmailTo As String, ByVal CC As String, ByVal BCC As String, ByVal Subject As String, ByVal Body As String)
+        Public Shared Sub SendEmail(EmailTo As String, CC As String, BCC As String, Subject As String, Body As String)
             ' Instantiate a new instance of MailMessage and set the recipients
             Dim objMailMessage As New System.Net.Mail.MailMessage()
             With objMailMessage
@@ -153,7 +153,7 @@ Namespace Predictathon
         End Sub
 
         ''' <summary>
-        ''' Returns e.g. http://www.predictathon.co.uk/ or http://localhost/Predictathon/
+        ''' Returns e.g. https://predictathon.co.uk/ or https://localhost/Predictathon/
         ''' </summary>
         ''' <returns></returns>
         ''' <remarks></remarks>

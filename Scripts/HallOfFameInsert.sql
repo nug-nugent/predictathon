@@ -1,6 +1,6 @@
 USE [predicta_predictathon];
 
-DECLARE @CompetitionName VARCHAR(50) = 'Premier League 2021/22';
+DECLARE @CompetitionName VARCHAR(50) = 'World Cup 2022';
 DECLARE @CompetitionID UNIQUEIDENTIFIER = (SELECT TOP 1 CompetitionID FROM Competition WHERE CompetitionName = @CompetitionName);
 IF @CompetitionID IS NULL
 BEGIN
@@ -16,7 +16,7 @@ BEGIN
 	RETURN;
 END;
 
-DECLARE @SecondPlaceUserName VARCHAR(50) = 'CR Rangers';
+DECLARE @SecondPlaceUserName VARCHAR(50) = 'Phoenixkeeper';
 DECLARE @SecondPlaceUserID UNIQUEIDENTIFIER = (SELECT TOP 1 UserID FROM [User] WHERE UserName = @SecondPlaceUserName);
 IF @SecondPlaceUserID IS NULL
 BEGIN
@@ -24,7 +24,7 @@ BEGIN
 	RETURN;
 END;
 
-DECLARE @ThirdPlaceUserName VARCHAR(50) = 'Handsome';
+DECLARE @ThirdPlaceUserName VARCHAR(50) = 'LewisQuicky';
 DECLARE @ThirdPlaceUserID UNIQUEIDENTIFIER = (SELECT TOP 1 UserID FROM [User] WHERE UserName = @ThirdPlaceUserName);
 IF @ThirdPlaceUserID IS NULL
 BEGIN
@@ -59,18 +59,22 @@ END;
 SELECT Username, EmailAddress, Forenames, Surname FROM [User] u WHERE UserName IN (@FirstPlaceUserName, @SecondPlaceUserName, @ThirdPlaceUserName);
 
 /*
-	1st:  £125 - DarkishJungle - £115 sent, I owe a Premier League code
-	2nd: £65 - CR Rangers - emailed
-	3rd: £30 - Handsome - emailed
+	1st: £200 - DarkishJungle
+	2nd: £95  - Phoenixkeeper
+	3rd: £50  - LewisQuicky
+	4th: £25  - JB82
+	5th: £10  - CR Rangers
 
 	Predictathon - prize money
 	
-	Hi,
-	
-	Well played! I owe you £25: can you please send me your account number and sort code?
-	If you're keen to play the upcoming Euros and you're happy for me to hold onto £10 for that, please let me know.
-	
-	All the best,
+Hi,
 
-	Nug.
+Well played! I owe you £95: can you please give me a PayPal address I can send it to, or if preferred, your account number and sort code?
+
+All the best,
+
+Nug.
+
 */
+
+-- SELECT Username, EmailAddress, Forenames, Surname FROM [User] u WHERE UserName IN ('CR Rangers');

@@ -1,25 +1,29 @@
 ﻿Namespace Predictathon
-    Public Class Twitter
+	''' <summary>
+	''' Obsolete class which previously fetched Tweets from a timeline.
+	''' </summary>
+	<Obsolete>
+	Public Class Twitter
 
-        Public Structure Tweet
-            Private _TweetContent As String
-            Public Property TweetContent() As String
-                Get
-                    Return _TweetContent
-                End Get
-                Set(ByVal value As String)
-                    _TweetContent = value
-                End Set
-            End Property
+		Public Structure Tweet
+			Private _TweetContent As String
+			Public Property TweetContent() As String
+				Get
+					Return _TweetContent
+				End Get
+				Set(ByVal value As String)
+					_TweetContent = value
+				End Set
+			End Property
 
-            Private _ScreenName As String
-            Public Property ScreenName() As String
-                Get
-                    Return _ScreenName
-                End Get
-                Set(ByVal value As String)
-                    _ScreenName = value
-                End Set
+			Private _ScreenName As String
+			Public Property ScreenName() As String
+				Get
+					Return _ScreenName
+				End Get
+				Set(ByVal value As String)
+					_ScreenName = value
+				End Set
 			End Property
 
 			Private _Name As String
@@ -206,7 +210,7 @@
 
 			'Create a list of string, string objects representing our oAuth authentication details:
 			Dim lstParameters As New List(Of KeyValuePair(Of String, String))
-			lstParameters.Add(New KeyValuePair(Of String, String)("oauth_consumer_key", oauthConsumerKey))
+			lstParameters.Add(New KeyValuePair(Of String, String)("oauth_consumer_key", oAuthConsumerKey))
 			lstParameters.Add(New KeyValuePair(Of String, String)("oauth_nonce", oAuthNonce))
 			lstParameters.Add(New KeyValuePair(Of String, String)("oauth_signature_method", oAuthSignatureMethod))
 			lstParameters.Add(New KeyValuePair(Of String, String)("oauth_timestamp", oAuthTimestamp))
@@ -234,18 +238,18 @@
 			End Using
 
 			' create the request header
-			Dim strHeaderFormat As String = "OAuth oauth_nonce=""{0}"", oauth_signature_method=""{1}"", " & _
-			  "oauth_timestamp=""{2}"", oauth_consumer_key=""{3}"", " & _
-			  "oauth_token=""{4}"", oauth_signature=""{5}"", " & _
+			Dim strHeaderFormat As String = "OAuth oauth_nonce=""{0}"", oauth_signature_method=""{1}"", " &
+			  "oauth_timestamp=""{2}"", oauth_consumer_key=""{3}"", " &
+			  "oauth_token=""{4}"", oauth_signature=""{5}"", " &
 			  "oauth_version=""{6}"""
 
-			Return String.Format(strHeaderFormat, _
-			 Uri.EscapeDataString(oAuthNonce), _
-			 Uri.EscapeDataString(oAuthSignatureMethod), _
-			 Uri.EscapeDataString(oAuthTimestamp), _
-			 Uri.EscapeDataString(oAuthConsumerKey), _
-			 Uri.EscapeDataString(oAuthToken), _
-			 Uri.EscapeDataString(oAuthSignature), _
+			Return String.Format(strHeaderFormat,
+			 Uri.EscapeDataString(oAuthNonce),
+			 Uri.EscapeDataString(oAuthSignatureMethod),
+			 Uri.EscapeDataString(oAuthTimestamp),
+			 Uri.EscapeDataString(oAuthConsumerKey),
+			 Uri.EscapeDataString(oAuthToken),
+			 Uri.EscapeDataString(oAuthSignature),
 			 Uri.EscapeDataString(oAuthVersion))
 		End Function
 	End Class
