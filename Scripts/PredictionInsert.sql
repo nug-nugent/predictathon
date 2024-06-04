@@ -1,6 +1,8 @@
 USE [predicta_predictathon];
 
-DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE Username = 'GoonerGirl');
+--DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE Username = 'GoonerGirl');
+DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE EmailAddress = 'dixon_a2@sky.com');
+
 IF @UserID IS NULL
 BEGIN
 	PRINT 'User not found.';
@@ -31,10 +33,10 @@ INSERT
 	Prediction (PredictionID, MatchID, UserID, HomeTeamGoals, AwayTeamGoals, GoalDifference, Score)
 SELECT
 	NEWID()
-	, MatchID = 'E1FE4FCE-3F99-4AF0-902E-772F35CC97AE'
+	, MatchID = '761D01FA-E14E-4A5E-9010-CEB79EF79D2A'
 	, @UserID
-	, HomeTeamGoals = 2
-	, AwayTeamGoals = 1
+	, HomeTeamGoals = 1
+	, AwayTeamGoals = 3
 	, GoalDifference = NULL
 	, Score = NULL;
 

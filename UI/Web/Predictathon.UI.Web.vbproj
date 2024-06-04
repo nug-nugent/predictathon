@@ -158,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\Branding\Football.png" />
+    <Content Include="Images\TeamCrests\Luton.gif" />
     <Content Include="Styles\Predictathon.css" />
     <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
     <Content Include="Images\Branding\PredictathonBrain.gif" />
