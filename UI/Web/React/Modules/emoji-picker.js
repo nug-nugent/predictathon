@@ -58,5 +58,29 @@ const getCustomEmojis = (customReactionsPath) => [
     {
         name: 'pussy time',
         emoji: customReactionsPath + '/pt.png'
+    },
+    {
+        name: 'beaker',
+        emoji: customReactionsPath + '/beaker.png'
+    },
+    {
+        name: 'facepalm',
+        emoji: customReactionsPath + '/facepalm.png'
+    },
+    {
+        name: 'rick roll',
+        emoji: customReactionsPath + '/rick.png'
+    },
+    {
+        name: 'success boy',
+        emoji: customReactionsPath + '/success.png'
+    },
+    {
+        name: 'vault boy',
+        emoji: customReactionsPath + '/vaultboy.jpg'
+    },
+    {
+        name: 'woo hoo',
+        emoji: customReactionsPath + '/woo.png'
     }
 ];
