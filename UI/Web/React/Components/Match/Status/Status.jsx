@@ -7,6 +7,7 @@ import { useIsInViewport } from "../../../Modules/use-is-in-viewport";
 import { Table } from "../../Table/Table";
 import { theme } from "../../../Modules/theme";
 import { Icon } from "../../../Modules/icons";
+import { PredictionsSummary } from "../PredictionsSummary/PredictionsSummary";
 
 const getStyle = (matchStatus, predictionStatus, minutesToPredict) => {
     if (matchStatus !== MatchStatus.Pre) return statusStyles.during;
@@ -108,6 +109,7 @@ export const Status = ({ id, lastInGroup, matchStatus, predictionStatus, date,
                     onClickOutside={() => togglePredictionsList(id)}
                     content={(
                         <PredictionsContainer>
+                            <PredictionsSummary predictionsList={predictionsList} />
                             <Table data={predictionsList} boldCheckFn={(p) => p.isMe}
                                 columns={[
                                     { name: "username", minWidth: "150px" },

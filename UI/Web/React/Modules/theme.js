@@ -38,6 +38,10 @@ const baseTheme = {
     predictionsListButtonLoading: icons.loading,
     predictionsListButtonError: icons.error,
 
+    predictionBarHomeWinColor: colors.blue,
+    predictionBarDrawColor: colors.lightBlue,
+    predictionBarAwayWinColor: colors.blue,
+
     asterickColor: colors.red,
 
     infoIcon: icons.info,
