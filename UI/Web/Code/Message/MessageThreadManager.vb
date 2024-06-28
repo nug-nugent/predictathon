@@ -60,7 +60,7 @@
             End If
             HttpContext.Current.Session("MessageThreadsReadThisSession") = dtblReadMessageThreads
 
-            'we have a datatable of MessageThreadIDs and their last-read date/time. Add to it or update as necessary
+            ' We have a datatable of MessageThreadIDs and their last read date/time. Add to it or update as necessary
             Dim dRowMessageThread() As DataRow = dtblReadMessageThreads.Select("UniqueID = '" & MessageThreadID.ToString & "'")
             If dRowMessageThread.GetLength(0) > 0 Then
                 dRowMessageThread(0)("DateAndTime") = lastReadDate

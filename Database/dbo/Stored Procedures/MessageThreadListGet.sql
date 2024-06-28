@@ -9,8 +9,8 @@ CREATE PROCEDURE [dbo].[MessageThreadListGet]
 	, @IncludeHiddenFromPublic BIT = 0
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
 	SELECT
 		MessageThread.MessageThreadID
