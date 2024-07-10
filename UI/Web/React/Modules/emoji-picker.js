@@ -4,6 +4,11 @@ export class EmojiPicker {
     constructor(onEmojiSelected, customReactionsPath) {
         this.popup = new EmojiButton({
             style: 'twemoji',
+            twemojiOptions: {
+                base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/',
+                ext: '.svg',
+                folder: 'svg'
+            },
             initialCategory: 'recents',
             zIndex: 2500, // nav bar is 2000
             showAnimation: false,

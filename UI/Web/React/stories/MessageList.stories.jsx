@@ -2,7 +2,13 @@ import { addMinutes, addSeconds } from 'date-fns';
 import React from 'react';
 import { MessageList } from '../Pages/MessageList/MessageList';
 
-const reactions = [{"Name":"rolling on the floor laughing","Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f923.svg","Username":"stu with a long username","IsMe":false},{"Name":"brewdog","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/brewdog.png","Username":"stu with a long username","IsMe":false},{"Name":"brewdog","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/brewdog.png","Username":"Nugsson","IsMe":false},{"Name":"guinness","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/pt.png","Username":"Nugsson","IsMe":false},{"Name":"beach with umbrella","Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f3d6.svg","Username":"Nugsson","IsMe":false},{"Name":"safety vest","Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f9ba.svg","Username":"3rd User","IsMe":true}];
+const reactions = [
+    {"Name":"rolling on the floor laughing","Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f923.svg","Username":"stu with a long username","IsMe":false},
+    {"Name":"brewdog","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/brewdog.png","Username":"stu with a long username","IsMe":false},
+    {"Name":"brewdog","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/brewdog.png","Username":"Nugsson","IsMe":false},
+    {"Name":"guinness","Url":"https://www.predictathon.co.uk/Images/Message/Reactions/pt.png","Username":"Nugsson","IsMe":false},
+    {"Name":"beach with umbrella","Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f3d6.svg","Username":"Nugsson","IsMe":false},
+    {"Name":"safety vest","Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f9ba.svg","Username":"3rd User","IsMe":true}];
 
 const stuPost = {
     authorImageUrl: "https://www.predictathon.co.uk/Uploads/Images/13473b15-dc61-437c-833a-af2b987b67ef_sm.jpg",
@@ -95,7 +101,7 @@ const BaseArgs = {
             text: "Here's a short message with lots of reactions.",
             reactions: [
                 {"Name":"rolling on the floor laughing",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f923.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f923.svg",
                 "Username":"stu with a long username",
                 "IsMe":false
             },{"Name":"brewdog",
@@ -111,11 +117,11 @@ const BaseArgs = {
                 "Username":"Nugsson",
                 "IsMe":false
             },{"Name":"beach with umbrella",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f3d6.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f3d6.svg",
                 "Username":"Nugsson",
                 "IsMe":false
             },{"Name":"safety vest",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f9ba.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f9ba.svg",
                 "Username":"3rd User",
                 "IsMe":true
             },{"Name":"ludo",
@@ -123,14 +129,14 @@ const BaseArgs = {
                 "Username":"3rd User",
                 "IsMe":true
             },{"Name":"world map",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f5fa.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f5fa.svg",
                 "Username":"3rd User",
                 "IsMe":true
             },{"Name":"pirate flag",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f3f4-200d-2620-fe0f.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f3f4-200d-2620-fe0f.svg",
                 "Username":"3rd User","IsMe":true
             },{"Name":"flag: Denmark",
-                "Url":"https://twemoji.maxcdn.com/v/13.0.0/svg/1f1e9-1f1f0.svg",
+                "Url":"https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/svg/1f1e9-1f1f0.svg",
                 "Username":"3rd User","IsMe":true
             },{"Name":"brewdog",
                 "Url":"https://www.predictathon.co.uk/Images/Message/Reactions/brewdog.png",
