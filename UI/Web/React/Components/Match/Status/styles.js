@@ -161,4 +161,5 @@ export const PredictionsContainer = styled.div`
     margin-bottom: 5px;
     border: ${theme.border};
     box-shadow: ${theme.boxShadow};
+    background-color: ${theme.backgroundColor};
 `;

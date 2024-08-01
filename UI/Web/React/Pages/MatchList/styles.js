@@ -2,7 +2,8 @@ import styled from "styled-components";
 import { theme } from "../../Modules/theme";
 
 export const Container = styled.div`
-    margin-bottom: 10px;
+    // this is a hack to ensure there is always enough space below a match for the predictions popover
+    margin-bottom: 400px; // 10px;
 `;
 
 export const TextContainer = styled.div`

@@ -4,6 +4,11 @@ export class EmojiPicker {
     constructor(onEmojiSelected, customReactionsPath) {
         this.popup = new EmojiButton({
             style: 'twemoji',
+            twemojiOptions: {
+                base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/13.0.0/',
+                ext: '.svg',
+                folder: 'svg'
+            },
             initialCategory: 'recents',
             zIndex: 2500, // nav bar is 2000
             showAnimation: false,
@@ -58,5 +63,29 @@ const getCustomEmojis = (customReactionsPath) => [
     {
         name: 'pussy time',
         emoji: customReactionsPath + '/pt.png'
+    },
+    {
+        name: 'beaker',
+        emoji: customReactionsPath + '/beaker.png'
+    },
+    {
+        name: 'facepalm',
+        emoji: customReactionsPath + '/facepalm.png'
+    },
+    {
+        name: 'rick roll',
+        emoji: customReactionsPath + '/rick.png'
+    },
+    {
+        name: 'success boy',
+        emoji: customReactionsPath + '/success.png'
+    },
+    {
+        name: 'vault boy',
+        emoji: customReactionsPath + '/vaultboy.jpg'
+    },
+    {
+        name: 'woo hoo',
+        emoji: customReactionsPath + '/woo.png'
     }
 ];

@@ -158,6 +158,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\Branding\Football.png" />
+    <Content Include="Images\Message\Reactions\facepalm.png" />
+    <Content Include="Images\Message\Reactions\beaker.png" />
+    <Content Include="Images\Message\Reactions\rick.png" />
+    <Content Include="Images\Message\Reactions\success.png" />
+    <Content Include="Images\Message\Reactions\vaultboy.jpg" />
+    <Content Include="Images\Message\Reactions\woo.png" />
     <Content Include="Images\TeamCrests\Luton.gif" />
     <Content Include="Styles\Predictathon.css" />
     <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
