@@ -12,14 +12,31 @@ Public Class Global_asax
 	End Sub
 
 	Public Sub ErrorMail_Filtering(sender As Object, e As ExceptionFilterEventArgs)
-		' We don't want emails in certain situations, e.g. "Invalid postback or callback argument", "Invalid length for a Base-64 char array or string"
-		Dim baseException = e.Exception?.GetBaseException()
-
-		If baseException Is Nothing _
-		OrElse TypeOf baseException Is ArgumentException _
-		OrElse TypeOf baseException Is FormatException _
-		OrElse (TypeOf baseException Is HttpException AndAlso baseException.Message.ToUpper.Contains("THIS IS AN INVALID SCRIPT RESOURCE REQUEST")) Then
+		If ShouldDismiss(e.Exception) Then
 			e.Dismiss()
 		End If
 	End Sub
+
+	Private Function ShouldDismiss(ex As Exception) As Boolean
+		Dim baseException = If(ex?.GetBaseException(), Nothing)
+		If baseException Is Nothing Then
+			Return False
+		End If
+
+		' Dismiss some common non-actionable exceptions
+		If TypeOf baseException Is ArgumentException Then Return True
+		If TypeOf baseException Is FormatException Then Return True
+		If TypeOf baseException Is HttpRequestValidationException Then Return True
+
+		If TypeOf baseException Is HttpException Then
+			Dim msg As String = If(baseException.Message, String.Empty).ToUpperInvariant()
+			If msg.Contains("THIS IS AN INVALID SCRIPT RESOURCE REQUEST") Then Return True
+			If msg.Contains("A POTENTIALLY DANGEROUS REQUEST.PATH") Then Return True
+			If msg.Contains("A POTENTIALLY DANGEROUS REQUEST.FORM") Then Return True
+			If msg.Contains("INVALID POSTBACK OR CALLBACK ARGUMENT") Then Return True
+			If msg.Contains("INVALID LENGTH FOR A BASE-64 CHAR ARRAY OR STRING") Then Return True
+		End If
+
+		Return False
+	End Function
 End Class

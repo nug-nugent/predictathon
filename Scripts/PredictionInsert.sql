@@ -1,7 +1,7 @@
 USE [predicta_predictathon];
 
---DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE Username = 'GoonerGirl');
-DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE EmailAddress = 'dixon_a2@sky.com');
+DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE Username = 'mubba liscious');
+--DECLARE @UserID UNIQUEIDENTIFIER = (SELECT UserID FROM [User] WHERE EmailAddress = 'dixon_a2@sky.com');
 
 IF @UserID IS NULL
 BEGIN
@@ -21,7 +21,7 @@ WHERE
 	--CAST(MatchDateTime AS DATE) = CAST(GETDATE() AS DATE)
 	 NOT EXISTS(SELECT 1 FROM Prediction WHERE Prediction.MatchID = Match.MatchID AND Prediction.UserID = @UserID)
 	 AND CompetitionID = (SELECT TOP 1 CompetitionID FROM Competition ORDER BY Competition.EndDate DESC)
-	 AND Match.MatchDateTime > DATEADD(DAY, -3, GETDATE())
+	 AND Match.MatchDateTime > DATEADD(DAY, -1, GETDATE())
 ORDER BY
 	Match.MatchDateTime;
 
@@ -33,10 +33,10 @@ INSERT
 	Prediction (PredictionID, MatchID, UserID, HomeTeamGoals, AwayTeamGoals, GoalDifference, Score)
 SELECT
 	NEWID()
-	, MatchID = '761D01FA-E14E-4A5E-9010-CEB79EF79D2A'
+	, MatchID = '11366E27-5BA7-4A2A-95E5-BAA5B534AC3C'
 	, @UserID
-	, HomeTeamGoals = 1
-	, AwayTeamGoals = 3
+	, HomeTeamGoals = 2
+	, AwayTeamGoals = 1
 	, GoalDifference = NULL
 	, Score = NULL;
 
