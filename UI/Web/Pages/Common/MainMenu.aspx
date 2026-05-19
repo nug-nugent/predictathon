@@ -10,8 +10,8 @@
     <div class="LeftPane">
         <uc1:UserStatistics ID="UserStatistics1" runat="server" Selectable="true" ShowNextPredictionDueIn="true" ShowUsername="true" />
         <br />
-        <uc1:TwitterFeed ID="TwitterFeed1" runat="server" TweetsToDisplay="3" TwitterProfileName="Predictathon" />
-        <br />
+<%--        <uc1:TwitterFeed ID="TwitterFeed1" runat="server" TweetsToDisplay="3" TwitterProfileName="Predictathon" />
+        <br />--%>
         <uc1:UserCompetitionRegistrationList ID="UserCompetitionRegistrationList1" runat="server" />
     </div>
     <div class="RightPane">

@@ -24,15 +24,6 @@ Namespace Predictathon.Pages
         Protected WithEvents UserStatistics1 As Global.Predictathon.UserControls.User.UserStatistics
 
         '''<summary>
-        '''TwitterFeed1 control.
-        '''</summary>
-        '''<remarks>
-        '''Auto-generated field.
-        '''To modify move field declaration from designer file to code-behind file.
-        '''</remarks>
-        Protected WithEvents TwitterFeed1 As Global.Predictathon.UserControls.Twitter.TwitterFeed
-
-        '''<summary>
         '''UserCompetitionRegistrationList1 control.
         '''</summary>
         '''<remarks>
