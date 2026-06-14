@@ -1,6 +1,6 @@
 USE [predicta_predictathon];
 
-DECLARE @CompetitionName VARCHAR(50) = 'Premier League 2024/25';
+DECLARE @CompetitionName VARCHAR(50) = 'Premier League 2025/26';
 DECLARE @CompetitionID UNIQUEIDENTIFIER = (SELECT TOP 1 CompetitionID FROM Competition WHERE CompetitionName = @CompetitionName);
 IF @CompetitionID IS NULL
 BEGIN
@@ -8,7 +8,7 @@ BEGIN
 	RETURN;
 END;
 
-DECLARE @FirstPlaceUserName VARCHAR(50) = 'Serious Bananas';
+DECLARE @FirstPlaceUserName VARCHAR(50) = 'DarkishJungle';
 DECLARE @FirstPlaceUserID UNIQUEIDENTIFIER = (SELECT TOP 1 UserID FROM [User] WHERE UserName = @FirstPlaceUserName);
 IF @FirstPlaceUserID IS NULL
 BEGIN
@@ -16,7 +16,7 @@ BEGIN
 	RETURN;
 END;
 
-DECLARE @SecondPlaceUserName VARCHAR(50) = 'DarkishJungle';
+DECLARE @SecondPlaceUserName VARCHAR(50) = 'No Drawers';
 DECLARE @SecondPlaceUserID UNIQUEIDENTIFIER = (SELECT TOP 1 UserID FROM [User] WHERE UserName = @SecondPlaceUserName);
 IF @SecondPlaceUserID IS NULL
 BEGIN
@@ -24,7 +24,7 @@ BEGIN
 	RETURN;
 END;
 
-DECLARE @ThirdPlaceUserName VARCHAR(50) = 'Handsome';
+DECLARE @ThirdPlaceUserName VARCHAR(50) = 'Miramar Majestics';
 DECLARE @ThirdPlaceUserID UNIQUEIDENTIFIER = (SELECT TOP 1 UserID FROM [User] WHERE UserName = @ThirdPlaceUserName);
 IF @ThirdPlaceUserID IS NULL
 BEGIN
@@ -34,7 +34,7 @@ END;
 
 IF NOT EXISTS(SELECT 1 FROM HallOfFame WHERE CompetitionID = @CompetitionID)
 BEGIN
-	--BEGIN TRANSACTION
+	BEGIN TRANSACTION
 		INSERT
 			HallOfFame (HallOfFameID, CompetitionID, CompetitionName, Winner, WinnerUserID, SecondPlace, SecondPlaceUserID, ThirdPlace, ThirdPlaceUserID, EndDate, ImageFilename)
 		SELECT
@@ -53,7 +53,7 @@ BEGIN
 			Competition
 		WHERE
 			CompetitionID = @CompetitionID;
-	--ROLLBACK TRANSACTION;
+	ROLLBACK TRANSACTION;
 	--COMMIT TRANSACTION;
 END;
 ELSE
@@ -64,15 +64,15 @@ END;
 SELECT Username, EmailAddress, Forenames, Surname FROM [User] u WHERE UserName IN (@FirstPlaceUserName, @SecondPlaceUserName, @ThirdPlaceUserName);
 
 /*
-	1st: £125 - Serious Bananas
-	2nd: £65  - DarkishJungle
-	3rd: £30  - Handsome
+	1st: £155 - DarkishJungle
+	2nd: £75  - No Drawers
+	3rd: £40  - Miramar Majestics
 
 Predictathon - prize money
 	
 Hi,
 
-Well played! I owe you £125: can you please give me a PayPal address I can send it to, or if preferred, your account number and sort code?
+Well played! I owe you £155: can you please give me a PayPal address I can send it to, or if preferred, your account number and sort code?
 
 All the best,
 

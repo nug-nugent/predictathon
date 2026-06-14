@@ -165,6 +165,7 @@
     <Content Include="Images\Message\Reactions\success.png" />
     <Content Include="Images\Message\Reactions\vaultboy.jpg" />
     <Content Include="Images\Message\Reactions\woo.png" />
+    <Content Include="Images\TeamCrests\International\CapeVerde.png" />
     <Content Include="Images\TeamCrests\International\Curacao.png" />
     <Content Include="Images\TeamCrests\International\DRCongo.png" />
     <Content Include="Images\TeamCrests\International\Haiti.png" />
