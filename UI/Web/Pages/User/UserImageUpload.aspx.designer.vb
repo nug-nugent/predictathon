@@ -69,6 +69,15 @@ Namespace Predictathon.Pages
         Protected WithEvents imgProfile As Global.System.Web.UI.WebControls.Image
 
         '''<summary>
+        '''lblMessage control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents lblMessage As Global.System.Web.UI.WebControls.Label
+
+        '''<summary>
         '''lblUploadFile control.
         '''</summary>
         '''<remarks>

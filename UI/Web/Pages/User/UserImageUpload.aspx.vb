@@ -45,22 +45,38 @@
             If Not String.IsNullOrEmpty(hdnImage.Value) Then
                 Dim strCroppedImagePath As String = Server.MapPath("~/Uploads/Images/" & Me.UserID.ToString & ".jpg")
                 Dim strCroppedImagePathSmall As String = Server.MapPath("~/Uploads/Images/" & Me.UserID.ToString & "_sm.jpg")
-                'crop and save our image as a .jpg... it's this easy:
-                ImageResizer.ImageBuilder.Current.Build(Server.MapPath(ImageResizer.Util.PathUtils.RemoveQueryString(hdnImage.Value)), strCroppedImagePath, New ImageResizer.ResizeSettings(hdnImage.Value) With {.Format = "jpg", .Width = 400})
-                '...and a thumbnail:
-                ImageResizer.ImageBuilder.Current.Build(Server.MapPath(ImageResizer.Util.PathUtils.RemoveQueryString(hdnImage.Value)), strCroppedImagePathSmall, New ImageResizer.ResizeSettings(hdnImage.Value) With {.Format = "jpg", .Width = 160})
+                Dim strSourceTemp As String = Server.MapPath("~/Uploads/Images/Temp/" & Me.UserID.ToString & "_uncropped" & hdnFileExtension.Value)
+
+                If Not System.IO.File.Exists(strSourceTemp) Then
+                    'temp file missing — show a meaningful error instead of throwing FileNotFound later
+                    divProfileImage.Style("border") = "1px solid red"
+                    ' TODO - log the full path here for diagnostics
+                    Return
+                End If
+
+                'create settings from the client-provided query (crop coords, etc.)
+                'hdnImage.Value contains the image URL plus the resize query (crop=...); pass that whole string
+                Dim cropSettings = New ImageResizer.ResizeSettings(hdnImage.Value) With {.Format = "jpg", .Width = 400}
+                Dim thumbSettings = New ImageResizer.ResizeSettings(hdnImage.Value) With {.Format = "jpg", .Width = 160}
+
+                'use the known temp file as the source and the crop settings for the output
+                ImageResizer.ImageBuilder.Current.Build(strSourceTemp, strCroppedImagePath, cropSettings)
+                ImageResizer.ImageBuilder.Current.Build(strSourceTemp, strCroppedImagePathSmall, thumbSettings)
 
                 'delete the uncropped version we've just uploaded
-                System.IO.File.Delete(Server.MapPath("~/Uploads/Images/Temp/" & Me.UserID.ToString & "_uncropped" & hdnFileExtension.Value))
+                System.IO.File.Delete(strSourceTemp)
 
                 '...and use the new version as the user's profile picture
                 Dim objUser As PredictathonModel.User = UserManager.Load(Me.UserID)
                 objUser.ImageUploaded = True
                 UserManager.Save(objUser)
 
-                imgProfile.ImageUrl = "~/Uploads/Images/" & Me.UserID.ToString & ".jpg?t=" & Guid.NewGuid.ToString 'the querystring will avoid a cached image being displayed
+                imgProfile.ImageUrl = "~/Uploads/Images/" & Me.UserID.ToString & ".jpg?t=" & Guid.NewGuid.ToString
+
+                'show success message
+                lblMessage.Text = "Profile picture updated!"
+                lblMessage.Visible = True
             Else
-                'user must crop the image. It really shouldn't come to this, though, as our JScript populates hdnImage on upload, and never clears it out.
                 divProfileImage.Style("border") = "1px solid red"
             End If
         End Sub

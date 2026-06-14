@@ -39,6 +39,10 @@
         <div id="divProfileImage" runat="server" class="image-cropper" style="margin-bottom: 10px">
             <asp:Image ID="imgProfile" runat="server" ImageUrl="~/Images/Branding/FootballBackground.jpg?width=400" Width="400px" CssClass="Image" />
         </div>
+
+        <!-- success / status message -->
+        <asp:Label ID="lblMessage" runat="server" Visible="false" ForeColor="Green" />
+
         <asp:Label ID="lblUploadFile" runat="server" Text="Upload profile picture: " /><asp:FileUpload ID="FileUpload1" runat="server" Text="Upload new image" />
         <asp:Button ID="btnUpload" runat="server" Text="Upload" />
         <asp:Button ID="btnSave" runat="server" Text="Save" />
