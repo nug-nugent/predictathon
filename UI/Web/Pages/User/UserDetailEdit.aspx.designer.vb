@@ -366,13 +366,22 @@ Namespace Predictathon.Pages.User
         Protected WithEvents lblSaved As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
-        '''ifImageUpload control.
+        '''divImageUpload control.
         '''</summary>
         '''<remarks>
         '''Auto-generated field.
         '''To modify move field declaration from designer file to code-behind file.
         '''</remarks>
-        Protected WithEvents ifImageUpload As Global.System.Web.UI.HtmlControls.HtmlIframe
+        Protected WithEvents divImageUpload As Global.System.Web.UI.HtmlControls.HtmlGenericControl
+
+        '''<summary>
+        '''UserImageUpload1 control.
+        '''</summary>
+        '''<remarks>
+        '''Auto-generated field.
+        '''To modify move field declaration from designer file to code-behind file.
+        '''</remarks>
+        Protected WithEvents UserImageUpload1 As Global.Predictathon.UserControls.User.UserImageUpload
 
         '''<summary>
         '''Master property.

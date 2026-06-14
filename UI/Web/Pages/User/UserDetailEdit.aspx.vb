@@ -13,6 +13,8 @@
         Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
             Me.Master.TitleSuffix = "User Detail"
 
+            UserImageUpload1.UserID = Me.UserID
+
             If Not IsPostBack Then
                 If Not Me.UserID = UserManager.CurrentUserID AndAlso Not UserManager.CurrentUser.UserAdministrator Then
                     'user shouldn't be here - send 'em away
@@ -24,7 +26,6 @@
             End If
 
             divSaveConfirmed.Visible = False
-            ifImageUpload.Attributes("src") = "UserImageUpload.aspx?UserID=" & Me.UserID.ToString
             rbUserDetail.Attributes("onclick") = "ShowHideUserDetail(true);"
             rbProfilePicture.Attributes("onclick") = "ShowHideUserDetail(false);"
 

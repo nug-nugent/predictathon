@@ -1,6 +1,7 @@
 ﻿<%@ Page Language="vb" AutoEventWireup="false" MasterPageFile="~/Pages/Master/Main.Master" CodeBehind="UserDetailEdit.aspx.vb" Inherits="Predictathon.Pages.User.UserDetailEdit" %>
 <%@ MasterType TypeName="Predictathon.Master.Main" %>
 
+<%@ Register TagPrefix="uc1" TagName="UserImageUpload" Src="~/UserControls/User/UserImageUpload.ascx" %>
 <asp:Content runat="server" ContentPlaceHolderID="MainContent">
     <script type="text/javascript" src="../../Scripts/jquery.auto-height.js"></script>
     <script type="text/javascript">
@@ -18,19 +19,13 @@
         function ShowHideUserDetail(value) {
             if (value) {
                 $('#<%=tblUserDetail.ClientID %>').show();
-                $('#<%=ifImageUpload.ClientID %>').hide();
+                $('#<%=divImageUpload.ClientID %>').hide();
             }
             else {
                 $('#<%=tblUserDetail.ClientID %>').hide();
-                $('#<%=ifImageUpload.ClientID %>').show();
-                $('#<%=ifImageUpload.ClientID %>').height(420);
+                $('#<%=divImageUpload.ClientID %>').show();
             }
         }
-        
-        //resize our iframe to fit its content
-        $(document).ready(function () {
-            $('#<%=ifImageUpload.ClientID %>').iframeAutoHeight({ heightOffset: 20 });
-        });
     </script>
 
     <div class="InputBlock NoHover">
@@ -159,6 +154,8 @@
                 </td>
             </tr>
         </table>
-        <iframe runat="server" id="ifImageUpload" width="420px" height="420px" class="auto-height" scrolling="no"></iframe>
+        <div runat="server" ID="divImageUpload">
+            <uc1:UserImageUpload ID="UserImageUpload1" runat="server" />
+        </div>
     </div>
 </asp:Content>

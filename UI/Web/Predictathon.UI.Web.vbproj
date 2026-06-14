@@ -179,7 +179,6 @@
     <Content Include="Images\TeamCrests\Ipswich.gif" />
     <Content Include="Images\TeamCrests\Luton.gif" />
     <Content Include="Styles\Predictathon.css" />
-    <Content Include="Styles\ThirdParty\jquery.jcrop.css" />
     <Content Include="Images\Branding\PredictathonBrain.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobile.gif" />
     <Content Include="Images\Branding\Predictathon_HeaderStartMobileLogin.gif" />
@@ -361,7 +360,6 @@
     <Content Include="Images\TeamCrests\Wigan.gif" />
     <Content Include="Images\TeamCrests\Wolves.gif" />
     <Content Include="Global.asax" />
-    <Content Include="Images\ThirdParty\jcrop.gif" />
     <Content Include="Login.aspx" />
     <Content Include="Pages\Common\MainMenu.aspx" />
     <Content Include="Pages\Competition\CompetitionDetailEdit.aspx" />
@@ -390,7 +388,6 @@
     <Content Include="Pages\Team\TeamDetail.aspx" />
     <Content Include="Pages\User\UserLeagueTable.aspx" />
     <Content Include="Pages\User\UserCompetitionRegistration.aspx" />
-    <Content Include="Pages\User\UserImageUpload.aspx" />
     <Content Include="Pages\User\UserDetailEdit.aspx" />
     <Content Include="Pages\User\UserRegistration.aspx" />
     <Content Include="Pages\User\UserDetail.aspx" />
@@ -399,7 +396,6 @@
     <Content Include="Scripts\Dist\message-list.bundle.js" />
     <Content Include="Scripts\emoji-button.js" />
     <Content Include="Scripts\jquery.auto-height.js" />
-    <Content Include="Scripts\jquery.jcrop.min.js" />
     <Content Include="Scripts\jquery.js" />
     <Content Include="Scripts\jquery.timeago.js" />
     <Content Include="UserControls\Common\Navigation.ascx" />
@@ -424,6 +420,7 @@
     <Content Include="UserControls\Statistics\PredictableMatches.ascx" />
     <Content Include="UserControls\Statistics\PredictableTeams.ascx" />
     <Content Include="UserControls\Twitter\TwitterFeed.ascx" />
+    <Content Include="UserControls\User\UserImageUpload.ascx" />
     <Content Include="UserControls\User\UserLeagueTable.ascx" />
     <Content Include="UserControls\User\UserCompetitionLeagueHistory.ascx" />
     <Content Include="UserControls\User\PasswordReset.ascx" />
@@ -433,6 +430,7 @@
     <Content Include="Handlers\RetainSession.ashx" />
     <None Include="My Project\PublishProfiles\Release.pubxml" />
     <None Include="packages.config" />
+    <Content Include="Pages\User\SaveCroppedImage.ashx" />
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
@@ -687,6 +685,9 @@
       <DependentUpon>TeamDetail.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Pages\User\SaveCroppedImage.ashx.vb">
+      <DependentUpon>SaveCroppedImage.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\User\UserLeagueTable.aspx.designer.vb">
       <DependentUpon>UserLeagueTable.aspx</DependentUpon>
     </Compile>
@@ -699,13 +700,6 @@
     </Compile>
     <Compile Include="Pages\User\UserCompetitionRegistration.aspx.vb">
       <DependentUpon>UserCompetitionRegistration.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Pages\User\UserImageUpload.aspx.designer.vb">
-      <DependentUpon>UserImageUpload.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\User\UserImageUpload.aspx.vb">
-      <DependentUpon>UserImageUpload.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Pages\User\UserDetailEdit.aspx.designer.vb">
@@ -883,6 +877,13 @@
       <DependentUpon>TwitterFeed.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="UserControls\User\UserImageUpload.ascx.designer.vb">
+      <DependentUpon>UserImageUpload.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\User\UserImageUpload.ascx.vb">
+      <DependentUpon>UserImageUpload.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="UserControls\User\UserLeagueTable.ascx.designer.vb">
       <DependentUpon>UserLeagueTable.ascx</DependentUpon>
     </Compile>
@@ -952,6 +953,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Images\ThirdParty\" />
+    <Folder Include="Styles\ThirdParty\" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
