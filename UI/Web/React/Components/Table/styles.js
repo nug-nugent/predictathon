@@ -9,21 +9,23 @@ export const Container = styled.div`
 
 export const Header = styled.div`
     display: table-row;
-    background-color: ${theme.headerBackgroundColor};
 `;
 
 export const HeaderColumn = styled.div`
     display: table-cell;
-    border-bottom: ${theme.border};
+    background-color: ${theme.headerBackgroundColor};
+    border-bottom: ${({ bottomBorder }) => bottomBorder ? theme.border : "unset" };
+    border-right: ${({ rightBorder }) => rightBorder ? theme.border : "unset" };
     padding: 5px 20px;
     min-width: ${({ minWidth }) => minWidth || "unset"};
+    width: ${({ width }) => width || "unset"};
 
     font-size: 0.9em;
-    text-transform: uppercase;
     font-weight: bold;
     text-align: ${({ align }) => align || "left"};
 
     ${media.mobile} {
+        width: ${({ width, mobileWidth }) => mobileWidth || width || "unset"};
         padding: 5px 10px;
         font-size: 0.75em;
     }

@@ -109,7 +109,7 @@ export const Status = ({ id, lastInGroup, matchStatus, predictionStatus, date,
                     onClickOutside={() => togglePredictionsList(id)}
                     content={(
                         <PredictionsContainer>
-                            <PredictionsSummary predictionsList={predictionsList} />
+                            <PredictionsSummary predictionsList={predictionsList} matchStatus={matchStatus} />
                             <Table data={predictionsList} boldCheckFn={(p) => p.isMe}
                                 columns={[
                                     { name: "username", minWidth: "150px" },

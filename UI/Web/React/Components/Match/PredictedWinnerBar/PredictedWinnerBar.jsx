@@ -21,9 +21,9 @@ export const PredictedWinnerBar = ({ homeWin, draw, awayWin }) => {
                 <Bar percent={data.awayPercent} />
             </Bars>
             <TextBar>
-                <div><b>{data.homePercent}%</b></div>
-                <div>DRAW: <b>{data.drawPercent}%</b></div>
-                <div><b>{data.awayPercent}%</b></div>
+                <div><b>{data.homePercent}%</b> ({homeWin})</div>
+                <div>DRAW: <b>{data.drawPercent}%</b> ({draw})</div>
+                <div><b>{data.awayPercent}%</b> ({awayWin})</div>
             </TextBar>
         </Container>;
 }

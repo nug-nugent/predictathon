@@ -3,10 +3,6 @@ import { theme, media } from "../../../Modules/theme";
 
 export const Container = styled.div`
     padding-bottom: 15px;
-
-    ${media.mobile} {
-        padding-bottom: 10px;
-    }
 `;
 
 export const Bars = styled.div`

@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Container, MostPredictedContainer } from "./styles";
+import { Container, Points, PointWinnersContainer, PredictedWinnerContainer, PredictedWinnerTitle } from "./styles";
 import { PredictedWinnerBar } from "../PredictedWinnerBar/PredictedWinnerBar";
+import { MatchStatus } from "../../../Modules/constants";
+import { Table } from "../../Table/Table";
 
-export const PredictionsSummary = ({ predictionsList }) => {
+export const PredictionsSummary = ({ predictionsList, matchStatus }) => {
     const [data, setData] = useState();
 
     useEffect(() => {
-        var homeWin = 0, draw = 0, awayWin = 0, list = [];
+        var homeWin = 0, draw = 0, awayWin = 0, scoresList = [],
+            pointCounts = { 0:0, 1:0, 2:0, 3:0 };
 
-        const counts = predictionsList.reduce((output, item) => {
+        const scoreCounts = predictionsList.reduce((output, item) => {
+            pointCounts[item.points || 0]++;
+
             if (item.homeGoals == null) return output;
 
             if (item.homeGoals > item.awayGoals) homeWin++;
@@ -18,31 +23,46 @@ export const PredictionsSummary = ({ predictionsList }) => {
             var scoreText = `${item.homeGoals} - ${item.awayGoals}`;
             output[scoreText] = (output[scoreText] || 0) + 1;
 
-            if (output[scoreText] === 1) list.push(scoreText);
+            if (output[scoreText] === 1) scoresList.push(scoreText);
 
             return output;
         }, {});
 
         setData({
-            topScores: list.sort((a, b) => counts[a] - counts[b]).reverse().slice(0, 3),
-            counts,
+            topScores: scoresList.sort((a, b) => scoreCounts[a] - scoreCounts[b]).reverse().slice(0, 4),
+            scoreCounts,
+            pointCounts: pointCounts,
             homeWin,
             draw,
             awayWin
-        })
+        });
     }, [predictionsList]);
 
     return data?.topScores?.length > 0 &&
         <Container>
-            <b>Predicted winner:</b>
-            <PredictedWinnerBar homeWin={data.homeWin} draw={data.draw} awayWin={data.awayWin} />
+            <PredictedWinnerContainer>
+                <PredictedWinnerTitle>PREDICTED WINNER</PredictedWinnerTitle>
+                <PredictedWinnerBar homeWin={data.homeWin} draw={data.draw} awayWin={data.awayWin} />
+            </PredictedWinnerContainer>
 
-            <MostPredictedContainer>
-                <div><b>Top predictions:</b>&nbsp;</div>
-                <div>
-                    {data.topScores.map((score, i) =>
-                        <span key={i}><b>{score}</b> ({data.counts[score]}){i+1 < data.topScores.length ? ", " : ""}</span>)}
-                </div>
-            </MostPredictedContainer>
+            <Table data={[{
+                "firstCol": "# OF USERS",
+                ...data.scoreCounts
+            }]} columns={[
+                { name: "firstCol", title: "TOP PREDICTIONS", width: "120px", mobileWidth: "90px", isHeaderColumn: true },
+                ...data.topScores.map(score => ({ name: score, align: "center" }))
+            ]} />
+
+            {matchStatus === MatchStatus.Post && (
+                <PointWinnersContainer>
+                    <Table data={[{
+                        "firstCol": "# OF USERS",
+                        ...data.pointCounts
+                    }]} columns={[
+                        { name: "firstCol", title: "POINTS WON", width: "120px", mobileWidth: "90px", isHeaderColumn: true },
+                        ...[3, 2, 1, 0].map(x => ({ name: x, title: <Points $points={x}>{x}</Points>, align: "center" }))
+                    ]} />
+                </PointWinnersContainer>
+            )}
        </Container>;
 }
