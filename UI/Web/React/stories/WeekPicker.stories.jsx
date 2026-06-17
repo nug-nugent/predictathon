@@ -1,4 +1,5 @@
 import React from 'react';
+import { fn } from 'storybook/test';
 import { WeekPicker } from '../Components/WeekPicker/WeekPicker';
 
 const weeks = [
@@ -32,12 +33,9 @@ export default {
 const Template = (args) => <WeekPicker {...args} />;
 const BaseArgs = {
     weeks: weeks,
-    initialWeek: weeks[0]
+    initialWeek: weeks[0],
+    onWeekChange: fn()
 };
 
-export const Desktop = Template.bind({});
-Desktop.args = BaseArgs;
-
-export const Mobile = Template.bind({});
-Mobile.args = BaseArgs;
-Mobile.parameters = { viewport: { defaultViewport: 'pixel5' } };
+export const Example = Template.bind({});
+Example.args = BaseArgs;

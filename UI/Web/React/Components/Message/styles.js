@@ -157,4 +157,8 @@ export const MarkdownContainer = styled.div`
     p:last-child {
         margin-bottom: 0;
     }
+
+    img {
+        max-width: 100%;
+    }
 `;

@@ -1,5 +1,4 @@
 import { addMinutes, addSeconds } from 'date-fns';
-import React from 'react';
 import { MessageList } from '../Pages/MessageList/MessageList';
 
 const reactions = [
@@ -23,7 +22,7 @@ const nugPost = {
 };
 
 export default {
-    title: "Messageboard Thread/Message List page",
+    title: "Messageboard Thread/Message List Page",
     component: MessageList,
     parameters: {
         layout: "fullscreen",
@@ -165,13 +164,15 @@ const BaseArgs = {
             date: addSeconds(new Date(), -5),
             text: "This post has a video\n\nIt'll be interested to see how it handles wrapping of long paragraph of text when there's a video and whatnot...\n\nAnd here's a third paragraph.",
             youTubeVideoId: "45NOP1OA-EQ"
+        },
+        {
+            ...stuPost,
+            id: "a-markdown-images-post",
+            date: addSeconds(new Date(), -3),
+            text: "This has some inline images added via markdown.\n\n![alt text](https://www.predictathon.co.uk/Uploads/Images/Message/e386267a-845f-4e3f-b16e-81f8f8a7f127.jpg)\n\nAnd here's more text.  And another image...\n\n![alt text](https://www.predictathon.co.uk/Uploads/Images/Message/4016c1b7-b0dc-48fd-b1a3-09fd0d055424.jpg)\n\nAnd some final text."
         }
     ]
 };
 
-export const Desktop = Template.bind({});
-Desktop.args = BaseArgs;
-
-export const Mobile = Template.bind({});
-Mobile.args = BaseArgs;
-Mobile.parameters = { viewport: { defaultViewport: 'pixel5' } };
+export const ExamplePage = Template.bind({});
+ExamplePage.args = BaseArgs;

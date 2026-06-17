@@ -2,7 +2,7 @@ import React from 'react';
 import { PredictedWinnerBar } from '../Components/Match/PredictedWinnerBar/PredictedWinnerBar';
 
 export default {
-    title: "Match List/PredictedWinnerBar Component",
+    title: "Match List/Predicted Winner Bar Component",
     component: PredictedWinnerBar
 };
 

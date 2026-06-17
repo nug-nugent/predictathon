@@ -28,18 +28,18 @@ const viewports = {
 }
 
 export const parameters = {
-  actions: { argTypesRegex: "^on[A-Z].*" },
   controls: {
     matchers: {
       color: /(background|color)$/i,
       date: /Date$/,
     },
   },
-  viewport: { viewports: viewports },
-  backgrounds: { disable: true, grid: { disable: true } },
+  viewport: { options: viewports },
+  backgrounds: { grid: { disable: true }, disabled: true },
   options: {
     storySort: {
       order: [ "Match List", ["Match List Page"] ]
     }
   }
 }
+export const tags = ['autodocs'];

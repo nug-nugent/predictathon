@@ -401,3 +401,5 @@ Data/
 
 /UI/Web/Scripts/Dist/
 /UI/Web/Uploads/
+.DS_Store
+storybook-static

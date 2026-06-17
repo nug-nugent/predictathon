@@ -1,4 +1,5 @@
 import React from 'react';
+import { fn } from 'storybook/test';
 import { Match } from '../Components/Match/Match';
 import { MatchStatus, PredictionsListStatus, PredictionStatus } from '../Modules/constants';
 
@@ -90,7 +91,10 @@ const BaseArgs = {
     predictionsListStatus: PredictionsListStatus.Loaded,
     predictionsList: [
         { username: 'stu', homeGoals: 2, awayGoals: 1 },
-    ]
+    ],
+    onFocus: fn(),
+    onPredictionChanged: fn(),
+    togglePredictionsList: fn()
 };
 
 export const BeforeMatch = Template.bind({});

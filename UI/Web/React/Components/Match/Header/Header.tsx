@@ -1,10 +1,15 @@
-import React from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import enGB from "date-fns/locale/en-GB";
 import { Container, KickOffAndTeam1, KickOff, Team1, Prediction, Team2, PostMatch, Result, Points, Status } from "./styles";
 import { MatchStatus } from "../../../Modules/constants";
 
-export const Header = ({ date, timeZone, matchStatus }) => (
+interface HeaderProps {
+    date: string;
+    timeZone: string;
+    matchStatus: MatchStatus;
+}
+
+export const Header = ({ date, timeZone, matchStatus }: HeaderProps) => (
     <Container>
         <KickOffAndTeam1>
             <KickOff>Kick-off&nbsp;</KickOff>

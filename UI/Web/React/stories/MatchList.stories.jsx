@@ -185,9 +185,5 @@ const BaseArgs = {
     imagesPath: "http://predictathon.co.uk/Images/",
 };
 
-export const Desktop = Template.bind({});
-Desktop.args = BaseArgs;
-
-export const Mobile = Template.bind({});
-Mobile.args = BaseArgs;
-Mobile.parameters = { viewport: { defaultViewport: 'pixel5' } };
+export const ExamplePage = Template.bind({});
+ExamplePage.args = BaseArgs;
