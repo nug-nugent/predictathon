@@ -1,16 +1,19 @@
-﻿-- =============================================
--- Author:		David Huggett
--- Create date: 09/03/2012
--- Description:	Returns a list of teams, with their average score between given dates, for a competition, etc
--- =============================================
+﻿/* ==========================================================================================
+	Description
+		Returns a list of teams, with their average score between given dates, for a competition, etc
+	
+	History
+		09/03/2012 : DH - Created
+		15/06/2026 : DH - Corrected @CompetitionID logic
+========================================================================================== */
 CREATE PROCEDURE [dbo].[AverageScoreByTeamListGet]
 	@CompetitionID UNIQUEIDENTIFIER = NULL
 	, @DateFrom DATE = NULL
 	, @DateTo DATE = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
 	SELECT
 		Team.TeamID
@@ -26,6 +29,7 @@ BEGIN
 	WHERE
 		Prediction.Score IS NOT NULL
 		AND (@CompetitionID IS NULL OR TeamCompetition.TeamID IS NOT NULL)
+		AND (@CompetitionID IS NULL OR Match.CompetitionID = @CompetitionID)
 		AND (@DateFrom IS NULL OR CAST(Match.MatchDateTime AS DATE) >= @DateFrom)
 		AND (@DateTo IS NULL OR CAST(Match.MatchDateTime AS DATE) <= @DateTo)
 	GROUP BY
@@ -34,5 +38,5 @@ BEGIN
 		, Team.TeamName
 		, Team.ImageName
 	ORDER BY
-		AverageScore DESC
-END
+		AverageScore DESC;
+END;
