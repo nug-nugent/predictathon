@@ -1,14 +1,10 @@
 ﻿Imports Elmah
-Imports System.Web.Optimization
 
 Public Class Global_asax
 	Inherits HttpApplication
 
 	Public Sub Application_Start(sender As Object, e As EventArgs)
 		Net.ServicePointManager.SecurityProtocol = Net.SecurityProtocolType.Tls Or Net.SecurityProtocolType.Tls11 Or Net.SecurityProtocolType.Tls12
-
-		BundleConfig.RegisterBundles(BundleTable.Bundles)
-		BundleTable.EnableOptimizations = True
 	End Sub
 
 	Public Sub ErrorMail_Filtering(sender As Object, e As ExceptionFilterEventArgs)

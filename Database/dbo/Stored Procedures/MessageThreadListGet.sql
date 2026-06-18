@@ -8,9 +8,9 @@
 		17/06/2026 : DH - Added local variables to minimise parameter sniffing issues
 ========================================================================================== */
 CREATE PROCEDURE [dbo].[MessageThreadListGet]
-	@UserLastViewedMessageboard DATETIME,
-	@MessageThreadsReadThisSession UniqueIDAndDateTime READONLY,
-	@IncludeHiddenFromPublic BIT = 0
+	@UserLastViewedMessageboard DATETIME
+	, @MessageThreadsReadThisSession UniqueIDAndDateTime READONLY
+	, @IncludeHiddenFromPublic BIT = 0
 AS
 BEGIN
 	SET NOCOUNT ON;

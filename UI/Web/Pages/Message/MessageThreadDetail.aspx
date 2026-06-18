@@ -4,7 +4,7 @@
 
 <asp:Content runat="server" ContentPlaceHolderID="MainContent">
     <asp:PlaceHolder runat="server"> 
-        <%: System.Web.Optimization.Scripts.Render("~/js/messagelist") %> 
+        <script src='<%= ResolveUrl("~/Scripts/Dist/message-list.bundle.js") %>'></script>
     </asp:PlaceHolder>
     <script type="text/javascript">
         window.appPath = "<%= AppPath %>";

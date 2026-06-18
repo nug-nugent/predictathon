@@ -4,7 +4,7 @@
 
 <asp:Content runat="server" ContentPlaceHolderID="MainContent">
     <asp:PlaceHolder runat="server"> 
-        <%: System.Web.Optimization.Scripts.Render("~/js/matchlist") %> 
+        <script src='<%= ResolveUrl("~/Scripts/Dist/match-list.bundle.js") %>'></script>
     </asp:PlaceHolder>
     <script type="text/javascript">
         window.matches = <%= MatchesJson %>;

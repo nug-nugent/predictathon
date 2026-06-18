@@ -7,7 +7,7 @@
     <link id="lnkFavicon1" runat="server" rel="shortcut icon" href="~/images/favicon.ico" type="image/x-icon" />
     <link id="lnkFavicon2" runat="server" rel="icon" href="~/images/favicon.ico" type="image/ico" />
     <asp:PlaceHolder runat="server">
-        <%: System.Web.Optimization.Styles.Render("~/Styles/predictathon") %>
+        <link href='<%= ResolveUrl("~/Styles/Predictathon.css") %>' rel="stylesheet" type="text/css" />
     </asp:PlaceHolder>
 </head>
 <body>
