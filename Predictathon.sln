@@ -1,11 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2015
+# Visual Studio Version 18
+VisualStudioVersion = 18.7.11903.348
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Predictathon.UI.Web", "UI\Web\Predictathon.UI.Web.vbproj", "{F2E9AE8F-E2E1-4D57-A4F7-B8A2EBF672C5}"
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Predictathon.Database", "Database\Predictathon.Database.sqlproj", "{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Domain", "Predictathon.Entities\Predictathon.Domain.csproj", "{881292A2-D15C-462C-B35C-CDF189ADE7DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.WebApi", "Predictathon.WebApi\Predictathon.WebApi.csproj", "{5C19AEA7-84FF-436E-B0DD-073E29ABA938}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Application", "Predictathon.Services\Predictathon.Application.csproj", "{542777A6-170B-4AAF-93D7-814F7B929A45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E81442B3-8C3A-4994-B3E1-08C2CE606698}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,23 +34,23 @@ Global
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{881292A2-D15C-462C-B35C-CDF189ADE7DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{881292A2-D15C-462C-B35C-CDF189ADE7DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{881292A2-D15C-462C-B35C-CDF189ADE7DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{881292A2-D15C-462C-B35C-CDF189ADE7DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C19AEA7-84FF-436E-B0DD-073E29ABA938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C19AEA7-84FF-436E-B0DD-073E29ABA938}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C19AEA7-84FF-436E-B0DD-073E29ABA938}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C19AEA7-84FF-436E-B0DD-073E29ABA938}.Release|Any CPU.Build.0 = Release|Any CPU
+		{542777A6-170B-4AAF-93D7-814F7B929A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{542777A6-170B-4AAF-93D7-814F7B929A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{542777A6-170B-4AAF-93D7-814F7B929A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{542777A6-170B-4AAF-93D7-814F7B929A45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35AC5261-7958-408A-9A69-D770E957531F}
-	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://davidhuggett.visualstudio.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = Database\\Predictathon.Database.sqlproj
-		SccProjectName1 = Database
-		SccLocalPath1 = Database
-		SccProjectUniqueName2 = UI\\Web\\Predictathon.UI.Web.vbproj
-		SccProjectName2 = UI/Web
-		SccLocalPath2 = UI\\Web
 	EndGlobalSection
 EndGlobal
