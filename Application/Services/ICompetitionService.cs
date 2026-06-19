@@ -8,9 +8,9 @@ namespace Predictathon.Application.Services;
 
 public class CompetitionService : ICompetitionService
 {
-    private readonly IDefaultDbContext _dbContext;
+    private readonly IApplicationDbContext _dbContext;
 
-    public CompetitionService(IDefaultDbContext dbContext)
+    public CompetitionService(IApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }

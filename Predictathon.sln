@@ -12,13 +12,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Infrastructure", "Predictathon.Infrastructure\Predictathon.Infrastructure.csproj", "{B8D320D4-0D58-4ABD-B209-9B9CC162B26C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Application", "Application\Predictathon.Application.csproj", "{2F7F6F7D-A6E7-11C4-19EC-5FF35959C9AC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Domain", "Domain\Predictathon.Domain.csproj", "{3B3A865A-BC0F-91C2-6C51-CDD4B840F902}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.WebApi", "WebApi\Predictathon.WebApi.csproj", "{AA651BBD-ACA9-C1BD-81E3-C49A24C0C139}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Infrastructure", "Infrastructure\Predictathon.Infrastructure.csproj", "{53303227-7681-AC01-A625-AD062CBCA030}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +36,6 @@ Global
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A7FB8812-3F72-4E6B-BB5C-54D45A061CEC}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{B8D320D4-0D58-4ABD-B209-9B9CC162B26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B8D320D4-0D58-4ABD-B209-9B9CC162B26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B8D320D4-0D58-4ABD-B209-9B9CC162B26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B8D320D4-0D58-4ABD-B209-9B9CC162B26C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2F7F6F7D-A6E7-11C4-19EC-5FF35959C9AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2F7F6F7D-A6E7-11C4-19EC-5FF35959C9AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F7F6F7D-A6E7-11C4-19EC-5FF35959C9AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -52,6 +48,10 @@ Global
 		{AA651BBD-ACA9-C1BD-81E3-C49A24C0C139}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA651BBD-ACA9-C1BD-81E3-C49A24C0C139}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA651BBD-ACA9-C1BD-81E3-C49A24C0C139}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53303227-7681-AC01-A625-AD062CBCA030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53303227-7681-AC01-A625-AD062CBCA030}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53303227-7681-AC01-A625-AD062CBCA030}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53303227-7681-AC01-A625-AD062CBCA030}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Domain.Entities;
 
-namespace Predictathon.Domain.Persistence;
+namespace Predictathon.Infrastructure.Persistence;
 
-public partial class DefaultDbContext : DbContext
+public partial class ApplicationDbContext : DbContext
 {
-    public DefaultDbContext(DbContextOptions<DefaultDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }

@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Predictathon.Infrastructure.Entities;
+using Predictathon.Domain.Entities;
 
 namespace Predictathon.Domain.Persistence;
 
-public interface IDefaultDbContext
+public interface IApplicationDbContext
 {
     DbSet<Competition> Competition { get; }
     DbSet<HallOfFame> HallOfFame { get; }
