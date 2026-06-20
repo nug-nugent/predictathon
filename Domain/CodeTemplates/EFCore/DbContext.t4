@@ -47,7 +47,7 @@ namespace <#= NamespaceHint #>;
 <#
     }
 #>
-public partial class <#= Options.ContextName #> : DbContext
+public partial class <#= Options.ContextName #> : GenericDbContext
 {
 <#
     if (!Options.SuppressOnConfiguring)

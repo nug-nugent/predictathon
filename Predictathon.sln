@@ -10,6 +10,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E81442B3-8C3A-4994-B3E1-08C2CE606698}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		copilot-instructions.md = copilot-instructions.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Application", "Application\Predictathon.Application.csproj", "{2F7F6F7D-A6E7-11C4-19EC-5FF35959C9AC}"

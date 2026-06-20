@@ -8,7 +8,7 @@ using Predictathon.Domain.Entities;
 
 namespace Predictathon.Infrastructure.Persistence;
 
-public partial class ApplicationDbContext : DbContext
+public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContext>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

@@ -1,6 +1,6 @@
-@Predictathon.WebApi_HostAddress = http://localhost:5193
+@Predictathon.WebApi_HostAddress = https://localhost:7046
 
-GET {{Predictathon.WebApi_HostAddress}}/weatherforecast/
+GET {{Predictathon.WebApi_HostAddress}}/Competition/
 Accept: application/json
 
 ###

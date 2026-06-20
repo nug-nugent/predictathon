@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Predictathon.Domain.Entities;
 
-namespace Predictathon.Domain.Persistence;
+namespace Predictathon.Application.Interfaces.Persistence;
 
 public interface IApplicationDbContext
 {

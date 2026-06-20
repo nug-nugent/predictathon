@@ -1,6 +1,4 @@
-﻿using Predictathon.Domain.Entities;
-
-namespace Predictathon.Application.Models;
+﻿namespace Predictathon.Application.Models;
 
 public class CompetitionModel
 {
@@ -33,27 +31,4 @@ public class CompetitionModel
     public bool DefaultToNeutralGround { get; set; }
 
     public bool AllowTwoPointers { get; set; }
-
-    // TODO get test cases for all mapper methods
-    public Competition ToCompetition()
-    {
-        return new Competition()
-        {
-            CompetitionID = this.CompetitionID,
-            CompetitionName = this.CompetitionName,
-            PrependNameWithThe = this.PrependNameWithThe,
-            StartDate = this.StartDate,
-            EndDate = this.EndDate,
-            DuplicateFixturesAllowed = this.DuplicateFixturesAllowed,
-            OpenForRegistration = this.OpenForRegistration,
-            RegistrationAvailableOnLoginPage = this.RegistrationAvailableOnLoginPage,
-            ShowInHallOfFame = this.ShowInHallOfFame,
-            EntranceFee = this.EntranceFee,
-            PayPalPaymentAvailable = this.PayPalPaymentAvailable,
-            Information = this.Information,
-            ImageFilename = this.ImageFilename,
-            DefaultToNeutralGround = this.DefaultToNeutralGround,
-            AllowTwoPointers = this.AllowTwoPointers
-        };
-    }
 }

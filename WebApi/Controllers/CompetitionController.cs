@@ -4,7 +4,7 @@ namespace Predictathon.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class CompetitionController : ControllerBase
     {
         private static readonly string[] Summaries =
         [

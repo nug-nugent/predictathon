@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Application\Predictathon.Application.csproj" />
     <ProjectReference Include="..\Domain\Predictathon.Domain.csproj" />
   </ItemGroup>
 
