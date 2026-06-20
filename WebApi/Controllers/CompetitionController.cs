@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Interfaces;
+using Predictathon.Application.Models;
 
 namespace Predictathon.WebApi.Controllers
 {
@@ -6,21 +8,28 @@ namespace Predictathon.WebApi.Controllers
     [Route("[controller]")]
     public class CompetitionController : ControllerBase
     {
-        private static readonly string[] Summaries =
-        [
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        ];
+        private readonly ICompetitionService _competitionService;
+        private readonly ILogger<CompetitionController> _logger;
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public CompetitionController(
+            ICompetitionService competitionService,
+            ILogger<CompetitionController> logger
+        )
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+            _competitionService = competitionService;
+            _logger = logger;
         }
+
+        [HttpGet(Name = "Get")]
+        public async Task<CompetitionModel?> Get()
+        {
+            return await _competitionService.GetById(new Guid("38893FFB-7EF3-4F27-8766-0B32FDF8F2EF"));
+        }
+
+        //[HttpGet(Name = "List")]
+        //public IEnumerable<CompetitionModel> GetList()
+        //{
+        //    return _competitionService.GetList();
+        //}
     }
 }

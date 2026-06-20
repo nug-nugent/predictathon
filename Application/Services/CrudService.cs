@@ -23,18 +23,17 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
         _mapper = dependencyAggregate.Mapper;
     }
 
-    /// <summary>
-    /// Create a new entity from the provided model. Uses <see cref="MapToEntity"/> which can be
-    /// overridden by derived classes to provide custom mapping.
-    /// </summary>
-    public virtual async Task<Result<TEntity>> Create(TModel model)
+    /// <inheritdoc />
+    public virtual async Task<Result<TModel>> Create(TModel model)
     {
         var entity = MapToEntity(model);
 
         await _dbContext.AddAsync(entity);
         await _dbContext.SaveChangesAsync();
 
-        return Result.Ok<TEntity>(entity);
+        var updatedModel = MapToModel(entity);
+
+        return Result.Ok(updatedModel);
     }
 
     /// <summary>
@@ -58,8 +57,8 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// <summary>
     /// Returns the entity by id.
     /// </summary>
-    public virtual Task<TEntity?> GetById(TPrimaryKey id)
-        => _dbContext.GetByIdAsync<TEntity>(id);
+    public virtual Task<TModel?> GetById(TPrimaryKey id)
+        => _dbContext.GetByIdAsync<TEntity>(id).ContinueWith(t => t.Result is null ? null : MapToModel(t.Result));
 
     /// <summary>
     /// Updates an existing entity using values from the provided model.
@@ -67,13 +66,13 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// then copy matching writable properties from a mapped entity. Override <see cref="UpdateEntityFromModel"/>
     /// to provide custom behaviour.
     /// </summary>
-    public virtual async Task<Result<TEntity>> Update(TPrimaryKey id, TModel model)
+    public virtual async Task<Result<TModel>> Update(TPrimaryKey id, TModel model)
     {
         var existing = await _dbContext.GetByIdAsync<TEntity>(id);
 
         if (existing is null)
         {
-            return Result.Fail<TEntity>("Entity not found");
+            return Result.Fail<TModel>("Entity not found");
         }
 
         UpdateEntityFromModel(existing, model);
@@ -81,7 +80,7 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
         _dbContext.Update(existing);
         await _dbContext.SaveChangesAsync();
 
-        return Result.Ok<TEntity>(existing);
+        return Result.Ok(MapToModel(existing));
     }
 
     /// <summary>
@@ -96,6 +95,15 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
         }
 
         return _mapper.Map<TEntity>(model);
+    }
+
+    /// <summary>
+    /// Map an entity to a model.
+    /// Override to provide explicit mapping logic.
+    /// </summary>
+    protected virtual TModel MapToModel(TEntity entity)
+    {
+        return _mapper.Map<TModel>(entity);
     }
 
     /// <summary>
