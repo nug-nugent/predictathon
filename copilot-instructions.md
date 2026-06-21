@@ -18,3 +18,7 @@ Scope
 
 Rationale
 - Always using braces avoids bugs when later adding statements and improves readability.
+
+Rule
+- Methods should be documented with XML comments, including a brief summary and parameter descriptions.
+- Spellings should always be in British English.

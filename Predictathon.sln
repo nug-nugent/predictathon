@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.WebApi", "WebA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.Infrastructure", "Infrastructure\Predictathon.Infrastructure.csproj", "{53303227-7681-AC01-A625-AD062CBCA030}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictathon.UnitTests", "UnitTests\Predictathon.UnitTests.csproj", "{708724D5-708C-4E1F-8363-E05289D8FF3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{53303227-7681-AC01-A625-AD062CBCA030}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53303227-7681-AC01-A625-AD062CBCA030}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53303227-7681-AC01-A625-AD062CBCA030}.Release|Any CPU.Build.0 = Release|Any CPU
+		{708724D5-708C-4E1F-8363-E05289D8FF3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{708724D5-708C-4E1F-8363-E05289D8FF3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{708724D5-708C-4E1F-8363-E05289D8FF3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{708724D5-708C-4E1F-8363-E05289D8FF3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
