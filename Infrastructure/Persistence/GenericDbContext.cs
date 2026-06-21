@@ -2,6 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Interfaces.Persistence;
 using System.Linq.Expressions;
+using System.Data;
+using System.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Predictathon.Infrastructure.Persistence;
 
@@ -52,7 +59,7 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
     public Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
         => Database.ExecuteSqlRawAsync(sql, cancellationToken);
 
-    public Task ExecuteStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
+    public Task CallStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
     {
         // Build command like: EXEC procName @p1, @p2
         var paramPlaceholders = parameters != null && parameters.Count > 0
@@ -66,5 +73,86 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
         var paramArray = parameters?.ToArray() ?? Array.Empty<object>();
 
         return Database.ExecuteSqlRawAsync(command, paramArray, cancellationToken);
+    }
+
+    public async Task<List<TReturnType>> CallStoredProcedureAsync<TReturnType>(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
+        where TReturnType : class, new()
+    {
+        var results = new List<TReturnType>();
+
+        var connection = Database.GetDbConnection();
+        try
+        {
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync(cancellationToken);
+            }
+
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = storedProcedureName;
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            if (parameters is not null)
+            {
+                foreach (var p in parameters)
+                {
+                    cmd.Parameters.Add(p);
+                }
+            }
+
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+
+            var props = typeof(TReturnType).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)).ToList();
+
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var item = new TReturnType();
+
+                foreach (var prop in props)
+                {
+                    var colIndex = columnNames.FindIndex(n => string.Equals(n, prop.Name, StringComparison.OrdinalIgnoreCase));
+                    if (colIndex < 0) continue;
+
+                    var value = reader.GetValue(colIndex);
+                    if (value == DBNull.Value)
+                    {
+                        prop.SetValue(item, null);
+                        continue;
+                    }
+
+                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+                    object? safeValue;
+
+                    if (targetType == typeof(Guid))
+                    {
+                        safeValue = reader.GetGuid(colIndex);
+                    }
+                    else if (targetType.IsEnum)
+                    {
+                        safeValue = Enum.ToObject(targetType, value);
+                    }
+                    else
+                    {
+                        safeValue = Convert.ChangeType(value, targetType);
+                    }
+
+                    prop.SetValue(item, safeValue);
+                }
+
+                results.Add(item);
+            }
+        }
+        finally
+        {
+            if (connection.State == ConnectionState.Open)
+            {
+                try { connection.Close(); } catch { }
+            }
+        }
+
+        return results;
     }
 }

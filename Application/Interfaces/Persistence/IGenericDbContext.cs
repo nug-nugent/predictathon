@@ -92,5 +92,12 @@ public interface IGenericDbContext
     /// <param name="storedProcedureName">Stored procedure name (including schema if required).</param>
     /// <param name="parameters">Optional list of parameters.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task ExecuteStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default);
+    Task CallStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a stored procedure and maps the resulting rows to instances of <typeparamref name="TReturnType"/>.
+    /// Property names on <typeparamref name="TReturnType"/> are matched to column names (case-insensitive).
+    /// </summary>
+    Task<List<TReturnType>> CallStoredProcedureAsync<TReturnType>(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
+        where TReturnType : class, new();
 }

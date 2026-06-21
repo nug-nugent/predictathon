@@ -2,4 +2,4 @@
 
 namespace Predictathon.Infrastructure.Persistence;
 
-public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContext>, IApplicationDbContext { }
+public partial class ApplicationDbContext : IApplicationDbContext { }

@@ -3,7 +3,7 @@ using Predictathon.Domain.Entities;
 
 namespace Predictathon.Application.Interfaces.Persistence;
 
-public interface IApplicationDbContext
+public interface IApplicationDbContext : IGenericDbContext
 {
     DbSet<Competition> Competition { get; }
     DbSet<HallOfFame> HallOfFame { get; }
