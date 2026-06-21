@@ -10,10 +10,15 @@
     <PackageReference Include="FluentResults" Version="4.0.0" />
     <PackageReference Include="Mapster" Version="10.0.8" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
+    <PackageReference Include="FluentValidation" Version="11.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Predictathon.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Persistence\" />
   </ItemGroup>
 
 </Project>

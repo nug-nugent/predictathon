@@ -32,5 +32,14 @@ namespace Predictathon.WebApi.Controllers
 
             return OkOrNotFound(model);
         }
+
+        [HttpPut("{id:guid}")]
+        public async Task<ActionResult<CompetitionModel?>> Put(Guid id, CompetitionModel model)
+        {
+            var result = await _competitionService.Update(id, model);
+
+            // Convert service Result<T> into ActionResult with consistent ProblemDetails on validation failures.
+            return FromResult(result);
+        }
     }
 }

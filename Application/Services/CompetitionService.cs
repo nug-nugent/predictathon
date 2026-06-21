@@ -10,7 +10,7 @@ namespace Predictathon.Application.Services;
 public class CompetitionService : CrudService<Guid, CompetitionModel, Competition>, ICompetitionService
 {
     public CompetitionService(
-        ICrudServiceDependencyAggregate dependencyAggregate
+        ICrudServiceDependencyAggregate<CompetitionModel> dependencyAggregate
     ) : base(dependencyAggregate)
     {
     }

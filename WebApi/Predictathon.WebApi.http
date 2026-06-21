@@ -1,7 +1,0 @@
-@Predictathon.WebApi_HostAddress = https://localhost:7046/api
-@CompetitionId = 38893FFB-7EF3-4F27-8766-0B32FDF8F2EF
-
-GET {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
-Accept: application/json
-
-###

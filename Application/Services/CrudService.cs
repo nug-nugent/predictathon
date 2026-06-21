@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using FluentValidation;
 using MapsterMapper;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Interfaces.Base;
@@ -14,18 +15,30 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
 {
     private readonly IGenericDbContext _dbContext;
     private readonly IMapper _mapper;
+    private readonly IValidator<TModel>? _validator;
 
     public CrudService(
-        ICrudServiceDependencyAggregate dependencyAggregate
+        ICrudServiceDependencyAggregate<TModel> dependencyAggregate
     )
     {
         _dbContext = dependencyAggregate.DbContext;
         _mapper = dependencyAggregate.Mapper;
+        _validator = dependencyAggregate.Validator;
     }
 
     /// <inheritdoc />
     public virtual async Task<Result<TModel>> Create(TModel model)
     {
+        if (_validator is not null)
+        {
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TModel>(model));
+            if (!validation.IsValid)
+            {
+                var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
+                return Result.Fail<TModel>(errors);
+            }
+        }
+
         var entity = MapToEntity(model);
 
         await _dbContext.AddAsync(entity);
@@ -68,6 +81,16 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// </summary>
     public virtual async Task<Result<TModel>> Update(TPrimaryKey id, TModel model)
     {
+        if (_validator is not null)
+        {
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TModel>(model));
+            if (!validation.IsValid)
+            {
+                var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
+                return Result.Fail<TModel>(errors);
+            }
+        }
+
         var existing = await _dbContext.GetByIdAsync<TEntity>(id);
 
         if (existing is null)

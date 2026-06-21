@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Predictathon.Application.Attributes;
 using Scrutor;
@@ -14,7 +15,19 @@ public static class ServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScopedServices(typeof(ServiceCollectionExtensions).Assembly);
+        var assembly = typeof(ServiceCollectionExtensions).Assembly;
+
+        services.AddScopedServices(assembly);
+
+        // Register open-generic dependency aggregate so CrudService<TModel> can receive a per-model aggregate
+        services.AddScoped(typeof(Predictathon.Application.Interfaces.Base.ICrudServiceDependencyAggregate<>), typeof(Predictathon.Application.Services.CrudServiceDependencyAggregate<>));
+
+        // Register FluentValidation validators from the Application assembly using Scrutor.
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IValidator<>)))
+            .AsImplementedInterfaces()
+            .WithTransientLifetime());
         return services;
     }
 
