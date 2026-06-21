@@ -40,11 +40,13 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
             }
         }
 
-        var editModel = new TEditModel();
-        var entity = MapToEntity(editModel);
+        var entity = MapToEntity(model);
 
         await _dbContext.AddAsync(entity);
         await _dbContext.SaveChangesAsync();
+
+        var editModel = new TEditModel();
+
 
         var updatedModel = MapToModel(entity);
 
@@ -114,11 +116,15 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
     /// </summary>
     protected virtual TEntity MapToEntity(TEditModel model)
     {
-        if (model is TEntity e)
-        {
-            return e;
-        }
+        return _mapper.Map<TEntity>(model);
+    }
 
+    /// <summary>
+    /// Map a model to an entity.
+    /// Override to provide explicit mapping logic.
+    /// </summary>
+    protected virtual TEntity MapToEntity(TCreateModel model)
+    {
         return _mapper.Map<TEntity>(model);
     }
 
