@@ -14,7 +14,7 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
     public IQueryable<T> Query<T>() where T : class => Set<T>().AsQueryable();
 
     public async Task<T?> GetByIdAsync<T>(object id, CancellationToken cancellationToken = default) where T : class
-        => await Set<T>().FindAsync(new object[] { id }, cancellationToken);
+        => await Set<T>().FindAsync([id], cancellationToken);
 
     public async Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : class
         => await Set<T>().FirstOrDefaultAsync(predicate, cancellationToken);

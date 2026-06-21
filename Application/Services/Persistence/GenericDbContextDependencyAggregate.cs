@@ -8,6 +8,12 @@ namespace Predictathon.Application.Services.Persistence;
 [ScopedService]
 public class GenericDbContextDependencyAggregate : ICrudServiceDependencyAggregate
 {
-    public required IGenericDbContext DbContext { get; set; }
-    public required IMapper Mapper { get; set; }
+    public IGenericDbContext DbContext { get; }
+    public IMapper Mapper { get; }
+
+    public GenericDbContextDependencyAggregate(IGenericDbContext dbContext, IMapper mapper)
+    {
+        DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    }
 }

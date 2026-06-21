@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
+using Predictathon.WebApi.Controllers.Base;
 
 namespace Predictathon.WebApi.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class CompetitionController : ControllerBase
+    public class CompetitionController : ApiControllerBase
     {
         private readonly ICompetitionService _competitionService;
         private readonly ILogger<CompetitionController> _logger;
@@ -20,16 +19,18 @@ namespace Predictathon.WebApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "Get")]
-        public async Task<CompetitionModel?> Get()
-        {
-            return await _competitionService.GetById(new Guid("38893FFB-7EF3-4F27-8766-0B32FDF8F2EF"));
-        }
+        // TODO - Add a POST endpoint to create a new competition (solid validation foundation)
+        // TODO - Add a PUT endpoint to update an existing competition
+        // TODO - Add a DELETE endpoint to delete an existing competition?
+        // TODO - Add a Competitions/GET endpoint to retrieve all competitions (with pagination and filtering)
 
-        //[HttpGet(Name = "List")]
-        //public IEnumerable<CompetitionModel> GetList()
-        //{
-        //    return _competitionService.GetList();
-        //}
+        //[HttpGet(Name = "Get")]
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<CompetitionModel?>> Get(Guid id)
+        {
+            var model = await _competitionService.GetById(id);
+
+            return OkOrNotFound(model);
+        }
     }
 }

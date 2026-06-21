@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\Base\" />
     <Folder Include="Mapping\" />
   </ItemGroup>
 

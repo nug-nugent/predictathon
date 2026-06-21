@@ -5,6 +5,7 @@ using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Infrastructure.Persistence;
+using Predictathon.WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,9 @@ builder.Services.AddScoped<IMapper, Mapper>();
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Configure ProblemDetails / RFC7807 behaviour for model validation and errors
+builder.Services.AddApiProblemDetails();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -44,6 +48,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// Enable ProblemDetails middleware (produces application/problem+json for errors)
+app.UseApiProblemDetails();
 
 app.MapControllers();
 
