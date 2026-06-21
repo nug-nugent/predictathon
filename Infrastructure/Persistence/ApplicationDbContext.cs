@@ -49,7 +49,7 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
     {
         modelBuilder.Entity<Competition>(entity =>
         {
-            entity.Property(e => e.CompetitionID).ValueGeneratedNever();
+            entity.Property(e => e.CompetitionID).HasDefaultValueSql("NEWID()");
             entity.Property(e => e.CompetitionName)
                 .HasMaxLength(50)
                 .IsUnicode(false);

@@ -4,7 +4,7 @@
     [PostedByUserID]             UNIQUEIDENTIFIER NOT NULL,
     [MessageDateTime]            DATETIME         CONSTRAINT [DF_Message_MessageDateTime] DEFAULT (getdate()) NOT NULL,
     [MessageContent]             NVARCHAR (MAX)   NULL,
-    [YouTubeVideoID]             CHAR (11)        COLLATE Latin1_General_CI_AI NULL,
+    [YouTubeVideoID]             CHAR (11)        NULL,
     [HasLinkedImage]             BIT              CONSTRAINT [DF_Message_HasLinkedImage] DEFAULT ((0)) NOT NULL,
     [UserTotalMessageboardPosts] INT              CONSTRAINT [DF_Message_UserTotalMessageboardPosts] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Message] PRIMARY KEY CLUSTERED ([MessageID] ASC),

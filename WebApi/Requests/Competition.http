@@ -4,8 +4,73 @@
 GET {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
 Accept: application/json
 
-###
-###
+### Create competition — valid (server-generated id)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionName": "Summer Predictathon",
+  "Information": "Predictathon for summer event",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10",
+  "EntranceFee": 0.00,
+  "OpenForRegistration": true
+}
+
+### Create competition — valid (client-supplied id using dynamic GUID)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionID": "{{$uuid}}",
+  "CompetitionName": "Team Challenge",
+  "StartDate": "2026-08-01",
+  "EndDate": "2026-08-05"
+}
+
+### Create competition — invalid (missing Content-Type)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Accept: application/json
+
+{
+  "CompetitionName": "No Content-Type",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
+
+### Create competition — invalid (malformed JSON)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionName": "Broken JSON", 
+  "StartDate": "2026-07-01",
+}
+
+### Create competition — invalid (bad GUID)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "CompetitionID": "not-a-guid",
+  "CompetitionName": "Bad GUID Example",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
+
+### Create competition — invalid (missing required field)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
 
 ### Valid PUT - update competition (expect 200)
 PUT {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}

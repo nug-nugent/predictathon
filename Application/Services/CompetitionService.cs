@@ -11,7 +11,7 @@ using System.Data;
 namespace Predictathon.Application.Services;
 
 [ScopedService]
-public class CompetitionService : CrudService<Guid, CompetitionModel, Competition>, ICompetitionService
+public class CompetitionService : CrudService<Guid, CreateCompetitionModel, CompetitionModel, Competition>, ICompetitionService
 {
     private readonly IApplicationDbContext _appDbContext;
 

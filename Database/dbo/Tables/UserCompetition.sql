@@ -3,7 +3,7 @@
     [UserID]                UNIQUEIDENTIFIER NOT NULL,
     [CompetitionID]         UNIQUEIDENTIFIER NOT NULL,
     [AmountPaid]            DECIMAL (5, 2)   CONSTRAINT [DF_UserCompetition_AmountPaid] DEFAULT ((0.00)) NOT NULL,
-    [PaymentProvider]       VARCHAR (20)     COLLATE Latin1_General_CI_AI NULL,
+    [PaymentProvider]       VARCHAR (20)     NULL,
     [PaymentCreditID]       UNIQUEIDENTIFIER NULL,
     [IsDefaultCompetition]  BIT              CONSTRAINT [DF_UserCompetition_Default] DEFAULT ((0)) NOT NULL,
     [LastEmailReminderSent] DATETIME         NULL,

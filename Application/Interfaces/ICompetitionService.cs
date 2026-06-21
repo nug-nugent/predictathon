@@ -4,7 +4,9 @@ using Predictathon.Domain.Entities;
 
 namespace Predictathon.Application.Interfaces;
 
-public interface ICompetitionService : ICrudService<Guid, CompetitionModel, Competition>
+// TCreateModel: CreateCompetitionModel (client-supplied fields)
+// TEditModel: CompetitionModel (full model including CompetitionID)
+public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel, CompetitionModel, Competition>
 {
     Task<IReadOnlyList<Competition>> GetCompetitionListAsync();
 

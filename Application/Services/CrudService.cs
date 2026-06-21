@@ -8,17 +8,18 @@ using Predictathon.Application.Interfaces.Persistence;
 namespace Predictathon.Application.Services;
 
 [ScopedService]
-public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKey, TModel, TEntity>
+public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity>
     where TPrimaryKey : struct, IComparable<TPrimaryKey>, IEquatable<TPrimaryKey>
     where TEntity : class, new()
-    where TModel : class
+    where TCreateModel : class
+    where TEditModel : class, new()
 {
     private readonly IGenericDbContext _dbContext;
     private readonly IMapper _mapper;
-    private readonly IValidator<TModel>? _validator;
+    private readonly IValidator<TEditModel>? _validator;
 
     public CrudService(
-        ICrudServiceDependencyAggregate<TModel> dependencyAggregate
+        ICrudServiceDependencyAggregate<TEditModel> dependencyAggregate
     )
     {
         _dbContext = dependencyAggregate.DbContext;
@@ -27,19 +28,20 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     }
 
     /// <inheritdoc />
-    public virtual async Task<Result<TModel>> Create(TModel model)
+    public virtual async Task<Result<TEditModel>> Create(TCreateModel model)
     {
         if (_validator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TModel>(model));
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TCreateModel>(model));
             if (!validation.IsValid)
             {
                 var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
-                return Result.Fail<TModel>(errors);
+                return Result.Fail<TEditModel>(errors);
             }
         }
 
-        var entity = MapToEntity(model);
+        var editModel = new TEditModel();
+        var entity = MapToEntity(editModel);
 
         await _dbContext.AddAsync(entity);
         await _dbContext.SaveChangesAsync();
@@ -70,7 +72,7 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// <summary>
     /// Returns the entity by id.
     /// </summary>
-    public virtual Task<TModel?> GetById(TPrimaryKey id)
+    public virtual Task<TEditModel?> GetById(TPrimaryKey id)
         => _dbContext.GetByIdAsync<TEntity>(id).ContinueWith(t => t.Result is null ? null : MapToModel(t.Result));
 
     /// <summary>
@@ -79,15 +81,15 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// then copy matching writable properties from a mapped entity. Override <see cref="UpdateEntityFromModel"/>
     /// to provide custom behaviour.
     /// </summary>
-    public virtual async Task<Result<TModel>> Update(TPrimaryKey id, TModel model)
+    public virtual async Task<Result<TEditModel>> Update(TPrimaryKey id, TEditModel model)
     {
         if (_validator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TModel>(model));
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TEditModel>(model));
             if (!validation.IsValid)
             {
                 var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
-                return Result.Fail<TModel>(errors);
+                return Result.Fail<TEditModel>(errors);
             }
         }
 
@@ -95,7 +97,7 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
 
         if (existing is null)
         {
-            return Result.Fail<TModel>("Entity not found");
+            return Result.Fail<TEditModel>("Entity not found");
         }
 
         UpdateEntityFromModel(existing, model);
@@ -110,7 +112,7 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// Map a model to an entity.
     /// Override to provide explicit mapping logic.
     /// </summary>
-    protected virtual TEntity MapToEntity(TModel model)
+    protected virtual TEntity MapToEntity(TEditModel model)
     {
         if (model is TEntity e)
         {
@@ -124,16 +126,16 @@ public class CrudService<TPrimaryKey, TModel, TEntity> : ICrudService<TPrimaryKe
     /// Map an entity to a model.
     /// Override to provide explicit mapping logic.
     /// </summary>
-    protected virtual TModel MapToModel(TEntity entity)
+    protected virtual TEditModel MapToModel(TEntity entity)
     {
-        return _mapper.Map<TModel>(entity);
+        return _mapper.Map<TEditModel>(entity);
     }
 
     /// <summary>
     /// Updates properties on <paramref name="entity"/> from <paramref name="model"/>.
     /// Override for custom update semantics.
     /// </summary>
-    protected virtual void UpdateEntityFromModel(TEntity entity, TModel model)
+    protected virtual void UpdateEntityFromModel(TEntity entity, TEditModel model)
     {
         _mapper.Map(model, entity);
         return;

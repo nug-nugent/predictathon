@@ -1,10 +1,11 @@
 ﻿namespace Predictathon.Application.Models;
 
-public class CompetitionModel
+/// <summary>
+/// Model used when creating a competition.
+/// </summary>
+public class CreateCompetitionModel
 {
-    public Guid CompetitionID { get; set; }
-
-    public required string CompetitionName { get; set; }
+    public string CompetitionName { get; set; } = "";
 
     public bool PrependNameWithThe { get; set; }
 
@@ -31,4 +32,10 @@ public class CompetitionModel
     public bool DefaultToNeutralGround { get; set; }
 
     public bool AllowTwoPointers { get; set; }
+}
+
+// Full model including the generated identifier.
+public class CompetitionModel : CreateCompetitionModel
+{
+    public Guid CompetitionID { get; set; }
 }

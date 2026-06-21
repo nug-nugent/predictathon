@@ -1,8 +1,8 @@
 ﻿CREATE TABLE [dbo].[Team] (
     [TeamID]    UNIQUEIDENTIFIER NOT NULL,
-    [TeamName]  VARCHAR (50)     COLLATE Latin1_General_CI_AI NOT NULL,
-    [ShortName] VARCHAR (20)     COLLATE Latin1_General_CI_AI NOT NULL,
-    [ImageName] VARCHAR (50)     COLLATE Latin1_General_CI_AI NULL,
+    [TeamName]  VARCHAR (50)     NOT NULL,
+    [ShortName] VARCHAR (20)     NOT NULL,
+    [ImageName] VARCHAR (50)     NULL,
     CONSTRAINT [PK_Team] PRIMARY KEY CLUSTERED ([TeamID] ASC)
 );
 

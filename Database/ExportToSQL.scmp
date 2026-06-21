@@ -9,7 +9,7 @@
   </SourceModelProvider>
   <TargetModelProvider>
     <ConnectionBasedModelProvider>
-      <ConnectionString>Data Source=(local);Initial Catalog=Predictathon;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False</ConnectionString>
+      <ConnectionString>Data Source=(local);Initial Catalog=Predictathon;Integrated Security=True;Persist Security Info=False;Pooling=False;Multiple Active Result Sets=False;Connect Timeout=60;Encrypt=False;Trust Server Certificate=False</ConnectionString>
     </ConnectionBasedModelProvider>
   </TargetModelProvider>
   <SchemaCompareSettingsService>
@@ -33,12 +33,20 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>AllowTableRecreation</Name>
+        <Value>True</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>BackupDatabaseBeforeChanges</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>IgnoreIndexesStatisticsOnEnclaveEnabledColumns</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>BlockOnPossibleDataLoss</Name>
-        <Value>True</Value>
+        <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>BlockWhenDriftDetected</Name>
@@ -63,6 +71,14 @@
       <PropertyElementName>
         <Name>DisableAndReenableDdlTriggers</Name>
         <Value>True</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DisableIndexesForDataPhase</Name>
+        <Value>True</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DisableParallelismForEnablingIndexes</Name>
+        <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>DoNotAlterChangeDataCaptureObjects</Name>
@@ -106,6 +122,10 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>GenerateSmartDefaults</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>HashObjectNamesInLogs</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
@@ -154,6 +174,14 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>IgnorePartitionSchemes</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>IgnorePreDeployScript</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>IgnorePostDeployScript</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
@@ -249,6 +277,10 @@
         <Value>True</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>IgnoreSensitivityClassifications</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>AllowUnsafeRowLevelSecurityDataMovement</Name>
         <Value>False</Value>
       </PropertyElementName>
@@ -261,6 +293,10 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>IsAlwaysEncryptedParameterizationEnabled</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>NoAlterStatementsToChangeCLRTypes</Name>
         <Value>False</Value>
       </PropertyElementName>
@@ -269,8 +305,24 @@
         <Value>True</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>PreserveIdentityLastValues</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>RegisterDataTierApplication</Name>
         <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>PerformIndexOperationsOnline</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>RebuildIndexesOfflineForDataPhase</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>RestoreSequenceCurrentValue</Name>
+        <Value>True</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>ScriptDatabaseCollation</Name>
@@ -306,7 +358,7 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>TargetConnectionString</Name>
-        <Value>Data Source=(local);Initial Catalog=Predictathon;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False;Application Name="Microsoft SQL Server Data Tools, Schema Compare"</Value>
+        <Value>Data Source=(local);Initial Catalog=Predictathon;Integrated Security=True;Persist Security Info=False;Pooling=False;Multiple Active Result Sets=False;Connect Timeout=60;Encrypt=False;Trust Server Certificate=False;Application Name="Microsoft SQL Server Data Tools, Schema Compare"</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>TreatVerificationErrorsAsWarnings</Name>
@@ -331,6 +383,10 @@
       <PropertyElementName>
         <Name>AllowDropBlockingAssemblies</Name>
         <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotEvaluateSqlCmdVariables</Name>
+        <Value>True</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>DoNotDropAggregates</Name>
@@ -401,6 +457,22 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>IgnoreDatabaseWorkloadGroups</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropDatabaseWorkloadGroups</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>IgnoreWorkloadClassifiers</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropWorkloadClassifiers</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>DoNotDropDefaults</Name>
         <Value>False</Value>
       </PropertyElementName>
@@ -433,7 +505,27 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>DoNotDropExternalLanguages</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropExternalLibraries</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropExternalModels</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropExternalStreamingJobs</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>DoNotDropExternalTables</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>DoNotDropExternalStreams</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
@@ -677,7 +769,27 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>ExcludeExternalLanguages</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>ExcludeExternalLibraries</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>ExcludeExternalModels</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>ExcludeExternalStreamingJobs</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>ExcludeExternalTables</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>ExcludeExternalStreams</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
@@ -825,6 +937,14 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>AllowExternalLibraryPaths</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>AllowExternalLanguagePaths</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlServerDdlTrigger</Name>
         <Value>ExcludedType</Value>
       </PropertyElementName>
@@ -932,21 +1052,21 @@
     <Filter>Equals_Objects,Not_Supported_Deploy</Filter>
   </SchemaCompareViewSettings>
   <ExcludedTargetElements>
-    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlUser, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlUser, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
       <Name>IIS APPPOOL\ASP.NET v4.0</Name>
     </SelectedItem>
-    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlSchema, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlSchema, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
       <Name>predicta_dbuser</Name>
     </SelectedItem>
-    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlUser, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlUser, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
       <Name>predicta_dbuser</Name>
     </SelectedItem>
-    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRole, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRole, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
       <Name>db_executor</Name>
     </SelectedItem>
-    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRoleMembership, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <SelectedItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRoleMembership, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
       <Name></Name>
-      <ParentItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRole, Microsoft.Data.Tools.Schema.Sql, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <ParentItem Type="Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlRole, Microsoft.Data.Tools.Schema.Sql, Version=170.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">
         <Name>db_executor</Name>
       </ParentItem>
     </SelectedItem>

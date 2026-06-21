@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[Competition] (
-    [CompetitionID]                    UNIQUEIDENTIFIER NOT NULL,
-    [CompetitionName]                  VARCHAR (50)     COLLATE Latin1_General_CI_AI NOT NULL,
+    [CompetitionID]                    UNIQUEIDENTIFIER NOT NULL DEFAULT (newid()),
+    [CompetitionName]                  VARCHAR (50)     NOT NULL,
     [PrependNameWithThe]               BIT              CONSTRAINT [DF_Competition_PrependWithThe] DEFAULT ((0)) NOT NULL,
     [StartDate]                        DATE             NOT NULL,
     [EndDate]                          DATE             NOT NULL,
@@ -10,8 +10,8 @@
     [ShowInHallOfFame]                 BIT              CONSTRAINT [DF_Competition_ShowInHallOfFame] DEFAULT ((0)) NOT NULL,
     [EntranceFee]                      DECIMAL (5, 2)   CONSTRAINT [DF_Competition_EntranceFee] DEFAULT ((0.00)) NOT NULL,
     [PayPalPaymentAvailable]           BIT              CONSTRAINT [DF_Competition_PayPalPaymentAvailable] DEFAULT ((1)) NOT NULL,
-    [Information]                      VARCHAR (MAX)    COLLATE Latin1_General_CI_AI NULL,
-    [ImageFilename]                    VARCHAR (40)     COLLATE Latin1_General_CI_AI NULL,
+    [Information]                      VARCHAR (MAX)    NULL,
+    [ImageFilename]                    VARCHAR (40)     NULL,
     [DefaultToNeutralGround]           BIT              CONSTRAINT [DF_Competition_DefaultToNeutralGround] DEFAULT ((0)) NOT NULL,
     [AllowTwoPointers]                 BIT              CONSTRAINT [DF_Competition_AllowTwoPointers] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Competition] PRIMARY KEY CLUSTERED ([CompetitionID] ASC)

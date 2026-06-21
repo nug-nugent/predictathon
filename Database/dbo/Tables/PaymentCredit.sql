@@ -1,8 +1,8 @@
 ﻿CREATE TABLE [dbo].[PaymentCredit] (
     [PaymentCreditID]   UNIQUEIDENTIFIER NOT NULL,
-    [ExpectedUsername]  VARCHAR (50)     COLLATE Latin1_General_CI_AI NULL,
+    [ExpectedUsername]  VARCHAR (50)     NULL,
     [ForCompetitionID]  UNIQUEIDENTIFIER NOT NULL,
-    [UniquePaymentCode] VARCHAR (10)     COLLATE Latin1_General_CI_AI NOT NULL,
+    [UniquePaymentCode] VARCHAR (10)     NOT NULL,
     [CreditUsed]        BIT              CONSTRAINT [DF_PaymentCredit_CreditUsed] DEFAULT ((0)) NOT NULL,
     [UsedByUserID]      UNIQUEIDENTIFIER NULL,
     [IssuedByUserID]    UNIQUEIDENTIFIER NOT NULL,
