@@ -17,7 +17,7 @@ export function LoginButton() {
     const goToPasswordReset = () => {
         setOpen(false);
         navigate("/password-reset");
-    }
+    };
 
     const login = async () => {
         setLoggingIn(true);
@@ -41,15 +41,27 @@ export function LoginButton() {
                             <Stack gap="4">
                                 <Field.Root>
                                     <Field.Label>Email / Username</Field.Label>
-                                    <Input size="sm" disabled={isLoggingIn} value={username} onChange={(e) => setUsername(e.target.value)} />
+                                    <Input
+                                        size="sm"
+                                        disabled={isLoggingIn}
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                    />
                                 </Field.Root>
 
                                 <Field.Root>
                                     <Field.Label>Password</Field.Label>
-                                    <PasswordInput size="sm" disabled={isLoggingIn} value={password} onChange={(e) => setPassword(e.target.value)} />
+                                    <PasswordInput
+                                        size="sm"
+                                        disabled={isLoggingIn}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
                                 </Field.Root>
 
-                                <Checkbox.Root checked={rememberMe} disabled={isLoggingIn}
+                                <Checkbox.Root
+                                    checked={rememberMe}
+                                    disabled={isLoggingIn}
                                     onCheckedChange={(e) => setRememberMe(!!e.checked)}
                                     colorPalette="blue">
                                     <Checkbox.HiddenInput />
@@ -58,8 +70,12 @@ export function LoginButton() {
                                 </Checkbox.Root>
 
                                 <HStack justifyContent={"space-between"}>
-                                    <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>
-                                    <Button loading={isLoggingIn} size="sm" colorPalette="blue" onClick={login}>Login</Button>
+                                    <Link variant="underline" onClick={goToPasswordReset}>
+                                        Forgotten password?
+                                    </Link>
+                                    <Button loading={isLoggingIn} size="sm" colorPalette="blue" onClick={login}>
+                                        Login
+                                    </Button>
                                 </HStack>
                             </Stack>
                         </Popover.Body>
@@ -67,5 +83,5 @@ export function LoginButton() {
                 </Popover.Positioner>
             </Portal>
         </Popover.Root>
-    )
+    );
 }

@@ -1,4 +1,16 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, Text, CloseButton } from "@chakra-ui/react";
+import {
+    Box,
+    Container,
+    Drawer,
+    Flex,
+    HStack,
+    Portal,
+    Stack,
+    Image,
+    Heading,
+    Text,
+    CloseButton
+} from "@chakra-ui/react";
 import { Outlet } from "react-router";
 import { useUser } from "../../providers/UserProvider";
 import { SideNavigation } from "../side-navigation/SideNavigation";
@@ -58,5 +70,5 @@ export function SiteLayout() {
                 </Flex>
             </Container>
         </Box>
-    )
+    );
 }

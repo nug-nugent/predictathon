@@ -3,8 +3,8 @@ import { HomePage } from "./Home";
 import { nug, stu } from "../../../services/user-service";
 
 const meta = {
-    title: 'Pages/Home',
-    component: HomePage,
+    title: "Pages/Home",
+    component: HomePage
 } satisfies Meta<typeof HomePage>;
 
 export default meta;

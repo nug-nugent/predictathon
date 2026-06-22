@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from 'storybook/test';
+import { fn } from "storybook/test";
 import { nug, stu } from "../../services/user-service";
 import { SiteHeader } from "./SiteHeader";
 
 const meta = {
-    title: 'Components/Site Header',
+    title: "Components/Site Header",
     component: SiteHeader,
     args: {
         onMenuButtonClick: fn()

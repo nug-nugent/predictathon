@@ -1,7 +1,18 @@
-import { Box, Heading, List} from "@chakra-ui/react";
-import { ChartColumn, Dices, Home, Info, Medal, MessagesSquare, TableProperties, Trophy, Users, Wrench } from "lucide-react";
-import { NavItem } from "./nav-item/NavItem";
+import { Box, Heading, List } from "@chakra-ui/react";
+import {
+    ChartColumn,
+    Dices,
+    Home,
+    Info,
+    Medal,
+    MessagesSquare,
+    TableProperties,
+    Trophy,
+    Users,
+    Wrench
+} from "lucide-react";
 import { UserRole, useUser } from "../../providers/UserProvider";
+import { NavItem } from "./nav-item/NavItem";
 
 export function SideNavigation({ onClick }: { onClick?: () => void }) {
     const { user } = useUser();
@@ -19,7 +30,9 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
 
                 {user?.role === UserRole.Admin && (
                     <>
-                        <Heading size={"sm"} mt={2}>Admin</Heading>
+                        <Heading size={"sm"} mt={2}>
+                            Admin
+                        </Heading>
                         <NavItem to="/admin/tournaments" icon={<Trophy size={20} />} label="Tournaments" />
                         <NavItem to="/admin/process" icon={<Wrench size={20} />} label="Process Results" />
                         <NavItem to="/admin/users" icon={<Users size={20} />} label="Users" />
@@ -27,5 +40,5 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
                 )}
             </List.Root>
         </Box>
-    )
+    );
 }

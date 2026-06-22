@@ -4,7 +4,7 @@ export const UserRole = {
     User: "User",
     Admin: "Admin"
 } as const;
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export type User = {
     name: string;
@@ -18,26 +18,29 @@ type UserContextType = {
     setUser: (user: User | null, rememberMe?: boolean) => void;
 };
 
-const UserContext = createContext<UserContextType>({ user: null, setUser: () => { } });
+const UserContext = createContext<UserContextType>({
+    user: null,
+    setUser: () => {}
+});
 
 const loadUserFromStorage = (): User | null => {
-    let userString = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const userString = localStorage.getItem("user") || sessionStorage.getItem("user");
     return userString ? JSON.parse(userString) : null;
-}
+};
 
-export const UserProvider = ({ mockUser, children }: { mockUser?: User, children: React.ReactNode }) => {
+export const UserProvider = ({ mockUser, children }: { mockUser?: User; children: React.ReactNode }) => {
     const [user, _setUser] = useState(() => mockUser || loadUserFromStorage());
 
     const setUser = (newUser: User | null, rememberMe: boolean = false) => {
         if (newUser) {
             if (rememberMe) {
-                localStorage.setItem('user', JSON.stringify(newUser));
+                localStorage.setItem("user", JSON.stringify(newUser));
             } else {
-                sessionStorage.setItem('user', JSON.stringify(newUser));
+                sessionStorage.setItem("user", JSON.stringify(newUser));
             }
         } else {
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('user');
+            localStorage.removeItem("user");
+            sessionStorage.removeItem("user");
         }
 
         _setUser(newUser);
@@ -46,16 +49,12 @@ export const UserProvider = ({ mockUser, children }: { mockUser?: User, children
     const contextValue = useMemo(
         () => ({
             user,
-            setUser,
+            setUser
         }),
         [user]
     );
 
-    return (
-        <UserContext.Provider value={contextValue}>
-            {children}
-        </UserContext.Provider>
-    )
+    return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => useContext(UserContext);

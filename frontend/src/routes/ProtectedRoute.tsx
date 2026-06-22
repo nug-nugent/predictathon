@@ -6,7 +6,7 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-    let { user } = useUser();
+    const { user } = useUser();
 
     if (!user || !allowedRoles.includes(user.role)) {
         return <Navigate to="/" replace />;

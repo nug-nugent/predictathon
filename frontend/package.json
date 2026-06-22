@@ -1,48 +1,50 @@
 {
-  "name": "predictathon-ui",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "az-login": "az login --tenant 761a4790-59d5-4049-b9bf-a7e0cf4a7304 --subscription 50449f10-5fae-40a7-98f9-22d8cd114a2e",
-    "deploy-demo": "npm run build && npm run az-login && swa deploy ./dist --resource-group static-web-apps --app-name predictathon-react-demo --env Production",
-    "deploy-storybook": "npm run build-storybook && npm run az-login && swa deploy ./storybook-static --resource-group static-web-apps --app-name predictathon-storybook --env Production"
-  },
-  "dependencies": {
-    "@chakra-ui/react": "^3.36.0",
-    "@emotion/react": "^11.14.0",
-    "lucide-react": "^1.21.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router": "^8.0.1"
-  },
-  "devDependencies": {
-    "@azure/static-web-apps-cli": "^2.0.9",
-    "@eslint/js": "^10.0.1",
-    "@storybook/react-vite": "^10.4.6",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "eslint-plugin-storybook": "^10.4.6",
-    "globals": "^17.6.0",
-    "storybook": "^10.4.6",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
-  },
-  "allowScripts": {
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true,
-    "keytar@7.9.0": true
-  }
+    "name": "predictathon-ui",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host",
+        "build": "tsc -b && vite build",
+        "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,json}\"",
+        "lint": "eslint .",
+        "preview": "vite preview",
+        "storybook": "storybook dev -p 6006",
+        "build-storybook": "storybook build",
+        "az-login": "az login --tenant 761a4790-59d5-4049-b9bf-a7e0cf4a7304 --subscription 50449f10-5fae-40a7-98f9-22d8cd114a2e",
+        "deploy-demo": "npm run build && npm run az-login && swa deploy ./dist --resource-group static-web-apps --app-name predictathon-react-demo --env Production",
+        "deploy-storybook": "npm run build-storybook && npm run az-login && swa deploy ./storybook-static --resource-group static-web-apps --app-name predictathon-storybook --env Production"
+    },
+    "dependencies": {
+        "@chakra-ui/react": "^3.36.0",
+        "@emotion/react": "^11.14.0",
+        "lucide-react": "^1.21.0",
+        "react": "^19.2.6",
+        "react-dom": "^19.2.6",
+        "react-router": "^8.0.1"
+    },
+    "devDependencies": {
+        "@azure/static-web-apps-cli": "^2.0.9",
+        "@eslint/js": "^10.0.1",
+        "@storybook/react-vite": "^10.4.6",
+        "@types/node": "^24.12.3",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.1",
+        "eslint": "^10.3.0",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "eslint-plugin-react-refresh": "^0.5.2",
+        "eslint-plugin-storybook": "^10.4.6",
+        "globals": "^17.6.0",
+        "prettier": "^3.8.4",
+        "storybook": "^10.4.6",
+        "typescript": "~6.0.2",
+        "typescript-eslint": "^8.59.2",
+        "vite": "^8.0.12"
+    },
+    "allowScripts": {
+        "esbuild@0.28.1": true,
+        "fsevents@2.3.3": true,
+        "keytar@7.9.0": true
+    }
 }

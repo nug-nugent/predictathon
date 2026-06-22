@@ -14,7 +14,7 @@ export const nug: User = {
 };
 
 export async function loginUser(username: string): Promise<User> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     return username.toLocaleLowerCase() === "nug" ? nug : stu;
 }
