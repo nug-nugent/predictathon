@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "az-login": "az login --tenant 761a4790-59d5-4049-b9bf-a7e0cf4a7304 --subscription 50449f10-5fae-40a7-98f9-22d8cd114a2e",
+    "deploy-demo": "npm run build && npm run az-login && swa deploy ./dist --resource-group static-web-apps --app-name predictathon-react-demo --env Production",
+    "deploy-storybook": "npm run build-storybook && npm run az-login && swa deploy ./storybook-static --resource-group static-web-apps --app-name predictathon-storybook --env Production"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.36.0",
@@ -20,6 +23,7 @@
     "react-router": "^8.0.1"
   },
   "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.9",
     "@eslint/js": "^10.0.1",
     "@storybook/react-vite": "^10.4.6",
     "@types/node": "^24.12.3",
@@ -38,6 +42,7 @@
   },
   "allowScripts": {
     "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.3": true,
+    "keytar@7.9.0": true
   }
 }

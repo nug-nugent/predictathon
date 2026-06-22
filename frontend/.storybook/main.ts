@@ -14,5 +14,12 @@ const config: StorybookConfig = {
     "sidebarOnboardingChecklist": false
   },
 
+  // uncomment this section to remove Chakra UI component pages
+  // refs: {
+  //   "@chakra-ui/react": {
+  //     disable: true,
+  //   },
+  // },
+
 };
 export default config;
