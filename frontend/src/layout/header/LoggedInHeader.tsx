@@ -1,30 +1,52 @@
 import {
     Box,
-    Container,
+    CloseButton,
     Drawer,
-    Flex,
-    HStack,
-    Portal,
-    Stack,
-    Image,
     Heading,
-    Text,
-    CloseButton
+    HStack,
+    IconButton,
+    Image,
+    Portal,
+    Spacer,
+    Stack,
+    Text
 } from "@chakra-ui/react";
-import { Outlet } from "react-router";
+import { Menu } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router";
+import football from "../../assets/football.png";
 import { useUser } from "../../providers/UserProvider";
 import { SideNavigation } from "../side-navigation/SideNavigation";
-import { SiteHeader } from "../site-header/SiteHeader";
-import { useState } from "react";
-import football from "../../assets/football.png";
+import { HeaderContainer } from "./header-container/HeaderContainer";
+import { UserMenu } from "./user-menu/UserMenu";
 
-export function SiteLayout() {
-    const { user } = useUser();
+export function LoggedInHeader() {
     const [sideNavOpen, setSideNavOpen] = useState(false);
+    const { user } = useUser();
 
     return (
-        <Box>
-            <SiteHeader onMenuButtonClick={() => setSideNavOpen(true)} />
+        <HeaderContainer>
+            <Box ml="-10px" mr={2} display={{ base: "block", lg: "none" }}>
+                <IconButton variant="plain" size="md" color="blue.contrast" onClick={() => setSideNavOpen(true)}>
+                    <Menu />
+                </IconButton>
+            </Box>
+
+            <Link to="/">
+                <Image src={football} mr={2} boxSize={{ base: "30px", md: "34px" }} />
+            </Link>
+
+            <Stack display={{ base: "none", sm: "block" }} gap="0">
+                <Heading size={{ base: "xl", md: "2xl" }} lineHeight="1">
+                    <Link to="/">Predictathon</Link>
+                </Heading>
+                <Text fontSize={{ base: "xs", md: "xs" }} lineHeight="1">
+                    {user!.currentCompetition}
+                </Text>
+            </Stack>
+
+            <Spacer />
+            <UserMenu />
 
             <Drawer.Root placement="start" open={sideNavOpen} onOpenChange={(e) => setSideNavOpen(e.open)}>
                 <Portal>
@@ -39,7 +61,7 @@ export function SiteLayout() {
                                             Predictathon
                                         </Heading>
                                         <Text fontSize={{ base: "xs", md: "xs" }} lineHeight="1">
-                                            {user?.currentCompetition}
+                                            {user!.currentCompetition}
                                         </Text>
                                     </Stack>
                                 </HStack>
@@ -54,21 +76,6 @@ export function SiteLayout() {
                     </Drawer.Positioner>
                 </Portal>
             </Drawer.Root>
-
-            <Container maxW="6xl">
-                <Flex>
-                    {user && (
-                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3}>
-                            <SideNavigation />
-                        </Box>
-                    )}
-
-                    <Box my={4} flexGrow={1}>
-                        {/* page content */}
-                        <Outlet />
-                    </Box>
-                </Flex>
-            </Container>
-        </Box>
+        </HeaderContainer>
     );
 }

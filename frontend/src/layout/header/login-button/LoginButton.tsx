@@ -1,8 +1,8 @@
 import { Button, Checkbox, Field, HStack, Input, Link, Popover, Portal, Stack } from "@chakra-ui/react";
 import { useState } from "react";
-import { PasswordInput } from "../../ui/password-input";
-import { useUser } from "../../../providers/UserProvider";
 import { useNavigate } from "react-router";
+import { PasswordInput } from "../../../components/password-input/PasswordInput";
+import { useUser } from "../../../providers/UserProvider";
 import { loginUser } from "../../../services/user-service";
 
 export function LoginButton() {
@@ -23,7 +23,7 @@ export function LoginButton() {
         setLoggingIn(true);
         const user = await loginUser(username);
         setUser(user, rememberMe);
-        navigate("/");
+        navigate("/home");
     };
 
     return (
