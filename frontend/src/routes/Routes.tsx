@@ -5,6 +5,7 @@ import { UsersPage } from "../pages/logged-in/admin/users/Users";
 import { ThreadPage } from "../pages/logged-in/board/thread/ThreadPage";
 import { HomePage } from "../pages/logged-in/home/HomePage";
 import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
+import { PredictPage } from "../pages/logged-in/predict/PredictPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { RootPage } from "../pages/public/root/RootPage";
@@ -28,7 +29,7 @@ export function SiteRoutes() {
             <Route element={<ProtectedRoute requiredRoles={[UserRole.User, UserRole.Admin]} />}>
                 <Route element={<LoggedInLayout />}>
                     <Route path="/home" element={<HomePage />} />
-                    <Route path="predictions" element={<PlaceholderPage name="Predictions" />} />
+                    <Route path="predict" element={<PredictPage />} />
                     <Route path="league" element={<LeaguePage />} />
 
                     <Route path="board" element={<PlaceholderPage name="Messageboard" />} />

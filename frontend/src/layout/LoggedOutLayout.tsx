@@ -7,7 +7,7 @@ export function LoggedOutLayout() {
         <Box>
             <LoggedOutHeader />
 
-            <Container maxW="6xl">
+            <Container maxW="6xl" paddingInline={{ base: 2, sm: 4, md: 6, lg: 8 }}>
                 <Flex>
                     <Box my={4} flexGrow={1}>
                         <Outlet />

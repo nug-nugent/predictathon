@@ -66,7 +66,7 @@ export function LoggedInHeader() {
                                     </Stack>
                                 </HStack>
                             </Drawer.Header>
-                            <Drawer.Body mt={0} ml={6}>
+                            <Drawer.Body>
                                 <SideNavigation onClick={() => setSideNavOpen(false)} />
                             </Drawer.Body>
                             <Drawer.CloseTrigger asChild>

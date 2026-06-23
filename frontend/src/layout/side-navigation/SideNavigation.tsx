@@ -20,7 +20,7 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
     return (
         <Stack gap="0" fontSize={{ base: "lg", lg: "md" }} fontWeight="bold" onClick={onClick}>
             <NavItem to="/home" icon={<Home size={20} />} label="Home" />
-            <NavItem to="/predictions" icon={<Dices size={20} />} label="Predictions" />
+            <NavItem to="/predict" icon={<Dices size={20} />} label="Predictions" />
             <NavItem to="/league" icon={<TableProperties size={20} />} label="League Table" />
             <NavItem to="/board" icon={<MessagesSquare size={20} />} label="Messageboard" />
             <NavItem to="/stats" icon={<ChartColumn size={20} />} label="Statistics" />

@@ -8,7 +8,7 @@ export function LoggedInLayout() {
         <Box>
             <LoggedInHeader />
 
-            <Container maxW="6xl">
+            <Container maxW="6xl" paddingInline={{ base: 2, sm: 4, md: 6, lg: 8 }}>
                 <Flex>
                     <Box display={{ base: "none", lg: "block" }} my={3} mr={6}>
                         <SideNavigation />

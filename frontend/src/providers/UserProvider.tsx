@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, type PropsWithChildren } from "react";
 
 export const UserRole = {
     User: "User",
@@ -28,7 +28,7 @@ const loadUserFromStorage = (): User | null => {
     return userString ? JSON.parse(userString) : null;
 };
 
-export const UserProvider = ({ mockUser, children }: { mockUser?: User; children: React.ReactNode }) => {
+export const UserProvider = ({ mockUser, children }: { mockUser?: User } & PropsWithChildren) => {
     const [user, _setUser] = useState(() => mockUser || loadUserFromStorage());
 
     const setUser = (newUser: User | null, rememberMe: boolean = false) => {
