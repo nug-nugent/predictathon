@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router";
+import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
 import { LoggedInLayout } from "../layout/LoggedInLayout";
 import { LoggedOutLayout } from "../layout/LoggedOutLayout";
 import { UsersPage } from "../pages/logged-in/admin/users/Users";
@@ -12,47 +12,63 @@ import { RootPage } from "../pages/public/root/RootPage";
 import { UserRole } from "../providers/UserProvider";
 import { ProtectedRoute } from "./ProtectedRoute";
 
-// prettier-ignore
-export function SiteRoutes() {
-    return (
-        <Routes>
-            // Logged out routes
-            <Route element={<LoggedOutLayout />}>
-                <Route element={<ProtectedRoute loggedOutOnly />}>
-                    <Route index element={<RootPage />} />
-                    <Route path="/register" element={<PlaceholderPage name="Register" />} />
-                    <Route path="password-reset" element={<PlaceholderPage name="Password Reset" />} />
-                </Route>
-            </Route>
+const routes: RouteObject[] = [
+    // Logged out routes
+    {
+        element: <LoggedOutLayout />,
+        children: [
+            {
+                element: <ProtectedRoute loggedOutOnly />,
+                children: [
+                    { index: true, element: <RootPage /> },
+                    { path: "/register", element: <PlaceholderPage name="Register" /> },
+                    { path: "password-reset", element: <PlaceholderPage name="Password Reset" /> }
+                ]
+            }
+        ]
+    },
 
-            // Protected routes for users
-            <Route element={<ProtectedRoute requiredRoles={[UserRole.User, UserRole.Admin]} />}>
-                <Route element={<LoggedInLayout />}>
-                    <Route path="/home" element={<HomePage />} />
-                    <Route path="predict" element={<PredictPage />} />
-                    <Route path="league" element={<LeaguePage />} />
-
-                    <Route path="board" element={<PlaceholderPage name="Messageboard" />} />
-                    <Route path="board/:id" element={<ThreadPage />} />
-
-                    <Route path="stats" element={<PlaceholderPage name="Statistics" />} />
-                    <Route path="hof" element={<PlaceholderPage name="Hall of Fame" />} />
-                    <Route path="rules" element={<PlaceholderPage name="Rules" />} />
-
-                    <Route path="profile/edit" element={<PlaceholderPage name="Edit Profile" />} />
-                    <Route path="profile/:id" element={<ProfilePage />} />
+    // Protected routes for users
+    {
+        element: <ProtectedRoute requiredRoles={[UserRole.User, UserRole.Admin]} />,
+        children: [
+            {
+                element: <LoggedInLayout />,
+                children: [
+                    { path: "/home", element: <HomePage /> },
+                    { path: "predict", element: <PredictPage /> },
+                    { path: "league", element: <LeaguePage /> },
+                    {
+                        path: "board",
+                        children: [
+                            { index: true, element: <PlaceholderPage name="Messageboard" /> },
+                            { path: ":id", element: <ThreadPage /> }
+                        ]
+                    },
+                    { path: "stats", element: <PlaceholderPage name="Statistics" /> },
+                    { path: "hof", element: <PlaceholderPage name="Hall of Fame" /> },
+                    { path: "rules", element: <PlaceholderPage name="Rules" /> },
+                    { path: "profile/edit", element: <PlaceholderPage name="Edit Profile" /> },
+                    { path: "profile/:id", element: <ProfilePage /> },
 
                     // Protected routes for admin users
-                    <Route path="admin" element={<ProtectedRoute requiredRoles={[UserRole.Admin]} />}>
-                        <Route path="competitions" element={<PlaceholderPage name="Competitions admin" />} />
-                        <Route path="process" element={<PlaceholderPage name="Results Processing" />} />
-                        <Route path="users" element={<UsersPage />} />
-                    </Route>
-                </Route>
-            </Route>
+                    {
+                        path: "admin",
+                        element: <ProtectedRoute requiredRoles={[UserRole.Admin]} />,
+                        children: [
+                            { index: true, element: <Navigate to="/" replace /> },
+                            { path: "competitions", element: <PlaceholderPage name="Competitions admin" /> },
+                            { path: "process", element: <PlaceholderPage name="Results Processing" /> },
+                            { path: "users", element: <UsersPage /> }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
 
-            // Catch-all redirect back home for unknown paths
-            <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-    );
-}
+    // Catch-all redirect back home for unknown paths
+    { path: "*", element: <Navigate to="/" replace /> }
+];
+
+export const router = createBrowserRouter(routes);
