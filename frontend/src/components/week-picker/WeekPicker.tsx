@@ -96,7 +96,7 @@ export function WeekPicker({
 
                 <Select
                     size={{ base: "xs", sm: "sm" }}
-                    width={{ base: "full", sm: "200px" }}
+                    width={{ base: "full", sm: "225px" }}
                     items={selectItems}
                     value={selectedWeek}
                     onValueChange={onSelectChange}

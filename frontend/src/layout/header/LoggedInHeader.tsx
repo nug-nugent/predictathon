@@ -32,13 +32,13 @@ export function LoggedInHeader() {
                 </IconButton>
             </Box>
 
-            <Link to="/">
+            <Link to="/home">
                 <Image src={football} mr={2} boxSize={{ base: "30px", md: "34px" }} />
             </Link>
 
             <Stack display={{ base: "none", sm: "block" }} gap="0">
                 <Heading size={{ base: "xl", md: "2xl" }} lineHeight="1">
-                    <Link to="/">Predictathon</Link>
+                    <Link to="/home">Predictathon</Link>
                 </Heading>
                 <Text fontSize={{ base: "xs", md: "xs" }} lineHeight="1">
                     {user!.currentCompetition}

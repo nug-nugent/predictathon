@@ -1,8 +1,8 @@
-import { Avatar, Button, Popover, Portal, Text, Stack } from "@chakra-ui/react";
-import { useUser } from "../../../providers/UserProvider";
+import { Avatar, Button, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { ChevronDown, LogOut, UserPen } from "lucide-react";
-import { Link, useNavigate } from "react-router";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { useUser } from "../../../providers/UserProvider";
 
 export function UserMenu() {
     const [open, setOpen] = useState(false);
@@ -22,7 +22,8 @@ export function UserMenu() {
                 positioning={{
                     placement: "bottom-end",
                     offset: { crossAxis: -10, mainAxis: 2 }
-                }}>
+                }}
+                autoFocus={false}>
                 <Popover.Trigger asChild>
                     <Button
                         size={{ base: "xs", md: "md" }}
