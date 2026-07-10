@@ -115,6 +115,18 @@ namespace Predictathon.WebApi.Controllers.Base
                 return ProblemResult(pd);
             }
 
+            var conflict = errors.OfType<ConflictError>().FirstOrDefault();
+            if (conflict is not null)
+            {
+                var pd = BuildProblemDetails(
+                    status: StatusCodes.Status409Conflict,
+                    type: "https://httpstatuses.com/409",
+                    title: "Conflict",
+                    detail: conflict.Message);
+
+                return ProblemResult(pd);
+            }
+
             var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var err in errors)

@@ -3,6 +3,7 @@ using FluentValidation;
 using MapsterMapper;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
+using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Interfaces.Persistence;
 
@@ -46,7 +47,15 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
         var entity = MapToEntity(model);
 
         await _dbContext.AddAsync(entity, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DuplicateKeyException ex)
+        {
+            return Result.Fail<TEditModel>(new ConflictError(ex.Message));
+        }
 
         var updatedModel = MapToModel(entity);
 
@@ -90,7 +99,15 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
         UpdateEntityFromModel(existing, model);
 
         _dbContext.Update(existing);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DuplicateKeyException ex)
+        {
+            return Result.Fail<TEditModel>(new ConflictError(ex.Message));
+        }
 
         return Result.Ok(MapToModel(existing));
     }

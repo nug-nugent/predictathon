@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces.Persistence;
 using System.Linq.Expressions;
 using System.Data;
@@ -56,7 +57,24 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
 
     public void RemoveRange<T>(IEnumerable<T> entities) where T : class => Set<T>().RemoveRange(entities);
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => base.SaveChangesAsync(cancellationToken);
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicateKeyViolation(ex))
+        {
+            throw new DuplicateKeyException("A record with the same key already exists.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether a <see cref="DbUpdateException"/> was caused by a SQL Server primary key
+    /// or unique constraint violation (error 2627 or 2601).
+    /// </summary>
+    private static bool IsDuplicateKeyViolation(DbUpdateException ex)
+        => ex.InnerException is SqlException sqlEx && (sqlEx.Number == 2627 || sqlEx.Number == 2601);
 
     public Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
         => Database.ExecuteSqlRawAsync(sql, cancellationToken);
