@@ -10,7 +10,7 @@ public static class ApiProblemDetailsExtensions
     /// <summary>
     /// Register services required to produce RFC7807 ProblemDetails responses
     /// for model validation and allow controllers to return ProblemDetails easily.
-    /// Call this after AddControllers()
+    /// Call this after AddControllers().
     /// </summary>
     public static IServiceCollection AddApiProblemDetails(this IServiceCollection services)
     {
@@ -57,7 +57,7 @@ public static class ApiProblemDetailsExtensions
                     Instance = context.Request.Path
                 };
 
-                context.Response.StatusCode = pd.Status!.Value;
+                context.Response.StatusCode = pd.Status.HasValue ? pd.Status.Value : StatusCodes.Status500InternalServerError;
                 context.Response.ContentType = "application/problem+json";
                 await context.Response.WriteAsJsonAsync(pd, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             });

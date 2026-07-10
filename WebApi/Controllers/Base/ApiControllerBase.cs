@@ -1,5 +1,6 @@
-﻿using FluentResults;
+using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Errors;
 
 namespace Predictathon.WebApi.Controllers.Base
 {
@@ -38,9 +39,9 @@ namespace Predictathon.WebApi.Controllers.Base
         }
 
         /// <summary>
-        /// Convert a FluentResults Result<T> into an ActionResult. On success returns 200 with the value.
+        /// Convert a FluentResults Result&lt;T&gt; into an ActionResult. On success returns 200 with the value.
         /// On failure returns either a ValidationProblemDetails (400) when errors are property-specific,
-        /// or a ProblemDetails with 404 when the failure indicates not found, or a generic 400 otherwise.
+        /// or a ProblemDetails with 404 when a <see cref="NotFoundError"/> is present, or a generic 400 otherwise.
         /// </summary>
         protected ActionResult<T?> FromResult<T>(Result<T> result) where T : class
         {
@@ -49,87 +50,21 @@ namespace Predictathon.WebApi.Controllers.Base
                 return Ok(result.Value);
             }
 
-            // If the only error is an "Entity not found" style message, return 404
-            if (result.Errors.Count == 1 && string.Equals(result.Errors[0].Message, "Entity not found", StringComparison.OrdinalIgnoreCase))
-            {
-                var pd = new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Type = "https://httpstatuses.com/404",
-                    Title = "Not Found",
-                    Detail = result.Errors[0].Message,
-                    Instance = Request?.Path
-                };
+            return BuildErrorResult(result.Errors);
+        }
 
-                return new ObjectResult(pd)
-                {
-                    StatusCode = pd.Status,
-                    ContentTypes = { "application/problem+json" }
-                };
+        /// <summary>
+        /// Convert a non-generic FluentResults Result into an ActionResult. On success returns 204 No Content.
+        /// On failure this follows the same error mapping as <see cref="FromResult{T}"/>.
+        /// </summary>
+        protected ActionResult FromResult(Result result)
+        {
+            if (result.IsSuccess)
+            {
+                return NoContent();
             }
 
-            // Map errors into ValidationProblemDetails if they look like property errors (format: "Property: message")
-            var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var err in result.Errors)
-            {
-                var msg = err.Message ?? string.Empty;
-                var idx = msg.IndexOf(':');
-                if (idx > 0)
-                {
-                    var prop = msg.Substring(0, idx).Trim();
-                    var em = msg.Substring(idx + 1).Trim();
-                    if (!modelErrors.TryGetValue(prop, out var list))
-                    {
-                        list = new List<string>();
-                        modelErrors[prop] = list;
-                    }
-                    list.Add(em);
-                }
-                else
-                {
-                    // General error - put under an empty key
-                    if (!modelErrors.TryGetValue(string.Empty, out var list))
-                    {
-                        list = new List<string>();
-                        modelErrors[string.Empty] = list;
-                    }
-                    list.Add(msg);
-                }
-            }
-
-            if (modelErrors.Any())
-            {
-                var vpd = new ValidationProblemDetails(modelErrors.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()))
-                {
-                    Type = "https://example.com/probs/validation",
-                    Title = "One or more validation errors occurred.",
-                    Status = StatusCodes.Status400BadRequest,
-                    Instance = Request?.Path
-                };
-
-                return new ObjectResult(vpd)
-                {
-                    StatusCode = vpd.Status,
-                    ContentTypes = { "application/problem+json" }
-                };
-            }
-
-            // Fallback generic bad request
-            var pdFallback = new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Type = "https://httpstatuses.com/400",
-                Title = "Bad Request",
-                Detail = string.Join(';', result.Errors.Select(e => e.Message)),
-                Instance = Request?.Path
-            };
-
-            return new ObjectResult(pdFallback)
-            {
-                StatusCode = pdFallback.Status,
-                ContentTypes = { "application/problem+json" }
-            };
+            return BuildErrorResult(result.Errors);
         }
 
         /// <summary>
@@ -150,6 +85,55 @@ namespace Predictathon.WebApi.Controllers.Base
             {
                 Type = type ?? "https://example.com/probs/validation",
                 Title = title ?? "One or more validation errors occurred.",
+                Status = StatusCodes.Status400BadRequest,
+                Instance = Request?.Path
+            };
+
+            return new ObjectResult(vpd)
+            {
+                StatusCode = vpd.Status,
+                ContentTypes = { "application/problem+json" }
+            };
+        }
+
+        /// <summary>
+        /// Map a failed Result's errors onto a ProblemDetails ActionResult. A <see cref="NotFoundError"/>
+        /// takes priority and produces a 404; otherwise errors are grouped by <see cref="PropertyValidationError.PropertyName"/>
+        /// (falling back to a general key for non-property errors) into a 400 ValidationProblemDetails.
+        /// </summary>
+        private ActionResult BuildErrorResult(IReadOnlyList<IError> errors)
+        {
+            var notFound = errors.OfType<NotFoundError>().FirstOrDefault();
+            if (notFound is not null)
+            {
+                var pd = BuildProblemDetails(
+                    status: StatusCodes.Status404NotFound,
+                    type: "https://httpstatuses.com/404",
+                    title: "Not Found",
+                    detail: notFound.Message);
+
+                return ProblemResult(pd);
+            }
+
+            var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var err in errors)
+            {
+                var key = err is PropertyValidationError propertyError ? propertyError.PropertyName : string.Empty;
+
+                if (!modelErrors.TryGetValue(key, out var list))
+                {
+                    list = new List<string>();
+                    modelErrors[key] = list;
+                }
+
+                list.Add(err.Message);
+            }
+
+            var vpd = new ValidationProblemDetails(modelErrors.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()))
+            {
+                Type = "https://example.com/probs/validation",
+                Title = "One or more validation errors occurred.",
                 Status = StatusCodes.Status400BadRequest,
                 Instance = Request?.Path
             };

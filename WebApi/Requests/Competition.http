@@ -1,5 +1,6 @@
 @Predictathon.WebApi_HostAddress = https://localhost:7046/api
-@CompetitionId = 3B9AB625-F871-4BAC-8639-1940C4D7E5D0
+@CompetitionId = d8447aaf-6fab-430e-9d5a-7d5e8eb6704e
+@NewCompetitionId = 4B9AB625-F871-4BAC-8639-1940C4D7E5D0
 #38893FFB-7EF3-4F27-8766-0B32FDF8F2EF
 
 GET {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
@@ -25,7 +26,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "CompetitionID": "{{$uuid}}",
+  "CompetitionID": "{{NewCompetitionId}}",
   "CompetitionName": "Team Challenge",
   "StartDate": "2026-08-01",
   "EndDate": "2026-08-05"

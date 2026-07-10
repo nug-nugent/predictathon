@@ -2,6 +2,7 @@
 using FluentValidation;
 using MapsterMapper;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Interfaces.Persistence;
 
@@ -28,25 +29,22 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
     }
 
     /// <inheritdoc />
-    public virtual async Task<Result<TEditModel>> Create(TCreateModel model)
+    public virtual async Task<Result<TEditModel>> Create(TCreateModel model, CancellationToken cancellationToken = default)
     {
         if (_validator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TCreateModel>(model));
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TCreateModel>(model), cancellationToken);
             if (!validation.IsValid)
             {
-                var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
+                var errors = validation.Errors.Select(ToValidationError).ToArray();
                 return Result.Fail<TEditModel>(errors);
             }
         }
 
         var entity = MapToEntity(model);
 
-        await _dbContext.AddAsync(entity);
-        await _dbContext.SaveChangesAsync();
-
-        var editModel = new TEditModel();
-
+        await _dbContext.AddAsync(entity, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         var updatedModel = MapToModel(entity);
 
@@ -54,28 +52,13 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
     }
 
     /// <summary>
-    /// Deletes the entity with the supplied id.
-    /// </summary>
-    public virtual async Task<Result> DeleteById(TPrimaryKey id)
-    {
-        var entity = await _dbContext.GetByIdAsync<TEntity>(id);
-
-        if (entity is null)
-        {
-            return Result.Fail("Entity not found");
-        }
-
-        _dbContext.Remove(entity);
-        await _dbContext.SaveChangesAsync();
-
-        return Result.Ok();
-    }
-
-    /// <summary>
     /// Returns the entity by id.
     /// </summary>
-    public virtual Task<TEditModel?> GetById(TPrimaryKey id)
-        => _dbContext.GetByIdAsync<TEntity>(id).ContinueWith(t => t.Result is null ? null : MapToModel(t.Result));
+    public virtual async Task<TEditModel?> GetById(TPrimaryKey id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _dbContext.GetByIdAsync<TEntity>(id, cancellationToken);
+        return entity is null ? null : MapToModel(entity);
+    }
 
     /// <summary>
     /// Updates an existing entity using values from the provided model.
@@ -83,32 +66,57 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
     /// then copy matching writable properties from a mapped entity. Override <see cref="UpdateEntityFromModel"/>
     /// to provide custom behaviour.
     /// </summary>
-    public virtual async Task<Result<TEditModel>> Update(TPrimaryKey id, TEditModel model)
+    public virtual async Task<Result<TEditModel>> Update(TPrimaryKey id, TEditModel model, CancellationToken cancellationToken = default)
     {
         if (_validator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TEditModel>(model));
+            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TEditModel>(model), cancellationToken);
             if (!validation.IsValid)
             {
-                var errors = validation.Errors.Select(e => new FluentResults.Error($"{e.PropertyName}: {e.ErrorMessage}")).ToArray();
+                var errors = validation.Errors.Select(ToValidationError).ToArray();
                 return Result.Fail<TEditModel>(errors);
             }
         }
 
-        var existing = await _dbContext.GetByIdAsync<TEntity>(id);
+        var existing = await _dbContext.GetByIdAsync<TEntity>(id, cancellationToken);
 
         if (existing is null)
         {
-            return Result.Fail<TEditModel>("Entity not found");
+            return Result.Fail<TEditModel>(new NotFoundError());
         }
 
         UpdateEntityFromModel(existing, model);
 
         _dbContext.Update(existing);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(MapToModel(existing));
     }
+
+    /// <summary>
+    /// Deletes the entity with the supplied id.
+    /// </summary>
+    public virtual async Task<Result> DeleteById(TPrimaryKey id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _dbContext.GetByIdAsync<TEntity>(id, cancellationToken);
+
+        if (entity is null)
+        {
+            return Result.Fail(new NotFoundError());
+        }
+
+        _dbContext.Remove(entity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// Converts a FluentValidation failure into a <see cref="PropertyValidationError"/> so
+    /// callers can group errors by property without parsing the error message text.
+    /// </summary>
+    private static PropertyValidationError ToValidationError(FluentValidation.Results.ValidationFailure failure)
+        => new(failure.PropertyName, failure.ErrorMessage);
 
     /// <summary>
     /// Map a model to an entity.
