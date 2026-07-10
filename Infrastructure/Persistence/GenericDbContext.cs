@@ -1,9 +1,12 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces.Persistence;
 using System.Linq.Expressions;
+using System.Collections.Concurrent;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 using System;
 using System.Collections.Generic;
@@ -79,20 +82,23 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
     public Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
         => Database.ExecuteSqlRawAsync(sql, cancellationToken);
 
-    public Task CallStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
+    public async Task CallStoredProcedureAsync(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
     {
-        // Build command like: EXEC procName @p1, @p2
-        var paramPlaceholders = parameters != null && parameters.Count > 0
-            ? string.Join(", ", parameters.Select(p => p.ParameterName))
-            : string.Empty;
+        var connection = Database.GetDbConnection();
+        var openedByUs = await EnsureConnectionOpenAsync(connection, cancellationToken);
 
-        var command = string.IsNullOrWhiteSpace(paramPlaceholders)
-            ? $"EXEC {storedProcedureName}"
-            : $"EXEC {storedProcedureName} {paramPlaceholders}";
-
-        var paramArray = parameters?.ToArray() ?? Array.Empty<object>();
-
-        return Database.ExecuteSqlRawAsync(command, paramArray, cancellationToken);
+        try
+        {
+            await using var cmd = CreateStoredProcedureCommand(connection, storedProcedureName, parameters);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+        finally
+        {
+            if (openedByUs)
+            {
+                connection.Close();
+            }
+        }
     }
 
     public async Task<List<TReturnType>> CallStoredProcedureAsync<TReturnType>(string storedProcedureName, List<SqlParameter>? parameters = null, CancellationToken cancellationToken = default)
@@ -101,65 +107,36 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
         var results = new List<TReturnType>();
 
         var connection = Database.GetDbConnection();
+        var openedByUs = await EnsureConnectionOpenAsync(connection, cancellationToken);
+
         try
         {
-            if (connection.State != ConnectionState.Open)
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
-
-            await using var cmd = connection.CreateCommand();
-            cmd.CommandText = storedProcedureName;
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            if (parameters is not null)
-            {
-                foreach (var p in parameters)
-                {
-                    cmd.Parameters.Add(p);
-                }
-            }
-
+            await using var cmd = CreateStoredProcedureCommand(connection, storedProcedureName, parameters);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
 
-            var props = typeof(TReturnType).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)).ToList();
+            var mappings = BuildColumnMappings<TReturnType>(reader);
 
             while (await reader.ReadAsync(cancellationToken))
             {
                 var item = new TReturnType();
 
-                foreach (var prop in props)
+                foreach (var (setter, columnIndex) in mappings)
                 {
-                    var colIndex = columnNames.FindIndex(n => string.Equals(n, prop.Name, StringComparison.OrdinalIgnoreCase));
-                    if (colIndex < 0) continue;
+                    var value = reader.GetValue(columnIndex);
 
-                    var value = reader.GetValue(colIndex);
                     if (value == DBNull.Value)
                     {
-                        prop.SetValue(item, null);
+                        // Only reference types and Nullable<T> properties can actually hold null;
+                        // leave non-nullable value-type properties at their default instead of throwing.
+                        if (setter.CanBeNull)
+                        {
+                            setter.SetValue(item, null);
+                        }
+
                         continue;
                     }
 
-                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-
-                    object? safeValue;
-
-                    if (targetType == typeof(Guid))
-                    {
-                        safeValue = reader.GetGuid(colIndex);
-                    }
-                    else if (targetType.IsEnum)
-                    {
-                        safeValue = Enum.ToObject(targetType, value);
-                    }
-                    else
-                    {
-                        safeValue = Convert.ChangeType(value, targetType);
-                    }
-
-                    prop.SetValue(item, safeValue);
+                    setter.SetValue(item, ConvertValue(value, setter.TargetType));
                 }
 
                 results.Add(item);
@@ -167,12 +144,171 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
         }
         finally
         {
-            if (connection.State == ConnectionState.Open)
+            if (openedByUs)
             {
-                try { connection.Close(); } catch { }
+                connection.Close();
             }
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Opens <paramref name="connection"/> if it isn't already open, returning whether this call opened it.
+    /// Callers should only close a connection they themselves opened, rather than one already in use
+    /// elsewhere on this DbContext (e.g. inside an ambient transaction).
+    /// </summary>
+    private static async Task<bool> EnsureConnectionOpenAsync(DbConnection connection, CancellationToken cancellationToken)
+    {
+        if (connection.State == ConnectionState.Open)
+        {
+            return false;
+        }
+
+        await connection.OpenAsync(cancellationToken);
+        return true;
+    }
+
+    /// <summary>
+    /// Builds a stored-procedure command. The procedure name is passed as <see cref="DbCommand.CommandText"/>
+    /// with <see cref="CommandType.StoredProcedure"/> rather than interpolated into SQL text, so it is
+    /// never parsed as part of a SQL statement.
+    /// </summary>
+    private DbCommand CreateStoredProcedureCommand(DbConnection connection, string storedProcedureName, List<SqlParameter>? parameters)
+    {
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = storedProcedureName;
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Transaction = Database.CurrentTransaction?.GetDbTransaction();
+
+        if (parameters is not null)
+        {
+            foreach (var p in parameters)
+            {
+                cmd.Parameters.Add(p);
+            }
+        }
+
+        return cmd;
+    }
+
+    /// <summary>
+    /// Resolves, once per query, which result columns map onto which writable properties of
+    /// <typeparamref name="TReturnType"/>, using an O(1) column-name lookup instead of re-scanning the
+    /// column list for every property on every row.
+    /// </summary>
+    private static List<(PropertySetter Setter, int ColumnIndex)> BuildColumnMappings<TReturnType>(DbDataReader reader)
+    {
+        var columnIndexes = new Dictionary<string, int>(reader.FieldCount, StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            columnIndexes[reader.GetName(i)] = i;
+        }
+
+        var mappings = new List<(PropertySetter, int)>();
+        foreach (var setter in GetPropertySetters(typeof(TReturnType)))
+        {
+            if (columnIndexes.TryGetValue(setter.Name, out var columnIndex))
+            {
+                mappings.Add((setter, columnIndex));
+            }
+        }
+
+        return mappings;
+    }
+
+    private static readonly ConcurrentDictionary<Type, PropertySetter[]> PropertySetterCache = new();
+
+    /// <summary>
+    /// Compiled property setters for <paramref name="type"/>, built once per type and cached, avoiding
+    /// repeated <see cref="PropertyInfo.SetValue(object?, object?)"/> reflection calls on every mapped row.
+    /// </summary>
+    private static PropertySetter[] GetPropertySetters(Type type)
+        => PropertySetterCache.GetOrAdd(type, static t => t
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite && p.GetIndexParameters().Length == 0)
+            .Select(p => new PropertySetter(p))
+            .ToArray());
+
+    /// <summary>
+    /// Converts a non-null column value to <paramref name="targetType"/>. Handles BCL types that aren't
+    /// <see cref="IConvertible"/> (and so aren't supported by <see cref="Convert.ChangeType(object, Type)"/>),
+    /// such as <see cref="Guid"/>, <see cref="DateOnly"/>, <see cref="TimeOnly"/> and <see cref="TimeSpan"/>.
+    /// </summary>
+    private static object ConvertValue(object value, Type targetType)
+    {
+        if (targetType.IsInstanceOfType(value))
+        {
+            return value;
+        }
+
+        if (targetType == typeof(Guid))
+        {
+            return value is Guid guid ? guid : Guid.Parse(Convert.ToString(value)!);
+        }
+
+        if (targetType.IsEnum)
+        {
+            return Enum.ToObject(targetType, value);
+        }
+
+        if (targetType == typeof(DateOnly))
+        {
+            return DateOnly.FromDateTime((DateTime)value);
+        }
+
+        if (targetType == typeof(TimeOnly))
+        {
+            return value switch
+            {
+                TimeSpan ts => TimeOnly.FromTimeSpan(ts),
+                DateTime dt => TimeOnly.FromDateTime(dt),
+                _ => throw new InvalidCastException($"Cannot convert value of type '{value.GetType()}' to {nameof(TimeOnly)}.")
+            };
+        }
+
+        if (targetType == typeof(TimeSpan) && value is DateTime dateTimeValue)
+        {
+            return dateTimeValue.TimeOfDay;
+        }
+
+        return Convert.ChangeType(value, targetType);
+    }
+
+    /// <summary>
+    /// A compiled, cached setter for a single property, used in place of reflection-based
+    /// <see cref="PropertyInfo.SetValue(object?, object?)"/> when mapping stored procedure result rows.
+    /// </summary>
+    private sealed class PropertySetter
+    {
+        private readonly Action<object, object?> _setValue;
+
+        public string Name { get; }
+
+        public Type TargetType { get; }
+
+        public bool CanBeNull { get; }
+
+        public PropertySetter(PropertyInfo property)
+        {
+            Name = property.Name;
+            TargetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            CanBeNull = !property.PropertyType.IsValueType || Nullable.GetUnderlyingType(property.PropertyType) is not null;
+            _setValue = BuildSetter(property);
+        }
+
+        public void SetValue(object instance, object? value) => _setValue(instance, value);
+
+        private static Action<object, object?> BuildSetter(PropertyInfo property)
+        {
+            var instanceParam = Expression.Parameter(typeof(object), "instance");
+            var valueParam = Expression.Parameter(typeof(object), "value");
+
+            var typedInstance = Expression.Convert(instanceParam, property.DeclaringType!);
+            var typedValue = Expression.Convert(valueParam, property.PropertyType);
+            var assign = Expression.Assign(Expression.Property(typedInstance, property), typedValue);
+
+            return Expression.Lambda<Action<object, object?>>(assign, instanceParam, valueParam).Compile();
+        }
     }
 }
