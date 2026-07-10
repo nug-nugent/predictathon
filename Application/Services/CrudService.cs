@@ -17,23 +17,25 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
 {
     private readonly IGenericDbContext _dbContext;
     private readonly IMapper _mapper;
-    private readonly IValidator<TEditModel>? _validator;
+    private readonly IValidator<TCreateModel>? _createValidator;
+    private readonly IValidator<TEditModel>? _editValidator;
 
     public CrudService(
-        ICrudServiceDependencyAggregate<TEditModel> dependencyAggregate
+        ICrudServiceDependencyAggregate<TCreateModel, TEditModel> dependencyAggregate
     )
     {
         _dbContext = dependencyAggregate.DbContext;
         _mapper = dependencyAggregate.Mapper;
-        _validator = dependencyAggregate.Validator;
+        _createValidator = dependencyAggregate.CreateValidator;
+        _editValidator = dependencyAggregate.EditValidator;
     }
 
     /// <inheritdoc />
     public virtual async Task<Result<TEditModel>> Create(TCreateModel model, CancellationToken cancellationToken = default)
     {
-        if (_validator is not null)
+        if (_createValidator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TCreateModel>(model), cancellationToken);
+            var validation = await _createValidator.ValidateAsync(model, cancellationToken);
             if (!validation.IsValid)
             {
                 var errors = validation.Errors.Select(ToValidationError).ToArray();
@@ -68,9 +70,9 @@ public class CrudService<TPrimaryKey, TCreateModel, TEditModel, TEntity> : ICrud
     /// </summary>
     public virtual async Task<Result<TEditModel>> Update(TPrimaryKey id, TEditModel model, CancellationToken cancellationToken = default)
     {
-        if (_validator is not null)
+        if (_editValidator is not null)
         {
-            var validation = await _validator.ValidateAsync(new FluentValidation.ValidationContext<TEditModel>(model), cancellationToken);
+            var validation = await _editValidator.ValidateAsync(model, cancellationToken);
             if (!validation.IsValid)
             {
                 var errors = validation.Errors.Select(ToValidationError).ToArray();

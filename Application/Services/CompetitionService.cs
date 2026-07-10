@@ -16,7 +16,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
     private readonly IApplicationDbContext _appDbContext;
 
     public CompetitionService(
-        ICrudServiceDependencyAggregate<CompetitionModel> dependencyAggregate,
+        ICrudServiceDependencyAggregate<CreateCompetitionModel, CompetitionModel> dependencyAggregate,
         IApplicationDbContext appDbContext
     ) : base(dependencyAggregate)
     {

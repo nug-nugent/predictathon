@@ -19,8 +19,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScopedServices(assembly);
 
-        // Register open-generic dependency aggregate so CrudService<TModel> can receive a per-model aggregate
-        services.AddScoped(typeof(Predictathon.Application.Interfaces.Base.ICrudServiceDependencyAggregate<>), typeof(Predictathon.Application.Services.CrudServiceDependencyAggregate<>));
+        // Register open-generic dependency aggregate so CrudService<...> can receive a per-model aggregate
+        services.AddScoped(typeof(Predictathon.Application.Interfaces.Base.ICrudServiceDependencyAggregate<,>), typeof(Predictathon.Application.Services.CrudServiceDependencyAggregate<,>));
 
         // Register FluentValidation validators from the Application assembly using Scrutor.
         services.Scan(scan => scan

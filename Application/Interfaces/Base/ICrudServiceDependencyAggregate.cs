@@ -4,9 +4,10 @@ using FluentValidation;
 
 namespace Predictathon.Application.Interfaces.Base;
 
-public interface ICrudServiceDependencyAggregate<TModel>
+public interface ICrudServiceDependencyAggregate<TCreateModel, TEditModel>
 {
     IGenericDbContext DbContext { get; }
     IMapper Mapper { get; }
-    IValidator<TModel>? Validator { get; }
+    IValidator<TCreateModel>? CreateValidator { get; }
+    IValidator<TEditModel>? EditValidator { get; }
 }
