@@ -36,25 +36,27 @@ public class GenericDbContext<TContext> : DbContext, IGenericDbContext
         return await Set<T>().Where(predicate).ToListAsync(cancellationToken);
     }
 
-    public async Task AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : class
-    {
-        await Set<T>().AddAsync(entity, cancellationToken);
-    }
+    // Explicit interface implementations: DbContext already declares AddAsync/Update/Remove with
+    // different return types (ValueTask<EntityEntry<T>>/EntityEntry<T> instead of Task/void), so these
+    // can't be `override`s. Implementing them explicitly keeps them off the class's public surface
+    // entirely, reachable only via IGenericDbContext, instead of silently hiding the base members.
+    async Task IGenericDbContext.AddAsync<T>(T entity, CancellationToken cancellationToken)
+        => await Set<T>().AddAsync(entity, cancellationToken);
 
     public async Task AddRangeAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default) where T : class
     {
         await Set<T>().AddRangeAsync(entities, cancellationToken);
     }
 
-    public void Update<T>(T entity) where T : class => Set<T>().Update(entity);
+    void IGenericDbContext.Update<T>(T entity) => Set<T>().Update(entity);
 
     public void UpdateRange<T>(IEnumerable<T> entities) where T : class => Set<T>().UpdateRange(entities);
 
-    public void Remove<T>(T entity) where T : class => Set<T>().Remove(entity);
+    void IGenericDbContext.Remove<T>(T entity) => Set<T>().Remove(entity);
 
     public void RemoveRange<T>(IEnumerable<T> entities) where T : class => Set<T>().RemoveRange(entities);
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => base.SaveChangesAsync(cancellationToken);
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => base.SaveChangesAsync(cancellationToken);
 
     public Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
         => Database.ExecuteSqlRawAsync(sql, cancellationToken);
