@@ -12,6 +12,8 @@ using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.Extensions;
 using System.Text;
 
+const string FrontendCorsPolicy = "Frontend";
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure DbContext
@@ -53,6 +55,20 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Configure CORS. No origins are allowed until Cors:AllowedOrigins is populated in config -
+// there's no permissive "just for dev" fallback, so nothing is silently left wide open.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Configure Mapster
 MapsterConfiguration.Configure();
 var config = TypeAdapterConfig.GlobalSettings;
@@ -80,6 +96,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
