@@ -1,79 +1,74 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Role } from "../constants/roles";
+import { refreshSession } from "../services/user-service";
+import { setAccessToken, setSessionExpiredHandler } from "../services/api";
 
 export type User = {
     name: string;
     roles: Role[];
     avatarUrl?: string;
     currentCompetition?: string;
-    // Bearer token for API calls, with its expiry. Optional only so Storybook mocks can omit it.
+    // Access token for API calls, held in memory only - never persisted to Web Storage. A page
+    // reload always starts from null and relies on refreshSession() (backed by the HttpOnly
+    // refresh-token cookie) to silently restore the session.
     token?: string;
     tokenExpiresAtUtc?: string;
 };
 
 type UserContextType = {
     user: User | null;
-    setUser: (user: User | null, rememberMe?: boolean) => void;
+    // True only while the initial silent-refresh check (on app load) is in flight, so consumers
+    // can avoid flashing "logged out" content before that resolves.
+    isLoading: boolean;
+    setUser: (user: User | null) => void;
 };
 
-const UserContext = createContext<UserContextType>({ user: null, setUser: () => { } });
+const UserContext = createContext<UserContextType>({ user: null, isLoading: false, setUser: () => { } });
 
-// Guards against stale/incompatible data left over from a previous version of this app (e.g. the
-// shape of User changes) rather than trusting whatever's in storage and crashing on render.
-const isValidStoredUser = (value: unknown): value is User =>
-    typeof value === "object" && value !== null &&
-    typeof (value as User).name === "string" &&
-    Array.isArray((value as User).roles);
+export const UserProvider = ({ mockUser, children }: { mockUser?: User | null, children: React.ReactNode }) => {
+    const [user, setUser] = useState<User | null>(mockUser ?? null);
+    // mockUser is only ever undefined when this isn't Storybook/a test (see .storybook/preview.tsx,
+    // which always passes a concrete value, even explicit null for "logged out").
+    const [isLoading, setIsLoading] = useState(mockUser === undefined);
 
-const loadUserFromStorage = (): User | null => {
-    const userString = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (!userString) {
-        return null;
-    }
-
-    let user: unknown;
-    try {
-        user = JSON.parse(userString);
-    } catch {
-        return null;
-    }
-
-    if (!isValidStoredUser(user)) {
-        return null;
-    }
-
-    // Treat a stored user whose token has expired as logged out.
-    if (user.tokenExpiresAtUtc && new Date(user.tokenExpiresAtUtc) <= new Date()) {
-        return null;
-    }
-
-    return user;
-}
-
-export const UserProvider = ({ mockUser, children }: { mockUser?: User, children: React.ReactNode }) => {
-    const [user, _setUser] = useState(() => mockUser || loadUserFromStorage());
-
-    const setUser = (newUser: User | null, rememberMe: boolean = false) => {
-        if (newUser) {
-            if (rememberMe) {
-                localStorage.setItem('user', JSON.stringify(newUser));
-            } else {
-                sessionStorage.setItem('user', JSON.stringify(newUser));
-            }
-        } else {
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('user');
+    useEffect(() => {
+        if (mockUser !== undefined) {
+            return;
         }
 
-        _setUser(newUser);
-    };
+        // One-time cleanup: earlier versions of this app persisted the user/token to Web Storage.
+        // That's no longer how sessions work - clear any leftovers so they don't linger unused.
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
+
+        refreshSession()
+            .then(setUser)
+            .catch(() => setUser(null))
+            .finally(() => setIsLoading(false));
+        // Deliberately runs once on mount only.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Keeps api.ts's module-level token store in sync so plain (non-React) service functions can
+    // attach the current access token to authenticated requests.
+    useEffect(() => {
+        setAccessToken(user?.token ?? null);
+    }, [user]);
+
+    useEffect(() => {
+        // If a background token refresh fails (e.g. the refresh cookie expired or was revoked),
+        // log the user out so the UI reflects reality instead of holding a dead session.
+        setSessionExpiredHandler(() => setUser(null));
+        return () => setSessionExpiredHandler(null);
+    }, []);
 
     const contextValue = useMemo(
         () => ({
             user,
+            isLoading,
             setUser,
         }),
-        [user]
+        [user, isLoading]
     );
 
     return (

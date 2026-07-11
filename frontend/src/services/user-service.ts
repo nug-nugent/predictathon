@@ -1,6 +1,6 @@
 import type { User } from "../providers/UserProvider";
 import { Role } from "../constants/roles";
-import { postJson } from "./api";
+import { postJson, refreshAccessToken } from "./api";
 
 // Mock users, kept for Storybook stories only - real logins come from the API below.
 export const stu: User = {
@@ -40,14 +40,32 @@ function extractRoles(claimValue: unknown): Role[] {
     return values.filter((value): value is Role => knownRoles.includes(value as Role));
 }
 
-export async function loginUser(username: string, password: string): Promise<User> {
-    const auth = await postJson<AuthResult>("/Auth/Login", { userName: username, password });
+function userFromAuthResult(auth: AuthResult): User {
     const payload = decodeJwtPayload(auth.token);
 
     return {
-        name: typeof payload[NAME_CLAIM] === "string" ? payload[NAME_CLAIM] : username,
+        name: typeof payload[NAME_CLAIM] === "string" ? payload[NAME_CLAIM] : "",
         roles: extractRoles(payload[ROLE_CLAIM]),
         token: auth.token,
         tokenExpiresAtUtc: auth.expiresAtUtc,
     };
+}
+
+export async function loginUser(username: string, password: string, rememberMe: boolean): Promise<User> {
+    const auth = await postJson<AuthResult>("/Auth/Login", { userName: username, password, rememberMe });
+    const user = userFromAuthResult(auth);
+
+    return user.name ? user : { ...user, name: username };
+}
+
+/// Silently exchanges the HttpOnly refresh-token cookie (if any) for a fresh access token.
+/// Throws (ApiError) if there's no valid session - callers should treat that as logged out.
+export async function refreshSession(): Promise<User> {
+    const auth = await refreshAccessToken();
+    return userFromAuthResult(auth);
+}
+
+/// Revokes the current refresh token and clears its cookie server-side.
+export async function logoutUser(): Promise<void> {
+    await postJson<void>("/Auth/Logout", {});
 }

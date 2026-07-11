@@ -3,13 +3,22 @@ import { useUser } from "../../../providers/UserProvider";
 import { ChevronDown, LogOut, UserPen } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
+import { logoutUser } from "../../../services/user-service";
 
 export function UserMenu() {
     const [open, setOpen] = useState(false);
     const { user, setUser } = useUser();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        // Best-effort - clear local state regardless of whether the network call succeeds, so
+        // the user isn't stuck "logged in" in the UI just because a request failed.
+        try {
+            await logoutUser();
+        } catch {
+            // Ignore - the refresh cookie will simply expire naturally if this didn't revoke it.
+        }
+
         setUser(null);
         navigate("/");
     }

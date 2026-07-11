@@ -127,6 +127,18 @@ namespace Predictathon.WebApi.Controllers.Base
                 return ProblemResult(pd);
             }
 
+            var unauthorized = errors.OfType<UnauthorizedError>().FirstOrDefault();
+            if (unauthorized is not null)
+            {
+                var pd = BuildProblemDetails(
+                    status: StatusCodes.Status401Unauthorized,
+                    type: "https://httpstatuses.com/401",
+                    title: "Unauthorized",
+                    detail: unauthorized.Message);
+
+                return ProblemResult(pd);
+            }
+
             var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var err in errors)

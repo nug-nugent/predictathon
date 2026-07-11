@@ -6,12 +6,24 @@ namespace Predictathon.Application.Interfaces;
 public interface IAuthService
 {
     /// <summary>
-    /// Creates a new user and returns a bearer token for them.
+    /// Creates a new user and returns a bearer token plus a raw refresh token for them.
     /// </summary>
-    Task<Result<AuthResultModel>> Register(RegisterModel model, CancellationToken cancellationToken = default);
+    Task<Result<AuthTokenResult>> Register(RegisterModel model, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Verifies credentials and returns a bearer token on success.
+    /// Verifies credentials and returns a bearer token plus a raw refresh token on success.
     /// </summary>
-    Task<Result<AuthResultModel>> Login(LoginModel model, CancellationToken cancellationToken = default);
+    Task<Result<AuthTokenResult>> Login(LoginModel model, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Exchanges a valid, active refresh token for a fresh bearer token. Does not rotate the
+    /// refresh token - the same one remains valid until its own expiry or explicit revocation.
+    /// </summary>
+    Task<Result<AuthResultModel>> RefreshToken(string? refreshToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Revokes the given refresh token, if any. Always succeeds - logging out an already-invalid
+    /// or missing token is not an error.
+    /// </summary>
+    Task Logout(string? refreshToken, CancellationToken cancellationToken = default);
 }

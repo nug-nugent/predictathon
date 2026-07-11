@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Predictathon.Application.Constants;
@@ -21,7 +22,16 @@ public class CompetitionController : ApiControllerBase
         _logger = logger;
     }
 
-    // TODO - Add a Competitions/GET endpoint to retrieve all competitions (with pagination and filtering)
+    /// <summary>
+    /// Get all competitions, most recently started first.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<CompetitionModel>>> GetAll()
+    {
+        var competitions = await _competitionService.GetCompetitionListAsync();
+
+        return Ok(competitions.Adapt<List<CompetitionModel>>());
+    }
 
     /// <summary>
     /// Get a competition by its ID.

@@ -26,6 +26,8 @@ public partial class ApplicationDbContext
 
     public DbSet<IdentityRole<Guid>> Roles => Set<IdentityRole<Guid>>();
 
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     private void ConfigureIdentity(ModelBuilder builder)
     {
         builder.Entity<ApplicationUser>(b =>
@@ -101,6 +103,25 @@ public partial class ApplicationDbContext
         {
             b.ToTable("UserRoles", "Identity");
             b.HasKey(ur => new { ur.UserId, ur.RoleId });
+        });
+    }
+
+    /// <summary>
+    /// Our own addition, not part of the copied Identity source above - configures the
+    /// app-specific RefreshTokens table (Database/Identity/Tables/RefreshTokens.sql).
+    /// </summary>
+    private void ConfigureRefreshTokens(ModelBuilder builder)
+    {
+        builder.Entity<RefreshToken>(b =>
+        {
+            b.ToTable("RefreshTokens", "Identity");
+            b.HasKey(t => t.Id);
+            b.HasIndex(t => t.TokenHash).IsUnique();
+            b.HasIndex(t => t.UserId);
+
+            b.Property(t => t.TokenHash).HasMaxLength(32).IsFixedLength();
+
+            b.HasOne<ApplicationUser>().WithMany().HasForeignKey(t => t.UserId).IsRequired();
         });
     }
 }

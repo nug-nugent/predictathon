@@ -8,5 +8,6 @@ public partial class ApplicationDbContext : IApplicationDbContext
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
         ConfigureIdentity(modelBuilder);
+        ConfigureRefreshTokens(modelBuilder);
     }
 }

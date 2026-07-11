@@ -1,18 +1,18 @@
 import { Center, Spinner, Table } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
-import { getLeague } from "../../../services/league-service";
+import { getCurrentLeagueTable, type LeagueTableItem } from "../../../services/league-service";
 import { Link } from "react-router";
 
 export function LeaguePage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<LeagueTableItem[]>([]);
 
   useEffect(() => {
     const asyncFetch = async () => {
-      const leagueData = await getLeague();
-      setItems(leagueData.results);
+      const leagueData = await getCurrentLeagueTable();
+      setItems(leagueData);
     }
     asyncFetch();
-  }), [];
+  }, []);
 
   return (
     <>
@@ -48,19 +48,19 @@ export function LeaguePage() {
         </Table.Header>
         <Table.Body>
           {items.map((item) => (
-              
-            <Table.Row key={item.pos}>
-              <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.pos}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userId}`}>{item.username}</Link></Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.three}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.two}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.one}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.zero}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.missed}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.points}</Table.Cell>
-              <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.agd}</Table.Cell>
+
+            <Table.Row key={item.userID}>
+              <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPointers}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPredictions}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.score}</Table.Cell>
+              <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
             </Table.Row>
-              
+
           ))}
         </Table.Body>
       </Table.Root>

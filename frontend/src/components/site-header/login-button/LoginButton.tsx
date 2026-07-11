@@ -26,8 +26,8 @@ export function LoginButton() {
         setError(null);
 
         try {
-            const user = await loginUser(username, password);
-            setUser(user, rememberMe);
+            const user = await loginUser(username, password, rememberMe);
+            setUser(user);
             setOpen(false);
             navigate("/");
         } catch (e) {

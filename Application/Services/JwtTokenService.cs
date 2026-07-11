@@ -13,6 +13,10 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class JwtTokenService : IJwtTokenService
 {
+    // Short-lived by design - a working refresh flow (IRefreshTokenService/AuthService.RefreshToken)
+    // renews this silently, so it doesn't need to survive long if it ever leaks.
+    private static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromMinutes(15);
+
     private readonly IConfiguration _configuration;
 
     public JwtTokenService(IConfiguration configuration)
@@ -46,7 +50,7 @@ public class JwtTokenService : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expiresAtUtc = DateTime.UtcNow.AddHours(4);
+        var expiresAtUtc = DateTime.UtcNow.Add(AccessTokenLifetime);
 
         var token = new JwtSecurityToken(
             issuer: issuer,

@@ -1,4 +1,4 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, Text, CloseButton } from "@chakra-ui/react";
+import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, Text, CloseButton, Center, Spinner } from "@chakra-ui/react";
 import { Outlet } from "react-router";
 import { useUser } from "../../providers/UserProvider";
 import { SideNavigation } from "../side-navigation/SideNavigation";
@@ -7,8 +7,18 @@ import { useState } from "react";
 import football from "../../assets/football.png";
 
 export function SiteLayout() {
-    const { user } = useUser();
+    const { user, isLoading } = useUser();
     const [sideNavOpen, setSideNavOpen] = useState(false);
+
+    // Avoids a flash of logged-out content (or a redirect out of a protected route) while the
+    // silent session refresh on app load is still in flight.
+    if (isLoading) {
+        return (
+            <Center minH="100vh">
+                <Spinner size="xl" />
+            </Center>
+        );
+    }
 
     return (
         <Box>

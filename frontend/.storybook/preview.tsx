@@ -8,7 +8,7 @@ const preview: Preview = {
   decorators: [
     (Story, { parameters }) => (
       <ChakraProvider value={predictTheme}>
-        <UserProvider mockUser={parameters.user}>
+        <UserProvider mockUser={parameters.user ?? null}>
           <BrowserRouter>
             <Story />
           </BrowserRouter>

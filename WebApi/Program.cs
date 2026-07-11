@@ -65,7 +65,10 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            // Needed so the browser sends/receives the HttpOnly refresh-token cookie cross-origin.
+            // Only valid combined with an explicit origin allow-list above, never AllowAnyOrigin().
+            .AllowCredentials();
     });
 });
 

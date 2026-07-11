@@ -132,5 +132,6 @@
     <Build Include="Identity\Tables\UserLogins.sql" />
     <Build Include="Identity\Tables\UserTokens.sql" />
     <Build Include="Identity\Tables\RoleClaims.sql" />
+    <Build Include="Identity\Tables\RefreshTokens.sql" />
   </ItemGroup>
 </Project>
