@@ -1,11 +1,16 @@
 using Mapster;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
+using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.Extensions;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +23,35 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 builder.Services.AddScoped<IGenericDbContext, ApplicationDbContext>();
+
+// Configure Identity (new AspNetUsers/AspNetRoles schema - separate from the legacy dbo.User table)
+builder.Services
+    .AddIdentityCore<ApplicationUser>()
+    .AddRoles<IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Configure JWT bearer authentication
+var jwtSection = builder.Configuration.GetSection("Jwt");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwtSection["Audience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["SigningKey"]!)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Configure Mapster
 MapsterConfiguration.Configure();
@@ -47,11 +81,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Enable ProblemDetails middleware (produces application/problem+json for errors)
 app.UseApiProblemDetails();
 
 app.MapControllers();
+
+await app.SeedRolesAsync();
 
 app.Run();

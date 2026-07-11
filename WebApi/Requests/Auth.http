@@ -1,0 +1,90 @@
+@Predictathon.WebApi_HostAddress = https://localhost:7046/api
+@Username = httptest_user
+@Password = P@ssw0rd123!
+
+### Register — valid
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "UserName": "{{Username}}",
+  "Email": "httptest@example.com",
+  "Password": "{{Password}}"
+}
+
+### Register — invalid (weak password, expect 400 with validation ProblemDetails)
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Register
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "UserName": "weakpassworduser",
+  "Email": "weakpassword@example.com",
+  "Password": "123"
+}
+
+### Register — invalid (malformed email, expect 400 with validation ProblemDetails)
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Register
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "UserName": "bademailuser",
+  "Email": "not-an-email",
+  "Password": "{{Password}}"
+}
+
+### Register — duplicate username (run the first request twice; expect 400 from Identity's CreateAsync errors)
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Register
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "UserName": "{{Username}}",
+  "Email": "httptest@example.com",
+  "Password": "{{Password}}"
+}
+
+### Login — valid
+# @name login
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "UserName": "{{Username}}",
+  "Password": "{{Password}}"
+}
+
+### Login — wrong password (expect 400, deliberately generic "Invalid username or password")
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Login
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "UserName": "{{Username}}",
+  "Password": "TheWrongPassword!"
+}
+
+### Login — unknown user (expect the same generic 400 - doesn't reveal whether the username exists)
+POST {{Predictathon.WebApi_HostAddress}}/Auth/Login
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "UserName": "no_such_user_zzz",
+  "Password": "WhoKnows123!"
+}
+
+### Use the login token against a protected endpoint - expect 403, {{Username}} has no CompetitionAdministrator role
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/problem+json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+  "CompetitionName": "Should be forbidden",
+  "StartDate": "2026-08-01",
+  "EndDate": "2026-08-05"
+}

@@ -70,6 +70,8 @@
     <Folder Include="Security\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
+    <Folder Include="Identity\" />
+    <Folder Include="Identity\Tables\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Backup\Predictathon.bak" />
@@ -122,5 +124,13 @@
     <Build Include="dbo\User Defined Types\UniqueIDAndDateTime.sql" />
     <Build Include="dbo\Tables\MessageReaction.sql" />
     <Build Include="dbo\Tables\PredictionHistory.sql" />
+    <Build Include="Security\Identity.sql" />
+    <Build Include="Identity\Tables\Users.sql" />
+    <Build Include="Identity\Tables\Roles.sql" />
+    <Build Include="Identity\Tables\UserRoles.sql" />
+    <Build Include="Identity\Tables\UserClaims.sql" />
+    <Build Include="Identity\Tables\UserLogins.sql" />
+    <Build Include="Identity\Tables\UserTokens.sql" />
+    <Build Include="Identity\Tables\RoleClaims.sql" />
   </ItemGroup>
 </Project>

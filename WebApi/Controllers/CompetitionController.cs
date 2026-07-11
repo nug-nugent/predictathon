@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
 using Predictathon.WebApi.Controllers.Base;
@@ -42,6 +44,7 @@ public class CompetitionController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPost]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
     public async Task<ActionResult<CompetitionModel?>> Post(CompetitionModel model, CancellationToken cancellationToken)
     {
         var result = await _competitionService.Create(model, cancellationToken);
@@ -57,6 +60,7 @@ public class CompetitionController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
     public async Task<ActionResult<CompetitionModel?>> Put(Guid id, CompetitionModel model, CancellationToken cancellationToken)
     {
         if (model.CompetitionID != Guid.Empty && model.CompetitionID != id)
@@ -79,6 +83,7 @@ public class CompetitionController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
     public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _competitionService.DeleteById(id, cancellationToken);
