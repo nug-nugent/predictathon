@@ -1,9 +1,10 @@
-import { Button, Checkbox, Field, HStack, Input, Link, Popover, Portal, Stack } from "@chakra-ui/react";
+import { Button, Checkbox, Field, HStack, Input, Link, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { PasswordInput } from "../../ui/password-input";
 import { useUser } from "../../../providers/UserProvider";
 import { useNavigate } from "react-router";
 import { loginUser } from "../../../services/user-service";
+import { ApiError } from "../../../services/api";
 
 export function LoginButton() {
     const [open, setOpen] = useState(false);
@@ -11,6 +12,7 @@ export function LoginButton() {
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(true);
     const [isLoggingIn, setLoggingIn] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { setUser } = useUser();
     const navigate = useNavigate();
 
@@ -21,9 +23,18 @@ export function LoginButton() {
 
     const login = async () => {
         setLoggingIn(true);
-        const user = await loginUser(username);
-        setUser(user, rememberMe);
-        navigate("/");
+        setError(null);
+
+        try {
+            const user = await loginUser(username, password);
+            setUser(user, rememberMe);
+            setOpen(false);
+            navigate("/");
+        } catch (e) {
+            setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+        } finally {
+            setLoggingIn(false);
+        }
     };
 
     return (
@@ -56,6 +67,10 @@ export function LoginButton() {
                                     <Checkbox.Control />
                                     <Checkbox.Label>Remember me</Checkbox.Label>
                                 </Checkbox.Root>
+
+                                {error && (
+                                    <Text fontSize="sm" color="fg.error">{error}</Text>
+                                )}
 
                                 <HStack justifyContent={"space-between"}>
                                     <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>

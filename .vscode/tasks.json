@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "watch-api",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/WebApi/Predictathon.WebApi.csproj"
+            ],
+            "isBackground": true,
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "panel": "dedicated",
+                "group": "fullstack"
+            }
+        },
+        {
+            "label": "frontend-dev",
+            "type": "shell",
+            // --open tells Vite to open a browser tab once it's ready; BROWSER below picks which
+            // one (Chrome isn't on PATH by default on Windows, so this points at the full exe path
+            // rather than just "chrome" - Vite's opener spawns it directly, not through the shell).
+            "command": "npm run dev -- --open",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend",
+                "env": {
+                    "BROWSER": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+                },
+                // Force cmd.exe for this task regardless of your default terminal shell, so it
+                // resolves to npm.cmd instead of npm.ps1 - sidesteps PowerShell's script-signing
+                // execution policy entirely rather than requiring it to be relaxed.
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/d", "/c"]
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "panel": "dedicated",
+                "group": "fullstack"
+            }
+        },
+        {
+            "label": "Launch Full Stack",
+            "dependsOn": [
+                "watch-api",
+                "frontend-dev"
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/WebApi/Predictathon.WebApi.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-and-frontend",
+            "dependsOn": [
+                "build",
+                "frontend-dev"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ]
+}

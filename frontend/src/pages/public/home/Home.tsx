@@ -16,7 +16,7 @@ export function HomePage() {
         </>
       ) : (
         <>
-          <Text>Welcome! Login above or <Link variant={"underline"}><RouterLink to={"/register"}>register here</RouterLink></Link>.</Text>
+          <Text>Welcome! Login above or <Link asChild variant={"underline"}><RouterLink to={"/register"}>register here</RouterLink></Link>.</Text>
         </>
       )}
     </>

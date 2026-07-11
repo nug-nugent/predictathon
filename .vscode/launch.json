@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch WebApi (API + Frontend)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-and-frontend",
+            "program": "${workspaceFolder}/WebApi/bin/Debug/net10.0/Predictathon.WebApi.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/WebApi",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
+    ]
+}
