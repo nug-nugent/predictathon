@@ -1,14 +1,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
-
-export const UserRole = {
-    User: "User",
-    Admin: "Admin"
-} as const;
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+import type { Role } from "../constants/roles";
 
 export type User = {
     name: string;
-    role: UserRole;
+    roles: Role[];
     avatarUrl: string;
     currentCompetition: string;
 };

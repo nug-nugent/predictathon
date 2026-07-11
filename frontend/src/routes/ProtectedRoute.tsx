@@ -1,14 +1,21 @@
 import { Navigate, Outlet } from "react-router";
-import { useUser, type UserRole } from "../providers/UserProvider";
+import { useUser } from "../providers/UserProvider";
+import type { Role } from "../constants/roles";
 
 type ProtectedRouteProps = {
-    allowedRoles: UserRole[];
+    // Omit to require only that the user is logged in. When provided, the user must hold at
+    // least one of the listed roles.
+    allowedRoles?: Role[];
 };
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     let { user } = useUser();
 
-    if (!user || !allowedRoles.includes(user.role)) {
+    if (!user) {
+        return <Navigate to="/" replace />;
+    }
+
+    if (allowedRoles && !allowedRoles.some(role => user.roles.includes(role))) {
         return <Navigate to="/" replace />;
     }
 

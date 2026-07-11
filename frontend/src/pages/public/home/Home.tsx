@@ -11,7 +11,7 @@ export function HomePage() {
         <>
           <Box>
             <Heading>Welcome, {user.name}!</Heading>
-            <Text>Your role is: {user.role}</Text>
+            <Text>Your roles: {user.roles.length > 0 ? user.roles.join(", ") : "Standard user"}</Text>
           </Box>
         </>
       ) : (
