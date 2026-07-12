@@ -110,14 +110,15 @@ function authHeaders(): HeadersInit {
     return currentToken ? { Authorization: `Bearer ${currentToken}` } : {};
 }
 
-/// GETs an authenticated endpoint, attaching the current access token. If the token was missing or
-/// expired (401), transparently refreshes it once and retries before giving up. If the refresh
+/// Fetches an authenticated endpoint, attaching the current access token. If the token was missing
+/// or expired (401), transparently refreshes it once and retries before giving up. If the refresh
 /// itself fails - no valid session - notifies the registered session-expired handler and rethrows.
-export async function getJsonAuthenticated<TResponse>(path: string): Promise<TResponse> {
-    const response = await doFetch(path, { headers: authHeaders() });
+async function authenticatedFetch(path: string, init: RequestInit): Promise<Response> {
+    const attempt = () => doFetch(path, { ...init, headers: { ...init.headers, ...authHeaders() } });
 
+    const response = await attempt();
     if (response.status !== 401) {
-        return handleJsonResponse<TResponse>(response);
+        return response;
     }
 
     try {
@@ -127,6 +128,20 @@ export async function getJsonAuthenticated<TResponse>(path: string): Promise<TRe
         throw error;
     }
 
-    const retryResponse = await doFetch(path, { headers: authHeaders() });
-    return handleJsonResponse<TResponse>(retryResponse);
+    return attempt();
+}
+
+export async function getJsonAuthenticated<TResponse>(path: string): Promise<TResponse> {
+    const response = await authenticatedFetch(path, {});
+    return handleJsonResponse<TResponse>(response);
+}
+
+export async function postJsonAuthenticated<TResponse>(path: string, body: unknown): Promise<TResponse> {
+    const response = await authenticatedFetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+    return handleJsonResponse<TResponse>(response);
 }

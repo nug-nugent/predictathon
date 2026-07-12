@@ -60,6 +60,15 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get the Friday-starting weeks a competition has matches in, earliest first.
+    /// </summary>
+    [HttpGet("{id:guid}/Weeks")]
+    public async Task<ActionResult<IReadOnlyList<DateTime>>> GetWeeks(Guid id)
+    {
+        return Ok(await _competitionService.GetCompetitionWeeksAsync(id));
+    }
+
+    /// <summary>
     /// Create a new competition.
     /// </summary>
     /// <param name="model"></param>
