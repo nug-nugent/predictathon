@@ -1,6 +1,3 @@
-SET ANSI_NULLS ON;
-SET QUOTED_IDENTIFIER ON;
-GO
 CREATE TABLE [Identity].[RefreshTokens] (
     [Id]            UNIQUEIDENTIFIER NOT NULL DEFAULT (newid()),
     [UserId]        UNIQUEIDENTIFIER NOT NULL,

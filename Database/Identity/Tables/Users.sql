@@ -1,6 +1,3 @@
-SET ANSI_NULLS ON;
-SET QUOTED_IDENTIFIER ON;
-GO
 CREATE TABLE [Identity].[Users] (
     [Id]                          UNIQUEIDENTIFIER NOT NULL DEFAULT (newid()),
     [UserName]                    NVARCHAR (256)   NULL,
