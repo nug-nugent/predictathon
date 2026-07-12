@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Predictathon.Application.Errors;
+using System.Security.Claims;
 
 namespace Predictathon.WebApi.Controllers.Base
 {
@@ -8,6 +9,13 @@ namespace Predictathon.WebApi.Controllers.Base
     [Route("api/[controller]")]
     public abstract class ApiControllerBase : ControllerBase
     {
+        /// <summary>
+        /// The authenticated caller's user id, from the JWT's NameIdentifier claim. Only valid to
+        /// read from an [Authorize]-protected action, which guarantees the claim is present.
+        /// </summary>
+        protected Guid CurrentUserId =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         /// <summary>
         /// Return 200 with the model or a ProblemDetails 404 when the model is null.
         /// </summary>

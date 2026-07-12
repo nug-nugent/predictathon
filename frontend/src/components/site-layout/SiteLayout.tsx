@@ -1,8 +1,9 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, Text, CloseButton, Center, Spinner } from "@chakra-ui/react";
+import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, CloseButton, Center, Spinner } from "@chakra-ui/react";
 import { Outlet } from "react-router";
 import { useUser } from "../../providers/UserProvider";
 import { SideNavigation } from "../side-navigation/SideNavigation";
 import { SiteHeader } from "../site-header/SiteHeader";
+import { CompetitionSelector } from "../site-header/competition-selector/CompetitionSelector";
 import { useState } from "react";
 import football from "../../assets/football.png";
 
@@ -36,9 +37,7 @@ export function SiteLayout() {
                                         <Heading as="h1" size={{ base: "xl", md: "2xl" }} lineHeight="1">
                                             Predictathon
                                         </Heading>
-                                        <Text fontSize={{ base: "xs", md: "xs" }} lineHeight="1">
-                                            {user?.currentCompetition}
-                                        </Text>
+                                        <CompetitionSelector />
                                     </Stack>
                                 </HStack>
                             </Drawer.Header>

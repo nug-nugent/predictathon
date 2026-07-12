@@ -34,6 +34,18 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get the competitions the current user is registered for, most recently started first.
+    /// </summary>
+    [HttpGet("MyRegistrations")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<UserCompetitionRegistrationListItem>>> GetMyRegistrations()
+    {
+        var registrations = await _competitionService.GetUserCompetitionRegistrationListAsync(CurrentUserId);
+
+        return Ok(registrations.Where(r => r.Registered).ToList());
+    }
+
+    /// <summary>
     /// Get a competition by its ID.
     /// </summary>
     /// <param name="id"></param>

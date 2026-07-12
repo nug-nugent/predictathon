@@ -7,7 +7,6 @@ export type User = {
     name: string;
     roles: Role[];
     avatarUrl?: string;
-    currentCompetition?: string;
     // Access token for API calls, held in memory only - never persisted to Web Storage. A page
     // reload always starts from null and relies on refreshSession() (backed by the HttpOnly
     // refresh-token cookie) to silently restore the session.

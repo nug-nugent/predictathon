@@ -1,10 +1,11 @@
-import { Box, Flex, Heading, Text, IconButton, Spacer, Container, Image, Stack } from "@chakra-ui/react";
+import { Box, Flex, Heading, IconButton, Spacer, Container, Image, Stack } from "@chakra-ui/react";
 import { Menu } from "lucide-react";
 import { useUser } from "../../providers/UserProvider";
 import { Link } from "react-router";
 import football from "../../assets/football.png";
 import { LoginButton } from "./login-button/LoginButton";
 import { UserMenu } from "./user-menu/UserMenu";
+import { CompetitionSelector } from "./competition-selector/CompetitionSelector";
 
 export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => void }) {
     const { user } = useUser();
@@ -37,10 +38,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                             <Heading  size={{ base: "xl", md: "2xl" }}  lineHeight="1">
                                 Predictathon
                             </Heading>
-                            <Text
-                                fontSize={{ base: "xs", md: "xs" }}
-                                lineHeight="1"
-                            >{user.currentCompetition}</Text>
+                            <CompetitionSelector />
                         </Stack>
                     ) : (
                         <Heading size={{ base: "2xl", md: "3xl" }}>
