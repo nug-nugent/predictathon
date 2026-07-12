@@ -9,6 +9,7 @@ import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
 import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
+import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 
 export function SiteRoutes() {
     return (
@@ -29,7 +30,7 @@ export function SiteRoutes() {
 
                     <Route path="stats" element={<PlaceholderPage name="Statistics" />} />
                     <Route path="hof" element={<PlaceholderPage name="Hall of Fame" />} />
-                    <Route path="rules" element={<PlaceholderPage name="Rules" />} />
+                    <Route path="rules" element={<RulesPage />} />
 
                     <Route path="profile/edit" element={<PlaceholderPage name="Edit Profile" />} />
                     <Route path="profile/:id" element={<ProfilePage />} />
