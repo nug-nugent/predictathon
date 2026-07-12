@@ -403,3 +403,6 @@ Data/
 /UI/Web/Uploads/
 .DS_Store
 storybook-static
+
+# Docker local dev secrets
+.env.docker

@@ -1,0 +1,63 @@
+# Run with: docker compose --env-file .env.docker up
+# (copy .env.docker.example to .env.docker first and set a real password)
+#
+# Frontend: http://localhost:5174   API: http://localhost:7047   DB: localhost,14330
+# Deliberately offset from the host dev workflow's ports (5173/7046/1433) so both
+# can run side by side without colliding, and so it's obvious which one you're on.
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "14330:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Database/Dockerfile.migrate
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: WebApi/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Server=db,1433;Database=Predictathon;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true
+      Cors__AllowedOrigins__0: http://localhost:5174
+    ports:
+      - "7047:7046"
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:7047/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5174:5173"
+    depends_on:
+      - api
+
+volumes:
+  mssql-data:
