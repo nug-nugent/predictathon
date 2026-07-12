@@ -1,9 +1,10 @@
-import { Center, Spinner, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
 import { useCompetition } from "../../../providers/CompetitionProvider";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../../services/prediction-service";
 import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
 import { MatchList } from "../../../components/match/match-list/MatchList";
+import { ApiError } from "../../../services/api";
 
 export function PredictionsPage() {
   const { currentCompetitionId, isLoading } = useCompetition();
@@ -29,34 +30,79 @@ export function PredictionsPage() {
   return <PredictionsWeekLoader key={currentCompetitionId} competitionId={currentCompetitionId} />;
 }
 
+function toApiErrorOrGeneric(err: unknown): ApiError {
+  return err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]);
+}
+
+function ErrorState({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  return (
+    <Center mt={4}>
+      <VStack gap={3}>
+        <Text>{error.messages.join(" ")}</Text>
+        <Button onClick={onRetry}>Try again</Button>
+      </VStack>
+    </Center>
+  );
+}
+
 function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
   const [weeks, setWeeks] = useState<string[] | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchPrediction[] | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Guards against a slower, older request's response landing after a newer one (e.g. clicking
+  // through weeks quickly) - only the response matching the latest request is ever applied.
+  const requestSeq = useRef(0);
 
   useEffect(() => {
-    getCompetitionWeeks(competitionId).then((fetchedWeeks) => {
-      setWeeks(fetchedWeeks);
+    let cancelled = false;
+    const seq = ++requestSeq.current;
 
-      const defaultWeek = computeDefaultWeek(fetchedWeeks);
-      setSelectedWeek(defaultWeek);
+    getCompetitionWeeks(competitionId)
+      .then((fetchedWeeks) => {
+        if (cancelled) return;
+        setWeeks(fetchedWeeks);
 
-      if (!defaultWeek) {
-        setMatches([]);
-        return;
-      }
+        const defaultWeek = computeDefaultWeek(fetchedWeeks);
+        setSelectedWeek(defaultWeek);
 
-      getMatchesForWeek(competitionId, defaultWeek).then(setMatches);
-    });
-  }, [competitionId]);
+        if (!defaultWeek) {
+          setMatches([]);
+          return;
+        }
+
+        return getMatchesForWeek(competitionId, defaultWeek).then((data) => {
+          if (!cancelled && requestSeq.current === seq) setMatches(data);
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setError(toApiErrorOrGeneric(err));
+      });
+
+    return () => { cancelled = true; };
+  }, [competitionId, retryCount]);
 
   const changeWeek = (dateFrom: string) => {
     setSelectedWeek(dateFrom);
     setMatches(null);
-    getMatchesForWeek(competitionId, dateFrom).then(setMatches);
+    setError(null);
+
+    const seq = ++requestSeq.current;
+    getMatchesForWeek(competitionId, dateFrom)
+      .then((data) => {
+        if (requestSeq.current === seq) setMatches(data);
+      })
+      .catch((err) => {
+        if (requestSeq.current === seq) setError(toApiErrorOrGeneric(err));
+      });
   };
 
-  if (weeks === null || selectedWeek === null || matches === null) {
+  if (weeks === null) {
+    if (error) {
+      return <ErrorState error={error} onRetry={() => { setError(null); setRetryCount((c) => c + 1); }} />;
+    }
     return (
       <Center mt={4}>
         <Spinner />
@@ -66,8 +112,17 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
 
   return (
     <>
-      <WeekPicker weeks={weeks} selectedWeek={selectedWeek} onWeekChange={changeWeek} />
-      <MatchList key={selectedWeek} matches={matches} />
+      <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} />
+
+      {error ? (
+        <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />
+      ) : matches === null ? (
+        <Center mt={4}>
+          <Spinner />
+        </Center>
+      ) : (
+        <MatchList key={selectedWeek} matches={matches} />
+      )}
     </>
   );
 }

@@ -1,7 +1,8 @@
-import { Center, Spinner, Table, Text } from "@chakra-ui/react"
+import { Button, Center, Spinner, Table, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { getLeagueTable, type LeagueTableItem } from "../../../services/league-service";
 import { useCompetition } from "../../../providers/CompetitionProvider";
+import { ApiError } from "../../../services/api";
 import { Link } from "react-router";
 
 export function LeaguePage() {
@@ -30,10 +31,33 @@ export function LeaguePage() {
 
 function LeagueTable({ competitionId }: { competitionId: string }) {
   const [items, setItems] = useState<LeagueTableItem[] | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    getLeagueTable(competitionId).then(setItems);
-  }, [competitionId]);
+    let cancelled = false;
+
+    getLeagueTable(competitionId)
+      .then((data) => {
+        if (!cancelled) setItems(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
+      });
+
+    return () => { cancelled = true; };
+  }, [competitionId, retryCount]);
+
+  if (error) {
+    return (
+      <Center mt={4}>
+        <VStack gap={3}>
+          <Text>{error.messages.join(" ")}</Text>
+          <Button onClick={() => { setError(null); setRetryCount((c) => c + 1); }}>Try again</Button>
+        </VStack>
+      </Center>
+    );
+  }
 
   if (items === null) {
     return (
