@@ -80,7 +80,8 @@ public class AuthService : IAuthService
             }
         }
 
-        var user = await _userManager.FindByNameAsync(model.UserName);
+        var user = await _userManager.FindByNameAsync(model.UserName)
+            ?? await _userManager.FindByEmailAsync(model.UserName);
 
         // Deliberately generic message either way - don't reveal whether the username exists.
         if (user is null || !await _userManager.CheckPasswordAsync(user, model.Password))
