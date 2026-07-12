@@ -1,6 +1,6 @@
 import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, CloseButton, Center, Spinner } from "@chakra-ui/react";
 import { Outlet } from "react-router";
-import { useUser } from "../../providers/UserProvider";
+import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
 import { SiteHeader } from "../site-header/SiteHeader";
 import { CompetitionSelector } from "../site-header/competition-selector/CompetitionSelector";

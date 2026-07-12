@@ -1,5 +1,5 @@
 import { Box, Heading, List, Text, VStack } from "@chakra-ui/react";
-import { useCompetition } from "../../../providers/CompetitionProvider";
+import { useCompetition } from "../../../hooks/useCompetition";
 
 // Used for the worked examples below - not tied to any real competition's teams.
 const EXAMPLE_TEAM_1 = "England";

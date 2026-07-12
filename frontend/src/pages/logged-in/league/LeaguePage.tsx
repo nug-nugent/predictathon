@@ -1,7 +1,7 @@
 import { Button, Center, Spinner, Table, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { getLeagueTable, type LeagueTableItem } from "../../../services/league-service";
-import { useCompetition } from "../../../providers/CompetitionProvider";
+import { useCompetition } from "../../../hooks/useCompetition";
 import { ApiError } from "../../../services/api";
 import { Link } from "react-router";
 

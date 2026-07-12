@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router";
-import { useUser } from "../providers/UserProvider";
+import { useUser } from "../hooks/useUser";
 import type { Role } from "../constants/roles";
 
 type ProtectedRouteProps = {
@@ -9,7 +9,7 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-    let { user } = useUser();
+    const { user } = useUser();
 
     if (!user) {
         return <Navigate to="/" replace />;

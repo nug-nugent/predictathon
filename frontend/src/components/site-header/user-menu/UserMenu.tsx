@@ -1,5 +1,5 @@
 import { Avatar, Button, Popover, Portal, Text, Stack } from "@chakra-ui/react";
-import { useUser } from "../../../providers/UserProvider";
+import { useUser } from "../../../hooks/useUser";
 import { ChevronDown, LogOut, UserPen } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";

@@ -4,7 +4,7 @@ import { ApiError } from "../../../services/api";
 import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
 import { computeMatchStatus, type SaveState } from "../matchStatus";
 import { MatchStatus } from "../match-status/MatchStatus";
-import { useUser } from "../../../providers/UserProvider";
+import { useUser } from "../../../hooks/useUser";
 
 type MatchRowProps = {
     match: MatchPrediction;

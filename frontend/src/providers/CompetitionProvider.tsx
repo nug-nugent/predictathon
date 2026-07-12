@@ -1,24 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { useUser } from "./UserProvider";
+import { useEffect, useMemo, useState } from "react";
+import { useUser } from "../hooks/useUser";
 import { getMyRegisteredCompetitions, type UserCompetitionRegistration } from "../services/competition-service";
+import { CompetitionContext, defaultCompetitionContextValue } from "../hooks/useCompetition";
 
 const STORAGE_KEY = "currentCompetitionId";
-
-type CompetitionContextType = {
-    competitions: UserCompetitionRegistration[];
-    currentCompetitionId: string | null;
-    setCurrentCompetitionId: (competitionId: string) => void;
-    isLoading: boolean;
-};
-
-const defaultContextValue: CompetitionContextType = {
-    competitions: [],
-    currentCompetitionId: null,
-    setCurrentCompetitionId: () => { },
-    isLoading: false,
-};
-
-const CompetitionContext = createContext<CompetitionContextType>(defaultContextValue);
 
 // Fetches and holds registered-competition state for a single logged-in user. Mounted keyed by
 // username, so logging in as a different person in the same tab remounts this fresh rather than
@@ -89,7 +74,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
 
     if (!user) {
         return (
-            <CompetitionContext.Provider value={defaultContextValue}>
+            <CompetitionContext.Provider value={defaultCompetitionContextValue}>
                 {children}
             </CompetitionContext.Provider>
         );
@@ -101,5 +86,3 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
         </LoggedInCompetitionProvider>
     );
 };
-
-export const useCompetition = () => useContext(CompetitionContext);

@@ -1,6 +1,6 @@
 import { Box, Flex, Heading, IconButton, Spacer, Container, Image, Stack } from "@chakra-ui/react";
 import { Menu } from "lucide-react";
-import { useUser } from "../../providers/UserProvider";
+import { useUser } from "../../hooks/useUser";
 import { Link } from "react-router";
 import football from "../../assets/football.png";
 import { LoginButton } from "./login-button/LoginButton";

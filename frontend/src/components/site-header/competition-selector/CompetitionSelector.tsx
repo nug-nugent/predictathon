@@ -1,7 +1,7 @@
 import { Button, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { useCompetition } from "../../../providers/CompetitionProvider";
+import { useCompetition } from "../../../hooks/useCompetition";
 
 const captionProps = {
     fontSize: { base: "xs", md: "xs" },

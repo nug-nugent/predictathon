@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Role } from "../constants/roles";
 import { refreshSession } from "../services/user-service";
 import { setAccessToken, setSessionExpiredHandler } from "../services/api";
+import { UserContext } from "../hooks/useUser";
 
 export type User = {
     name: string;
@@ -13,16 +14,6 @@ export type User = {
     token?: string;
     tokenExpiresAtUtc?: string;
 };
-
-type UserContextType = {
-    user: User | null;
-    // True only while the initial silent-refresh check (on app load) is in flight, so consumers
-    // can avoid flashing "logged out" content before that resolves.
-    isLoading: boolean;
-    setUser: (user: User | null) => void;
-};
-
-const UserContext = createContext<UserContextType>({ user: null, isLoading: false, setUser: () => { } });
 
 export const UserProvider = ({ mockUser, children }: { mockUser?: User | null, children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(mockUser ?? null);
@@ -76,5 +67,3 @@ export const UserProvider = ({ mockUser, children }: { mockUser?: User | null, c
         </UserContext.Provider>
     )
 };
-
-export const useUser = () => useContext(UserContext);

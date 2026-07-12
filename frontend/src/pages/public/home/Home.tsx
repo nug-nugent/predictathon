@@ -1,5 +1,5 @@
 import { Box, Heading, Link, Text } from "@chakra-ui/react";
-import { useUser} from "../../../providers/UserProvider";
+import { useUser} from "../../../hooks/useUser";
 import { Link as RouterLink} from "react-router";
 
 export function HomePage() {

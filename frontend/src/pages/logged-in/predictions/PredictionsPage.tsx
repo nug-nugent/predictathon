@@ -1,6 +1,6 @@
 import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
-import { useCompetition } from "../../../providers/CompetitionProvider";
+import { useCompetition } from "../../../hooks/useCompetition";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../../services/prediction-service";
 import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
 import { MatchList } from "../../../components/match/match-list/MatchList";

@@ -1,7 +1,7 @@
 import { Box, Heading, List} from "@chakra-ui/react";
 import { ChartColumn, Dices, Home, Info, Medal, MessagesSquare, TableProperties, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
-import { useUser } from "../../providers/UserProvider";
+import { useUser } from "../../hooks/useUser";
 import { Role } from "../../constants/roles";
 
 export function SideNavigation({ onClick }: { onClick?: () => void }) {

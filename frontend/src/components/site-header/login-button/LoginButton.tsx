@@ -1,7 +1,7 @@
 import { Button, Checkbox, Field, HStack, Input, Link, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { PasswordInput } from "../../ui/password-input";
-import { useUser } from "../../../providers/UserProvider";
+import { useUser } from "../../../hooks/useUser";
 import { useNavigate } from "react-router";
 import { loginUser } from "../../../services/user-service";
 import { ApiError } from "../../../services/api";
