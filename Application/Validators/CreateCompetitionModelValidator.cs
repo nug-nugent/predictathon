@@ -20,6 +20,8 @@ public class CreateCompetitionModelValidator : AbstractValidator<CreateCompetiti
             .WithMessage("StartDate must be before EndDate");
 
         RuleFor(x => x.EntranceFee)
-            .GreaterThanOrEqualTo(0m);
+            .GreaterThanOrEqualTo(0m)
+            .LessThan(100m)
+            .WithMessage("EntranceFee must be less than £100");
     }
 }

@@ -13,6 +13,8 @@ import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
 import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResultsPage";
 import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
+import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/CompetitionsAdminPage";
+import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
 
 export function SiteRoutes() {
     return (
@@ -42,7 +44,8 @@ export function SiteRoutes() {
                 // Protected routes for admin users - each gated behind the specific role it needs
                 <Route path="admin">
                     <Route element={<ProtectedRoute allowedRoles={[Role.CompetitionAdministrator]} />}>
-                        <Route path="tournaments" element={<PlaceholderPage name="Tournmanets Admin" />} />
+                        <Route path="tournaments" element={<CompetitionsAdminPage />} />
+                        <Route path="tournaments/:id" element={<CompetitionEditPage />} />
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.MatchAdministrator]} />}>
                         <Route path="matches" element={<MatchesAdminPage />} />
