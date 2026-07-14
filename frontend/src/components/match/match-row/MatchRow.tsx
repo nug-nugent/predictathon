@@ -5,6 +5,8 @@ import { savePrediction, type MatchPrediction } from "../../../services/predicti
 import { computeMatchStatus, type SaveState } from "../matchStatus";
 import { MatchStatus } from "../match-status/MatchStatus";
 import { useUser } from "../../../hooks/useUser";
+import { crestUrl } from "../../../utils/crestUrl";
+import { parseDigit } from "../../../utils/parseDigit";
 
 type MatchRowProps = {
     match: MatchPrediction;
@@ -16,18 +18,9 @@ type MatchRowProps = {
     onSaved: (matchId: string) => void;
 };
 
-function crestUrl(image: string | null): string | undefined {
-    return image ? `/team-crests/${image}` : undefined;
-}
-
 // Undecided future matches without a real team assigned should never render blank.
 function teamName(name: string | null, shortName: string): string {
     return name || shortName || "TBC";
-}
-
-function parseDigit(raw: string): string | null {
-    if (raw === "") return "";
-    return /^[0-9]$/.test(raw) ? raw : null;
 }
 
 export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSaved }: MatchRowProps) {

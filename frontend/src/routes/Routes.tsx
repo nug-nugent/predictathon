@@ -11,6 +11,7 @@ import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
+import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResultsPage";
 
 export function SiteRoutes() {
     return (
@@ -44,7 +45,7 @@ export function SiteRoutes() {
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.MatchAdministrator]} />}>
                         <Route path="matches" element={<MatchesAdminPage />} />
-                        <Route path="process" element={<PlaceholderPage name="Results Processing" />} />
+                        <Route path="process" element={<ProcessResultsPage />} />
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.UserAdministrator]} />}>
                         <Route path="users" element={<UsersPage />} />

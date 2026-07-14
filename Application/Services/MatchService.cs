@@ -1,7 +1,10 @@
+using FluentResults;
 using Mapster;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
+using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Interfaces.Persistence;
@@ -59,6 +62,51 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
             .ToListAsync(cancellationToken);
 
         return matches.Adapt<List<MatchModel>>();
+    }
+
+    private const int ResultEligibleMinutesAfterKickoff = 90;
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<MatchModel>> GetForProcessingAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = UkClock.Now;
+
+        var matches = await _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId && !m.MatchPlayed && m.MatchDateTime <= now)
+            .OrderBy(m => m.MatchDateTime)
+            .ToListAsync(cancellationToken);
+
+        return matches.Adapt<List<MatchModel>>();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<MatchModel>> SaveResultAsync(
+        Guid matchId,
+        int homeTeamGoals,
+        int awayTeamGoals,
+        CancellationToken cancellationToken = default)
+    {
+        var match = await _appDbContext.Match.FirstOrDefaultAsync(m => m.MatchID == matchId, cancellationToken);
+        if (match is null)
+        {
+            return Result.Fail<MatchModel>(new NotFoundError("The match could not be found."));
+        }
+
+        if (UkClock.Now < match.MatchDateTime.AddMinutes(ResultEligibleMinutesAfterKickoff))
+        {
+            return Result.Fail<MatchModel>(new ConflictError("This match's result can't be entered until 90 minutes after kickoff."));
+        }
+
+        match.HomeTeamGoals = homeTeamGoals;
+        match.AwayTeamGoals = awayTeamGoals;
+        match.MatchPlayed = true;
+
+        _appDbContext.Update(match);
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok(match.Adapt<MatchModel>());
     }
 
     /// <summary>

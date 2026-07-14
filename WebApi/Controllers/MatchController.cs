@@ -98,4 +98,29 @@ public class MatchController : ApiControllerBase
 
         return FromResult(result);
     }
+
+    /// <summary>
+    /// Get unplayed matches for a competition whose kickoff has already passed - the pool of
+    /// matches a result could plausibly be entered for.
+    /// </summary>
+    [HttpGet("Processing/{competitionId:guid}")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<IReadOnlyList<MatchModel>>> GetForProcessing(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var matches = await _matchService.GetForProcessingAsync(competitionId, cancellationToken);
+
+        return Ok(matches);
+    }
+
+    /// <summary>
+    /// Record a match's final score and mark it played.
+    /// </summary>
+    [HttpPost("Result")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<MatchModel?>> SaveResult(SaveMatchResultRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _matchService.SaveResultAsync(request.MatchID, request.HomeTeamGoals, request.AwayTeamGoals, cancellationToken);
+
+        return FromResult(result);
+    }
 }

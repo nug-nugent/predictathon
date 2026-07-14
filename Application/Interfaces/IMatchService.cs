@@ -1,3 +1,4 @@
+using FluentResults;
 using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Entities;
@@ -29,5 +30,23 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
     Task<IReadOnlyList<MatchModel>> GetForAdminAsync(
         Guid competitionId,
         bool includePlayed,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets unplayed matches for a competition whose kickoff has already passed, ordered by date -
+    /// the pool of matches a result could plausibly be entered for.
+    /// </summary>
+    Task<IReadOnlyList<MatchModel>> GetForProcessingAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a match's final score and marks it played. Fails with a <see cref="Errors.ConflictError"/>
+    /// if the match hasn't been over long enough yet.
+    /// </summary>
+    Task<Result<MatchModel>> SaveResultAsync(
+        Guid matchId,
+        int homeTeamGoals,
+        int awayTeamGoals,
         CancellationToken cancellationToken = default);
 }
