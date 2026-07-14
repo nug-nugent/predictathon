@@ -15,6 +15,7 @@ import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResu
 import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
 import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/CompetitionsAdminPage";
 import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
+import { StatisticsPage } from "../pages/logged-in/statistics/StatisticsPage";
 
 export function SiteRoutes() {
     return (
@@ -33,7 +34,7 @@ export function SiteRoutes() {
                     <Route path="board" element={<PlaceholderPage name="Messageboard" />} />
                     <Route path="board/:id" element={<ThreadPage />} />
 
-                    <Route path="stats" element={<PlaceholderPage name="Statistics" />} />
+                    <Route path="stats" element={<StatisticsPage />} />
                     <Route path="hof" element={<HallOfFamePage />} />
                     <Route path="rules" element={<RulesPage />} />
 
