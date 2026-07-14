@@ -15,6 +15,11 @@ public static class MapsterConfiguration
         config.NewConfig<CompetitionModel, Competition>();
         config.NewConfig<Competition, CompetitionModel>();
 
+        config.NewConfig<MatchModel, Match>();
+        config.NewConfig<Match, MatchModel>();
+
+        config.NewConfig<Team, TeamModel>();
+
         // Add further mappings here as your application grows.
     }
 }

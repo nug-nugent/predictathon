@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
 using Predictathon.WebApi.Controllers.Base;
@@ -32,5 +33,69 @@ public class MatchController : ApiControllerBase
         var matches = await _matchService.GetUserMatchesForWeekAsync(CurrentUserId, competitionId, dateFrom, cancellationToken);
 
         return Ok(matches);
+    }
+
+    /// <summary>
+    /// Get every match for a competition for admin management.
+    /// </summary>
+    /// <param name="competitionId"></param>
+    /// <param name="includePlayed">Whether to include already-played matches. Defaults to false.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("Admin/{competitionId:guid}")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<IReadOnlyList<MatchModel>>> GetForAdmin(
+        Guid competitionId,
+        [FromQuery] bool includePlayed,
+        CancellationToken cancellationToken)
+    {
+        var matches = await _matchService.GetForAdminAsync(competitionId, includePlayed, cancellationToken);
+
+        return Ok(matches);
+    }
+
+    /// <summary>
+    /// Create a new match.
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<MatchModel?>> Post(CreateMatchModel model, CancellationToken cancellationToken)
+    {
+        var result = await _matchService.Create(model, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Edit a match.
+    /// </summary>
+    /// <param name="id">Primary key of the match to update, taken from the route.</param>
+    /// <param name="model"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<MatchModel?>> Put(Guid id, MatchModel model, CancellationToken cancellationToken)
+    {
+        if (model.MatchID != Guid.Empty && model.MatchID != id)
+        {
+            return BadRequestProblem(
+                detail: "The match id in the route does not match the MatchID in the request body.",
+                title: "ID mismatch");
+        }
+
+        var result = await _matchService.Update(id, model, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Delete a match.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _matchService.DeleteById(id, cancellationToken);
+
+        return FromResult(result);
     }
 }

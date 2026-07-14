@@ -10,6 +10,7 @@ import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage"
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
+import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
 
 export function SiteRoutes() {
     return (
@@ -42,6 +43,7 @@ export function SiteRoutes() {
                         <Route path="tournaments" element={<PlaceholderPage name="Tournmanets Admin" />} />
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.MatchAdministrator]} />}>
+                        <Route path="matches" element={<MatchesAdminPage />} />
                         <Route path="process" element={<PlaceholderPage name="Results Processing" />} />
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.UserAdministrator]} />}>

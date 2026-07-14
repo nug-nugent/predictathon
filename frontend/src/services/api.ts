@@ -145,3 +145,18 @@ export async function postJsonAuthenticated<TResponse>(path: string, body: unkno
 
     return handleJsonResponse<TResponse>(response);
 }
+
+export async function putJsonAuthenticated<TResponse>(path: string, body: unknown): Promise<TResponse> {
+    const response = await authenticatedFetch(path, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+    return handleJsonResponse<TResponse>(response);
+}
+
+export async function deleteAuthenticated(path: string): Promise<void> {
+    const response = await authenticatedFetch(path, { method: "DELETE" });
+    return handleJsonResponse<void>(response);
+}
