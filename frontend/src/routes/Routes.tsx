@@ -12,6 +12,7 @@ import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
 import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResultsPage";
+import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
 
 export function SiteRoutes() {
     return (
@@ -31,7 +32,7 @@ export function SiteRoutes() {
                     <Route path="board/:id" element={<ThreadPage />} />
 
                     <Route path="stats" element={<PlaceholderPage name="Statistics" />} />
-                    <Route path="hof" element={<PlaceholderPage name="Hall of Fame" />} />
+                    <Route path="hof" element={<HallOfFamePage />} />
                     <Route path="rules" element={<RulesPage />} />
 
                     <Route path="profile/edit" element={<PlaceholderPage name="Edit Profile" />} />
