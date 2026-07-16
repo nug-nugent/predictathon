@@ -93,6 +93,16 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get the league table for a competition as it would be had all of a user's predictions come true.
+    /// </summary>
+    [HttpGet("{id:guid}/UserLeagueTable/{userId:guid}")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<CompetitionUserLeagueTableItem>>> GetUserLeagueTable(Guid id, Guid userId)
+    {
+        return Ok(await _competitionService.CompetitionUserLeagueTableGetAsync(id, userId));
+    }
+
+    /// <summary>
     /// Create a new competition.
     /// </summary>
     /// <param name="model"></param>

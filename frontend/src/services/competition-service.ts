@@ -27,3 +27,15 @@ export async function getAllCompetitionRegistrations(): Promise<UserCompetitionR
 export async function setDefaultCompetition(competitionId: string): Promise<void> {
     return putJsonAuthenticated<void>(`/Competition/${competitionId}/SetDefault`, {});
 }
+
+// Just the fields consumers outside admin need - the full CompetitionModel shape lives in
+// competition-admin-service.ts.
+export type CompetitionDetails = {
+    competitionID: string;
+    competitionName: string;
+    duplicateFixturesAllowed: boolean;
+};
+
+export async function getCompetitionDetails(competitionId: string): Promise<CompetitionDetails> {
+    return getJsonAuthenticated<CompetitionDetails>(`/Competition/${competitionId}`);
+}

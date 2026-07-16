@@ -48,6 +48,19 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get a user's prediction history for a competition, most recent first. Future matches are
+    /// only included when the caller is viewing their own history.
+    /// </summary>
+    [HttpGet("{competitionId:guid}/UserPredictions/{userId:guid}")]
+    public async Task<ActionResult<IReadOnlyList<UserMatchPredictionListItem>>> GetUserPredictionHistory(Guid competitionId, Guid userId, CancellationToken cancellationToken)
+    {
+        var includeFuture = userId == CurrentUserId;
+        var matches = await _matchService.GetUserPredictionHistoryAsync(userId, competitionId, includeFuture, cancellationToken);
+
+        return Ok(matches);
+    }
+
+    /// <summary>
     /// Get every match for a competition for admin management.
     /// </summary>
     /// <param name="competitionId"></param>

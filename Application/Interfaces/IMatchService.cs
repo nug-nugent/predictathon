@@ -33,6 +33,17 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a user's prediction history for a competition, most recent first. Future matches are
+    /// only included when <paramref name="includeFuture"/> is true (i.e. the viewer is the user
+    /// themselves) - other users only see predictions for matches that have already kicked off.
+    /// </summary>
+    Task<IReadOnlyList<UserMatchPredictionListItem>> GetUserPredictionHistoryAsync(
+        Guid userId,
+        Guid competitionId,
+        bool includeFuture,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets every match for a competition for admin management, optionally excluding already-played
     /// matches, ordered by date.
     /// </summary>
