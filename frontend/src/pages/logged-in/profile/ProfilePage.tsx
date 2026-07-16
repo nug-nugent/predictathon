@@ -3,14 +3,18 @@ import { Button, Center, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/re
 import { useParams } from "react-router";
 import { useUser } from "../../../hooks/useUser";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { getUserProfile, getUserPredictionHistory, getUserLeagueTable, type UserProfile } from "../../../services/profile-service";
+import {
+    getUserProfile, getUserPredictionHistory, getUserLeagueTable, getUserLeagueHistory,
+    type UserProfile, type CompetitionUserLeagueTableItem, type UserCompetitionLeagueHistoryItem,
+} from "../../../services/profile-service";
 import { getCompetitionDetails } from "../../../services/competition-service";
+import { getLeagueTable } from "../../../services/league-service";
 import type { MatchPrediction } from "../../../services/prediction-service";
-import type { CompetitionUserLeagueTableItem } from "../../../services/profile-service";
 import { ProfileCard } from "../../../components/profile/ProfileCard";
 import { ProfileStatisticsCard } from "../../../components/profile/ProfileStatisticsCard";
 import { ProfilePredictionsTable } from "../../../components/profile/ProfilePredictionsTable";
 import { ProfileLeagueTable } from "../../../components/profile/ProfileLeagueTable";
+import { ProfileLeagueHistoryChart } from "../../../components/profile/ProfileLeagueHistoryChart";
 import { ApiError } from "../../../services/api";
 
 export function ProfilePage() {
@@ -80,6 +84,8 @@ function ProfileCompetitionContent({ userId }: { userId: string }) {
 function ProfileCompetitionData({ userId, competitionId }: { userId: string; competitionId: string }) {
     const [predictions, setPredictions] = useState<MatchPrediction[] | null>(null);
     const [leagueTable, setLeagueTable] = useState<CompetitionUserLeagueTableItem[] | "hidden" | null>(null);
+    const [history, setHistory] = useState<UserCompetitionLeagueHistoryItem[] | null>(null);
+    const [worstPosition, setWorstPosition] = useState<number>(1);
     const [username, setUsername] = useState<string | null>(null);
     const [error, setError] = useState<ApiError | null>(null);
 
@@ -88,15 +94,19 @@ function ProfileCompetitionData({ userId, competitionId }: { userId: string; com
 
         const load = async () => {
             try {
-                const [profile, history, competition] = await Promise.all([
+                const [profile, matchHistory, competition, leagueHistory, table] = await Promise.all([
                     getUserProfile(userId),
                     getUserPredictionHistory(competitionId, userId),
                     getCompetitionDetails(competitionId),
+                    getUserLeagueHistory(competitionId, userId),
+                    getLeagueTable(competitionId),
                 ]);
 
                 if (cancelled) return;
                 setUsername(profile.username);
-                setPredictions(history);
+                setPredictions(matchHistory);
+                setHistory(leagueHistory);
+                setWorstPosition(table.reduce((max, r) => Math.max(max, r.leaguePosition), 1));
 
                 if (competition.duplicateFixturesAllowed) {
                     setLeagueTable("hidden");
@@ -120,7 +130,7 @@ function ProfileCompetitionData({ userId, competitionId }: { userId: string; com
         );
     }
 
-    if (predictions === null || leagueTable === null || username === null) {
+    if (predictions === null || leagueTable === null || username === null || history === null) {
         return (
             <Center mt={4}>
                 <Spinner />
@@ -132,6 +142,7 @@ function ProfileCompetitionData({ userId, competitionId }: { userId: string; com
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap={6}>
             <VStack align="stretch" gap={4}>
                 <ProfileStatisticsCard competitionId={competitionId} userId={userId} />
+                <ProfileLeagueHistoryChart history={history} worstPosition={worstPosition} />
                 {leagueTable !== "hidden" && <ProfileLeagueTable username={username} table={leagueTable} />}
             </VStack>
             <ProfilePredictionsTable predictions={predictions} />

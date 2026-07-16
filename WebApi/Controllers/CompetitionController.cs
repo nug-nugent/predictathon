@@ -103,6 +103,16 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get a user's league-position history for a competition, ordered by date ascending.
+    /// </summary>
+    [HttpGet("{id:guid}/UserLeagueHistory/{userId:guid}")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<UserCompetitionLeagueHistoryItem>>> GetUserLeagueHistory(Guid id, Guid userId, CancellationToken cancellationToken)
+    {
+        return Ok(await _competitionService.GetUserCompetitionLeagueHistoryAsync(userId, id, cancellationToken));
+    }
+
+    /// <summary>
     /// Create a new competition.
     /// </summary>
     /// <param name="model"></param>

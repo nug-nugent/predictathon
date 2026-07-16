@@ -16,6 +16,11 @@ public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel
     Task<IReadOnlyList<UserCompetitionRegistrationListItem>> GetUserCompetitionRegistrationListAsync(Guid userId);
 
     /// <summary>
+    /// Gets a user's league-position history for a competition, ordered by date ascending.
+    /// </summary>
+    Task<IReadOnlyList<UserCompetitionLeagueHistoryItem>> GetUserCompetitionLeagueHistoryAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Marks a competition as the user's default (unmarking any other), for it to be preselected on
     /// future logins. Fails with a <see cref="Errors.NotFoundError"/> if the user isn't registered for it.
     /// </summary>

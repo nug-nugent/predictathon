@@ -40,3 +40,16 @@ export type CompetitionUserLeagueTableItem = {
 export async function getUserLeagueTable(competitionId: string, userId: string): Promise<CompetitionUserLeagueTableItem[]> {
     return getJsonAuthenticated<CompetitionUserLeagueTableItem[]>(`/Competition/${competitionId}/UserLeagueTable/${userId}`);
 }
+
+// Matches Application/Models/UserCompetitionLeagueHistoryItem.cs.
+export type UserCompetitionLeagueHistoryItem = {
+    username: string;
+    date: string;
+    score: number;
+    leaguePosition: number;
+};
+
+/// A user's league-position history for a competition, ordered by date ascending.
+export async function getUserLeagueHistory(competitionId: string, userId: string): Promise<UserCompetitionLeagueHistoryItem[]> {
+    return getJsonAuthenticated<UserCompetitionLeagueHistoryItem[]>(`/Competition/${competitionId}/UserLeagueHistory/${userId}`);
+}

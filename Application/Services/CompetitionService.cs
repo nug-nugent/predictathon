@@ -70,6 +70,17 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return Result.Ok();
     }
 
+    public async Task<IReadOnlyList<UserCompetitionLeagueHistoryItem>> GetUserCompetitionLeagueHistoryAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+        };
+
+        return await _appDbContext.CallStoredProcedureAsync<UserCompetitionLeagueHistoryItem>("UserCompetitionLeagueHistoryListGet", parameters, cancellationToken);
+    }
+
     public async Task SetUserCompetitionLeagueHistoryAsync()
     {
         var competitions = await _appDbContext.Competition.ToListAsync();
