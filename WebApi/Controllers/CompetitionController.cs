@@ -46,6 +46,30 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get every competition either registered to or open for registration, most recently started first.
+    /// </summary>
+    [HttpGet("Registrations")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<UserCompetitionRegistrationListItem>>> GetRegistrations()
+    {
+        var registrations = await _competitionService.GetUserCompetitionRegistrationListAsync(CurrentUserId);
+
+        return Ok(registrations);
+    }
+
+    /// <summary>
+    /// Mark a competition as the current user's default, for it to be preselected on future logins.
+    /// </summary>
+    [HttpPut("{competitionId:guid}/SetDefault")]
+    [Authorize]
+    public async Task<ActionResult> SetDefault(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var result = await _competitionService.SetDefaultCompetitionAsync(CurrentUserId, competitionId, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
     /// Get a competition by its ID.
     /// </summary>
     /// <param name="id"></param>

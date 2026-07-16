@@ -20,7 +20,8 @@ const LoggedInCompetitionProvider = ({ children }: { children: React.ReactNode }
 
                 const stored = sessionStorage.getItem(STORAGE_KEY);
                 const storedStillValid = stored !== null && list.some((c) => c.competitionID === stored);
-                const resolved = storedStillValid ? stored : (list[0]?.competitionID ?? null);
+                const dbDefault = list.find((c) => c.isDefaultCompetition)?.competitionID;
+                const resolved = storedStillValid ? stored : (dbDefault ?? list[0]?.competitionID ?? null);
 
                 setCurrentCompetitionIdState(resolved);
 

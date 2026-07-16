@@ -18,6 +18,7 @@ BEGIN
 		, Competition.StartDate
 		, Competition.EntranceFee
 		, Registered = CAST(CASE WHEN UserCompetition.UserCompetitionID IS NULL THEN 0 ELSE 1 END AS BIT)
+		, IsDefaultCompetition = ISNULL(UserCompetition.IsDefaultCompetition, CAST(0 AS BIT))
 	FROM
 		Competition
 		LEFT JOIN (SELECT * FROM UserCompetition WHERE UserID = @UserID) UserCompetition ON Competition.CompetitionID = UserCompetition.CompetitionID

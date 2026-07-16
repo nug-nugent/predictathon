@@ -2,6 +2,7 @@ import { Button, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useCompetition } from "../../../hooks/useCompetition";
+import { setDefaultCompetition } from "../../../services/competition-service";
 
 const captionProps = {
     fontSize: { base: "xs", md: "xs" },
@@ -26,6 +27,16 @@ export function CompetitionSelector() {
         return <Text {...captionProps}>{current?.competitionName}</Text>;
     }
 
+    // Switches immediately (sessionStorage, via setCurrentCompetitionId) so the UI never waits on
+    // the network; persisting the choice as the DB-backed default happens in the background and
+    // is best-effort - a failure there shouldn't stop the user switching competitions.
+    const selectCompetition = (competitionId: string) => {
+        setCurrentCompetitionId(competitionId);
+        setDefaultCompetition(competitionId).catch((err) => {
+            console.error("Failed to persist default competition", err);
+        });
+    };
+
     return (
         <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}
             positioning={{ placement: "bottom-start" }}>
@@ -46,7 +57,7 @@ export function CompetitionSelector() {
                                     justifyContent="flex-start"
                                     variant="ghost"
                                     colorPalette="blue"
-                                    onClick={() => setCurrentCompetitionId(c.competitionID)}
+                                    onClick={() => selectCompetition(c.competitionID)}
                                 >
                                     {c.competitionName}
                                 </Button>

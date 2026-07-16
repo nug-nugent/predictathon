@@ -51,6 +51,27 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
     }
 
     /// <inheritdoc />
+    public async Task<UserMatchPredictionListItem?> GetNextUnpredictedMatchAsync(
+        Guid userId,
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+            new SqlParameter("@DateFrom", SqlDbType.DateTime) { Value = UkClock.Now.AddMinutes(5) },
+        };
+
+        var matches = await _dbContext.CallStoredProcedureAsync<UserMatchPredictionListItem>("UserMatchPredictionListGet", parameters, cancellationToken);
+
+        return matches
+            .Where(m => m.HomeTeamGoals is null)
+            .OrderBy(m => m.MatchDateTime)
+            .FirstOrDefault();
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<MatchModel>> GetForAdminAsync(
         Guid competitionId,
         bool includePlayed,

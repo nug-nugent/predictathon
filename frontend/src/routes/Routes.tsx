@@ -40,6 +40,8 @@ export function SiteRoutes() {
 
                     <Route path="profile/edit" element={<PlaceholderPage name="Edit Profile" />} />
                     <Route path="profile/:id" element={<ProfilePage />} />
+
+                    <Route path="competition/:id/register" element={<PlaceholderPage name="Competition Registration" />} />
                 </Route>
 
                 // Protected routes for admin users - each gated behind the specific role it needs

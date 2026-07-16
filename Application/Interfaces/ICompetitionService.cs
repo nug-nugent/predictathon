@@ -1,4 +1,5 @@
-﻿using Predictathon.Application.Interfaces.Base;
+﻿using FluentResults;
+using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Entities;
 
@@ -13,6 +14,12 @@ public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel
     Task<IReadOnlyList<Competition>> GetCompetitionListForLoginPageAsync();
 
     Task<IReadOnlyList<UserCompetitionRegistrationListItem>> GetUserCompetitionRegistrationListAsync(Guid userId);
+
+    /// <summary>
+    /// Marks a competition as the user's default (unmarking any other), for it to be preselected on
+    /// future logins. Fails with a <see cref="Errors.NotFoundError"/> if the user isn't registered for it.
+    /// </summary>
+    Task<Result> SetDefaultCompetitionAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default);
 
     Task SetUserCompetitionLeagueHistoryAsync();
 

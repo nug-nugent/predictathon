@@ -1,4 +1,4 @@
-import { getJsonAuthenticated } from "./api";
+import { getJsonAuthenticated, putJsonAuthenticated } from "./api";
 
 // Matches Application/Models/UserCompetitionRegistrationListItem.cs.
 export type UserCompetitionRegistration = {
@@ -9,10 +9,21 @@ export type UserCompetitionRegistration = {
     startDate: string;
     entranceFee: number;
     registered: boolean;
+    isDefaultCompetition: boolean;
 };
 
 /// Competitions the current user is registered for, most-recently-started first
 /// (see CompetitionController.GetMyRegistrations).
 export async function getMyRegisteredCompetitions(): Promise<UserCompetitionRegistration[]> {
     return getJsonAuthenticated<UserCompetitionRegistration[]>("/Competition/MyRegistrations");
+}
+
+/// Every competition either registered to or open for registration, most-recently-started first.
+export async function getAllCompetitionRegistrations(): Promise<UserCompetitionRegistration[]> {
+    return getJsonAuthenticated<UserCompetitionRegistration[]>("/Competition/Registrations");
+}
+
+/// Marks a competition as the current user's default, for it to be preselected on future logins.
+export async function setDefaultCompetition(competitionId: string): Promise<void> {
+    return putJsonAuthenticated<void>(`/Competition/${competitionId}/SetDefault`, {});
 }

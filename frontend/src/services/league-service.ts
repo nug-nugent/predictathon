@@ -15,6 +15,11 @@ export type LeagueTableItem = {
     noPredictions: number;
 };
 
-export async function getLeagueTable(competitionId: string): Promise<LeagueTableItem[]> {
-    return getJsonAuthenticated<LeagueTableItem[]>(`/League/${competitionId}`);
+export async function getLeagueTable(competitionId: string, dateFrom?: string, dateTo?: string): Promise<LeagueTableItem[]> {
+    const params = new URLSearchParams();
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    const query = params.toString();
+
+    return getJsonAuthenticated<LeagueTableItem[]>(`/League/${competitionId}${query ? `?${query}` : ""}`);
 }

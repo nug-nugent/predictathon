@@ -9,4 +9,5 @@ public class UserCompetitionRegistrationListItem
     public DateTime StartDate { get; set; }
     public decimal EntranceFee { get; set; }
     public bool Registered { get; set; }
+    public bool IsDefaultCompetition { get; set; }
 }

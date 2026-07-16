@@ -1,6 +1,8 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using FluentResults;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Base;
 using Predictathon.Application.Interfaces.Persistence;
@@ -43,6 +45,29 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         var results = await _appDbContext.CallStoredProcedureAsync<UserCompetitionRegistrationListItem>("UserCompetitionRegistrationListGet", parameters);
 
         return results;
+    }
+
+    public async Task<Result> SetDefaultCompetitionAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        var registrations = await _appDbContext.UserCompetition
+            .Where(uc => uc.UserID == userId)
+            .ToListAsync(cancellationToken);
+
+        var target = registrations.FirstOrDefault(uc => uc.CompetitionID == competitionId);
+        if (target is null)
+        {
+            return Result.Fail(new NotFoundError("You are not registered for this competition."));
+        }
+
+        foreach (var registration in registrations)
+        {
+            registration.IsDefaultCompetition = registration.CompetitionID == competitionId;
+        }
+
+        _appDbContext.UpdateRange(registrations);
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok();
     }
 
     public async Task SetUserCompetitionLeagueHistoryAsync()
