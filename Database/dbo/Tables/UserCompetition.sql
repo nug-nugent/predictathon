@@ -9,7 +9,7 @@
     [LastEmailReminderSent] DATETIME         NULL,
     CONSTRAINT [PK_UserCompetition] PRIMARY KEY CLUSTERED ([UserCompetitionID] ASC),
     CONSTRAINT [FK_UserCompetition_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_UserCompetition_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_UserCompetition_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 

@@ -9,8 +9,8 @@
     [IssueDate]         DATETIME         NOT NULL,
     CONSTRAINT [PK_PaymentCredit] PRIMARY KEY CLUSTERED ([PaymentCreditID] ASC),
     CONSTRAINT [FK_PaymentCredit_Competition] FOREIGN KEY ([ForCompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_PaymentCredit_IssuedByUser] FOREIGN KEY ([IssuedByUserID]) REFERENCES [dbo].[User] ([UserID]),
-    CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_PaymentCredit_IssuedByUser] FOREIGN KEY ([IssuedByUserID]) REFERENCES [Identity].[Users] ([Id]),
+    CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 

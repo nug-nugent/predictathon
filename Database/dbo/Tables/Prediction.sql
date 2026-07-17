@@ -11,7 +11,7 @@
     [AutoUpdatedDueToLatePrediction] BIT              CONSTRAINT [DF_Prediction_AutoUpdatedDueToLatePrediction] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Prediction] PRIMARY KEY CLUSTERED ([PredictionID] ASC),
     CONSTRAINT [FK_Prediction_Match] FOREIGN KEY ([MatchID]) REFERENCES [dbo].[Match] ([MatchID]),
-    CONSTRAINT [FK_Prediction_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[User] ([UserID]),
+    CONSTRAINT [FK_Prediction_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [UK_Prediction_MatchID_UserID] UNIQUE NONCLUSTERED ([MatchID] ASC, [UserID] ASC)
 );
 

@@ -45,10 +45,10 @@ BEGIN
 	LastMessageData AS (
 		SELECT
 			lm.MessageThreadID,
-			u.Username AS LastPostedByUsername
+			u.UserName AS LastPostedByUsername
 		FROM
 			LastMessages lm
-			LEFT JOIN [User] u ON lm.PostedByUserID = u.UserID
+			LEFT JOIN [Identity].[Users] u ON lm.PostedByUserID = u.Id
 		WHERE
 			lm.rn = 1
 	)
@@ -56,7 +56,7 @@ BEGIN
 	SELECT
 		mt.MessageThreadID
 		, mt.ThreadSubject
-		, StartedByUsername = su.Username
+		, StartedByUsername = su.UserName
 		, mt.StartedDateTime
 		, mt.HiddenFromPublic
 		, MessageCount = COALESCE(mc.MessageCount, 0)
@@ -71,7 +71,7 @@ BEGIN
 		MessageThread mt
 		LEFT JOIN MessageCounts mc ON mt.MessageThreadID = mc.MessageThreadID
 		LEFT JOIN LastMessageData lmd ON mt.MessageThreadID = lmd.MessageThreadID
-		LEFT JOIN [User] su ON mt.StartedByUserID = su.UserID
+		LEFT JOIN [Identity].[Users] su ON mt.StartedByUserID = su.Id
 		LEFT JOIN MessageThreadRead rt ON rt.MessageThreadID = mt.MessageThreadID AND rt.UserID = @pUserID
 	WHERE
 		(@pIncludeHiddenFromPublic = CAST(1 AS BIT) OR mt.HiddenFromPublic = 0)

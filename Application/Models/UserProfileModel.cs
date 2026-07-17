@@ -1,7 +1,7 @@
 namespace Predictathon.Application.Models;
 
 /// <summary>
-/// Publicly-viewable profile information for a user (dbo.User).
+/// Publicly-viewable profile information for a user (Identity.Users).
 /// </summary>
 public class UserProfileModel
 {

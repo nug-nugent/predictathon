@@ -10,10 +10,10 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		[User].Username
-		, [User].UserID
+		[User].UserName AS Username
+		, [User].Id AS UserID
 		, PredictionsDue.UserCompetitionID
-		, [User].EmailAddress
+		, [User].Email AS EmailAddress
 		, PredictionsDue.CompetitionName
 		, PredictionsDue.NextPredictionDue
 	FROM
@@ -36,12 +36,12 @@ BEGIN
 			, UserCompetition.UserCompetitionID
 			, UserCompetition.LastEmailReminderSent
 			, Competition.CompetitionName) PredictionsDue
-		INNER JOIN [User] ON PredictionsDue.UserID = [User].UserID
+		INNER JOIN [Identity].[Users] AS [User] ON PredictionsDue.UserID = [User].Id
 	WHERE
 		[User].EmailPredictionReminderDays IS NOT NULL
 		AND CAST(NextPredictionDue AS DATE) <= CAST(DATEADD(DAY, [User].EmailPredictionReminderDays, GETDATE()) AS DATE)
 		AND (LastEmailReminderSent IS NULL OR CAST(LastEmailReminderSent AS DATE) < CAST(DATEADD(DAY, -[User].EmailPredictionReminderDays, NextPredictionDue) AS DATE))
 	ORDER BY
-		[User].UserID
+		[User].Id
 		, PredictionsDue.UserCompetitionID
 END

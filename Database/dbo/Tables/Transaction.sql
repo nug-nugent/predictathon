@@ -19,7 +19,7 @@
     [Comments]             VARCHAR (100)    NULL,
     CONSTRAINT [PK_Transaction] PRIMARY KEY CLUSTERED ([TransactionID] ASC),
     CONSTRAINT [FK_Transaction_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_Transaction_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[User] ([UserID]),
+    CONSTRAINT [FK_Transaction_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [FK_Transaction_UserCompetition1] FOREIGN KEY ([UserCompetitionID]) REFERENCES [dbo].[UserCompetition] ([UserCompetitionID])
 );
 

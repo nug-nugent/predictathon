@@ -12,18 +12,18 @@ BEGIN
 
 	SELECT
 		CASE WHEN Prediction.PredictionID IS NULL THEN CAST(0x0 AS UNIQUEIDENTIFIER) ELSE Prediction.PredictionID END AS PredictionID
-		, [User].Username
-		, [User].UserID
+		, [User].UserName AS Username
+		, [User].Id AS UserID
 		, Prediction.HomeTeamGoals
 		, Prediction.AwayTeamGoals
 		, Prediction.Score
 	FROM
 		UserCompetition
 		INNER JOIN Match ON UserCompetition.CompetitionID = Match.CompetitionID AND Match.MatchID = @MatchID
-		INNER JOIN [User] ON [User].UserID = UserCompetition.UserID
-		LEFT JOIN Prediction ON Prediction.MatchID = Match.MatchID AND Prediction.UserID = [User].UserID AND Prediction.Invalid = 0
+		INNER JOIN [Identity].[Users] AS [User] ON [User].Id = UserCompetition.UserID
+		LEFT JOIN Prediction ON Prediction.MatchID = Match.MatchID AND Prediction.UserID = [User].Id AND Prediction.Invalid = 0
 	ORDER BY
 		Prediction.Score DESC
 		, Prediction.GoalDifference DESC -- GD is always 0 or negative; 0 is the optimal result
-		, [User].Username;
+		, [User].UserName;
 END;

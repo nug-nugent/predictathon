@@ -41,8 +41,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     public virtual DbSet<Transaction> Transaction => Set<Transaction>();
 
-    public virtual DbSet<User> User => Set<User>();
-
     public virtual DbSet<UserCompetition> UserCompetition => Set<UserCompetition>();
 
     public virtual DbSet<UserCompetitionLeagueHistory> UserCompetitionLeagueHistory => Set<UserCompetitionLeagueHistory>();
@@ -51,7 +49,7 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
     {
         modelBuilder.Entity<Competition>(entity =>
         {
-            entity.Property(e => e.CompetitionID).HasDefaultValueSql("NEWID()");
+            entity.Property(e => e.CompetitionID).HasDefaultValueSql("newid()");
             entity.Property(e => e.CompetitionName)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -85,18 +83,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.HasOne(d => d.Competition).WithMany(p => p.HallOfFame)
                 .HasForeignKey(d => d.CompetitionID)
                 .HasConstraintName("FK_HallOfFame_Competition");
-
-            entity.HasOne(d => d.SecondPlaceUser).WithMany(p => p.HallOfFameSecondPlaceUser)
-                .HasForeignKey(d => d.SecondPlaceUserID)
-                .HasConstraintName("FK_HallOfFame_User1");
-
-            entity.HasOne(d => d.ThirdPlaceUser).WithMany(p => p.HallOfFameThirdPlaceUser)
-                .HasForeignKey(d => d.ThirdPlaceUserID)
-                .HasConstraintName("FK_HallOfFame_User2");
-
-            entity.HasOne(d => d.WinnerUser).WithMany(p => p.HallOfFameWinnerUser)
-                .HasForeignKey(d => d.WinnerUserID)
-                .HasConstraintName("FK_HallOfFame_User");
         });
 
         modelBuilder.Entity<Match>(entity =>
@@ -144,11 +130,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.MessageThreadID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Message_MessageThread");
-
-            entity.HasOne(d => d.PostedByUser).WithMany(p => p.Message)
-                .HasForeignKey(d => d.PostedByUserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Message_User");
         });
 
         modelBuilder.Entity<MessageReaction>(entity =>
@@ -166,11 +147,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.MessageID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MessageReaction_Message");
-
-            entity.HasOne(d => d.User).WithMany(p => p.MessageReaction)
-                .HasForeignKey(d => d.UserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_MessageReaction_User");
         });
 
         modelBuilder.Entity<MessageThread>(entity =>
@@ -182,16 +158,11 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.Property(e => e.ThreadSubject)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-
-            entity.HasOne(d => d.StartedByUser).WithMany(p => p.MessageThread)
-                .HasForeignKey(d => d.StartedByUserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_MessageThread_User");
         });
 
         modelBuilder.Entity<MessageThreadRead>(entity =>
         {
-            entity.HasIndex(e => new { e.UserID, e.MessageThreadID }, "IX_MessageThreadRead_UserID_MessageThreadID");
+            entity.HasIndex(e => new { e.UserID, e.MessageThreadID }, "IX_MessageThreadRead_UserID_MessageThreadID").IsUnique();
 
             entity.Property(e => e.LastReadDateTime).HasColumnType("datetime");
 
@@ -199,11 +170,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.MessageThreadID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MessageThreadRead_MessageThread");
-
-            entity.HasOne(d => d.User).WithMany(p => p.MessageThreadRead)
-                .HasForeignKey(d => d.UserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_MessageThreadRead_User");
         });
 
         modelBuilder.Entity<PaymentCredit>(entity =>
@@ -221,15 +187,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.ForCompetitionID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PaymentCredit_Competition");
-
-            entity.HasOne(d => d.IssuedByUser).WithMany(p => p.PaymentCreditIssuedByUser)
-                .HasForeignKey(d => d.IssuedByUserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PaymentCredit_IssuedByUser");
-
-            entity.HasOne(d => d.UsedByUser).WithMany(p => p.PaymentCreditUsedByUser)
-                .HasForeignKey(d => d.UsedByUserID)
-                .HasConstraintName("FK_PaymentCredit_UsedByUser");
         });
 
         modelBuilder.Entity<Prediction>(entity =>
@@ -246,11 +203,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.MatchID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Prediction_Match");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Prediction)
-                .HasForeignKey(d => d.UserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Prediction_User");
         });
 
         modelBuilder.Entity<PredictionHistory>(entity =>
@@ -333,43 +285,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.HasOne(d => d.UserCompetition).WithMany(p => p.Transaction)
                 .HasForeignKey(d => d.UserCompetitionID)
                 .HasConstraintName("FK_Transaction_UserCompetition1");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Transaction)
-                .HasForeignKey(d => d.UserID)
-                .HasConstraintName("FK_Transaction_User");
-        });
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.Property(e => e.UserID).ValueGeneratedNever();
-            entity.Property(e => e.CanViewMessageboard).HasDefaultValue(true, "DF_User_CanViewMessageboard");
-            entity.Property(e => e.Caption)
-                .HasMaxLength(30)
-                .IsUnicode(false);
-            entity.Property(e => e.EmailAddress)
-                .HasMaxLength(128)
-                .IsUnicode(false);
-            entity.Property(e => e.FavouriteTeam)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Forenames)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.LastLoginDateTime).HasColumnType("datetime");
-            entity.Property(e => e.LastViewedMessageboard).HasColumnType("datetime");
-            entity.Property(e => e.Location)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Password)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.ProfileText).IsUnicode(false);
-            entity.Property(e => e.Surname)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Username)
-                .HasMaxLength(50)
-                .IsUnicode(false);
         });
 
         modelBuilder.Entity<UserCompetition>(entity =>
@@ -385,11 +300,6 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.CompetitionID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserCompetition_Competition");
-
-            entity.HasOne(d => d.User).WithMany(p => p.UserCompetition)
-                .HasForeignKey(d => d.UserID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_UserCompetition_User");
         });
 
         modelBuilder.Entity<UserCompetitionLeagueHistory>(entity =>

@@ -12,9 +12,9 @@
     [ImageFilename]     VARCHAR (40)     NULL,
     CONSTRAINT [PK_HallOfFame] PRIMARY KEY CLUSTERED ([HallOfFameID] ASC),
     CONSTRAINT [FK_HallOfFame_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_HallOfFame_User] FOREIGN KEY ([WinnerUserID]) REFERENCES [dbo].[User] ([UserID]),
-    CONSTRAINT [FK_HallOfFame_User1] FOREIGN KEY ([SecondPlaceUserID]) REFERENCES [dbo].[User] ([UserID]),
-    CONSTRAINT [FK_HallOfFame_User2] FOREIGN KEY ([ThirdPlaceUserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_HallOfFame_User] FOREIGN KEY ([WinnerUserID]) REFERENCES [Identity].[Users] ([Id]),
+    CONSTRAINT [FK_HallOfFame_User1] FOREIGN KEY ([SecondPlaceUserID]) REFERENCES [Identity].[Users] ([Id]),
+    CONSTRAINT [FK_HallOfFame_User2] FOREIGN KEY ([ThirdPlaceUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 

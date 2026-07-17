@@ -1,7 +1,7 @@
 <Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<SqlServerVersion>Sql160</SqlServerVersion>
+		<SqlServerVersion>Sql150</SqlServerVersion>
 		<RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
 		<!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
 	</PropertyGroup>
@@ -22,4 +22,10 @@
 	<PropertyGroup>
 		<!-- Refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#publishing-support for supported publishing options -->
 	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Drops the FKs referencing dbo.User and copies any not-yet-migrated dbo.User accounts
+		     into Identity.Users before the schema changes below (which drop dbo.User) are applied. -->
+		<PreDeploy Include="Pre-Deployment\Script.PreDeployment.sql" />
+	</ItemGroup>
 </Project>

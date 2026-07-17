@@ -30,7 +30,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 builder.Services.AddScoped<IGenericDbContext, ApplicationDbContext>();
 
-// Configure Identity (new AspNetUsers/AspNetRoles schema - separate from the legacy dbo.User table)
+// Configure Identity (Identity.Users/Identity.Roles schema)
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {

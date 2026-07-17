@@ -1,12 +1,10 @@
 using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
-using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces;
-using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Identity;
 
@@ -24,8 +22,9 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IJwtTokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
-    private readonly IApplicationDbContext _dbContext;
     private readonly IAvatarService _avatarService;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
     private readonly IValidator<RegisterModel>? _registerValidator;
     private readonly IValidator<LoginModel>? _loginValidator;
 
@@ -33,16 +32,18 @@ public class AuthService : IAuthService
         UserManager<ApplicationUser> userManager,
         IJwtTokenService tokenService,
         IRefreshTokenService refreshTokenService,
-        IApplicationDbContext dbContext,
         IAvatarService avatarService,
+        IEmailService emailService,
+        IConfiguration configuration,
         IValidator<RegisterModel>? registerValidator = null,
         IValidator<LoginModel>? loginValidator = null)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
-        _dbContext = dbContext;
         _avatarService = avatarService;
+        _emailService = emailService;
+        _configuration = configuration;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
     }
@@ -92,6 +93,14 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByNameAsync(model.UserName)
             ?? await _userManager.FindByEmailAsync(model.UserName);
 
+        if (user is not null && !await _userManager.HasPasswordAsync(user))
+        {
+            // A real account (e.g. migrated from the legacy dbo.User table) with no usable
+            // password yet - a distinct failure from wrong credentials, so the frontend can point
+            // them at password reset instead of implying they mistyped something.
+            return Result.Fail<AuthTokenResult>(new PasswordResetRequiredError());
+        }
+
         // Deliberately generic message either way - don't reveal whether the username exists.
         if (user is null || !await _userManager.CheckPasswordAsync(user, model.Password))
         {
@@ -121,13 +130,9 @@ public class AuthService : IAuthService
             return Result.Fail<AuthResultModel>(new UnauthorizedError("The refresh token is invalid or has expired."));
         }
 
-        // Self-healing: covers any account whose dbo.User row wasn't created at registration
-        // time (e.g. it predates this fix) - the next silent refresh backfills it.
-        await EnsureDboUserAsync(user, cancellationToken);
-
         var roles = await _userManager.GetRolesAsync(user);
         var response = _tokenService.GenerateToken(user, roles);
-        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, await HasUploadedImageAsync(user.Id, cancellationToken));
+        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded);
 
         return Result.Ok(response);
     }
@@ -141,19 +146,56 @@ public class AuthService : IAuthService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Result> ForgotPassword(ForgotPasswordModel model, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByNameAsync(model.UserNameOrEmail)
+            ?? await _userManager.FindByEmailAsync(model.UserNameOrEmail);
+
+        // Always succeed regardless of whether a match was found - same "don't reveal whether the
+        // account exists" reasoning as Login.
+        if (user is null || string.IsNullOrEmpty(user.Email))
+        {
+            return Result.Ok();
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? string.Empty).TrimEnd('/');
+        var resetUrl = $"{frontendBaseUrl}/password-reset/confirm?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+        await _emailService.SendAsync(
+            user.Email,
+            "Reset your Predictathon password",
+            $"""<p>Click the link below to reset your Predictathon password:</p><p><a href="{resetUrl}">{resetUrl}</a></p><p>If you didn't request this, you can safely ignore this email.</p>""",
+            cancellationToken);
+
+        return Result.Ok();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(model.UserId.ToString());
+        if (user is null)
+        {
+            return Result.Fail(new PropertyValidationError(string.Empty, "This password reset link is invalid or has expired."));
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => new PropertyValidationError(string.Empty, e.Description)).ToArray();
+            return Result.Fail(errors);
+        }
+
+        return Result.Ok();
+    }
+
     private async Task<AuthTokenResult> IssueTokensAsync(ApplicationUser user, bool rememberMe, CancellationToken cancellationToken)
     {
-        // dbo.User is a separate, legacy table that every reporting feature (league tables, Hall
-        // of Fame, statistics, prediction history) reads from - Identity's own store has no
-        // knowledge of it. Registration used to leave a new account without a matching row at
-        // all, making them invisible everywhere else. Ensuring it here (and on refresh) closes
-        // that gap without a one-off migration step - a deliberate stopgap until dbo.User is
-        // migrated out entirely.
-        await EnsureDboUserAsync(user, cancellationToken);
-
         var roles = await _userManager.GetRolesAsync(user);
         var response = _tokenService.GenerateToken(user, roles);
-        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, await HasUploadedImageAsync(user.Id, cancellationToken));
+        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded);
 
         var refreshLifetime = rememberMe ? RememberedRefreshTokenLifetime : UnrememberedRefreshTokenLifetime;
         var refreshTokenExpiresAtUtc = DateTime.UtcNow.Add(refreshLifetime);
@@ -167,43 +209,4 @@ public class AuthService : IAuthService
         };
     }
 
-    private async Task EnsureDboUserAsync(ApplicationUser user, CancellationToken cancellationToken)
-    {
-        var exists = await _dbContext.User.AnyAsync(u => u.UserID == user.Id, cancellationToken);
-        if (exists)
-        {
-            return;
-        }
-
-        var dboUser = new Domain.Entities.User
-        {
-            UserID = user.Id,
-            Username = user.UserName ?? user.Id.ToString(),
-            // dbo.User.Password is a vestigial NOT NULL column from before Identity existed -
-            // Identity's own ApplicationUser.PasswordHash is the only credential store now.
-            Password = "(managed by Identity)",
-            EmailAddress = user.Email,
-            // The column's DB-level DEFAULT ((1)) never applies here - EF Core always sends the
-            // CLR value (false) explicitly in the INSERT, so this has to be set here to actually
-            // grant new users messageboard access by default, matching legacy behaviour.
-            CanViewMessageboard = true,
-        };
-
-        await _dbContext.AddAsync(dboUser, cancellationToken);
-
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DuplicateKeyException)
-        {
-            // Another concurrent request (e.g. two tabs logging in at once) already created it.
-        }
-    }
-
-    private async Task<bool> HasUploadedImageAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var user = await _dbContext.User.FirstOrDefaultAsync(u => u.UserID == userId, cancellationToken);
-        return user?.ImageUploaded ?? false;
-    }
 }

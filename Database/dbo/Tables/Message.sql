@@ -9,7 +9,7 @@
     [UserTotalMessageboardPosts] INT              CONSTRAINT [DF_Message_UserTotalMessageboardPosts] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Message] PRIMARY KEY CLUSTERED ([MessageID] ASC),
     CONSTRAINT [FK_Message_MessageThread] FOREIGN KEY ([MessageThreadID]) REFERENCES [dbo].[MessageThread] ([MessageThreadID]),
-    CONSTRAINT [FK_Message_User] FOREIGN KEY ([PostedByUserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_Message_User] FOREIGN KEY ([PostedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 

@@ -57,14 +57,14 @@ BEGIN
 			UserCompetition
 			INNER JOIN (
 				SELECT
-					[User].UserID
-					, LeaguePosition = ROW_NUMBER() OVER(ORDER BY 
+					[User].Id AS UserID
+					, LeaguePosition = ROW_NUMBER() OVER(ORDER BY
 														ISNULL(SUM(Prediction.Score), 0) DESC
 														, ISNULL(SUM(Prediction.GoalDifference), 0) DESC
 														, SUM(CASE WHEN Prediction.Score = 3 THEN 1 ELSE 0 END) DESC
 														, SUM(CASE WHEN Prediction.Score = 2 THEN 1 ELSE 0 END) DESC
 														, SUM(CASE WHEN Prediction.Score = 1 THEN 1 ELSE 0 END) DESC
-														, [User].Username
+														, [User].UserName
 													)
 					, Score = ISNULL(SUM(Prediction.Score), 0)
 					, AverageGoalDifference = CAST(ISNULL(AVG(CAST(Prediction.GoalDifference AS DECIMAL(9,2))), 0) AS DECIMAL(9,2))
@@ -75,15 +75,15 @@ BEGIN
 					, NoPointers = SUM(CASE WHEN Prediction.Score = 0 THEN 1 ELSE 0 END)
 					, NoPredictions = SUM(CASE WHEN Prediction.PredictionID IS NULL THEN 1 ELSE 0 END)
 				FROM
-					[User]
+					[Identity].[Users] AS [User]
 					CROSS JOIN Match
-					LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID AND [User].UserID = Prediction.UserID
+					LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID AND [User].Id = Prediction.UserID
 				WHERE
 					CAST(Match.MatchDateTime AS DATE) <= @Date
 					AND Match.CompetitionID = @CompetitionID
 				GROUP BY
-					[User].Username
-					, [User].UserID	
+					[User].UserName
+					, [User].Id
 			) LeagueTable ON UserCompetition.UserID = LeagueTable.UserID
 		WHERE
 			UserCompetition.CompetitionID = @CompetitionID

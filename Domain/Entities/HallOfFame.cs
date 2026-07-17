@@ -31,10 +31,4 @@ public partial class HallOfFame
     public string? ImageFilename { get; set; }
 
     public virtual Competition? Competition { get; set; }
-
-    public virtual User? SecondPlaceUser { get; set; }
-
-    public virtual User? ThirdPlaceUser { get; set; }
-
-    public virtual User? WinnerUser { get; set; }
 }

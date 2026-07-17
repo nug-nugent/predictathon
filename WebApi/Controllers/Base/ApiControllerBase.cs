@@ -159,6 +159,18 @@ namespace Predictathon.WebApi.Controllers.Base
                 return ProblemResult(pd);
             }
 
+            var passwordResetRequired = errors.OfType<PasswordResetRequiredError>().FirstOrDefault();
+            if (passwordResetRequired is not null)
+            {
+                var pd = BuildProblemDetails(
+                    status: StatusCodes.Status400BadRequest,
+                    type: "https://example.com/probs/password-reset-required",
+                    title: "Password Reset Required",
+                    detail: passwordResetRequired.Message);
+
+                return ProblemResult(pd);
+            }
+
             var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var err in errors)

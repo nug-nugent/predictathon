@@ -6,20 +6,29 @@ export function getHubUrl(hubPath: string): string {
     return `${API_BASE_URL.replace(/\/api\/?$/, "")}${hubPath}`;
 }
 
+// The `type` value AuthController/ApiControllerBase uses for a login failure caused by an
+// account having no usable password yet (e.g. one migrated from the legacy dbo.User table) -
+// lets callers show a "reset your password" prompt instead of a generic login failure.
+export const PASSWORD_RESET_REQUIRED_ERROR_TYPE = "https://example.com/probs/password-reset-required";
+
 // Thrown for any failed API call. `messages` holds human-readable error text extracted from the
-// API's RFC7807 ProblemDetails response where available.
+// API's RFC7807 ProblemDetails response where available. `type` is the ProblemDetails `type` URI,
+// letting callers distinguish specific failure kinds (see PASSWORD_RESET_REQUIRED_ERROR_TYPE).
 export class ApiError extends Error {
     status: number;
     messages: string[];
+    type?: string;
 
-    constructor(status: number, messages: string[]) {
+    constructor(status: number, messages: string[], type?: string) {
         super(messages.join(" "));
         this.status = status;
         this.messages = messages;
+        this.type = type;
     }
 }
 
 type ProblemDetails = {
+    type?: string;
     title?: string;
     detail?: string;
     errors?: Record<string, string[]>;
@@ -27,9 +36,11 @@ type ProblemDetails = {
 
 async function toApiError(response: Response): Promise<ApiError> {
     let messages: string[] = [];
+    let type: string | undefined;
 
     try {
         const problem: ProblemDetails = await response.json();
+        type = problem.type;
         if (problem.errors) {
             messages = Object.values(problem.errors).flat();
         } else if (problem.detail) {
@@ -45,7 +56,7 @@ async function toApiError(response: Response): Promise<ApiError> {
         messages = [`The request failed (${response.status}).`];
     }
 
-    return new ApiError(response.status, messages);
+    return new ApiError(response.status, messages, type);
 }
 
 async function handleJsonResponse<TResponse>(response: Response): Promise<TResponse> {

@@ -43,6 +43,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[MessageThreadRead]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[PaymentCredit]",
          "ObjectType": 0
       },
@@ -64,10 +68,6 @@
       },
       {
          "Name": "[dbo].[Transaction]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[User]",
          "ObjectType": 0
       },
       {

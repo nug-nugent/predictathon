@@ -18,7 +18,6 @@ public interface IApplicationDbContext : IGenericDbContext
     DbSet<Team> Team { get; }
     DbSet<TeamCompetition> TeamCompetition { get; }
     DbSet<Transaction> Transaction { get; }
-    DbSet<User> User { get; }
     DbSet<UserCompetition> UserCompetition { get; }
     DbSet<UserCompetitionLeagueHistory> UserCompetitionLeagueHistory { get; }
 }

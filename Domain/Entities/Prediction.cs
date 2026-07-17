@@ -29,6 +29,4 @@ public partial class Prediction
     public bool AutoUpdatedDueToLatePrediction { get; set; }
 
     public virtual Match Match { get; set; } = null!;
-
-    public virtual User User { get; set; } = null!;
 }

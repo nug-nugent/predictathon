@@ -1,11 +1,9 @@
 using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
-using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Identity;
 
@@ -14,18 +12,15 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class UserService : IUserService
 {
-    private readonly IApplicationDbContext _dbContext;
     private readonly IAvatarService _avatarService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IValidator<UpdateProfileModel>? _updateProfileValidator;
 
     public UserService(
-        IApplicationDbContext dbContext,
         IAvatarService avatarService,
         UserManager<ApplicationUser> userManager,
         IValidator<UpdateProfileModel>? updateProfileValidator = null)
     {
-        _dbContext = dbContext;
         _avatarService = avatarService;
         _userManager = userManager;
         _updateProfileValidator = updateProfileValidator;
@@ -39,13 +34,6 @@ public class UserService : IUserService
             return null;
         }
 
-        // ImageUploaded still comes from dbo.User - AvatarService's storage is untouched by the
-        // profile-edit feature, so it remains the source of truth for that one flag.
-        var imageUploaded = await _dbContext.User
-            .Where(u => u.UserID == userId)
-            .Select(u => u.ImageUploaded)
-            .FirstOrDefaultAsync(cancellationToken);
-
         return new UserProfileModel
         {
             UserID = user.Id,
@@ -54,7 +42,7 @@ public class UserService : IUserService
             Location = user.Location,
             FavouriteTeam = user.FavouriteTeam,
             ProfileText = user.ProfileText,
-            AvatarUrl = _avatarService.GetAvatarUrl(user.Id, imageUploaded),
+            AvatarUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded),
         };
     }
 

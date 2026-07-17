@@ -27,6 +27,4 @@ public partial class UserCompetition
     public virtual Competition Competition { get; set; } = null!;
 
     public virtual ICollection<Transaction> Transaction { get; set; } = new List<Transaction>();
-
-    public virtual User User { get; set; } = null!;
 }

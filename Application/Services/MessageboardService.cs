@@ -98,15 +98,19 @@ public class MessageboardService : IMessageboardService
         }
 
         var messages = await query
-            .Include(m => m.PostedByUser)
-            .Include(m => m.MessageReaction).ThenInclude(r => r.User)
+            .Include(m => m.MessageReaction)
             .OrderByDescending(m => m.MessageDateTime)
             .Take(take)
             .ToListAsync(cancellationToken);
 
         messages.Reverse();
 
-        return Result.Ok(messages.Select(MapMessage).ToList());
+        var userIds = messages
+            .Select(m => m.PostedByUserID)
+            .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)));
+        var users = await GetUsersByIdAsync(userIds, cancellationToken);
+
+        return Result.Ok(messages.Select(m => MapMessage(m, users)).ToList());
     }
 
     public async Task<Result<MessageThreadModel>> CreateThreadAsync(Guid userId, string subject, string firstMessageContent, CancellationToken cancellationToken = default)
@@ -168,7 +172,7 @@ public class MessageboardService : IMessageboardService
             return Result.Fail<MessageModel>(viewerResult.Errors);
         }
 
-        var viewer = viewerResult.Value.DboUser;
+        var viewer = viewerResult.Value;
 
         var threadExists = await _dbContext.MessageThread.AnyAsync(t => t.MessageThreadID == threadId, cancellationToken);
         if (!threadExists)
@@ -232,7 +236,7 @@ public class MessageboardService : IMessageboardService
             MessageID = message.MessageID,
             MessageThreadID = threadId,
             PostedByUserID = userId,
-            PostedByUsername = viewer.Username,
+            PostedByUsername = viewer.UserName ?? string.Empty,
             PostedByAvatarUrl = _avatarService.GetAvatarUrl(userId, viewer.ImageUploaded),
             MessageDateTime = message.MessageDateTime,
             MessageContent = message.MessageContent,
@@ -360,60 +364,65 @@ public class MessageboardService : IMessageboardService
         return Result.Ok();
     }
 
-    // CanViewMessageboard/CanViewHiddenMessageThreads are edited via the profile-edit feature,
-    // which writes to Identity.Users only - dbo.User's copies of these two flags are never updated
-    // after the row is created, so gating reads from Identity.Users instead. Everything else about
-    // the viewer (Username, ImageUploaded, TotalMessageboardPosts) still comes from dbo.User,
-    // unaffected by that feature and still the source every reporting stored procedure reads.
-    private async Task<Result<(User DboUser, bool CanViewMessageboard, bool CanViewHiddenMessageThreads)>> GetViewerAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<Result<ApplicationUser>> GetViewerAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await _dbContext.User.FirstOrDefaultAsync(u => u.UserID == userId, cancellationToken);
-        if (user is null)
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null || !user.CanViewMessageboard)
         {
-            return Result.Fail<(User, bool, bool)>(new ForbiddenError("You don't have access to the messageboard."));
+            return Result.Fail<ApplicationUser>(new ForbiddenError("You don't have access to the messageboard."));
         }
 
-        var identityUser = await _userManager.FindByIdAsync(userId.ToString());
-        if (identityUser is null || !identityUser.CanViewMessageboard)
-        {
-            return Result.Fail<(User, bool, bool)>(new ForbiddenError("You don't have access to the messageboard."));
-        }
+        return Result.Ok(user);
+    }
 
-        return Result.Ok((user, identityUser.CanViewMessageboard, identityUser.CanViewHiddenMessageThreads));
+    // Message/MessageReaction have no EF navigation property into Identity.Users (it's configured
+    // separately from the dbo-schema, DB-first entities - see ApplicationDbContext.Identity.cs), so
+    // usernames/avatars for a batch of messages are looked up explicitly rather than via .Include.
+    private async Task<Dictionary<Guid, ApplicationUser>> GetUsersByIdAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var ids = userIds.Distinct().ToList();
+        var users = await _dbContext.Query<ApplicationUser>().Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
+        return users.ToDictionary(u => u.Id);
     }
 
     private async Task<List<MessageReactionModel>> GetReactionsAsync(Guid messageId, CancellationToken cancellationToken)
-        => await _dbContext.MessageReaction
+    {
+        var reactions = await _dbContext.MessageReaction
             .Where(r => r.MessageID == messageId)
-            .Select(r => new MessageReactionModel
-            {
-                UserID = r.UserID,
-                Username = r.User.Username,
-                ReactionName = r.ReactionName,
-                ImageUrl = r.ImageUrl,
-            })
             .ToListAsync(cancellationToken);
 
-    private MessageModel MapMessage(Message message) => new()
+        var users = await GetUsersByIdAsync(reactions.Select(r => r.UserID), cancellationToken);
+
+        return reactions.Select(r => MapReaction(r, users)).ToList();
+    }
+
+    private static MessageReactionModel MapReaction(MessageReaction reaction, Dictionary<Guid, ApplicationUser> users) => new()
     {
-        MessageID = message.MessageID,
-        MessageThreadID = message.MessageThreadID,
-        PostedByUserID = message.PostedByUserID,
-        PostedByUsername = message.PostedByUser.Username,
-        PostedByAvatarUrl = _avatarService.GetAvatarUrl(message.PostedByUserID, message.PostedByUser.ImageUploaded),
-        MessageDateTime = message.MessageDateTime,
-        MessageContent = message.MessageContent,
-        YouTubeVideoID = message.YouTubeVideoID,
-        ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
-        PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
-        Reactions = message.MessageReaction.Select(r => new MessageReactionModel
-        {
-            UserID = r.UserID,
-            Username = r.User.Username,
-            ReactionName = r.ReactionName,
-            ImageUrl = r.ImageUrl,
-        }).ToList(),
+        UserID = reaction.UserID,
+        Username = users.TryGetValue(reaction.UserID, out var user) ? user.UserName ?? string.Empty : string.Empty,
+        ReactionName = reaction.ReactionName,
+        ImageUrl = reaction.ImageUrl,
     };
+
+    private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users)
+    {
+        var poster = users.GetValueOrDefault(message.PostedByUserID);
+
+        return new MessageModel
+        {
+            MessageID = message.MessageID,
+            MessageThreadID = message.MessageThreadID,
+            PostedByUserID = message.PostedByUserID,
+            PostedByUsername = poster?.UserName ?? string.Empty,
+            PostedByAvatarUrl = _avatarService.GetAvatarUrl(message.PostedByUserID, poster?.ImageUploaded ?? false),
+            MessageDateTime = message.MessageDateTime,
+            MessageContent = message.MessageContent,
+            YouTubeVideoID = message.YouTubeVideoID,
+            ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
+            PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
+            Reactions = message.MessageReaction.Select(r => MapReaction(r, users)).ToList(),
+        };
+    }
 
     /// <summary>
     /// Extracts an 11-character YouTube video id from a pasted URL (watch?v=... or youtu.be/...),

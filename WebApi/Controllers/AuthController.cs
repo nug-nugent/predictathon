@@ -80,6 +80,33 @@ public class AuthController : ApiControllerBase
     }
 
     /// <summary>
+    /// Requests a password-reset email. Always returns 204, regardless of whether the given
+    /// username/email matched an account - see AuthService.ForgotPassword.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    [HttpPost("ForgotPassword")]
+    public async Task<ActionResult> ForgotPassword(ForgotPasswordModel model, CancellationToken cancellationToken)
+    {
+        var result = await _authService.ForgotPassword(model, cancellationToken);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Completes a password reset using the token emailed by ForgotPassword.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    [HttpPost("ResetPassword")]
+    public async Task<ActionResult> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken)
+    {
+        var result = await _authService.ResetPassword(model, cancellationToken);
+        return FromResult(result);
+    }
+
+    /// <summary>
     /// Sets the refresh-token cookie on success and returns just the access-token portion of the
     /// result to the client - the raw refresh token must never appear in a JSON response body,
     /// only in the (HttpOnly) cookie, otherwise client-side JS could read it.

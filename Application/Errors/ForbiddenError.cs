@@ -4,7 +4,7 @@ namespace Predictathon.Application.Errors;
 
 /// <summary>
 /// Signals that the caller is authenticated but not permitted to perform the requested operation
-/// (e.g. dbo.User.CanViewMessageboard is false), allowing callers to distinguish this from
+/// (e.g. Identity.Users.CanViewMessageboard is false), allowing callers to distinguish this from
 /// <see cref="UnauthorizedError"/> (not authenticated at all) and map it to an HTTP 403 by type.
 /// </summary>
 public class ForbiddenError : Error

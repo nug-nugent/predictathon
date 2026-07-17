@@ -7,7 +7,7 @@ public interface IMessageboardService
 {
     /// <summary>
     /// Lists message threads, newest-activity first. Threads marked HiddenFromPublic are excluded
-    /// unless the caller has dbo.User.CanViewHiddenMessageThreads. Fails with a ForbiddenError if
+    /// unless the caller has Identity.Users.CanViewHiddenMessageThreads. Fails with a ForbiddenError if
     /// the caller can't view the messageboard at all.
     /// </summary>
     Task<Result<List<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, CancellationToken cancellationToken = default);

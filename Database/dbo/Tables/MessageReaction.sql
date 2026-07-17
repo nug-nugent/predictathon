@@ -7,7 +7,7 @@
     [CreationDate] DATETIME NOT NULL , 
     CONSTRAINT [PK_MessageReaction] PRIMARY KEY NONCLUSTERED ([MessageReactionID] ASC),
     CONSTRAINT [FK_MessageReaction_Message] FOREIGN KEY ([MessageID]) REFERENCES [dbo].[Message] ([MessageID]),
-    CONSTRAINT [FK_MessageReaction_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_MessageReaction_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 GO

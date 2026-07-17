@@ -73,3 +73,14 @@ export async function refreshSession(): Promise<User> {
 export async function logoutUser(): Promise<void> {
     await postJson<void>("/Auth/Logout", {});
 }
+
+/// Requests a password-reset email. Always resolves, regardless of whether the given
+/// username/email matched an account - the API deliberately doesn't reveal that.
+export async function forgotPassword(userNameOrEmail: string): Promise<void> {
+    await postJson<void>("/Auth/ForgotPassword", { userNameOrEmail });
+}
+
+/// Completes a password reset using the userId/token from the link emailed by forgotPassword.
+export async function resetPassword(userId: string, token: string, newPassword: string): Promise<void> {
+    await postJson<void>("/Auth/ResetPassword", { userId, token, newPassword });
+}

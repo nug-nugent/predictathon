@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Identity;
 namespace Predictathon.Domain.Identity;
 
 /// <summary>
-/// The application's Identity user. Backed by the new AspNetUsers table (SSDT-managed), which is
-/// entirely separate from the legacy dbo.User table - no data migration between the two has happened yet.
+/// The application's Identity user. Backed by the Identity.Users table (SSDT-managed) - the sole
+/// source of truth for user data now that the legacy dbo.User table has been retired and its
+/// accounts migrated in (see the dbo.User pre-deployment script).
 /// </summary>
 public class ApplicationUser : IdentityUser<Guid>
 {

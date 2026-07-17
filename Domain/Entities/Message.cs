@@ -27,6 +27,4 @@ public partial class Message
     public virtual ICollection<MessageReaction> MessageReaction { get; set; } = new List<MessageReaction>();
 
     public virtual MessageThread MessageThread { get; set; } = null!;
-
-    public virtual User PostedByUser { get; set; } = null!;
 }

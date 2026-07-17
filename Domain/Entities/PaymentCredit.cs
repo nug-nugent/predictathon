@@ -25,8 +25,4 @@ public partial class PaymentCredit
     public DateTime IssueDate { get; set; }
 
     public virtual Competition ForCompetition { get; set; } = null!;
-
-    public virtual User IssuedByUser { get; set; } = null!;
-
-    public virtual User? UsedByUser { get; set; }
 }

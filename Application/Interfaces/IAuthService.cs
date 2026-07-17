@@ -26,4 +26,15 @@ public interface IAuthService
     /// or missing token is not an error.
     /// </summary>
     Task Logout(string? refreshToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Emails a password-reset link if the given username/email matches an account. Always
+    /// succeeds - deliberately doesn't reveal whether the account exists.
+    /// </summary>
+    Task<Result> ForgotPassword(ForgotPasswordModel model, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Completes a password reset using the token emailed by <see cref="ForgotPassword"/>.
+    /// </summary>
+    Task<Result> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken = default);
 }

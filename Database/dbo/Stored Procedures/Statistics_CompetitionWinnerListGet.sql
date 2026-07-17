@@ -19,16 +19,16 @@ BEGIN
 	FROM
 		(
 		SELECT
-			[User].Username
-			, [User].UserID
-			, Wins = (SELECT COUNT(1) FROM HallOfFame WHERE WinnerUserID = [User].UserID)
-			, SecondPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE SecondPlaceUserID = [User].UserID)
-			, ThirdPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE ThirdPlaceUserID = [User].UserID)
+			[User].UserName AS Username
+			, [User].Id AS UserID
+			, Wins = (SELECT COUNT(1) FROM HallOfFame WHERE WinnerUserID = [User].Id)
+			, SecondPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE SecondPlaceUserID = [User].Id)
+			, ThirdPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE ThirdPlaceUserID = [User].Id)
 		FROM
-			[User]
+			[Identity].[Users] AS [User]
 		GROUP BY
-			[User].Username
-			, [User].UserID) Winners
+			[User].UserName
+			, [User].Id) Winners
 	WHERE
 		Wins + SecondPlaces + ThirdPlaces > 0
 	ORDER BY

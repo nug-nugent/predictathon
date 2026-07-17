@@ -4,7 +4,7 @@ CREATE TABLE [dbo].[MessageThreadRead] (
     [MessageThreadID] UNIQUEIDENTIFIER NOT NULL,
     [LastReadDateTime] DATETIME NOT NULL,
     CONSTRAINT [PK_MessageThreadRead] PRIMARY KEY CLUSTERED ([MessageThreadReadID] ASC),
-    CONSTRAINT [FK_MessageThreadRead_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[User] ([UserID]),
+    CONSTRAINT [FK_MessageThreadRead_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [FK_MessageThreadRead_MessageThread] FOREIGN KEY ([MessageThreadID]) REFERENCES [dbo].[MessageThread] ([MessageThreadID])
 );
 

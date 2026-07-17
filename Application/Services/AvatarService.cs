@@ -1,11 +1,11 @@
 using FluentResults;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
-using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
+using Predictathon.Domain.Identity;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
@@ -27,12 +27,12 @@ public class AvatarService : IAvatarService
 
     private static readonly JpegEncoder Encoder = new() { Quality = 90 };
 
-    private readonly IApplicationDbContext _dbContext;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
 
-    public AvatarService(IApplicationDbContext dbContext, IConfiguration configuration)
+    public AvatarService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
     {
-        _dbContext = dbContext;
+        _userManager = userManager;
         _configuration = configuration;
     }
 
@@ -112,15 +112,14 @@ public class AvatarService : IAvatarService
 
     private async Task SetImageUploadedAsync(Guid userId, bool imageUploaded, CancellationToken cancellationToken)
     {
-        var user = await _dbContext.User.FirstOrDefaultAsync(u => u.UserID == userId, cancellationToken);
+        var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null)
         {
             return;
         }
 
         user.ImageUploaded = imageUploaded;
-        _dbContext.Update(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _userManager.UpdateAsync(user);
     }
 
     private static void DeleteIfExists(string path)

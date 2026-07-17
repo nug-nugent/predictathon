@@ -11,15 +11,15 @@ BEGIN
 
 	-- Users to have predicted the most matches altogether
 	SELECT TOP 10
-		[User].Username
-		, [User].UserID
+		[User].UserName AS Username
+		, [User].Id AS UserID
 		, TotalPredictions = COUNT(1)
 	FROM
-		[User]
-		INNER JOIN Prediction ON [User].UserID = Prediction.UserID
+		[Identity].[Users] AS [User]
+		INNER JOIN Prediction ON [User].Id = Prediction.UserID
 	GROUP BY
-		[User].Username
-		, [User].UserID
+		[User].UserName
+		, [User].Id
 	ORDER BY
 		COUNT(1) DESC;
 END

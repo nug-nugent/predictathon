@@ -46,7 +46,5 @@ public partial class Transaction
 
     public virtual Competition? Competition { get; set; }
 
-    public virtual User? User { get; set; }
-
     public virtual UserCompetition? UserCompetition { get; set; }
 }

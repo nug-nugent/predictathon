@@ -1,8 +1,8 @@
 namespace Predictathon.Application.Models;
 
 /// <summary>
-/// Model used to update a user's profile. Applies to Identity.Users only - dbo.User is not
-/// touched (see UserService.UpdateProfileAsync for why).
+/// Model used to update a user's profile. Applies to Identity.Users, the sole source of truth
+/// for user data now that the legacy dbo.User table has been retired.
 /// </summary>
 public class UpdateProfileModel
 {

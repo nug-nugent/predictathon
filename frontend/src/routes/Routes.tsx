@@ -9,6 +9,8 @@ import { SiteLayout } from "../components/site-layout/SiteLayout";
 import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
 import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
+import { ForgotPasswordPage } from "../pages/public/password-reset/ForgotPasswordPage";
+import { ResetPasswordPage } from "../pages/public/password-reset/ResetPasswordPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
 import { ProfileEditPage } from "../pages/logged-in/profile/ProfileEditPage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
@@ -26,7 +28,8 @@ export function SiteRoutes() {
                 // Public routes
                 <Route index element={<HomePage />} />
                 <Route path="register" element={<PlaceholderPage name="Register" />} />
-                <Route path="password-reset" element={<PlaceholderPage name="Password Reset" />} />
+                <Route path="password-reset" element={<ForgotPasswordPage />} />
+                <Route path="password-reset/confirm" element={<ResetPasswordPage />} />
 
                 // Protected routes for logged in users
                 <Route element={<ProtectedRoute />}>
