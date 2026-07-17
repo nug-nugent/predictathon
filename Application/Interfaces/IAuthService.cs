@@ -37,4 +37,11 @@ public interface IAuthService
     /// Completes a password reset using the token emailed by <see cref="ForgotPassword"/>.
     /// </summary>
     Task<Result> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Admin-triggered equivalent of <see cref="ForgotPassword"/> for a known user id - unlike the
+    /// self-service version, this doesn't need to hide whether the account exists, since the
+    /// caller (a UserAdministrator) is already looking at a specific user's admin row.
+    /// </summary>
+    Task<Result> AdminResetPasswordAsync(Guid userId, CancellationToken cancellationToken = default);
 }

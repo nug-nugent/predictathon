@@ -25,6 +25,42 @@ public class UserController : ApiControllerBase
     }
 
     /// <summary>
+    /// Gets a server-paged, optionally search-filtered list of users, for the User Admin page.
+    /// </summary>
+    [HttpGet]
+    [Authorize(Roles = RoleConstants.UserAdministrator)]
+    public async Task<ActionResult<PagedResult<UserAdminListItem>>> GetUsersForAdmin([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string? search, CancellationToken cancellationToken)
+    {
+        var result = await _userService.GetUsersForAdminAsync(page < 1 ? 1 : page, pageSize < 1 ? 20 : pageSize, search, cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Sets the full role set a user should hold.
+    /// </summary>
+    [HttpPut("{userId:guid}/Roles")]
+    [Authorize(Roles = RoleConstants.UserAdministrator)]
+    public async Task<ActionResult> UpdateUserRoles(Guid userId, [FromBody] UpdateUserRolesModel model, CancellationToken cancellationToken)
+    {
+        var result = await _userService.UpdateUserRolesAsync(userId, model.Roles, CurrentUserId, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Locks or unlocks a user's account.
+    /// </summary>
+    [HttpPut("{userId:guid}/Lockout")]
+    [Authorize(Roles = RoleConstants.UserAdministrator)]
+    public async Task<ActionResult> SetUserLocked(Guid userId, [FromBody] SetUserLockedModel model, CancellationToken cancellationToken)
+    {
+        var result = await _userService.SetUserLockedAsync(userId, model.Locked, CurrentUserId, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
     /// Get a user's publicly-viewable profile.
     /// </summary>
     [HttpGet("{userId:guid}/Profile")]

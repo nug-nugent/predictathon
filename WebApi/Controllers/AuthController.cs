@@ -1,5 +1,7 @@
 using FluentResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
 using Predictathon.WebApi.Controllers.Base;
@@ -103,6 +105,20 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken)
     {
         var result = await _authService.ResetPassword(model, cancellationToken);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Admin-triggered password reset email for a known user, from the User Admin page.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    [HttpPost("AdminResetPassword/{userId:guid}")]
+    [Authorize(Roles = RoleConstants.UserAdministrator)]
+    public async Task<ActionResult> AdminResetPassword(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await _authService.AdminResetPasswordAsync(userId, cancellationToken);
         return FromResult(result);
     }
 

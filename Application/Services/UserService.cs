@@ -1,9 +1,12 @@
 using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
+using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Identity;
 
@@ -14,15 +17,18 @@ public class UserService : IUserService
 {
     private readonly IAvatarService _avatarService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IApplicationDbContext _dbContext;
     private readonly IValidator<UpdateProfileModel>? _updateProfileValidator;
 
     public UserService(
         IAvatarService avatarService,
         UserManager<ApplicationUser> userManager,
+        IApplicationDbContext dbContext,
         IValidator<UpdateProfileModel>? updateProfileValidator = null)
     {
         _avatarService = avatarService;
         _userManager = userManager;
+        _dbContext = dbContext;
         _updateProfileValidator = updateProfileValidator;
     }
 
@@ -137,6 +143,127 @@ public class UserService : IUserService
         }
 
         return Result.Ok(ToEditModel(user));
+    }
+
+    public async Task<PagedResult<UserAdminListItem>> GetUsersForAdminAsync(int page, int pageSize, string? search, CancellationToken cancellationToken = default)
+    {
+        var query = _userManager.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(u =>
+                EF.Functions.Like(u.UserName!, pattern) ||
+                EF.Functions.Like(u.Email!, pattern) ||
+                (u.Forenames != null && EF.Functions.Like(u.Forenames, pattern)) ||
+                (u.Surname != null && EF.Functions.Like(u.Surname, pattern)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .OrderBy(u => u.UserName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var userIds = users.Select(u => u.Id).ToList();
+
+        // Batch-loaded in one query rather than per-user, to avoid an N+1 against Identity.UserRoles.
+        var rolesByUserId = await _dbContext.Query<IdentityUserRole<Guid>>()
+            .Where(ur => userIds.Contains(ur.UserId))
+            .Join(_dbContext.Query<IdentityRole<Guid>>(), ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
+            .ToListAsync(cancellationToken);
+
+        var items = users.Select(u => new UserAdminListItem
+        {
+            Id = u.Id,
+            UserName = u.UserName ?? string.Empty,
+            Email = u.Email ?? string.Empty,
+            Forenames = u.Forenames,
+            Surname = u.Surname,
+            Roles = rolesByUserId.Where(r => r.UserId == u.Id).Select(r => r.Name ?? string.Empty).ToList(),
+            IsLockedOut = u.LockoutEnd is not null && u.LockoutEnd > DateTimeOffset.UtcNow,
+            LastLoginDateTime = u.LastLoginDateTime,
+        }).ToList();
+
+        return new PagedResult<UserAdminListItem>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
+    }
+
+    public async Task<Result> UpdateUserRolesAsync(Guid userId, IReadOnlyList<string> roles, Guid currentUserId, CancellationToken cancellationToken = default)
+    {
+        var validRoles = new[] { RoleConstants.MatchAdministrator, RoleConstants.UserAdministrator, RoleConstants.CompetitionAdministrator };
+        var unknownRoles = roles.Except(validRoles).ToList();
+        if (unknownRoles.Count > 0)
+        {
+            return Result.Fail(new PropertyValidationError(nameof(roles), $"Unknown role(s): {string.Join(", ", unknownRoles)}."));
+        }
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return Result.Fail(new NotFoundError("No such user."));
+        }
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+
+        if (userId == currentUserId
+            && currentRoles.Contains(RoleConstants.UserAdministrator)
+            && !roles.Contains(RoleConstants.UserAdministrator))
+        {
+            return Result.Fail(new PropertyValidationError(nameof(roles), "You cannot remove your own UserAdministrator role."));
+        }
+
+        var rolesToAdd = roles.Except(currentRoles).ToList();
+        var rolesToRemove = currentRoles.Except(roles).ToList();
+
+        if (rolesToAdd.Count > 0)
+        {
+            var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
+            if (!addResult.Succeeded)
+            {
+                return Result.Fail(MapIdentityErrors(addResult, nameof(roles)));
+            }
+        }
+
+        if (rolesToRemove.Count > 0)
+        {
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+            {
+                return Result.Fail(MapIdentityErrors(removeResult, nameof(roles)));
+            }
+        }
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> SetUserLockedAsync(Guid userId, bool locked, Guid currentUserId, CancellationToken cancellationToken = default)
+    {
+        if (locked && userId == currentUserId)
+        {
+            return Result.Fail(new PropertyValidationError(string.Empty, "You cannot lock your own account."));
+        }
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return Result.Fail(new NotFoundError("No such user."));
+        }
+
+        var result = await _userManager.SetLockoutEndDateAsync(user, locked ? DateTimeOffset.MaxValue : null);
+        if (!result.Succeeded)
+        {
+            return Result.Fail(MapIdentityErrors(result, string.Empty));
+        }
+
+        return Result.Ok();
     }
 
     private static UserProfileEditModel ToEditModel(ApplicationUser user) => new()

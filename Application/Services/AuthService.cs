@@ -93,6 +93,15 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByNameAsync(model.UserName)
             ?? await _userManager.FindByEmailAsync(model.UserName);
 
+        if (user is not null && await _userManager.IsLockedOutAsync(user))
+        {
+            // Deliberately distinct from the generic "invalid username or password" message below -
+            // a locked-out user isn't mistyping anything, and should know to contact an admin
+            // instead of retrying. Checked before HasPasswordAsync/CheckPasswordAsync since it
+            // doesn't matter whether their credentials would otherwise be valid.
+            return Result.Fail<AuthTokenResult>(new PropertyValidationError(string.Empty, "This account has been disabled. Please contact an administrator."));
+        }
+
         if (user is not null && !await _userManager.HasPasswordAsync(user))
         {
             // A real account (e.g. migrated from the legacy dbo.User table) with no usable
@@ -159,15 +168,21 @@ public class AuthService : IAuthService
             return Result.Ok();
         }
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? string.Empty).TrimEnd('/');
-        var resetUrl = $"{frontendBaseUrl}/password-reset/confirm?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+        await SendPasswordResetEmailAsync(user, cancellationToken);
 
-        await _emailService.SendAsync(
-            user.Email,
-            "Reset your Predictathon password",
-            $"""<p>Click the link below to reset your Predictathon password:</p><p><a href="{resetUrl}">{resetUrl}</a></p><p>If you didn't request this, you can safely ignore this email.</p>""",
-            cancellationToken);
+        return Result.Ok();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> AdminResetPasswordAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null || string.IsNullOrEmpty(user.Email))
+        {
+            return Result.Fail(new NotFoundError("No such user."));
+        }
+
+        await SendPasswordResetEmailAsync(user, cancellationToken);
 
         return Result.Ok();
     }
@@ -189,6 +204,19 @@ public class AuthService : IAuthService
         }
 
         return Result.Ok();
+    }
+
+    private async Task SendPasswordResetEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? string.Empty).TrimEnd('/');
+        var resetUrl = $"{frontendBaseUrl}/password-reset/confirm?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+        await _emailService.SendAsync(
+            user.Email!,
+            "Reset your Predictathon password",
+            $"""<p>Click the link below to reset your Predictathon password:</p><p><a href="{resetUrl}">{resetUrl}</a></p><p>If you didn't request this, you can safely ignore this email.</p>""",
+            cancellationToken);
     }
 
     private async Task<AuthTokenResult> IssueTokensAsync(ApplicationUser user, bool rememberMe, CancellationToken cancellationToken)
