@@ -6,11 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Predictathon.Application.Extensions;
+using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.Extensions;
+using Predictathon.WebApi.Hubs;
+using Predictathon.WebApi.Realtime;
 using System.Text;
 
 const string FrontendCorsPolicy = "Frontend";
@@ -52,9 +55,29 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+
+        // SignalR's browser client can't set an Authorization header on the WebSocket handshake,
+        // so it sends the access token as a query string parameter instead - only honoured for the
+        // messageboard hub's own path, not for regular API requests.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/messageboard"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IMessageboardNotifier, MessageboardNotifier>();
 
 // Configure CORS. No origins are allowed until Cors:AllowedOrigins is populated in config -
 // there's no permissive "just for dev" fallback, so nothing is silently left wide open.
@@ -113,6 +136,14 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads/avatars"
 });
 
+var messageImagesStoragePath = Path.GetFullPath(builder.Configuration["MessageImages:StoragePath"] ?? "Uploads/MessageImages");
+Directory.CreateDirectory(messageImagesStoragePath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(messageImagesStoragePath),
+    RequestPath = "/uploads/message-images"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -120,6 +151,7 @@ app.UseAuthorization();
 app.UseApiProblemDetails();
 
 app.MapControllers();
+app.MapHub<MessageboardHub>("/hubs/messageboard");
 
 await app.SeedRolesAsync();
 

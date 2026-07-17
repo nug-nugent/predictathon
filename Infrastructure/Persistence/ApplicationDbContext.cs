@@ -27,6 +27,8 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     public virtual DbSet<MessageThread> MessageThread => Set<MessageThread>();
 
+    public virtual DbSet<MessageThreadRead> MessageThreadRead => Set<MessageThreadRead>();
+
     public virtual DbSet<PaymentCredit> PaymentCredit => Set<PaymentCredit>();
 
     public virtual DbSet<Prediction> Prediction => Set<Prediction>();
@@ -185,6 +187,23 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasForeignKey(d => d.StartedByUserID)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MessageThread_User");
+        });
+
+        modelBuilder.Entity<MessageThreadRead>(entity =>
+        {
+            entity.HasIndex(e => new { e.UserID, e.MessageThreadID }, "IX_MessageThreadRead_UserID_MessageThreadID");
+
+            entity.Property(e => e.LastReadDateTime).HasColumnType("datetime");
+
+            entity.HasOne(d => d.MessageThread).WithMany(p => p.MessageThreadRead)
+                .HasForeignKey(d => d.MessageThreadID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MessageThreadRead_MessageThread");
+
+            entity.HasOne(d => d.User).WithMany(p => p.MessageThreadRead)
+                .HasForeignKey(d => d.UserID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MessageThreadRead_User");
         });
 
         modelBuilder.Entity<PaymentCredit>(entity =>

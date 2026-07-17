@@ -60,6 +60,8 @@ public partial class User
 
     public virtual ICollection<MessageThread> MessageThread { get; set; } = new List<MessageThread>();
 
+    public virtual ICollection<MessageThreadRead> MessageThreadRead { get; set; } = new List<MessageThreadRead>();
+
     public virtual ICollection<PaymentCredit> PaymentCreditIssuedByUser { get; set; } = new List<PaymentCredit>();
 
     public virtual ICollection<PaymentCredit> PaymentCreditUsedByUser { get; set; } = new List<PaymentCredit>();

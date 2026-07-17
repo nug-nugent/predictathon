@@ -147,6 +147,18 @@ namespace Predictathon.WebApi.Controllers.Base
                 return ProblemResult(pd);
             }
 
+            var forbidden = errors.OfType<ForbiddenError>().FirstOrDefault();
+            if (forbidden is not null)
+            {
+                var pd = BuildProblemDetails(
+                    status: StatusCodes.Status403Forbidden,
+                    type: "https://httpstatuses.com/403",
+                    title: "Forbidden",
+                    detail: forbidden.Message);
+
+                return ProblemResult(pd);
+            }
+
             var modelErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var err in errors)

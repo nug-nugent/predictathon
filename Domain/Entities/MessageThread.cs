@@ -20,5 +20,7 @@ public partial class MessageThread
 
     public virtual ICollection<Message> Message { get; set; } = new List<Message>();
 
+    public virtual ICollection<MessageThreadRead> MessageThreadRead { get; set; } = new List<MessageThreadRead>();
+
     public virtual User StartedByUser { get; set; } = null!;
 }

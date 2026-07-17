@@ -14,11 +14,14 @@
   "dependencies": {
     "@chakra-ui/react": "^3.36.0",
     "@emotion/react": "^11.14.0",
+    "@microsoft/signalr": "^9.0.6",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-easy-crop": "^6.2.2",
-    "react-router": "^8.0.1"
+    "react-markdown": "^10.1.0",
+    "react-router": "^8.0.1",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

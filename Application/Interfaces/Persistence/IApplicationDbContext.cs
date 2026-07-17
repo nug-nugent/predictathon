@@ -11,6 +11,7 @@ public interface IApplicationDbContext : IGenericDbContext
     DbSet<Message> Message { get; }
     DbSet<MessageReaction> MessageReaction { get; }
     DbSet<MessageThread> MessageThread { get; }
+    DbSet<MessageThreadRead> MessageThreadRead { get; }
     DbSet<PaymentCredit> PaymentCredit { get; }
     DbSet<Prediction> Prediction { get; }
     DbSet<PredictionHistory> PredictionHistory { get; }

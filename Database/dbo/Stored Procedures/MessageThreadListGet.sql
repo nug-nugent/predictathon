@@ -1,15 +1,17 @@
-﻿/* ==========================================================================================
+/* ==========================================================================================
 	Description
 		Returns all message threads
-	
+
 	History
 		24/12/2011 : DH - Created
 		15/06/2026 : DH - Added CTE for performance
 		17/06/2026 : DH - Added local variables to minimise parameter sniffing issues
+		17/07/2026 : DH - Replaced the session-scoped @MessageThreadsReadThisSession table-valued
+		                   parameter and the @UserLastViewedMessageboard fallback with a join against
+		                   the new persisted dbo.MessageThreadRead table, keyed by @UserID.
 ========================================================================================== */
 CREATE PROCEDURE [dbo].[MessageThreadListGet]
-	@UserLastViewedMessageboard DATETIME
-	, @MessageThreadsReadThisSession UniqueIDAndDateTime READONLY
+	@UserID UNIQUEIDENTIFIER
 	, @IncludeHiddenFromPublic BIT = 0
 AS
 BEGIN
@@ -17,17 +19,7 @@ BEGIN
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
 	-- Minimise the effect of parameter sniffing:
-	DECLARE @pUserLastViewedMessageboard DATETIME = @UserLastViewedMessageBoard;
-	
-	DECLARE @pMessageThreadsReadThisSession UniqueIDAndDateTime;
-	INSERT
-		@pMessageThreadsReadThisSession (UniqueID, DateAndTime)
-	SELECT
-		UniqueID
-		, DateAndTime
-	FROM
-		@MessageThreadsReadThisSession;
-
+	DECLARE @pUserID UNIQUEIDENTIFIER = @UserID;
 	DECLARE @pIncludeHiddenFromPublic BIT = @IncludeHiddenFromPublic;
 
 	;WITH MessageCounts AS (
@@ -36,58 +28,53 @@ BEGIN
 			m.MessageThreadID
 			, COUNT(m.MessageID) AS MessageCount
 			, MAX(m.MessageDateTime) AS LastMessageDate
-		FROM 
+		FROM
 			[Message] m
-		GROUP BY 
+		GROUP BY
 			m.MessageThreadID
 	),
 	LastMessages AS (
 		-- most recent message per thread
 		SELECT
 			m.MessageThreadID
-			, m.MessageID
-			, m.MessageDateTime
-			, m.MessageContent
 			, m.PostedByUserID
 			, ROW_NUMBER() OVER (PARTITION BY m.MessageThreadID ORDER BY m.MessageDateTime DESC, m.MessageID DESC) AS rn
-		FROM 
+		FROM
 			[Message] m
 	),
 	LastMessageData AS (
 		SELECT
 			lm.MessageThreadID,
-			lm.MessageContent,
-			lm.MessageDateTime,
 			u.Username AS LastPostedByUsername
-		FROM 
+		FROM
 			LastMessages lm
 			LEFT JOIN [User] u ON lm.PostedByUserID = u.UserID
-		WHERE 
+		WHERE
 			lm.rn = 1
 	)
 
 	SELECT
 		mt.MessageThreadID
 		, mt.ThreadSubject
-		, StartedByUser = su.Username
-		, mt.StartedByUserID
+		, StartedByUsername = su.Username
 		, mt.StartedDateTime
-		, LastMessageDate = mc.LastMessageDate
-		, LastMessagePostedByUser = lmd.LastPostedByUsername
-		, LastMessage = CASE WHEN lmd.MessageContent IS NOT NULL AND LEN(lmd.MessageContent) > 40 THEN LEFT(lmd.MessageContent, 37) + '...' ELSE lmd.MessageContent END
-		, ReplyCount = COALESCE(mc.MessageCount, 0) - 1
+		, mt.HiddenFromPublic
+		, MessageCount = COALESCE(mc.MessageCount, 0)
+		, LastMessageDateTime = COALESCE(mc.LastMessageDate, mt.StartedDateTime)
+		, LastMessageByUsername = COALESCE(lmd.LastPostedByUsername, su.Username)
 		, Unread = CASE
-			WHEN rt.DateAndTime IS NOT NULL THEN CASE WHEN rt.DateAndTime < mc.LastMessageDate THEN 1 ELSE 0 END
-			ELSE CASE WHEN @pUserLastViewedMessageboard < mc.LastMessageDate THEN 1 ELSE 0 END
+			WHEN rt.LastReadDateTime IS NULL THEN CAST(1 AS BIT)
+			WHEN rt.LastReadDateTime < COALESCE(mc.LastMessageDate, mt.StartedDateTime) THEN CAST(1 AS BIT)
+			ELSE CAST(0 AS BIT)
 		END
-	FROM 
+	FROM
 		MessageThread mt
 		LEFT JOIN MessageCounts mc ON mt.MessageThreadID = mc.MessageThreadID
 		LEFT JOIN LastMessageData lmd ON mt.MessageThreadID = lmd.MessageThreadID
 		LEFT JOIN [User] su ON mt.StartedByUserID = su.UserID
-		LEFT JOIN @pMessageThreadsReadThisSession rt ON mt.MessageThreadID = rt.UniqueID
-	WHERE 
+		LEFT JOIN MessageThreadRead rt ON rt.MessageThreadID = mt.MessageThreadID AND rt.UserID = @pUserID
+	WHERE
 		(@pIncludeHiddenFromPublic = CAST(1 AS BIT) OR mt.HiddenFromPublic = 0)
 	ORDER BY
-		LastMessageDate DESC;
+		LastMessageDateTime DESC;
 END;

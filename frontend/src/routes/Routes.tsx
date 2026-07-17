@@ -4,6 +4,7 @@ import { UsersPage } from "../pages/logged-in/admin/users/Users";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Role } from "../constants/roles";
 import { ThreadPage } from "../pages/logged-in/board/thread/ThreadPage";
+import { BoardPage } from "../pages/logged-in/board/BoardPage";
 import { SiteLayout } from "../components/site-layout/SiteLayout";
 import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
 import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage";
@@ -31,7 +32,7 @@ export function SiteRoutes() {
                     <Route path="predictions" element={<PredictionsPage />} />
                     <Route path="league" element={<LeaguePage />} />
 
-                    <Route path="board" element={<PlaceholderPage name="Messageboard" />} />
+                    <Route path="board" element={<BoardPage />} />
                     <Route path="board/:id" element={<ThreadPage />} />
 
                     <Route path="stats" element={<StatisticsPage />} />

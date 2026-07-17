@@ -183,6 +183,10 @@ public class AuthService : IAuthService
             // Identity's own ApplicationUser.PasswordHash is the only credential store now.
             Password = "(managed by Identity)",
             EmailAddress = user.Email,
+            // The column's DB-level DEFAULT ((1)) never applies here - EF Core always sends the
+            // CLR value (false) explicitly in the INSERT, so this has to be set here to actually
+            // grant new users messageboard access by default, matching legacy behaviour.
+            CanViewMessageboard = true,
         };
 
         await _dbContext.AddAsync(dboUser, cancellationToken);

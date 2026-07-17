@@ -1,5 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Derives the API host root (without the /api suffix) for non-REST endpoints, such as SignalR
+// hubs, that aren't mounted under /api.
+export function getHubUrl(hubPath: string): string {
+    return `${API_BASE_URL.replace(/\/api\/?$/, "")}${hubPath}`;
+}
+
 // Thrown for any failed API call. `messages` holds human-readable error text extracted from the
 // API's RFC7807 ProblemDetails response where available.
 export class ApiError extends Error {
@@ -90,6 +96,12 @@ export function setAccessToken(token: string | null): void {
     currentToken = token;
 }
 
+// Read by the SignalR hub client, which can't attach an Authorization header to a WebSocket
+// handshake and instead sends the token as a connection query-string parameter.
+export function getAccessToken(): string | null {
+    return currentToken;
+}
+
 // Registered by UserProvider to clear the logged-in session when a background token refresh fails.
 export function setSessionExpiredHandler(handler: (() => void) | null): void {
     onSessionExpired = handler;
@@ -159,6 +171,11 @@ export async function putJsonAuthenticated<TResponse>(path: string, body: unknow
 export async function deleteAuthenticated(path: string): Promise<void> {
     const response = await authenticatedFetch(path, { method: "DELETE" });
     return handleJsonResponse<void>(response);
+}
+
+export async function deleteJsonAuthenticated<TResponse>(path: string): Promise<TResponse> {
+    const response = await authenticatedFetch(path, { method: "DELETE" });
+    return handleJsonResponse<TResponse>(response);
 }
 
 // No Content-Type header - the browser sets the multipart boundary itself when the body is a
