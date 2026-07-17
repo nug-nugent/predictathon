@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
 using Predictathon.WebApi.Controllers.Base;
@@ -81,5 +82,41 @@ public class UserController : ApiControllerBase
         await _avatarService.RemoveAvatarAsync(CurrentUserId, cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets the full editable profile for a user. Allowed for the profile's own owner, or for a
+    /// UserAdministrator editing someone else's.
+    /// </summary>
+    [HttpGet("{userId:guid}/ProfileEdit")]
+    public async Task<ActionResult<UserProfileEditModel?>> GetProfileEdit(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId != CurrentUserId && !User.IsInRole(RoleConstants.UserAdministrator))
+        {
+            return Forbid();
+        }
+
+        var profile = await _userService.GetProfileForEditAsync(userId, cancellationToken);
+
+        return OkOrNotFound(profile);
+    }
+
+    /// <summary>
+    /// Updates a user's profile. Allowed for the profile's own owner, or for a UserAdministrator
+    /// editing someone else's. The two messageboard-visibility flags are only persisted when the
+    /// caller themselves holds UserAdministrator, matching legacy behaviour.
+    /// </summary>
+    [HttpPut("{userId:guid}/ProfileEdit")]
+    public async Task<ActionResult<UserProfileEditModel?>> UpdateProfileEdit(Guid userId, [FromBody] UpdateProfileModel model, CancellationToken cancellationToken)
+    {
+        var isUserAdministrator = User.IsInRole(RoleConstants.UserAdministrator);
+        if (userId != CurrentUserId && !isUserAdministrator)
+        {
+            return Forbid();
+        }
+
+        var result = await _userService.UpdateProfileAsync(userId, model, allowAdminFields: isUserAdministrator, cancellationToken);
+
+        return FromResult(result);
     }
 }

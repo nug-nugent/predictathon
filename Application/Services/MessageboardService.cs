@@ -1,4 +1,5 @@
 using FluentResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
@@ -8,6 +9,7 @@ using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Entities;
+using Predictathon.Domain.Identity;
 using System.Data;
 
 namespace Predictathon.Application.Services;
@@ -19,17 +21,20 @@ public class MessageboardService : IMessageboardService
     private readonly IAvatarService _avatarService;
     private readonly IMessageImageService _messageImageService;
     private readonly IMessageboardNotifier _notifier;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public MessageboardService(
         IApplicationDbContext dbContext,
         IAvatarService avatarService,
         IMessageImageService messageImageService,
-        IMessageboardNotifier notifier)
+        IMessageboardNotifier notifier,
+        UserManager<ApplicationUser> userManager)
     {
         _dbContext = dbContext;
         _avatarService = avatarService;
         _messageImageService = messageImageService;
         _notifier = notifier;
+        _userManager = userManager;
     }
 
     public async Task<Result<List<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -163,7 +168,7 @@ public class MessageboardService : IMessageboardService
             return Result.Fail<MessageModel>(viewerResult.Errors);
         }
 
-        var viewer = viewerResult.Value;
+        var viewer = viewerResult.Value.DboUser;
 
         var threadExists = await _dbContext.MessageThread.AnyAsync(t => t.MessageThreadID == threadId, cancellationToken);
         if (!threadExists)
@@ -355,15 +360,26 @@ public class MessageboardService : IMessageboardService
         return Result.Ok();
     }
 
-    private async Task<Result<User>> GetViewerAsync(Guid userId, CancellationToken cancellationToken)
+    // CanViewMessageboard/CanViewHiddenMessageThreads are edited via the profile-edit feature,
+    // which writes to Identity.Users only - dbo.User's copies of these two flags are never updated
+    // after the row is created, so gating reads from Identity.Users instead. Everything else about
+    // the viewer (Username, ImageUploaded, TotalMessageboardPosts) still comes from dbo.User,
+    // unaffected by that feature and still the source every reporting stored procedure reads.
+    private async Task<Result<(User DboUser, bool CanViewMessageboard, bool CanViewHiddenMessageThreads)>> GetViewerAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await _dbContext.User.FirstOrDefaultAsync(u => u.UserID == userId, cancellationToken);
-        if (user is null || !user.CanViewMessageboard)
+        if (user is null)
         {
-            return Result.Fail<User>(new ForbiddenError("You don't have access to the messageboard."));
+            return Result.Fail<(User, bool, bool)>(new ForbiddenError("You don't have access to the messageboard."));
         }
 
-        return Result.Ok(user);
+        var identityUser = await _userManager.FindByIdAsync(userId.ToString());
+        if (identityUser is null || !identityUser.CanViewMessageboard)
+        {
+            return Result.Fail<(User, bool, bool)>(new ForbiddenError("You don't have access to the messageboard."));
+        }
+
+        return Result.Ok((user, identityUser.CanViewMessageboard, identityUser.CanViewHiddenMessageThreads));
     }
 
     private async Task<List<MessageReactionModel>> GetReactionsAsync(Guid messageId, CancellationToken cancellationToken)

@@ -32,7 +32,13 @@ builder.Services.AddScoped<IGenericDbContext, ApplicationDbContext>();
 
 // Configure Identity (new AspNetUsers/AspNetRoles schema - separate from the legacy dbo.User table)
 builder.Services
-    .AddIdentityCore<ApplicationUser>()
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
+        // Unset (false) by default, which makes Identity's built-in UserValidator skip email
+        // format/uniqueness checks entirely - needed so SetEmailAsync/CreateAsync actually
+        // enforce them (profile editing relies on this to reject duplicate emails).
+        options.User.RequireUniqueEmail = true;
+    })
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();

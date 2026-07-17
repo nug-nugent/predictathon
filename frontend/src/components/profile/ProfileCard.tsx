@@ -4,12 +4,14 @@ import { Camera } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import type { UserProfile } from "../../services/profile-service";
 import { useUser } from "../../hooks/useUser";
+import { Role } from "../../constants/roles";
 import { AvatarUploadDialog } from "./AvatarUploadDialog";
 
 export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; isOwnProfile: boolean }) {
     const { user, setUser } = useUser();
     const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const canEdit = isOwnProfile || (user?.roles.includes(Role.UserAdministrator) ?? false);
 
     const hasDetails = profile.caption || profile.profileText || profile.location || profile.favouriteTeam;
 
@@ -30,9 +32,9 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
         <Box borderWidth="1px" rounded="md" p={4}>
             <HStack justify="space-between" mb={3}>
                 <Heading size="md">{profile.username}</Heading>
-                {isOwnProfile && (
+                {canEdit && (
                     <Button asChild size="xs" variant="ghost">
-                        <RouterLink to="/profile/edit">Edit User</RouterLink>
+                        <RouterLink to={isOwnProfile ? "/profile/edit" : `/profile/${profile.userID}/edit`}>Edit User</RouterLink>
                     </Button>
                 )}
             </HStack>

@@ -1,4 +1,4 @@
-import { getJsonAuthenticated, postFormAuthenticated, deleteAuthenticated } from "./api";
+import { getJsonAuthenticated, putJsonAuthenticated, postFormAuthenticated, deleteAuthenticated } from "./api";
 import type { MatchPrediction } from "./prediction-service";
 
 // Matches Application/Models/UserProfileModel.cs.
@@ -14,6 +14,32 @@ export type UserProfile = {
 
 export async function getUserProfile(userId: string): Promise<UserProfile> {
     return getJsonAuthenticated<UserProfile>(`/User/${userId}/Profile`);
+}
+
+// Matches Application/Models/UserProfileEditModel.cs / UpdateProfileModel.cs. CanViewMessageboard
+// and CanViewHiddenMessageThreads are only persisted server-side when the caller holds
+// UserAdministrator - see ProfileEditPage.
+export type UserProfileEdit = {
+    userId: string;
+    userName: string;
+    email: string;
+    forenames: string | null;
+    surname: string | null;
+    favouriteTeam: string | null;
+    location: string | null;
+    caption: string | null;
+    profileText: string | null;
+    emailPredictionReminderDays: number | null;
+    canViewMessageboard: boolean;
+    canViewHiddenMessageThreads: boolean;
+};
+
+export async function getUserProfileForEdit(userId: string): Promise<UserProfileEdit> {
+    return getJsonAuthenticated<UserProfileEdit>(`/User/${userId}/ProfileEdit`);
+}
+
+export async function updateProfile(userId: string, model: UserProfileEdit): Promise<UserProfileEdit> {
+    return putJsonAuthenticated<UserProfileEdit>(`/User/${userId}/ProfileEdit`, model);
 }
 
 export type AvatarCropRect = { x: number; y: number; width: number; height: number };

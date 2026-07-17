@@ -10,6 +10,7 @@ import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
 import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
+import { ProfileEditPage } from "../pages/logged-in/profile/ProfileEditPage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
 import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResultsPage";
@@ -39,7 +40,8 @@ export function SiteRoutes() {
                     <Route path="hof" element={<HallOfFamePage />} />
                     <Route path="rules" element={<RulesPage />} />
 
-                    <Route path="profile/edit" element={<PlaceholderPage name="Edit Profile" />} />
+                    <Route path="profile/edit" element={<ProfileEditPage />} />
+                    <Route path="profile/:id/edit" element={<ProfileEditPage />} />
                     <Route path="profile/:id" element={<ProfilePage />} />
 
                     <Route path="competition/:id/register" element={<PlaceholderPage name="Competition Registration" />} />

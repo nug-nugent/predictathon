@@ -5,6 +5,7 @@ import { setAccessToken, setSessionExpiredHandler } from "../services/api";
 import { UserContext } from "../hooks/useUser";
 
 export type User = {
+    id: string;
     name: string;
     roles: Role[];
     avatarUrl?: string;
