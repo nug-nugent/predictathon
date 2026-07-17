@@ -10,10 +10,12 @@ namespace Predictathon.Application.Services;
 public class UserService : IUserService
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IAvatarService _avatarService;
 
-    public UserService(IApplicationDbContext dbContext)
+    public UserService(IApplicationDbContext dbContext, IAvatarService avatarService)
     {
         _dbContext = dbContext;
+        _avatarService = avatarService;
     }
 
     public async Task<UserProfileModel?> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -33,6 +35,7 @@ public class UserService : IUserService
             Location = user.Location,
             FavouriteTeam = user.FavouriteTeam,
             ProfileText = user.ProfileText,
+            AvatarUrl = _avatarService.GetAvatarUrl(user.UserID, user.ImageUploaded),
         };
     }
 }

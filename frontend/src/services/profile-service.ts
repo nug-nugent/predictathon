@@ -1,4 +1,4 @@
-import { getJsonAuthenticated } from "./api";
+import { getJsonAuthenticated, postFormAuthenticated, deleteAuthenticated } from "./api";
 import type { MatchPrediction } from "./prediction-service";
 
 // Matches Application/Models/UserProfileModel.cs.
@@ -9,10 +9,32 @@ export type UserProfile = {
     location: string | null;
     favouriteTeam: string | null;
     profileText: string | null;
+    avatarUrl: string | null;
 };
 
 export async function getUserProfile(userId: string): Promise<UserProfile> {
     return getJsonAuthenticated<UserProfile>(`/User/${userId}/Profile`);
+}
+
+export type AvatarCropRect = { x: number; y: number; width: number; height: number };
+
+/// Uploads the current user's avatar - the original image plus the crop rectangle chosen in the
+/// client-side cropper (in the original image's pixel coordinates). The server derives both the
+/// large and thumbnail sizes from this itself, rather than trusting client-produced crops.
+export async function uploadAvatar(image: File, crop: AvatarCropRect): Promise<{ avatarUrl: string }> {
+    const form = new FormData();
+    form.append("image", image);
+    form.append("cropX", String(Math.round(crop.x)));
+    form.append("cropY", String(Math.round(crop.y)));
+    form.append("cropWidth", String(Math.round(crop.width)));
+    form.append("cropHeight", String(Math.round(crop.height)));
+
+    return postFormAuthenticated<{ avatarUrl: string }>("/User/Avatar", form);
+}
+
+/// Removes the current user's avatar, reverting to the initials fallback.
+export async function removeAvatar(): Promise<void> {
+    return deleteAuthenticated("/User/Avatar");
 }
 
 /// A user's prediction history for a competition, most recent first. Future matches are only

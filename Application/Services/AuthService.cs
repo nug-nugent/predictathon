@@ -1,9 +1,12 @@
 using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
+using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces;
+using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Identity;
 
@@ -21,6 +24,8 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IJwtTokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IApplicationDbContext _dbContext;
+    private readonly IAvatarService _avatarService;
     private readonly IValidator<RegisterModel>? _registerValidator;
     private readonly IValidator<LoginModel>? _loginValidator;
 
@@ -28,12 +33,16 @@ public class AuthService : IAuthService
         UserManager<ApplicationUser> userManager,
         IJwtTokenService tokenService,
         IRefreshTokenService refreshTokenService,
+        IApplicationDbContext dbContext,
+        IAvatarService avatarService,
         IValidator<RegisterModel>? registerValidator = null,
         IValidator<LoginModel>? loginValidator = null)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
+        _dbContext = dbContext;
+        _avatarService = avatarService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
     }
@@ -112,8 +121,15 @@ public class AuthService : IAuthService
             return Result.Fail<AuthResultModel>(new UnauthorizedError("The refresh token is invalid or has expired."));
         }
 
+        // Self-healing: covers any account whose dbo.User row wasn't created at registration
+        // time (e.g. it predates this fix) - the next silent refresh backfills it.
+        await EnsureDboUserAsync(user, cancellationToken);
+
         var roles = await _userManager.GetRolesAsync(user);
-        return Result.Ok(_tokenService.GenerateToken(user, roles));
+        var response = _tokenService.GenerateToken(user, roles);
+        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, await HasUploadedImageAsync(user.Id, cancellationToken));
+
+        return Result.Ok(response);
     }
 
     /// <inheritdoc />
@@ -127,8 +143,17 @@ public class AuthService : IAuthService
 
     private async Task<AuthTokenResult> IssueTokensAsync(ApplicationUser user, bool rememberMe, CancellationToken cancellationToken)
     {
+        // dbo.User is a separate, legacy table that every reporting feature (league tables, Hall
+        // of Fame, statistics, prediction history) reads from - Identity's own store has no
+        // knowledge of it. Registration used to leave a new account without a matching row at
+        // all, making them invisible everywhere else. Ensuring it here (and on refresh) closes
+        // that gap without a one-off migration step - a deliberate stopgap until dbo.User is
+        // migrated out entirely.
+        await EnsureDboUserAsync(user, cancellationToken);
+
         var roles = await _userManager.GetRolesAsync(user);
         var response = _tokenService.GenerateToken(user, roles);
+        response.AvatarUrl = _avatarService.GetAvatarUrl(user.Id, await HasUploadedImageAsync(user.Id, cancellationToken));
 
         var refreshLifetime = rememberMe ? RememberedRefreshTokenLifetime : UnrememberedRefreshTokenLifetime;
         var refreshTokenExpiresAtUtc = DateTime.UtcNow.Add(refreshLifetime);
@@ -140,5 +165,41 @@ public class AuthService : IAuthService
             RefreshToken = refreshToken,
             RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc
         };
+    }
+
+    private async Task EnsureDboUserAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var exists = await _dbContext.User.AnyAsync(u => u.UserID == user.Id, cancellationToken);
+        if (exists)
+        {
+            return;
+        }
+
+        var dboUser = new Domain.Entities.User
+        {
+            UserID = user.Id,
+            Username = user.UserName ?? user.Id.ToString(),
+            // dbo.User.Password is a vestigial NOT NULL column from before Identity existed -
+            // Identity's own ApplicationUser.PasswordHash is the only credential store now.
+            Password = "(managed by Identity)",
+            EmailAddress = user.Email,
+        };
+
+        await _dbContext.AddAsync(dboUser, cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DuplicateKeyException)
+        {
+            // Another concurrent request (e.g. two tabs logging in at once) already created it.
+        }
+    }
+
+    private async Task<bool> HasUploadedImageAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _dbContext.User.FirstOrDefaultAsync(u => u.UserID == userId, cancellationToken);
+        return user?.ImageUploaded ?? false;
     }
 }

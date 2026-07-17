@@ -16,4 +16,6 @@ public class UserProfileModel
     public string? FavouriteTeam { get; set; }
 
     public string? ProfileText { get; set; }
+
+    public string? AvatarUrl { get; set; }
 }

@@ -3,6 +3,7 @@ using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces.Persistence;
@@ -101,6 +102,16 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors(FrontendCorsPolicy);
+
+// Serve uploaded avatars directly from disk. Images don't need CORS headers (only canvas pixel
+// reads would), so this works cross-origin from the frontend's own host as-is.
+var avatarsStoragePath = Path.GetFullPath(builder.Configuration["Avatars:StoragePath"] ?? "Uploads/Avatars");
+Directory.CreateDirectory(avatarsStoragePath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(avatarsStoragePath),
+    RequestPath = "/uploads/avatars"
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

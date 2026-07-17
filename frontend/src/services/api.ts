@@ -160,3 +160,10 @@ export async function deleteAuthenticated(path: string): Promise<void> {
     const response = await authenticatedFetch(path, { method: "DELETE" });
     return handleJsonResponse<void>(response);
 }
+
+// No Content-Type header - the browser sets the multipart boundary itself when the body is a
+// FormData, and overriding it manually would drop that boundary and break parsing server-side.
+export async function postFormAuthenticated<TResponse>(path: string, form: FormData): Promise<TResponse> {
+    const response = await authenticatedFetch(path, { method: "POST", body: form });
+    return handleJsonResponse<TResponse>(response);
+}

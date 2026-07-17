@@ -17,6 +17,7 @@ export const nug: User = {
 type AuthResult = {
     token: string;
     expiresAtUtc: string;
+    avatarUrl?: string;
 };
 
 // Claim type URIs as they appear in the API's JWT payload (System.Security.Claims.ClaimTypes).
@@ -44,6 +45,7 @@ function userFromAuthResult(auth: AuthResult): User {
     return {
         name: typeof payload[NAME_CLAIM] === "string" ? payload[NAME_CLAIM] : "",
         roles: extractRoles(payload[ROLE_CLAIM]),
+        avatarUrl: auth.avatarUrl,
         token: auth.token,
         tokenExpiresAtUtc: auth.expiresAtUtc,
     };
