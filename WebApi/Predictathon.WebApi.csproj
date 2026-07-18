@@ -21,4 +21,11 @@
     <Folder Include="Controllers\Base\" />
   </ItemGroup>
 
+  <!-- Vendored reaction images (standard-emoji SVGs + Predictathon's custom reactions) - static,
+       checked into source control, served via the /reactions static-files mapping in Program.cs.
+       Not under wwwroot, so needs an explicit copy-to-output rule for a real publish. -->
+  <ItemGroup>
+    <Content Include="Assets\Reactions\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

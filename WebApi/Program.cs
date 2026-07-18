@@ -152,6 +152,15 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads/message-images"
 });
 
+// Serve the vendored reaction images (standard-emoji SVGs + Predictathon's own custom reactions).
+// Unlike the Uploads/* folders above, this is static, checked-in content, not user-uploaded -
+// content root rather than a configurable storage path, since it ships with the app.
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Assets", "Reactions")),
+    RequestPath = "/reactions"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,9 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Derives the API host root (without the /api suffix) for non-REST endpoints, such as SignalR
-// hubs, that aren't mounted under /api.
+// The API host root (without the /api suffix), for non-REST endpoints - SignalR hubs, static
+// asset folders like /reactions - that aren't mounted under /api.
+function getApiOrigin(): string {
+    return API_BASE_URL.replace(/\/api\/?$/, "");
+}
+
 export function getHubUrl(hubPath: string): string {
-    return `${API_BASE_URL.replace(/\/api\/?$/, "")}${hubPath}`;
+    return `${getApiOrigin()}${hubPath}`;
+}
+
+// Absolute URL for a file under the backend's static /reactions mount (WebApi/Assets/Reactions) -
+// must be absolute, not a bare path, since these render directly in the browser (picker preview,
+// message reactions) and the frontend's own origin differs from the API's.
+export function getReactionImageUrl(filename: string): string {
+    return `${getApiOrigin()}/reactions/${filename}`;
 }
 
 // The `type` value AuthController/ApiControllerBase uses for a login failure caused by an
