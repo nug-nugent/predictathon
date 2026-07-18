@@ -30,6 +30,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 builder.Services.AddScoped<IGenericDbContext, ApplicationDbContext>();
 
+builder.Services.AddHttpClient();
+
 // Configure Identity (Identity.Users/Identity.Roles schema)
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>

@@ -62,6 +62,22 @@ export async function loginUser(username: string, password: string, rememberMe: 
     return user.name ? user : { ...user, name: username };
 }
 
+export type RegisterFields = {
+    userName: string;
+    email: string;
+    password: string;
+    forenames: string;
+    surname: string;
+};
+
+/// Creates a new account and logs it straight in (matches Auth/Login's response shape).
+export async function registerUser(fields: RegisterFields): Promise<User> {
+    const auth = await postJson<AuthResult>("/Auth/Register", { ...fields, rememberMe: true });
+    const user = userFromAuthResult(auth);
+
+    return user.name ? user : { ...user, name: fields.userName };
+}
+
 /// Silently exchanges the HttpOnly refresh-token cookie (if any) for a fresh access token.
 /// Throws (ApiError) if there's no valid session - callers should treat that as logged out.
 export async function refreshSession(): Promise<User> {

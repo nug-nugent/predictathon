@@ -1,19 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUser } from "../hooks/useUser";
 import { getMyRegisteredCompetitions, type UserCompetitionRegistration } from "../services/competition-service";
-import { CompetitionContext, defaultCompetitionContextValue } from "../hooks/useCompetition";
+import { CompetitionContext } from "../hooks/useCompetition";
 
 const STORAGE_KEY = "currentCompetitionId";
 
-// Fetches and holds registered-competition state for a single logged-in user. Mounted keyed by
-// username, so logging in as a different person in the same tab remounts this fresh rather than
-// needing to explicitly reset state left over from the previous session.
-const LoggedInCompetitionProvider = ({ children }: { children: React.ReactNode }) => {
+// Always renders `children` under a single, stable CompetitionContext.Provider - the fetching
+// logic below switches on `user`, but the element type/position never changes across a
+// login/logout transition. That matters because `children` here is the whole routed page tree
+// (see main.tsx); if this provider's own JSX shape changed across that transition, React would
+// unmount and remount every page underneath it, silently discarding local component state (e.g.
+// RegisterPage's in-progress step) at exactly the moment a page like Register logs a user in
+// without navigating away.
+export const CompetitionProvider = ({ children }: { children: React.ReactNode }) => {
+    const { user, isLoading: userLoading } = useUser();
+
     const [competitions, setCompetitions] = useState<UserCompetitionRegistration[]>([]);
     const [currentCompetitionId, setCurrentCompetitionIdState] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Re-fetches just the list, leaving currentCompetitionId alone - callers that just registered
+    // for a new competition follow this with an explicit setCurrentCompetitionId to switch to it.
+    // Deliberately doesn't read `user` - callers only ever invoke this right after a registration
+    // action that itself required being logged in, and a stale closure over `user` (captured
+    // before a same-tick setUser() has actually propagated through React) would make this silently
+    // no-op right when it matters most.
+    const refreshCompetitions = useCallback(async () => {
+        const list = await getMyRegisteredCompetitions();
+        setCompetitions(list);
+    }, []);
+
     useEffect(() => {
+        if (!user) {
+            setCompetitions([]);
+            setCurrentCompetitionIdState(null);
+            setIsLoading(false);
+
+            // Only clear on a genuine logout - `user` also starts out null while UserProvider's
+            // silent session-refresh is still in flight on initial load, which isn't a logout.
+            if (!userLoading) {
+                sessionStorage.removeItem(STORAGE_KEY);
+            }
+            return;
+        }
+
+        setIsLoading(true);
         getMyRegisteredCompetitions()
             .then((list) => {
                 setCompetitions(list);
@@ -36,9 +67,10 @@ const LoggedInCompetitionProvider = ({ children }: { children: React.ReactNode }
                 setCurrentCompetitionIdState(null);
             })
             .finally(() => setIsLoading(false));
-        // Deliberately runs once per mount (i.e. once per logged-in user - see the `key` this is
-        // mounted with in CompetitionProvider below).
-    }, []);
+        // Re-fetches once per logged-in identity (login/logout/switch user), not on every render -
+        // `user` is a fresh object each refresh cycle, so we key on the stable `name` instead.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.name, userLoading]);
 
     const setCurrentCompetitionId = (competitionId: string) => {
         setCurrentCompetitionIdState(competitionId);
@@ -50,40 +82,15 @@ const LoggedInCompetitionProvider = ({ children }: { children: React.ReactNode }
             competitions,
             currentCompetitionId,
             setCurrentCompetitionId,
+            refreshCompetitions,
             isLoading,
         }),
-        [competitions, currentCompetitionId, isLoading]
+        [competitions, currentCompetitionId, refreshCompetitions, isLoading]
     );
 
     return (
         <CompetitionContext.Provider value={contextValue}>
             {children}
         </CompetitionContext.Provider>
-    );
-};
-
-export const CompetitionProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user, isLoading: userLoading } = useUser();
-
-    useEffect(() => {
-        // Only clear on a genuine logout - `user` also starts out null while UserProvider's
-        // silent session-refresh is still in flight on initial load, which isn't a logout.
-        if (!user && !userLoading) {
-            sessionStorage.removeItem(STORAGE_KEY);
-        }
-    }, [user, userLoading]);
-
-    if (!user) {
-        return (
-            <CompetitionContext.Provider value={defaultCompetitionContextValue}>
-                {children}
-            </CompetitionContext.Provider>
-        );
-    }
-
-    return (
-        <LoggedInCompetitionProvider key={user.name}>
-            {children}
-        </LoggedInCompetitionProvider>
     );
 };

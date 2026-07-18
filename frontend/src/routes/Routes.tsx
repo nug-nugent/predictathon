@@ -8,7 +8,6 @@ import { BoardPage } from "../pages/logged-in/board/BoardPage";
 import { SiteLayout } from "../components/site-layout/SiteLayout";
 import { LeaguePage } from "../pages/logged-in/league/LeaguePage";
 import { PredictionsPage } from "../pages/logged-in/predictions/PredictionsPage";
-import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { ForgotPasswordPage } from "../pages/public/password-reset/ForgotPasswordPage";
 import { ResetPasswordPage } from "../pages/public/password-reset/ResetPasswordPage";
 import { ProfilePage } from "../pages/logged-in/profile/ProfilePage";
@@ -20,6 +19,8 @@ import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
 import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/CompetitionsAdminPage";
 import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
 import { StatisticsPage } from "../pages/logged-in/statistics/StatisticsPage";
+import { RegisterPage } from "../pages/public/registration/RegisterPage";
+import { CompetitionRegistrationPage } from "../pages/logged-in/registration/CompetitionRegistrationPage";
 
 export function SiteRoutes() {
     return (
@@ -27,7 +28,7 @@ export function SiteRoutes() {
             <Route path="/" element={<SiteLayout />}>
                 // Public routes
                 <Route index element={<HomePage />} />
-                <Route path="register" element={<PlaceholderPage name="Register" />} />
+                <Route path="register" element={<RegisterPage />} />
                 <Route path="password-reset" element={<ForgotPasswordPage />} />
                 <Route path="password-reset/confirm" element={<ResetPasswordPage />} />
 
@@ -47,7 +48,7 @@ export function SiteRoutes() {
                     <Route path="profile/:id/edit" element={<ProfileEditPage />} />
                     <Route path="profile/:id" element={<ProfilePage />} />
 
-                    <Route path="competition/:id/register" element={<PlaceholderPage name="Competition Registration" />} />
+                    <Route path="competition/:id/register" element={<CompetitionRegistrationPage />} />
                 </Route>
 
                 // Protected routes for admin users - each gated behind the specific role it needs

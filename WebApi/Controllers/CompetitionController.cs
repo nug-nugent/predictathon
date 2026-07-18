@@ -11,15 +11,78 @@ namespace Predictathon.WebApi.Controllers;
 public class CompetitionController : ApiControllerBase
 {
     private readonly ICompetitionService _competitionService;
+    private readonly IUserCompetitionService _userCompetitionService;
     private readonly ILogger<CompetitionController> _logger;
 
     public CompetitionController(
         ICompetitionService competitionService,
+        IUserCompetitionService userCompetitionService,
         ILogger<CompetitionController> logger
     )
     {
         _competitionService = competitionService;
+        _userCompetitionService = userCompetitionService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Get the competitions currently open for registration, for the pre-login landing page.
+    /// </summary>
+    [HttpGet("OpenForRegistration")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<CompetitionRegistrationSummaryModel>>> GetOpenForRegistration()
+    {
+        var competitions = await _competitionService.GetCompetitionListForLoginPageAsync();
+
+        return Ok(competitions.Adapt<List<CompetitionRegistrationSummaryModel>>());
+    }
+
+    /// <summary>
+    /// Register the current user for a competition that has no entrance fee.
+    /// </summary>
+    [HttpPost("{id:guid}/Register/Free")]
+    [Authorize]
+    public async Task<ActionResult> RegisterFree(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _userCompetitionService.RegisterFreeAsync(CurrentUserId, id, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Register the current user for a competition by redeeming a payment credit code.
+    /// </summary>
+    [HttpPost("{id:guid}/Register/PaymentCredit")]
+    [Authorize]
+    public async Task<ActionResult> RegisterWithPaymentCredit(Guid id, RegisterWithPaymentCreditModel model, CancellationToken cancellationToken)
+    {
+        var result = await _userCompetitionService.RegisterWithPaymentCreditAsync(CurrentUserId, id, model.Code, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Create a PayPal order for a competition's entrance fee, for the frontend's PayPal Buttons.
+    /// </summary>
+    [HttpPost("{id:guid}/Register/PayPal/CreateOrder")]
+    [Authorize]
+    public async Task<ActionResult<PayPalOrderModel?>> CreatePayPalOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _userCompetitionService.CreatePayPalOrderAsync(id, cancellationToken);
+
+        return FromResult(result.Map(order => new PayPalOrderModel { OrderId = order.OrderId }));
+    }
+
+    /// <summary>
+    /// Capture a buyer-approved PayPal order and register the current user for the competition.
+    /// </summary>
+    [HttpPost("{id:guid}/Register/PayPal/Capture")]
+    [Authorize]
+    public async Task<ActionResult> CapturePayPalOrder(Guid id, CapturePayPalOrderModel model, CancellationToken cancellationToken)
+    {
+        var result = await _userCompetitionService.CapturePayPalOrderAsync(CurrentUserId, id, model.OrderId, cancellationToken);
+
+        return FromResult(result);
     }
 
     /// <summary>

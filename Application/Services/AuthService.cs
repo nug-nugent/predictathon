@@ -64,7 +64,9 @@ public class AuthService : IAuthService
         var user = new ApplicationUser
         {
             UserName = model.UserName,
-            Email = model.Email
+            Email = model.Email,
+            Forenames = model.Forenames,
+            Surname = model.Surname
         };
 
         var createResult = await _userManager.CreateAsync(user, model.Password);

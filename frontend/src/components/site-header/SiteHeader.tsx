@@ -3,7 +3,6 @@ import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { Link } from "react-router";
 import football from "../../assets/football.png";
-import { LoginButton } from "./login-button/LoginButton";
 import { UserMenu } from "./user-menu/UserMenu";
 import { CompetitionSelector } from "./competition-selector/CompetitionSelector";
 
@@ -46,11 +45,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                         </Heading>
                     )}
                     <Spacer />
-                    {user ? (
-                        <UserMenu />
-                    ) : (
-                        <LoginButton />
-                    )}
+                    {user && <UserMenu />}
                 </Flex>
             </Container>
         </Box>

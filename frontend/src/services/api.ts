@@ -84,6 +84,11 @@ async function doFetch(path: string, init: RequestInit): Promise<Response> {
     }
 }
 
+export async function getJson<TResponse>(path: string): Promise<TResponse> {
+    const response = await doFetch(path, {});
+    return handleJsonResponse<TResponse>(response);
+}
+
 export async function postJson<TResponse>(path: string, body: unknown): Promise<TResponse> {
     const response = await doFetch(path, {
         method: "POST",
