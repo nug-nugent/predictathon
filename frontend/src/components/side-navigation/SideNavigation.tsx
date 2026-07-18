@@ -1,5 +1,5 @@
 import { Box, Heading, List} from "@chakra-ui/react";
-import { CalendarPlus, ChartColumn, Dices, Home, Info, Medal, MessagesSquare, TableProperties, Trophy, Users, Wrench } from "lucide-react";
+import { CalendarPlus, ChartColumn, Dices, Home, Info, Medal, MessagesSquare, TableProperties, Ticket, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
 import { useUser } from "../../hooks/useUser";
 import { Role } from "../../constants/roles";
@@ -33,6 +33,9 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
                         )}
                         {roles.includes(Role.UserAdministrator) && (
                             <NavItem to="/admin/users" icon={<Users size={20} />} label="Users" />
+                        )}
+                        {roles.includes(Role.UserAdministrator) && (
+                            <NavItem to="/admin/payment-credits" icon={<Ticket size={20} />} label="Payment Credits" />
                         )}
                     </>
                 )}

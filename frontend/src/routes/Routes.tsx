@@ -18,6 +18,7 @@ import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResu
 import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
 import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/CompetitionsAdminPage";
 import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
+import { PaymentCreditsAdminPage } from "../pages/logged-in/admin/payment-credits/PaymentCreditsAdminPage";
 import { StatisticsPage } from "../pages/logged-in/statistics/StatisticsPage";
 import { RegisterPage } from "../pages/public/registration/RegisterPage";
 import { CompetitionRegistrationPage } from "../pages/logged-in/registration/CompetitionRegistrationPage";
@@ -63,6 +64,7 @@ export function SiteRoutes() {
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.UserAdministrator]} />}>
                         <Route path="users" element={<UsersPage />} />
+                        <Route path="payment-credits" element={<PaymentCreditsAdminPage />} />
                     </Route>
                 </Route>
 
