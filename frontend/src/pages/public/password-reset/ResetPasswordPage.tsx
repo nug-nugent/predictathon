@@ -23,7 +23,7 @@ export function ResetPasswordPage() {
                 <VStack gap={3} maxW="sm" textAlign="center">
                     <Heading size="md">Invalid reset link</Heading>
                     <Text>This password reset link is missing some information. Please request a new one.</Text>
-                    <Link as={RouterLink} to="/password-reset" variant="underline">Request a new link</Link>
+                    <Link asChild variant="underline"><RouterLink to="/password-reset">Request a new link</RouterLink></Link>
                 </VStack>
             </Center>
         );
