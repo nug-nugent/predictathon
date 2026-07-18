@@ -41,4 +41,13 @@ public interface IUserService
     /// refuse locking your own account.
     /// </summary>
     Task<Result> SetUserLockedAsync(Guid userId, bool locked, Guid currentUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Emails every user with a prediction due within their chosen reminder window (per
+    /// UserOverduePredictionsGet) and marks the affected UserCompetitions as reminded. Intended to
+    /// be triggered on a schedule (e.g. daily), not interactively. A user's email failing to send
+    /// doesn't stop the remaining users being processed, and leaves that user's reminder unmarked
+    /// so it's retried on the next run.
+    /// </summary>
+    Task SendPredictionEmailRemindersAsync(CancellationToken cancellationToken = default);
 }

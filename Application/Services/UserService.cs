@@ -2,7 +2,10 @@ using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Constants;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
@@ -18,17 +21,26 @@ public class UserService : IUserService
     private readonly IAvatarService _avatarService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IApplicationDbContext _dbContext;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<UserService> _logger;
     private readonly IValidator<UpdateProfileModel>? _updateProfileValidator;
 
     public UserService(
         IAvatarService avatarService,
         UserManager<ApplicationUser> userManager,
         IApplicationDbContext dbContext,
+        IEmailService emailService,
+        IConfiguration configuration,
+        ILogger<UserService> logger,
         IValidator<UpdateProfileModel>? updateProfileValidator = null)
     {
         _avatarService = avatarService;
         _userManager = userManager;
         _dbContext = dbContext;
+        _emailService = emailService;
+        _configuration = configuration;
+        _logger = logger;
         _updateProfileValidator = updateProfileValidator;
     }
 
@@ -264,6 +276,63 @@ public class UserService : IUserService
         }
 
         return Result.Ok();
+    }
+
+    public async Task SendPredictionEmailRemindersAsync(CancellationToken cancellationToken = default)
+    {
+        var overduePredictions = await _dbContext.CallStoredProcedureAsync<UserOverduePredictionsItem>(
+            "UserOverduePredictionsGet", cancellationToken: cancellationToken);
+
+        var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? string.Empty).TrimEnd('/');
+        var predictionsUrl = $"{frontendBaseUrl}/predictions";
+
+        foreach (var userItems in overduePredictions.GroupBy(p => p.UserID))
+        {
+            var items = userItems.ToList();
+
+            try
+            {
+                await _emailService.SendAsync(
+                    items[0].EmailAddress,
+                    "Prediction reminder",
+                    BuildReminderEmailBody(items, predictionsUrl),
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Don't mark these as reminded if the send failed, so they're picked up again on
+                // the next scheduled run instead of being silently skipped. Other users still get
+                // processed.
+                _logger.LogError(ex, "Failed to send prediction reminder email to {UserId}", items[0].UserID);
+                continue;
+            }
+
+            var userCompetitionIds = items.Select(i => i.UserCompetitionID).ToList();
+            var userCompetitions = await _dbContext.UserCompetition
+                .Where(uc => userCompetitionIds.Contains(uc.UserCompetitionID))
+                .ToListAsync(cancellationToken);
+
+            foreach (var userCompetition in userCompetitions)
+            {
+                userCompetition.LastEmailReminderSent = UkClock.Now;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static string BuildReminderEmailBody(IReadOnlyList<UserOverduePredictionsItem> overduePredictions, string predictionsUrl)
+    {
+        var rows = string.Join(string.Empty, overduePredictions.Select(p =>
+            $"<tr><td>{p.CompetitionName}</td><td>{p.NextPredictionDue:dddd d MMMM 'at' h:mmtt}</td></tr>"));
+
+        return $"""
+            <p>Dear {overduePredictions[0].Username},</p>
+            <p>You need to make a prediction in the following competition{(overduePredictions.Count > 1 ? "s" : "")}:</p>
+            <table><tr><th>Competition</th><th>Next prediction due</th></tr>{rows}</table>
+            <p>Please visit <a href="{predictionsUrl}">{predictionsUrl}</a> and log in to register your predictions.</p>
+            <p>Good luck,<br />Predictathon.</p>
+            """;
     }
 
     private static UserProfileEditModel ToEditModel(ApplicationUser user) => new()
