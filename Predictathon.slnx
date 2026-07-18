@@ -8,7 +8,6 @@
   <Project Path="Database/Predictathon.Database.csproj" />
   <Project Path="Domain/Predictathon.Domain.csproj" />
   <Project Path="Infrastructure/Predictathon.Infrastructure.csproj" />
-  <Project Path="UI/Web/Predictathon.UI.Web.vbproj" Id="f2e9ae8f-e2e1-4d57-a4f7-b8a2ebf672c5" />
   <Project Path="UnitTests/Predictathon.UnitTests.csproj" />
   <Project Path="WebApi/Predictathon.WebApi.csproj" />
 </Solution>
