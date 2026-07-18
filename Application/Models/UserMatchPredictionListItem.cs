@@ -17,11 +17,21 @@ public class UserMatchPredictionListItem
 
     public DateTime MatchDateTime { get; set; }
 
+    /// <summary>
+    /// Null for a not-yet-decided knockout placeholder (see HomeTeamTBC on the Match entity).
+    /// </summary>
+    public Guid? HomeTeamID { get; set; }
+
     public string? HomeTeam { get; set; }
 
     public string HomeTeamShortName { get; set; } = string.Empty;
 
     public string? HomeTeamImage { get; set; }
+
+    /// <summary>
+    /// Null for a not-yet-decided knockout placeholder (see AwayTeamTBC on the Match entity).
+    /// </summary>
+    public Guid? AwayTeamID { get; set; }
 
     public string? AwayTeam { get; set; }
 

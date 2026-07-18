@@ -22,6 +22,7 @@ import { PaymentCreditsAdminPage } from "../pages/logged-in/admin/payment-credit
 import { StatisticsPage } from "../pages/logged-in/statistics/StatisticsPage";
 import { RegisterPage } from "../pages/public/registration/RegisterPage";
 import { CompetitionRegistrationPage } from "../pages/logged-in/registration/CompetitionRegistrationPage";
+import { TeamDetailPage } from "../pages/logged-in/team/TeamDetailPage";
 
 export function SiteRoutes() {
     return (
@@ -42,6 +43,7 @@ export function SiteRoutes() {
                     <Route path="board/:id" element={<ThreadPage />} />
 
                     <Route path="stats" element={<StatisticsPage />} />
+                    <Route path="team/:teamId" element={<TeamDetailPage />} />
                     <Route path="hof" element={<HallOfFamePage />} />
                     <Route path="rules" element={<RulesPage />} />
 

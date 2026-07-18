@@ -53,6 +53,17 @@ public class TeamController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get a team's played-match stats and results within a competition, for the Team Detail page.
+    /// </summary>
+    [HttpGet("{competitionId:guid}/{teamId:guid}/Detail")]
+    public async Task<ActionResult<TeamDetailModel?>> GetDetail(Guid competitionId, Guid teamId, CancellationToken cancellationToken)
+    {
+        var detail = await _teamService.GetTeamDetailAsync(competitionId, teamId, CurrentUserId, cancellationToken);
+
+        return OkOrNotFound(detail);
+    }
+
+    /// <summary>
     /// Assign a team to a competition.
     /// </summary>
     [HttpPost("{competitionId:guid}/{teamId:guid}")]

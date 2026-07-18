@@ -1,9 +1,10 @@
-import { Flex, HStack, Image, Input, Text } from "@chakra-ui/react";
+import { Flex, HStack, Input, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
 import { ApiError } from "../../../services/api";
 import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
 import { computeMatchStatus, type SaveState } from "../matchStatus";
 import { MatchStatus } from "../match-status/MatchStatus";
+import { TeamName } from "../team-name/TeamName";
 import { useUser } from "../../../hooks/useUser";
 import { crestUrl } from "../../../utils/crestUrl";
 import { parseDigit } from "../../../utils/parseDigit";
@@ -93,8 +94,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} py={2} px={{ base: 2, md: 4 }} gap={2}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
                 <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                    <Text fontSize="0.9em" textAlign="right" truncate>{teamName(match.homeTeam, match.homeTeamShortName)}</Text>
-                    {homeCrest && <Image src={homeCrest} boxSize="20px" alt="" />}
+                    <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)} crest={homeCrest} crestPosition="after" />
                 </HStack>
 
                 <HStack gap={1}>
@@ -106,8 +106,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>
-                    {awayCrest && <Image src={awayCrest} boxSize="20px" alt="" />}
-                    <Text fontSize="0.9em" truncate>{teamName(match.awayTeam, match.awayTeamShortName)}</Text>
+                    <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
                 </HStack>
 
                 <MatchStatus matchId={match.matchID} myUsername={user?.name} status={status} minutesToPredict={minutesToPredict} saveState={saveState}

@@ -1,5 +1,6 @@
 using FluentResults;
 using Mapster;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
@@ -7,6 +8,7 @@ using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
 using Predictathon.Domain.Entities;
+using System.Data;
 
 namespace Predictathon.Application.Services;
 
@@ -89,5 +91,59 @@ public class TeamService : ITeamService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();
+    }
+
+    public async Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var team = await _dbContext.Team.FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);
+        if (team is null)
+        {
+            return null;
+        }
+
+        var playedMatches = await _dbContext.Match
+            .Where(m => m.CompetitionID == competitionId && m.MatchPlayed && (m.HomeTeamID == teamId || m.AwayTeamID == teamId))
+            .ToListAsync(cancellationToken);
+
+        var homeMatches = playedMatches.Where(m => m.HomeTeamID == teamId && !m.NeutralGround).ToList();
+        var awayMatches = playedMatches.Where(m => m.AwayTeamID == teamId && !m.NeutralGround).ToList();
+        var neutralMatches = playedMatches.Where(m => m.NeutralGround).ToList();
+
+        var homeGoalsFor = homeMatches.Sum(m => m.HomeTeamGoals ?? 0);
+        var homeGoalsAgainst = homeMatches.Sum(m => m.AwayTeamGoals ?? 0);
+        var awayGoalsFor = awayMatches.Sum(m => m.AwayTeamGoals ?? 0);
+        var awayGoalsAgainst = awayMatches.Sum(m => m.HomeTeamGoals ?? 0);
+        var neutralGoalsFor = neutralMatches.Sum(m => m.HomeTeamID == teamId ? (m.HomeTeamGoals ?? 0) : (m.AwayTeamGoals ?? 0));
+        var neutralGoalsAgainst = neutralMatches.Sum(m => m.HomeTeamID == teamId ? (m.AwayTeamGoals ?? 0) : (m.HomeTeamGoals ?? 0));
+
+        var goalsFor = homeGoalsFor + awayGoalsFor + neutralGoalsFor;
+        var goalsAgainst = homeGoalsAgainst + awayGoalsAgainst + neutralGoalsAgainst;
+        var totalMatches = playedMatches.Count;
+
+        var results = await _dbContext.CallStoredProcedureAsync<PredictableMatchListItem>(
+            "MatchResultListGet",
+            [
+                new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+                new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+                new SqlParameter("@TeamID", SqlDbType.UniqueIdentifier) { Value = teamId },
+            ],
+            cancellationToken);
+
+        return new TeamDetailModel
+        {
+            TeamID = team.TeamID,
+            TeamName = team.TeamName,
+            ShortName = team.ShortName,
+            ImageName = team.ImageName,
+            GoalsFor = goalsFor,
+            GoalsAgainst = goalsAgainst,
+            AverageGoalsForHome = homeMatches.Count > 0 ? (decimal)homeGoalsFor / homeMatches.Count : null,
+            AverageGoalsAgainstHome = homeMatches.Count > 0 ? (decimal)homeGoalsAgainst / homeMatches.Count : null,
+            AverageGoalsForAway = awayMatches.Count > 0 ? (decimal)awayGoalsFor / awayMatches.Count : null,
+            AverageGoalsAgainstAway = awayMatches.Count > 0 ? (decimal)awayGoalsAgainst / awayMatches.Count : null,
+            AverageGoalsForTotal = totalMatches > 0 ? (decimal)goalsFor / totalMatches : null,
+            AverageGoalsAgainstTotal = totalMatches > 0 ? (decimal)goalsAgainst / totalMatches : null,
+            Results = results,
+        };
     }
 }

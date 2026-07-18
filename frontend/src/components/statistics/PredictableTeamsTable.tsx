@@ -1,8 +1,11 @@
 import { Heading, HStack, Image, Table, Text, VStack } from "@chakra-ui/react";
+import { useNavigate } from "react-router";
 import type { PredictableTeam } from "../../services/statistics-service";
 import { crestUrl } from "../../utils/crestUrl";
 
 export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
+    const navigate = useNavigate();
+
     return (
         <VStack align="stretch" gap={1}>
             <Heading size="sm">Average Prediction Score By Team</Heading>
@@ -21,7 +24,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
                             </Table.Cell>
                         </Table.Row>
                     ) : teams.map((t) => (
-                        <Table.Row key={t.teamID}>
+                        <Table.Row key={t.teamID} onClick={() => navigate(`/team/${t.teamID}`)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
                             <Table.Cell>
                                 <HStack gap={2}>
                                     {crestUrl(t.teamImage) && <Image src={crestUrl(t.teamImage)} h="16px" alt="" />}
