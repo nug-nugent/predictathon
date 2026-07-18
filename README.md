@@ -38,6 +38,21 @@ docker compose --env-file .env.docker down -v
 ```
 (`.\make.ps1 clean` on Windows.)
 
+### Sample data
+
+The stack seeds itself with a starting point so there's something to explore right after `up` -
+a `db-seed` service runs `Scripts/Sample/00_RunAll.sql` once `db-migrate` finishes:
+
+- **Sample Cup**: a free, always-open 32-team World Cup-format competition. The group stage and
+  Round of 16 are already played, the Quarter-finals onward are still to be predicted.
+- **Accounts** (same as David's real dev DB - these are intentionally shared, not newly generated):
+  - `DemoAdmin` / `DemoAdmin!2026` - full admin (User/Competition/Match admin), registered into Sample Cup
+  - `DemoPredictor` / `DemoPass123!` - regular user, registered into Sample Cup
+
+Re-running `up` re-runs `db-seed` too, but it's idempotent (`MERGE`-based) so it's a safe no-op on
+an already-seeded database. To regenerate `Scripts/Sample/01_Teams.sql` after `dbo.Team` changes,
+see that file's header comment for the exact `sp_generate_merge` command.
+
 ### Notes
 
 - Schema changes are picked up automatically — `db-migrate` builds the `Database` project's dacpac from source and publishes it on every `up`, no manual build step needed.

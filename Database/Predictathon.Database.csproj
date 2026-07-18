@@ -27,5 +27,8 @@
 		<!-- Drops the FKs referencing dbo.User and copies any not-yet-migrated dbo.User accounts
 		     into Identity.Users before the schema changes below (which drop dbo.User) are applied. -->
 		<PreDeploy Include="Pre-Deployment\Script.PreDeployment.sql" />
+		<!-- Seeds the 3 admin roles with fixed, well-known GUIDs (insert-only-when-missing, so
+		     existing environments are untouched). -->
+		<PostDeploy Include="Post-Deployment\Script.PostDeployment.sql" />
 	</ItemGroup>
 </Project>

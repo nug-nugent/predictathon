@@ -32,6 +32,16 @@ services:
       db:
         condition: service_healthy
 
+  db-seed:
+    build:
+      context: .
+      dockerfile: Scripts/Sample/Dockerfile
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+
   api:
     build:
       context: .
