@@ -1,11 +1,12 @@
-import { Heading, Tabs, VStack } from "@chakra-ui/react";
+import { Tabs, VStack } from "@chakra-ui/react";
 import { AllTimeStatisticsTab } from "./AllTimeStatisticsTab";
 import { CurrentCompetitionStatisticsTab } from "./CurrentCompetitionStatisticsTab";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 export function StatisticsPage() {
     return (
         <VStack align="stretch" gap={4}>
-            <Heading size="lg">Statistics</Heading>
+            <PageHeading>Statistics</PageHeading>
             <Tabs.Root defaultValue="all-time">
                 <Tabs.List>
                     <Tabs.Trigger value="all-time">All Time</Tabs.Trigger>

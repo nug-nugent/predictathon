@@ -12,6 +12,7 @@ import {
     getCompetitionsOpenForRegistration, type CompetitionRegistrationSummary,
 } from "../../../services/competition-registration-service";
 import { ApiError } from "../../../services/api";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 export function HomePage() {
     const { user, isLoading: userLoading } = useUser();
@@ -93,12 +94,15 @@ function Dashboard() {
     }
 
     return (
-        <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={6}>
-            <VStack align="stretch" gap={4}>
-                <UserStatisticsCard competitionId={currentCompetitionId} />
-                <CompetitionRegistrationsCard />
-            </VStack>
-            <HomeMatchWeeksSection competitionId={currentCompetitionId} />
-        </SimpleGrid>
+        <>
+            <PageHeading mb={4}>Home</PageHeading>
+            <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={6}>
+                <VStack align="stretch" gap={4}>
+                    <UserStatisticsCard competitionId={currentCompetitionId} />
+                    <CompetitionRegistrationsCard />
+                </VStack>
+                <HomeMatchWeeksSection competitionId={currentCompetitionId} />
+            </SimpleGrid>
+        </>
     );
 }

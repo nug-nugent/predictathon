@@ -11,6 +11,7 @@ import {
 } from "../../../../services/users-admin-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
+import { PageHeading } from "../../../../components/ui/page-heading";
 
 const PAGE_SIZE = 20;
 const ALL_ROLES = [Role.UserAdministrator, Role.CompetitionAdministrator, Role.MatchAdministrator];
@@ -58,6 +59,7 @@ export function UsersPage() {
 
     return (
         <VStack align="stretch" gap={4}>
+            <PageHeading>Users</PageHeading>
             <Input
                 size="sm" maxWidth="320px" placeholder="Search by username, email, or name"
                 value={search} onChange={(e) => setSearch(e.target.value)}

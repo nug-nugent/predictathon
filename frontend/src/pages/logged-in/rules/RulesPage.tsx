@@ -1,6 +1,7 @@
 import { Heading, List, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { Panel } from "../../../components/ui/panel";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 // Used for the worked examples below - not tied to any real competition's teams.
 const EXAMPLE_TEAM_1 = "England";
@@ -16,7 +17,7 @@ export function RulesPage() {
 
     return (
         <VStack align="stretch" gap={6} maxW="container.md">
-            <Heading size="lg" textAlign="center">Rules of the game</Heading>
+            <PageHeading textAlign="center">Rules of the game</PageHeading>
 
             <Panel>
                 <Heading size="md" mb={2}>Scoring points</Heading>

@@ -5,6 +5,7 @@ import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchP
 import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
 import { MatchList } from "../../../components/match/match-list/MatchList";
 import { ApiError } from "../../../services/api";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 export function PredictionsPage() {
   const { currentCompetitionId, isLoading } = useCompetition();
@@ -112,6 +113,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
 
   return (
     <>
+      <PageHeading mb={4}>Predictions</PageHeading>
       <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} />
 
       {error ? (

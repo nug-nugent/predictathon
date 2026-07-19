@@ -5,6 +5,7 @@ import { getHallOfFame, type HallOfFameItem } from "../../../services/hall-of-fa
 import { ApiError } from "../../../services/api";
 import { competitionImageUrl } from "../../../utils/competitionImageUrl";
 import { Panel } from "../../../components/ui/panel";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 function PlaceEntry({ label, name, userId, color }: { label: string; name: string | null; userId: string | null; color: string }) {
     if (!name) return null;
@@ -67,7 +68,7 @@ export function HallOfFamePage() {
 
     return (
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
-            <Heading size="lg" textAlign="center" mb={2}>Hall of Fame</Heading>
+            <PageHeading textAlign="center" mb={2}>Hall of Fame</PageHeading>
             {items.length === 0 ? (
                 <Text textAlign="center" color="fg.muted">No competitions have concluded yet.</Text>
             ) : (

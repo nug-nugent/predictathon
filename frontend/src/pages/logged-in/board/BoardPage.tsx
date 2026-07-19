@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Center, Heading, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Button, Center, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router";
 import { Plus } from "lucide-react";
 import { getThreads, type MessageThreadSummary } from "../../../services/messageboard-service";
@@ -7,6 +7,7 @@ import { ApiError } from "../../../services/api";
 import { ThreadListItem } from "../../../components/messageboard/ThreadListItem";
 import { NewThreadDialog } from "../../../components/messageboard/NewThreadDialog";
 import { Panel } from "../../../components/ui/panel";
+import { PageHeading } from "../../../components/ui/page-heading";
 
 export function BoardPage() {
     const navigate = useNavigate();
@@ -44,8 +45,8 @@ export function BoardPage() {
     return (
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
             <HStack justify="space-between" mb={2}>
-                <Heading size="lg">Messageboard</Heading>
-                <Button size="sm" colorPalette="blue" onClick={() => setDialogOpen(true)}>
+                <PageHeading>Messageboard</PageHeading>
+                <Button size="sm" colorPalette="blue" onClick={() => setDialogOpen(true)} ml="auto">
                     <Plus size={16} /> New thread
                 </Button>
             </HStack>

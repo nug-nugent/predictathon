@@ -10,6 +10,7 @@ import {
 } from "../../../../services/payment-credit-admin-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
+import { PageHeading } from "../../../../components/ui/page-heading";
 
 const PAGE_SIZE = 20;
 
@@ -55,6 +56,7 @@ export function PaymentCreditsAdminPage() {
 
     return (
         <VStack align="stretch" gap={4}>
+            <PageHeading>Payment Credits</PageHeading>
             <HStack justify="flex-end">
                 <Button size="sm" colorPalette="blue" onClick={() => setAdding(true)} disabled={competitions.length === 0}>
                     Add credit

@@ -12,6 +12,7 @@ import {
 import { getTeamsForCompetition, type Team } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
+import { PageHeading } from "../../../../components/ui/page-heading";
 
 const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     competitionID: competitionId,
@@ -106,6 +107,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
 
     return (
         <VStack align="stretch" gap={4}>
+            <PageHeading>Matches</PageHeading>
             <HStack justify="space-between">
                 <Checkbox.Root checked={includePlayed} onCheckedChange={(e) => { setIncludePlayed(!!e.checked); setPage(1); }}>
                     <Checkbox.HiddenInput />

@@ -9,6 +9,7 @@ import { getAllCompetitions, createCompetition, type CompetitionAdmin } from "..
 import { formatDateOnly } from "../../../../utils/formatDateOnly";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
+import { PageHeading } from "../../../../components/ui/page-heading";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "GBP" });
 
@@ -52,6 +53,7 @@ export function CompetitionsAdminPage() {
 
     return (
         <VStack align="stretch" gap={4}>
+            <PageHeading>Tournaments</PageHeading>
             <HStack justify="flex-end">
                 <Button size="sm" colorPalette="blue" onClick={() => setAdding(true)}>Add competition</Button>
             </HStack>

@@ -6,6 +6,7 @@ import { getTeamsForCompetition, type Team } from "../../../../services/team-ser
 import { ApiError } from "../../../../services/api";
 import { ResultsList } from "./ResultsList";
 import type { MatchAdmin } from "../../../../services/match-admin-service";
+import { PageHeading } from "../../../../components/ui/page-heading";
 
 export function ProcessResultsPage() {
     const { currentCompetitionId, isLoading } = useCompetition();
@@ -67,5 +68,10 @@ function ProcessResultsLoader({ competitionId }: { competitionId: string }) {
         );
     }
 
-    return <ResultsList matches={matches} teams={teams} />;
+    return (
+        <>
+            <PageHeading mb={4}>Process Results</PageHeading>
+            <ResultsList matches={matches} teams={teams} />
+        </>
+    );
 }
