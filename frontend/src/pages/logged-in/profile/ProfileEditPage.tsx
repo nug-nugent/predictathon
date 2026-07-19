@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import {
-    Button, Center, Checkbox, Field, Heading, HStack, Input, Link, Spinner, Text, Textarea, VStack,
+    Avatar, Box, Button, Center, Checkbox, Field, Heading, HStack, Input, Link, Spinner, Text, Textarea, VStack,
 } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
 import { Role } from "../../../constants/roles";
 import { getUserProfileForEdit, updateProfile, type UserProfileEdit } from "../../../services/profile-service";
 import { ApiError } from "../../../services/api";
 import { Panel } from "../../../components/ui/panel";
+import { AvatarUploadDialog } from "../../../components/profile/AvatarUploadDialog";
 
 export function ProfileEditPage() {
     const { id: routeId } = useParams<{ id: string }>();
@@ -62,13 +63,26 @@ export function ProfileEditPage() {
 }
 
 function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
-    const { user } = useUser();
+    const { user, setUser } = useUser();
     const canEditAdminFields = user?.roles.includes(Role.UserAdministrator) ?? false;
+    const isOwnProfile = user?.id === profile.userId;
 
     const [form, setForm] = useState<UserProfileEdit>(profile);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+
+    const handleAvatarUploaded = (newAvatarUrl: string) => {
+        // Cache-bust: the filename never changes, so the browser would otherwise keep showing the
+        // previous image from cache.
+        const busted = `${newAvatarUrl}?v=${Date.now()}`;
+        if (user) setUser({ ...user, avatarUrl: busted });
+    };
+
+    const handleAvatarRemoved = () => {
+        if (user) setUser({ ...user, avatarUrl: undefined });
+    };
 
     const update = (patch: Partial<UserProfileEdit>) => {
         setForm((f) => ({ ...f, ...patch }));
@@ -102,6 +116,19 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
 
             <Panel>
                 <VStack align="stretch" gap={3}>
+                    {isOwnProfile && (
+                        <HStack gap={3} pb={1}>
+                            <Avatar.Root size="lg">
+                                <Avatar.Image src={user?.avatarUrl ?? undefined} />
+                                <Avatar.Fallback name={form.userName} />
+                            </Avatar.Root>
+                            <Button size="sm" variant="outline" onClick={() => setAvatarDialogOpen(true)}>
+                                <Box as={Camera} boxSize={4} mr={1} />
+                                Change photo
+                            </Button>
+                        </HStack>
+                    )}
+
                     <HStack align="start">
                         <Field.Root>
                             <Field.Label>Username</Field.Label>
@@ -177,6 +204,16 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
                     </HStack>
                 </VStack>
             </Panel>
+
+            {isOwnProfile && (
+                <AvatarUploadDialog
+                    open={avatarDialogOpen}
+                    onClose={() => setAvatarDialogOpen(false)}
+                    hasAvatar={!!user?.avatarUrl}
+                    onUploaded={handleAvatarUploaded}
+                    onRemoved={handleAvatarRemoved}
+                />
+            )}
         </VStack>
     );
 }
