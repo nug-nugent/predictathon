@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Box, Center, Heading, Spinner, Table, Text } from "@chakra-ui/react";
+import { Center, Heading, Spinner, Table, Text } from "@chakra-ui/react";
 import { getLeagueTable } from "../../services/league-service";
 import { getCompetitionWeeks, computeDefaultWeek } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
 import { toDateOnly } from "../../utils/toDateOnly";
 import { ApiError } from "../../services/api";
+import { Panel } from "../ui/panel";
 
 type WeekStat = { points: number; position: number };
 
@@ -84,7 +85,7 @@ export function ProfileStatisticsCard({ competitionId, userId }: { competitionId
     }
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <Heading size="md" mb={2}>Statistics</Heading>
             <Table.Root size="sm" variant="line">
                 <Table.Body>
@@ -110,6 +111,6 @@ export function ProfileStatisticsCard({ competitionId, userId }: { competitionId
                     )}
                 </Table.Body>
             </Table.Root>
-        </Box>
+        </Panel>
     );
 }

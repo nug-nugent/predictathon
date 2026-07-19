@@ -29,9 +29,17 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
 
 export function ColorModeButton(props: Omit<IconButtonProps, "aria-label">) {
     const { colorMode, toggleColorMode } = useColorMode();
+    const isDark = colorMode === "dark";
+
     return (
-        <IconButton aria-label="Toggle color mode" variant="ghost" size="sm" onClick={toggleColorMode} {...props}>
-            {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        <IconButton
+            aria-label="Toggle color mode" variant="ghost" size="sm" onClick={toggleColorMode}
+            // The default ghost hover fill (a flat grey square) looks out of place against the
+            // header's solid color - darkening the icon itself instead reads as a much cleaner hover cue.
+            _hover={{ bg: "transparent", color: isDark ? "brand.wordmarkFg" : "gray.900" }}
+            {...props}
+        >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </IconButton>
     );
 }

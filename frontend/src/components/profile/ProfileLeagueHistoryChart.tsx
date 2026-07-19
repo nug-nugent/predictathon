@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import type { UserCompetitionLeagueHistoryItem } from "../../services/profile-service";
+import { Panel } from "../ui/panel";
 
 const WIDTH = 600;
 const HEIGHT = 220;
@@ -34,10 +35,10 @@ export function ProfileLeagueHistoryChart({ history, worstPosition }: {
 
     if (history.length === 0) {
         return (
-            <Box borderWidth="1px" rounded="md" p={4}>
+            <Panel>
                 <Heading size="md" mb={2}>League Position by Date</Heading>
                 <Text color="fg.muted">No history yet</Text>
-            </Box>
+            </Panel>
         );
     }
 
@@ -89,7 +90,7 @@ export function ProfileLeagueHistoryChart({ history, worstPosition }: {
     const hovered = hoverIndex !== null ? points[hoverIndex] : null;
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <Heading size="md" mb={2}>League Position by Date</Heading>
             <Box position="relative">
                 <svg
@@ -176,6 +177,6 @@ export function ProfileLeagueHistoryChart({ history, worstPosition }: {
                     </Box>
                 )}
             </Box>
-        </Box>
+        </Panel>
     );
 }

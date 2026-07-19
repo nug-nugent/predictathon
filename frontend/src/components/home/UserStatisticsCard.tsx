@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Center, Heading, HStack, Link, Spinner, Table, Text } from "@chakra-ui/react";
+import { Button, Center, Heading, HStack, Link, Spinner, Table, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { getLeagueTable } from "../../services/league-service";
@@ -7,6 +7,7 @@ import { getCompetitionWeeks, getMatchesForWeek, getNextUnpredictedMatch, comput
 import { ordinal } from "../../utils/ordinal";
 import { toDateOnly } from "../../utils/toDateOnly";
 import { ApiError } from "../../services/api";
+import { Panel } from "../ui/panel";
 
 type WeekStat = { points: number; position: number };
 
@@ -126,7 +127,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
     const deadline = stats.nextDueMatchDateTime ? new Date(new Date(stats.nextDueMatchDateTime).getTime() - 5 * 60000) : null;
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <HStack justify="space-between" mb={2}>
                 <Heading size="md">{user.name}</Heading>
                 <Button asChild size="xs" variant="ghost">
@@ -175,6 +176,6 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                     </Table.Row>
                 </Table.Body>
             </Table.Root>
-        </Box>
+        </Panel>
     );
 }

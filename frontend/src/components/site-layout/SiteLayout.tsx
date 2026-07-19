@@ -48,7 +48,7 @@ export function SiteLayout() {
             <Container maxW="6xl">
                 <Flex>
                     {user && (
-                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3} p={2}
+                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3} p={2} alignSelf="flex-start"
                             bg="surface.sidebar" borderWidth="1px" borderColor="border.hairline" borderRadius="card">
                             <SideNavigation />
                         </Box>

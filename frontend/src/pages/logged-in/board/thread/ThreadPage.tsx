@@ -8,6 +8,7 @@ import { connectToThread } from "../../../../services/messageboard-hub";
 import { ApiError } from "../../../../services/api";
 import { MessageItem } from "../../../../components/messageboard/MessageItem";
 import { MessageComposer } from "../../../../components/messageboard/MessageComposer";
+import { Panel } from "../../../../components/ui/panel";
 
 const PAGE_SIZE = 30;
 
@@ -117,28 +118,30 @@ export function ThreadPage() {
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
             <Heading size="lg">{thread.threadSubject}</Heading>
 
-            {hasMore && (
-                <Center>
-                    <Button size="xs" variant="ghost" loading={loadingOlder} onClick={loadOlder}>
-                        Load older messages
-                    </Button>
-                </Center>
-            )}
+            <Panel>
+                {hasMore && (
+                    <Center mb={2}>
+                        <Button size="xs" variant="ghost" loading={loadingOlder} onClick={loadOlder}>
+                            Load older messages
+                        </Button>
+                    </Center>
+                )}
 
-            <VStack align="stretch" gap={0}>
-                {messages.map((message) => (
-                    <MessageItem
-                        key={message.messageID}
-                        message={message}
-                        onReactionsChanged={(reactions: MessageReaction[]) =>
-                            setMessages((prev) =>
-                                prev ? prev.map((m) => (m.messageID === message.messageID ? { ...m, reactions } : m)) : prev)
-                        }
-                    />
-                ))}
-            </VStack>
+                <VStack align="stretch" gap={0}>
+                    {messages.map((message) => (
+                        <MessageItem
+                            key={message.messageID}
+                            message={message}
+                            onReactionsChanged={(reactions: MessageReaction[]) =>
+                                setMessages((prev) =>
+                                    prev ? prev.map((m) => (m.messageID === message.messageID ? { ...m, reactions } : m)) : prev)
+                            }
+                        />
+                    ))}
+                </VStack>
 
-            <MessageComposer threadId={id} onPosted={() => { /* the new message arrives via SignalR */ }} />
+                <MessageComposer threadId={id} onPosted={() => { /* the new message arrives via SignalR */ }} />
+            </Panel>
         </VStack>
     );
 }

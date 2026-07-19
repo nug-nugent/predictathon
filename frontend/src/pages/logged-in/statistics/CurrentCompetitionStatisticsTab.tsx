@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Center, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { getCurrentCompetitionStatistics, type CurrentCompetitionStatistics } from "../../../services/statistics-service";
 import { PredictableTeamsTable } from "../../../components/statistics/PredictableTeamsTable";
@@ -61,15 +61,11 @@ function CurrentCompetitionStats({ competitionId }: { competitionId: string }) {
     }
 
     return (
-        <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8}>
-            <VStack align="stretch" gap={6}>
-                <BestPredictionsTable predictions={stats.bestPredictions} />
-                <PredictableMatchesTable title="Most Predictable Matches" matches={stats.mostPredictableMatches} />
-                <PredictableMatchesTable title="Least Predictable Matches" matches={stats.leastPredictableMatches} />
-            </VStack>
-            <VStack align="stretch" gap={6}>
-                <PredictableTeamsTable teams={stats.predictableTeams} />
-            </VStack>
-        </SimpleGrid>
+        <VStack align="stretch" gap={6}>
+            <BestPredictionsTable predictions={stats.bestPredictions} />
+            <PredictableMatchesTable title="Most Predictable Matches" matches={stats.mostPredictableMatches} />
+            <PredictableMatchesTable title="Least Predictable Matches" matches={stats.leastPredictableMatches} />
+            <PredictableTeamsTable teams={stats.predictableTeams} />
+        </VStack>
     );
 }

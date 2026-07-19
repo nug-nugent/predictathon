@@ -11,6 +11,7 @@ import {
 } from "../../../../services/match-admin-service";
 import { getTeamsForCompetition, type Team } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
+import { Panel } from "../../../../components/ui/panel";
 
 const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     competitionID: competitionId,
@@ -114,63 +115,65 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                 <Button size="sm" colorPalette="blue" onClick={() => setEditing("new")}>Add match</Button>
             </HStack>
 
-            <Table.Root size="sm" variant="line" striped showColumnBorder>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.ColumnHeader>Home</Table.ColumnHeader>
-                        <Table.ColumnHeader>Away</Table.ColumnHeader>
-                        <Table.ColumnHeader>Date</Table.ColumnHeader>
-                        <Table.ColumnHeader>Description</Table.ColumnHeader>
-                        <Table.ColumnHeader textAlign="center">Score</Table.ColumnHeader>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {pageMatches.map((m) => (
-                        <Table.Row key={m.matchID} onClick={() => setEditing(m)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
-                            <Table.Cell>{teamName(m.homeTeamID, m.homeTeamTBC)}</Table.Cell>
-                            <Table.Cell>{teamName(m.awayTeamID, m.awayTeamTBC)}</Table.Cell>
-                            {/* "medium" spells the month, so it reads unambiguously regardless of
-                                whether the user's locale orders day/month as DD/MM or MM/DD. */}
-                            <Table.Cell>{new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
-                            <Table.Cell>{m.description}</Table.Cell>
-                            <Table.Cell textAlign="center">
-                                {m.matchPlayed ? `${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"}` : ""}
-                            </Table.Cell>
+            <Panel overflowX="auto">
+                <Table.Root size="sm" variant="line" striped showColumnBorder>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Home</Table.ColumnHeader>
+                            <Table.ColumnHeader>Away</Table.ColumnHeader>
+                            <Table.ColumnHeader>Date</Table.ColumnHeader>
+                            <Table.ColumnHeader>Description</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center">Score</Table.ColumnHeader>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
+                    </Table.Header>
+                    <Table.Body>
+                        {pageMatches.map((m) => (
+                            <Table.Row key={m.matchID} onClick={() => setEditing(m)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
+                                <Table.Cell>{teamName(m.homeTeamID, m.homeTeamTBC)}</Table.Cell>
+                                <Table.Cell>{teamName(m.awayTeamID, m.awayTeamTBC)}</Table.Cell>
+                                {/* "medium" spells the month, so it reads unambiguously regardless of
+                                    whether the user's locale orders day/month as DD/MM or MM/DD. */}
+                                <Table.Cell>{new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
+                                <Table.Cell>{m.description}</Table.Cell>
+                                <Table.Cell textAlign="center">
+                                    {m.matchPlayed ? `${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"}` : ""}
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
 
-            {matches.length === 0 && (
-                <Center mt={4}>
-                    <Text color="fg.muted">No matches found.</Text>
-                </Center>
-            )}
+                {matches.length === 0 && (
+                    <Center mt={4}>
+                        <Text color="fg.muted">No matches found.</Text>
+                    </Center>
+                )}
 
-            {matches.length > PAGE_SIZE && (
-                <Pagination.Root
-                    count={matches.length}
-                    pageSize={PAGE_SIZE}
-                    page={page}
-                    onPageChange={(e) => setPage(e.page)}
-                >
-                    <ButtonGroup variant="ghost" size="sm" justifyContent="center">
-                        <Pagination.PrevTrigger asChild>
-                            <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                        </Pagination.PrevTrigger>
-                        <Pagination.Items
-                            render={(p) => (
-                                <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                    {p.value}
-                                </IconButton>
-                            )}
-                        />
-                        <Pagination.NextTrigger asChild>
-                            <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                        </Pagination.NextTrigger>
-                    </ButtonGroup>
-                </Pagination.Root>
-            )}
+                {matches.length > PAGE_SIZE && (
+                    <Pagination.Root
+                        count={matches.length}
+                        pageSize={PAGE_SIZE}
+                        page={page}
+                        onPageChange={(e) => setPage(e.page)}
+                    >
+                        <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
+                            <Pagination.PrevTrigger asChild>
+                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
+                            </Pagination.PrevTrigger>
+                            <Pagination.Items
+                                render={(p) => (
+                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
+                                        {p.value}
+                                    </IconButton>
+                                )}
+                            />
+                            <Pagination.NextTrigger asChild>
+                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
+                            </Pagination.NextTrigger>
+                        </ButtonGroup>
+                    </Pagination.Root>
+                )}
+            </Panel>
 
             {editing !== null && (
                 <MatchEditDialog

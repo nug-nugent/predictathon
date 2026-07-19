@@ -8,6 +8,7 @@ import { useUser } from "../../../hooks/useUser";
 import { Role } from "../../../constants/roles";
 import { getUserProfileForEdit, updateProfile, type UserProfileEdit } from "../../../services/profile-service";
 import { ApiError } from "../../../services/api";
+import { Panel } from "../../../components/ui/panel";
 
 export function ProfileEditPage() {
     const { id: routeId } = useParams<{ id: string }>();
@@ -99,81 +100,83 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
 
             <Heading size="lg">Edit profile</Heading>
 
-            <VStack align="stretch" gap={3}>
-                <HStack align="start">
+            <Panel>
+                <VStack align="stretch" gap={3}>
+                    <HStack align="start">
+                        <Field.Root>
+                            <Field.Label>Username</Field.Label>
+                            <Input size="sm" maxLength={256} value={form.userName} onChange={(e) => update({ userName: e.target.value })} />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>Email</Field.Label>
+                            <Input size="sm" type="email" maxLength={256} value={form.email} onChange={(e) => update({ email: e.target.value })} />
+                        </Field.Root>
+                    </HStack>
+
+                    <HStack align="start">
+                        <Field.Root>
+                            <Field.Label>First name</Field.Label>
+                            <Input size="sm" maxLength={50} value={form.forenames ?? ""} onChange={(e) => update({ forenames: e.target.value || null })} />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>Surname</Field.Label>
+                            <Input size="sm" maxLength={50} value={form.surname ?? ""} onChange={(e) => update({ surname: e.target.value || null })} />
+                        </Field.Root>
+                    </HStack>
+
+                    <HStack align="start">
+                        <Field.Root>
+                            <Field.Label>Favourite team</Field.Label>
+                            <Input size="sm" maxLength={50} value={form.favouriteTeam ?? ""} onChange={(e) => update({ favouriteTeam: e.target.value || null })} />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>Location</Field.Label>
+                            <Input size="sm" maxLength={50} value={form.location ?? ""} onChange={(e) => update({ location: e.target.value || null })} />
+                        </Field.Root>
+                    </HStack>
+
                     <Field.Root>
-                        <Field.Label>Username</Field.Label>
-                        <Input size="sm" maxLength={256} value={form.userName} onChange={(e) => update({ userName: e.target.value })} />
+                        <Field.Label>Caption</Field.Label>
+                        <Input size="sm" maxLength={30} value={form.caption ?? ""} onChange={(e) => update({ caption: e.target.value || null })} />
                     </Field.Root>
+
                     <Field.Root>
-                        <Field.Label>Email</Field.Label>
-                        <Input size="sm" type="email" maxLength={256} value={form.email} onChange={(e) => update({ email: e.target.value })} />
+                        <Field.Label>Profile text</Field.Label>
+                        <Textarea rows={5} value={form.profileText ?? ""} onChange={(e) => update({ profileText: e.target.value || null })} />
                     </Field.Root>
-                </HStack>
 
-                <HStack align="start">
-                    <Field.Root>
-                        <Field.Label>First name</Field.Label>
-                        <Input size="sm" maxLength={50} value={form.forenames ?? ""} onChange={(e) => update({ forenames: e.target.value || null })} />
+                    <Field.Root maxW="260px">
+                        <Field.Label>Email prediction reminder (days before, blank for none)</Field.Label>
+                        <Input
+                            size="sm" type="number" min={1}
+                            value={form.emailPredictionReminderDays ?? ""}
+                            onChange={(e) => update({ emailPredictionReminderDays: e.target.value === "" ? null : Number(e.target.value) })}
+                        />
                     </Field.Root>
-                    <Field.Root>
-                        <Field.Label>Surname</Field.Label>
-                        <Input size="sm" maxLength={50} value={form.surname ?? ""} onChange={(e) => update({ surname: e.target.value || null })} />
-                    </Field.Root>
-                </HStack>
 
-                <HStack align="start">
-                    <Field.Root>
-                        <Field.Label>Favourite team</Field.Label>
-                        <Input size="sm" maxLength={50} value={form.favouriteTeam ?? ""} onChange={(e) => update({ favouriteTeam: e.target.value || null })} />
-                    </Field.Root>
-                    <Field.Root>
-                        <Field.Label>Location</Field.Label>
-                        <Input size="sm" maxLength={50} value={form.location ?? ""} onChange={(e) => update({ location: e.target.value || null })} />
-                    </Field.Root>
-                </HStack>
+                    {canEditAdminFields && (
+                        <VStack align="stretch" gap={2}>
+                            <Checkbox.Root checked={form.canViewMessageboard} onCheckedChange={(e) => update({ canViewMessageboard: !!e.checked })}>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>Can view messageboard</Checkbox.Label>
+                            </Checkbox.Root>
+                            <Checkbox.Root checked={form.canViewHiddenMessageThreads} onCheckedChange={(e) => update({ canViewHiddenMessageThreads: !!e.checked })}>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>Can view hidden message threads</Checkbox.Label>
+                            </Checkbox.Root>
+                        </VStack>
+                    )}
 
-                <Field.Root>
-                    <Field.Label>Caption</Field.Label>
-                    <Input size="sm" maxLength={30} value={form.caption ?? ""} onChange={(e) => update({ caption: e.target.value || null })} />
-                </Field.Root>
+                    {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
-                <Field.Root>
-                    <Field.Label>Profile text</Field.Label>
-                    <Textarea rows={5} value={form.profileText ?? ""} onChange={(e) => update({ profileText: e.target.value || null })} />
-                </Field.Root>
-
-                <Field.Root maxW="260px">
-                    <Field.Label>Email prediction reminder (days before, blank for none)</Field.Label>
-                    <Input
-                        size="sm" type="number" min={1}
-                        value={form.emailPredictionReminderDays ?? ""}
-                        onChange={(e) => update({ emailPredictionReminderDays: e.target.value === "" ? null : Number(e.target.value) })}
-                    />
-                </Field.Root>
-
-                {canEditAdminFields && (
-                    <VStack align="stretch" gap={2}>
-                        <Checkbox.Root checked={form.canViewMessageboard} onCheckedChange={(e) => update({ canViewMessageboard: !!e.checked })}>
-                            <Checkbox.HiddenInput />
-                            <Checkbox.Control />
-                            <Checkbox.Label>Can view messageboard</Checkbox.Label>
-                        </Checkbox.Root>
-                        <Checkbox.Root checked={form.canViewHiddenMessageThreads} onCheckedChange={(e) => update({ canViewHiddenMessageThreads: !!e.checked })}>
-                            <Checkbox.HiddenInput />
-                            <Checkbox.Control />
-                            <Checkbox.Label>Can view hidden message threads</Checkbox.Label>
-                        </Checkbox.Root>
-                    </VStack>
-                )}
-
-                {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-
-                <HStack justify="flex-end">
-                    {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
-                    <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
-                </HStack>
-            </VStack>
+                    <HStack justify="flex-end">
+                        {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
+                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
+                    </HStack>
+                </VStack>
+            </Panel>
         </VStack>
     );
 }

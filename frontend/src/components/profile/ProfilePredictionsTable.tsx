@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Box, ButtonGroup, Heading, HStack, IconButton, Image, Pagination, Table, Text } from "@chakra-ui/react";
+import { ButtonGroup, Heading, HStack, IconButton, Image, Pagination, Table, Text } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MatchPrediction } from "../../services/prediction-service";
 import { crestUrl } from "../../utils/crestUrl";
+import { Panel } from "../ui/panel";
 
 const PAGE_SIZE = 10;
 
@@ -11,7 +12,7 @@ export function ProfilePredictionsTable({ predictions }: { predictions: MatchPre
     const pagePredictions = predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel overflowX="auto">
             <Heading size="md" mb={2}>Predictions</Heading>
             {predictions.length === 0 ? (
                 <Text color="fg.muted">No predictions found</Text>
@@ -65,6 +66,6 @@ export function ProfilePredictionsTable({ predictions }: { predictions: MatchPre
                     )}
                 </>
             )}
-        </Box>
+        </Panel>
     );
 }

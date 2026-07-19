@@ -1,5 +1,6 @@
-import { Box, Heading, Text, VStack } from "@chakra-ui/react";
+import { Heading, Text, VStack } from "@chakra-ui/react";
 import { formatDateOnly } from "../../utils/formatDateOnly";
+import { Panel } from "../ui/panel";
 
 type CompetitionSummary = {
     competitionName: string;
@@ -11,7 +12,7 @@ type CompetitionSummary = {
 
 export function CompetitionSummaryCard({ competition }: { competition: CompetitionSummary }) {
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <VStack align="stretch" gap={1}>
                 <Heading size="md">{competition.competitionName}</Heading>
                 <Text fontSize="sm" color="fg.muted">
@@ -22,6 +23,6 @@ export function CompetitionSummaryCard({ competition }: { competition: Competiti
                 </Text>
                 {competition.information && <Text fontSize="sm" mt={2}>{competition.information}</Text>}
             </VStack>
-        </Box>
+        </Panel>
     );
 }

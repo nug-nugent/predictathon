@@ -48,29 +48,41 @@ export function ResultsList({ matches, teams }: ResultsListProps) {
 
     const dateHeadings = matches.map((m) => formatDateHeading(m.matchDateTime));
 
-    return (
-        <Stack gap={0}>
-            {matches.map((match, index) => {
-                const date = dateHeadings[index];
-                const isFirstInGroup = index === 0 || dateHeadings[index - 1] !== date;
-                const home = teamDisplay(match.homeTeamID, match.homeTeamTBC, teams);
-                const away = teamDisplay(match.awayTeamID, match.awayTeamTBC, teams);
+    const groups: { date: string; matches: MatchAdmin[] }[] = [];
+    matches.forEach((match, index) => {
+        const date = dateHeadings[index];
+        if (index === 0 || dateHeadings[index - 1] !== date) {
+            groups.push({ date, matches: [match] });
+        } else {
+            groups[groups.length - 1].matches.push(match);
+        }
+    });
 
-                return (
-                    <Box key={match.matchID}>
-                        {isFirstInGroup && (
-                            <Text fontWeight="bold" fontSize="sm" mt={4} mb={1} px={{ base: 2, md: 4 }}>{date}</Text>
-                        )}
-                        <ResultRow
-                            matchId={match.matchID} matchDateTime={match.matchDateTime}
-                            homeTeamName={home.name} awayTeamName={away.name}
-                            homeCrest={home.crest} awayCrest={away.crest}
-                            now={now} hasFocus={match.matchID === focusedMatchId}
-                            isFirstInGroup={isFirstInGroup} onFocus={setFocusedMatchId} onSaved={handleSaved}
-                        />
+    return (
+        <Stack gap={4}>
+            {groups.map((group) => (
+                <Box key={group.date}>
+                    <Text fontWeight="bold" fontSize="sm" mb={1} px={{ base: 2, md: 4 }} color="content.dateHeading">{group.date}</Text>
+                    <Box bg="surface.card" borderWidth="1px" borderColor="border.card" borderTopWidth="3px"
+                        borderTopColor="card.accentStripe" borderRadius="card">
+                        {group.matches.map((match, index) => {
+                            const home = teamDisplay(match.homeTeamID, match.homeTeamTBC, teams);
+                            const away = teamDisplay(match.awayTeamID, match.awayTeamTBC, teams);
+
+                            return (
+                                <ResultRow
+                                    key={match.matchID}
+                                    matchId={match.matchID} matchDateTime={match.matchDateTime}
+                                    homeTeamName={home.name} awayTeamName={away.name}
+                                    homeCrest={home.crest} awayCrest={away.crest}
+                                    now={now} hasFocus={match.matchID === focusedMatchId}
+                                    isFirstInGroup={index === 0} onFocus={setFocusedMatchId} onSaved={handleSaved}
+                                />
+                            );
+                        })}
                     </Box>
-                );
-            })}
+                </Box>
+            ))}
         </Stack>
     );
 }

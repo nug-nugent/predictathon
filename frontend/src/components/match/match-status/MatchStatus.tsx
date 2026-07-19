@@ -18,18 +18,18 @@ type MatchStatusProps = {
 
 function formatCountdown(minutes: number): string {
     if (minutes < 60) {
-        return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+        return `${minutes}m left`;
     }
 
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
         const remainingMinutes = minutes % 60;
-        return `${hours} hour${hours === 1 ? "" : "s"}${remainingMinutes ? ` ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}` : ""}`;
+        return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ""} left`;
     }
 
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
-    return `${days} day${days === 1 ? "" : "s"}${remainingHours ? ` ${remainingHours} hour${remainingHours === 1 ? "" : "s"}` : ""}`;
+    return `${days}d${remainingHours ? ` ${remainingHours}h` : ""} left`;
 }
 
 function getColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
@@ -48,7 +48,7 @@ function getText(status: MatchStatusValue, saveState: SaveState, minutesToPredic
     if (saveState === "saving") return "Saving...";
     if (saveState === "saved") return "Prediction saved!";
 
-    return `${formatCountdown(minutesToPredict)} to predict`;
+    return formatCountdown(minutesToPredict);
 }
 
 export function MatchStatus({ matchId, myUsername, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
@@ -67,14 +67,14 @@ export function MatchStatus({ matchId, myUsername, status, minutesToPredict, sav
     };
 
     return (
-        <VStack gap={1} align={{ base: "flex-start", md: "flex-end" }}>
+        <VStack gap={1} align={{ base: "flex-start", md: "flex-end" }} width={{ base: "auto", md: "140px" }} flexShrink={0}>
             {status === "Post" ? (
-                <VStack gap={0} minW="90px" fontSize="0.85em">
+                <VStack gap={0} width="full" fontSize="0.85em">
                     <Text>Result: {actualHomeGoals} - {actualAwayGoals}</Text>
                     <Text color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
-                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} minW="90px" textAlign={{ base: "left", md: "right" }}>
+                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width="full" textAlign={{ base: "left", md: "right" }}>
                     {getText(status, saveState, minutesToPredict)}
                 </Text>
             )}

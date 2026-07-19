@@ -23,6 +23,7 @@ export const predictTheme = createSystem(defaultConfig, {
       colors: {
         bg: {
           DEFAULT: { value: { _light: "#FAFAFB", _dark: "#1C1D21" } },
+          panel: { value: { _light: "#FFFFFF", _dark: "#2A2B30" } },
         },
         brand: {
           headerBg: { value: { _light: "#1E4FD1", _dark: "{colors.bg}" } },

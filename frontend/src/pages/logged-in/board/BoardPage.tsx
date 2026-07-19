@@ -6,6 +6,7 @@ import { getThreads, type MessageThreadSummary } from "../../../services/message
 import { ApiError } from "../../../services/api";
 import { ThreadListItem } from "../../../components/messageboard/ThreadListItem";
 import { NewThreadDialog } from "../../../components/messageboard/NewThreadDialog";
+import { Panel } from "../../../components/ui/panel";
 
 export function BoardPage() {
     const navigate = useNavigate();
@@ -51,7 +52,9 @@ export function BoardPage() {
             {threads.length === 0 ? (
                 <Text textAlign="center" color="fg.muted">No threads yet - start the conversation!</Text>
             ) : (
-                threads.map((thread) => <ThreadListItem key={thread.messageThreadID} thread={thread} />)
+                <Panel>
+                    {threads.map((thread) => <ThreadListItem key={thread.messageThreadID} thread={thread} />)}
+                </Panel>
             )}
             <NewThreadDialog
                 open={dialogOpen}

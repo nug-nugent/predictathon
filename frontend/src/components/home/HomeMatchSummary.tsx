@@ -1,13 +1,14 @@
-import { Box, Heading, HStack, Image, Table, Text } from "@chakra-ui/react";
+import { Heading, HStack, Image, Table, Text } from "@chakra-ui/react";
 import type { MatchPrediction } from "../../services/prediction-service";
 import { crestUrl } from "../../utils/crestUrl";
+import { Panel } from "../ui/panel";
 
 // Compact, read-only match summary - used for the Home page's "Current/Last Matches" and "Future
 // Matches" widgets. Unlike the full Predictions page's MatchList/MatchRow, there's no inline
 // editing here; it's just a preview (click through to Predictions to actually predict).
 export function HomeMatchSummary({ title, matches }: { title: string; matches: MatchPrediction[] }) {
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <Heading size="md" mb={2}>{title}</Heading>
             {matches.length === 0 ? (
                 <Text color="fg.muted">No matches found</Text>
@@ -45,6 +46,6 @@ export function HomeMatchSummary({ title, matches }: { title: string; matches: M
                     </Table.Body>
                 </Table.Root>
             )}
-        </Box>
+        </Panel>
     );
 }

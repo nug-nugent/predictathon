@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { Box, Button, Center, Heading, HStack, Image, SimpleGrid, Spinner, Table, Text, VStack } from "@chakra-ui/react";
+import { Button, Center, Heading, HStack, Image, SimpleGrid, Spinner, Table, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { getTeamDetail, type TeamDetail } from "../../../services/team-service";
 import { PredictableMatchesTable } from "../../../components/statistics/PredictableMatchesTable";
 import { crestUrl } from "../../../utils/crestUrl";
 import { ApiError } from "../../../services/api";
+import { Panel } from "../../../components/ui/panel";
 
 export function TeamDetailPage() {
     const { teamId } = useParams<{ teamId: string }>();
@@ -66,7 +67,7 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
 
     return (
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8} alignItems="start">
-            <Box borderWidth="1px" rounded="md" p={4}>
+            <Panel overflowX="auto">
                 <HStack mb={2}>
                     {crest && <Image src={crest} boxSize="32px" alt="" />}
                     <Heading size="md">{team.teamName}</Heading>
@@ -114,7 +115,7 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
                         )}
                     </Table.Body>
                 </Table.Root>
-            </Box>
+            </Panel>
 
             <PredictableMatchesTable title="Results" matches={team.results} />
         </SimpleGrid>

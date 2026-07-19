@@ -1,5 +1,6 @@
-import { Box, Heading, List, Text, VStack } from "@chakra-ui/react";
+import { Heading, List, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
+import { Panel } from "../../../components/ui/panel";
 
 // Used for the worked examples below - not tied to any real competition's teams.
 const EXAMPLE_TEAM_1 = "England";
@@ -17,7 +18,7 @@ export function RulesPage() {
         <VStack align="stretch" gap={6} maxW="container.md">
             <Heading size="lg" textAlign="center">Rules of the game</Heading>
 
-            <Box>
+            <Panel>
                 <Heading size="md" mb={2}>Scoring points</Heading>
                 <Text mb={2}>
                     Players predict the score for every match in {competitionName}. They then score points based on the accuracy of those predictions.
@@ -39,9 +40,9 @@ export function RulesPage() {
                     <List.Item>If the result was 0-0, 2-2, 3-3, 4-4, or a higher-scoring draw, you would score <Points value={1}>1 point</Points>.</List.Item>
                     <List.Item>If either team won or you failed to make a prediction, you would score <Points value={0}>0 points</Points>.</List.Item>
                 </List.Root>
-            </Box>
+            </Panel>
 
-            <Box>
+            <Panel>
                 <Heading size="md" mb={2}>Goal difference</Heading>
                 <Text mb={2}>
                     Throughout the competition, your goal difference will be adversely affected by all but perfect predictions.
@@ -50,9 +51,9 @@ export function RulesPage() {
                     <List.Item>If you predict a 2-1 home win and the result is a 2-0 home win, 1 goal will be subtracted from your goal difference.</List.Item>
                     <List.Item>If you predict a 0-2 away win and the result is a 2-0 home win, 4 goals will be subtracted from your goal difference.</List.Item>
                 </List.Root>
-            </Box>
+            </Panel>
 
-            <Box>
+            <Panel>
                 <Heading size="md" mb={2}>Deciding the victor</Heading>
                 <Text mb={2}>
                     At the end of the competition, players on equal points will be separated by goal difference.
@@ -60,7 +61,7 @@ export function RulesPage() {
                 <Text>
                     In the event of a tie, they'll then be separated firstly by the number of 3-pointers they've scored, then 2-pointers, and finally 1-pointers.
                 </Text>
-            </Box>
+            </Panel>
         </VStack>
     );
 }

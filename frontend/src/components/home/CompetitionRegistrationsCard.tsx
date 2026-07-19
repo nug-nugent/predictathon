@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Center, Heading, Image, Spinner, Table, Text, VStack } from "@chakra-ui/react";
+import { Center, Heading, Image, Spinner, Table, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router";
 import { useCompetition } from "../../hooks/useCompetition";
 import {
@@ -8,6 +8,7 @@ import {
 import { competitionImageUrl } from "../../utils/competitionImageUrl";
 import { formatDateOnly } from "../../utils/formatDateOnly";
 import { ApiError } from "../../services/api";
+import { Panel } from "../ui/panel";
 
 export function CompetitionRegistrationsCard() {
     const { setCurrentCompetitionId } = useCompetition();
@@ -61,7 +62,7 @@ export function CompetitionRegistrationsCard() {
     }
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <Heading size="md" mb={2}>Competitions</Heading>
             <Table.Root size="sm" variant="line">
                 <Table.Body>
@@ -99,6 +100,6 @@ export function CompetitionRegistrationsCard() {
                     ))}
                 </Table.Body>
             </Table.Root>
-        </Box>
+        </Panel>
     );
 }

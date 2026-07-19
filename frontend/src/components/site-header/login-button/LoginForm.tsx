@@ -1,6 +1,7 @@
 import { Button, Checkbox, Field, HStack, Input, Link, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { PasswordInput } from "../../ui/password-input";
+import { Panel } from "../../ui/panel";
 import { useUser } from "../../../hooks/useUser";
 import { useNavigate } from "react-router";
 import { loginUser } from "../../../services/user-service";
@@ -45,48 +46,52 @@ export function LoginForm() {
 
     if (needsPasswordReset) {
         return (
-            <Stack gap="3" borderWidth="1px" rounded="md" p={4}>
-                <Text fontWeight="semibold">We've upgraded our security</Text>
-                <Text fontSize="sm" color="fg.muted">
-                    You'll need to reset your password before you can log in again. It only takes a minute.
-                </Text>
-                <Button size="sm" colorPalette="blue" alignSelf="flex-start" onClick={goToPasswordReset}>
-                    Reset your password
-                </Button>
-            </Stack>
+            <Panel>
+                <Stack gap="3">
+                    <Text fontWeight="semibold">We've upgraded our security</Text>
+                    <Text fontSize="sm" color="fg.muted">
+                        You'll need to reset your password before you can log in again. It only takes a minute.
+                    </Text>
+                    <Button size="sm" colorPalette="blue" alignSelf="flex-start" onClick={goToPasswordReset}>
+                        Reset your password
+                    </Button>
+                </Stack>
+            </Panel>
         );
     }
 
     return (
-        <Stack gap="4" borderWidth="1px" rounded="md" p={4}>
-            <Text fontWeight="semibold">Login</Text>
+        <Panel>
+            <Stack gap="4">
+                <Text fontWeight="semibold">Login</Text>
 
-            <Field.Root>
-                <Field.Label>Email / Username</Field.Label>
-                <Input size="sm" disabled={isLoggingIn} value={username} onChange={(e) => setUsername(e.target.value)} />
-            </Field.Root>
+                <Field.Root>
+                    <Field.Label>Email / Username</Field.Label>
+                    <Input size="sm" disabled={isLoggingIn} value={username} onChange={(e) => setUsername(e.target.value)} />
+                </Field.Root>
 
-            <Field.Root>
-                <Field.Label>Password</Field.Label>
-                <PasswordInput size="sm" disabled={isLoggingIn} value={password} onChange={(e) => setPassword(e.target.value)} />
-            </Field.Root>
+                <Field.Root>
+                    <Field.Label>Password</Field.Label>
+                    <PasswordInput size="sm" disabled={isLoggingIn} value={password} onChange={(e) => setPassword(e.target.value)} />
+                </Field.Root>
 
-            <Checkbox.Root checked={rememberMe} disabled={isLoggingIn}
-                onCheckedChange={(e) => setRememberMe(!!e.checked)}
-                colorPalette="blue">
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>Remember me</Checkbox.Label>
-            </Checkbox.Root>
+                <Checkbox.Root checked={rememberMe} disabled={isLoggingIn}
+                    onCheckedChange={(e) => setRememberMe(!!e.checked)}
+                    colorPalette="blue">
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>Remember me</Checkbox.Label>
+                </Checkbox.Root>
 
-            {error && (
-                <Text fontSize="sm" color="fg.error">{error}</Text>
-            )}
+                {error && (
+                    <Text fontSize="sm" color="fg.error">{error}</Text>
+                )}
 
-            <HStack justifyContent={"space-between"}>
-                <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>
-                <Button loading={isLoggingIn} size="sm" colorPalette="blue" onClick={login}>Login</Button>
-            </HStack>
-        </Stack>
+                <HStack justifyContent={"space-between"}>
+                    <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>
+                    <Button loading={isLoggingIn} size="sm" colorPalette="blue" onClick={login}>Login</Button>
+                </HStack>
+            </Stack>
+        </Panel>
     )
 }

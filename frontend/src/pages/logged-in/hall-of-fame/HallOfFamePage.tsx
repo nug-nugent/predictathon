@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { getHallOfFame, type HallOfFameItem } from "../../../services/hall-of-fame-service";
 import { ApiError } from "../../../services/api";
 import { competitionImageUrl } from "../../../utils/competitionImageUrl";
+import { Panel } from "../../../components/ui/panel";
 
 function PlaceEntry({ label, name, userId, color }: { label: string; name: string | null; userId: string | null; color: string }) {
     if (!name) return null;
@@ -70,7 +71,9 @@ export function HallOfFamePage() {
             {items.length === 0 ? (
                 <Text textAlign="center" color="fg.muted">No competitions have concluded yet.</Text>
             ) : (
-                items.map((item) => <HallOfFameEntry key={item.hallOfFameID} item={item} />)
+                <Panel>
+                    {items.map((item) => <HallOfFameEntry key={item.hallOfFameID} item={item} />)}
+                </Panel>
             )}
         </VStack>
     );

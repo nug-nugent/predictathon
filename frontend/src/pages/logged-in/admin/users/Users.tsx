@@ -10,6 +10,7 @@ import {
     getUsers, updateUserRoles, setUserLocked, adminResetPassword, type UserAdmin,
 } from "../../../../services/users-admin-service";
 import { ApiError } from "../../../../services/api";
+import { Panel } from "../../../../components/ui/panel";
 
 const PAGE_SIZE = 20;
 const ALL_ROLES = [Role.UserAdministrator, Role.CompetitionAdministrator, Role.MatchAdministrator];
@@ -67,7 +68,7 @@ export function UsersPage() {
                     <Spinner />
                 </Center>
             ) : (
-                <>
+                <Panel overflowX="auto">
                     <Table.Root size="sm" variant="line" striped showColumnBorder>
                         <Table.Header>
                             <Table.Row>
@@ -112,7 +113,7 @@ export function UsersPage() {
                             page={page}
                             onPageChange={(e) => setPage(e.page)}
                         >
-                            <ButtonGroup variant="ghost" size="sm" justifyContent="center">
+                            <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
                                 <Pagination.PrevTrigger asChild>
                                     <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
                                 </Pagination.PrevTrigger>
@@ -129,7 +130,7 @@ export function UsersPage() {
                             </ButtonGroup>
                         </Pagination.Root>
                     )}
-                </>
+                </Panel>
             )}
 
             {editing && (

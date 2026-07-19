@@ -15,6 +15,7 @@ import {
     type AssignedTeam, type Team,
 } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
+import { Panel } from "../../../../components/ui/panel";
 
 export function CompetitionEditPage() {
     const { id } = useParams<{ id: string }>();
@@ -106,96 +107,98 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
 
             <Heading size="lg">{form.competitionName || "Edit competition"}</Heading>
 
-            <VStack align="stretch" gap={3}>
-                <HStack align="start">
-                    <Field.Root>
-                        <Field.Label>Competition name</Field.Label>
-                        <Input size="sm" maxLength={50} value={form.competitionName} onChange={(e) => update({ competitionName: e.target.value })} />
+            <Panel>
+                <VStack align="stretch" gap={3}>
+                    <HStack align="start">
+                        <Field.Root>
+                            <Field.Label>Competition name</Field.Label>
+                            <Input size="sm" maxLength={50} value={form.competitionName} onChange={(e) => update({ competitionName: e.target.value })} />
+                        </Field.Root>
+                        <Field.Root maxW="fit-content" pt={7}>
+                            <Checkbox.Root checked={form.prependNameWithThe} onCheckedChange={(e) => update({ prependNameWithThe: !!e.checked })}>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>Prepend "The"</Checkbox.Label>
+                            </Checkbox.Root>
+                        </Field.Root>
+                    </HStack>
+
+                    <HStack align="start">
+                        <Field.Root>
+                            <Field.Label>Start date</Field.Label>
+                            <Input size="sm" type="date" value={form.startDate} onChange={(e) => update({ startDate: e.target.value })} />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>End date</Field.Label>
+                            <Input size="sm" type="date" value={form.endDate} onChange={(e) => update({ endDate: e.target.value })} />
+                        </Field.Root>
+                    </HStack>
+
+                    <Field.Root maxW="200px">
+                        <Field.Label>Entrance fee</Field.Label>
+                        <Input
+                            size="sm" type="number" min={0} max={99.99} step={0.01}
+                            value={form.entranceFee}
+                            onChange={(e) => update({ entranceFee: e.target.value === "" ? 0 : Number(e.target.value) })}
+                        />
                     </Field.Root>
-                    <Field.Root maxW="fit-content" pt={7}>
-                        <Checkbox.Root checked={form.prependNameWithThe} onCheckedChange={(e) => update({ prependNameWithThe: !!e.checked })}>
+
+                    <Field.Root>
+                        <Field.Label>Image filename</Field.Label>
+                        <Input size="sm" maxLength={40} value={form.imageFilename ?? ""} onChange={(e) => update({ imageFilename: e.target.value || null })} />
+                    </Field.Root>
+
+                    <Field.Root>
+                        <Field.Label>Information</Field.Label>
+                        <Textarea rows={5} value={form.information ?? ""} onChange={(e) => update({ information: e.target.value || null })} />
+                    </Field.Root>
+
+                    <VStack align="stretch" gap={2}>
+                        <Checkbox.Root checked={form.duplicateFixturesAllowed} onCheckedChange={(e) => update({ duplicateFixturesAllowed: !!e.checked })}>
                             <Checkbox.HiddenInput />
                             <Checkbox.Control />
-                            <Checkbox.Label>Prepend "The"</Checkbox.Label>
+                            <Checkbox.Label>Duplicate fixtures allowed</Checkbox.Label>
                         </Checkbox.Root>
-                    </Field.Root>
-                </HStack>
+                        <Checkbox.Root checked={form.openForRegistration} onCheckedChange={(e) => update({ openForRegistration: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Open for registration</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Checkbox.Root checked={form.registrationAvailableOnLoginPage} onCheckedChange={(e) => update({ registrationAvailableOnLoginPage: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Registration available on login page</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Checkbox.Root checked={form.showInHallOfFame} onCheckedChange={(e) => update({ showInHallOfFame: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Show in Hall of Fame</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Checkbox.Root checked={form.payPalPaymentAvailable} onCheckedChange={(e) => update({ payPalPaymentAvailable: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>PayPal payment available</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Checkbox.Root checked={form.defaultToNeutralGround} onCheckedChange={(e) => update({ defaultToNeutralGround: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Default to neutral ground</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Checkbox.Root checked={form.allowTwoPointers} onCheckedChange={(e) => update({ allowTwoPointers: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Allow two-pointers</Checkbox.Label>
+                        </Checkbox.Root>
+                    </VStack>
 
-                <HStack align="start">
-                    <Field.Root>
-                        <Field.Label>Start date</Field.Label>
-                        <Input size="sm" type="date" value={form.startDate} onChange={(e) => update({ startDate: e.target.value })} />
-                    </Field.Root>
-                    <Field.Root>
-                        <Field.Label>End date</Field.Label>
-                        <Input size="sm" type="date" value={form.endDate} onChange={(e) => update({ endDate: e.target.value })} />
-                    </Field.Root>
-                </HStack>
+                    {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
-                <Field.Root maxW="200px">
-                    <Field.Label>Entrance fee</Field.Label>
-                    <Input
-                        size="sm" type="number" min={0} max={99.99} step={0.01}
-                        value={form.entranceFee}
-                        onChange={(e) => update({ entranceFee: e.target.value === "" ? 0 : Number(e.target.value) })}
-                    />
-                </Field.Root>
-
-                <Field.Root>
-                    <Field.Label>Image filename</Field.Label>
-                    <Input size="sm" maxLength={40} value={form.imageFilename ?? ""} onChange={(e) => update({ imageFilename: e.target.value || null })} />
-                </Field.Root>
-
-                <Field.Root>
-                    <Field.Label>Information</Field.Label>
-                    <Textarea rows={5} value={form.information ?? ""} onChange={(e) => update({ information: e.target.value || null })} />
-                </Field.Root>
-
-                <VStack align="stretch" gap={2}>
-                    <Checkbox.Root checked={form.duplicateFixturesAllowed} onCheckedChange={(e) => update({ duplicateFixturesAllowed: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Duplicate fixtures allowed</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.openForRegistration} onCheckedChange={(e) => update({ openForRegistration: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Open for registration</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.registrationAvailableOnLoginPage} onCheckedChange={(e) => update({ registrationAvailableOnLoginPage: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Registration available on login page</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.showInHallOfFame} onCheckedChange={(e) => update({ showInHallOfFame: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Show in Hall of Fame</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.payPalPaymentAvailable} onCheckedChange={(e) => update({ payPalPaymentAvailable: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>PayPal payment available</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.defaultToNeutralGround} onCheckedChange={(e) => update({ defaultToNeutralGround: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Default to neutral ground</Checkbox.Label>
-                    </Checkbox.Root>
-                    <Checkbox.Root checked={form.allowTwoPointers} onCheckedChange={(e) => update({ allowTwoPointers: !!e.checked })}>
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Allow two-pointers</Checkbox.Label>
-                    </Checkbox.Root>
+                    <HStack justify="flex-end">
+                        {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
+                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
+                    </HStack>
                 </VStack>
-
-                {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-
-                <HStack justify="flex-end">
-                    {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
-                    <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
-                </HStack>
-            </VStack>
+            </Panel>
 
             <TeamsSection competitionId={form.competitionID} />
         </VStack>
@@ -252,42 +255,46 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
     };
 
     return (
-        <VStack align="stretch" gap={3}>
-            <Heading size="md">Teams</Heading>
+        <>
+            <Panel>
+                <VStack align="stretch" gap={3}>
+                    <Heading size="md">Teams</Heading>
 
-            <HStack>
-                <NativeSelect.Root size="sm" maxW="300px" disabled={!unassigned || unassigned.length === 0}>
-                    <NativeSelect.Field value={selectedTeamId} onChange={(e) => setSelectedTeamId(e.target.value)}>
-                        <option value="">-- select a team --</option>
-                        {unassigned?.map((t) => <option key={t.teamID} value={t.teamID}>{t.teamName}</option>)}
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                </NativeSelect.Root>
-                <Button size="sm" disabled={!selectedTeamId} onClick={addTeam}>Add</Button>
-            </HStack>
+                    <HStack>
+                        <NativeSelect.Root size="sm" maxW="300px" disabled={!unassigned || unassigned.length === 0}>
+                            <NativeSelect.Field value={selectedTeamId} onChange={(e) => setSelectedTeamId(e.target.value)}>
+                                <option value="">-- select a team --</option>
+                                {unassigned?.map((t) => <option key={t.teamID} value={t.teamID}>{t.teamName}</option>)}
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                        <Button size="sm" disabled={!selectedTeamId} onClick={addTeam}>Add</Button>
+                    </HStack>
 
-            {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
+                    {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
-            {assigned === null ? (
-                <Center mt={2}><Spinner size="sm" /></Center>
-            ) : assigned.length === 0 ? (
-                <Text color="fg.muted">No teams assigned yet.</Text>
-            ) : (
-                <Table.Root size="sm" variant="line">
-                    <Table.Body>
-                        {assigned.map((t) => (
-                            <Table.Row key={t.teamCompetitionID}>
-                                <Table.Cell>{t.teamName}</Table.Cell>
-                                <Table.Cell textAlign="right" width="1">
-                                    <IconButton size="xs" variant="ghost" colorPalette="red" aria-label="Remove team" onClick={() => setRemoving(t)}>
-                                        <X size={14} />
-                                    </IconButton>
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
-            )}
+                    {assigned === null ? (
+                        <Center mt={2}><Spinner size="sm" /></Center>
+                    ) : assigned.length === 0 ? (
+                        <Text color="fg.muted">No teams assigned yet.</Text>
+                    ) : (
+                        <Table.Root size="sm" variant="line">
+                            <Table.Body>
+                                {assigned.map((t) => (
+                                    <Table.Row key={t.teamCompetitionID}>
+                                        <Table.Cell>{t.teamName}</Table.Cell>
+                                        <Table.Cell textAlign="right" width="1">
+                                            <IconButton size="xs" variant="ghost" colorPalette="red" aria-label="Remove team" onClick={() => setRemoving(t)}>
+                                                <X size={14} />
+                                            </IconButton>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
+                    )}
+                </VStack>
+            </Panel>
 
             <Dialog.Root role="alertdialog" open={removing !== null} onOpenChange={(e) => { if (!e.open) setRemoving(null); }}>
                 <Portal>
@@ -308,6 +315,6 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                     </Dialog.Positioner>
                 </Portal>
             </Dialog.Root>
-        </VStack>
+        </>
     );
 }

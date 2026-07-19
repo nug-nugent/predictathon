@@ -1,9 +1,10 @@
-import { Box, Heading, Table, Text } from "@chakra-ui/react";
+import { Heading, Table, Text } from "@chakra-ui/react";
 import type { CompetitionUserLeagueTableItem } from "../../services/profile-service";
+import { Panel } from "../ui/panel";
 
 export function ProfileLeagueTable({ username, table }: { username: string; table: CompetitionUserLeagueTableItem[] }) {
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel overflowX="auto">
             <Heading size="md" mb={2}>If {username}'s predictions had all come true...</Heading>
             {table.length === 0 ? (
                 <Text color="fg.muted">No league data found</Text>
@@ -41,6 +42,6 @@ export function ProfileLeagueTable({ username, table }: { username: string; tabl
                     </Table.Body>
                 </Table.Root>
             )}
-        </Box>
+        </Panel>
     );
 }

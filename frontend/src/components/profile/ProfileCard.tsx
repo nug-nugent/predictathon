@@ -6,6 +6,7 @@ import type { UserProfile } from "../../services/profile-service";
 import { useUser } from "../../hooks/useUser";
 import { Role } from "../../constants/roles";
 import { AvatarUploadDialog } from "./AvatarUploadDialog";
+import { Panel } from "../ui/panel";
 
 export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; isOwnProfile: boolean }) {
     const { user, setUser } = useUser();
@@ -29,7 +30,7 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
     };
 
     return (
-        <Box borderWidth="1px" rounded="md" p={4}>
+        <Panel>
             <HStack justify="space-between" mb={3}>
                 <Heading size="md">{profile.username}</Heading>
                 {canEdit && (
@@ -91,6 +92,6 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
                     onRemoved={handleRemoved}
                 />
             )}
-        </Box>
+        </Panel>
     );
 }

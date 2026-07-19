@@ -4,6 +4,7 @@ import { Button, Center, Field, Heading, Link, Text, VStack } from "@chakra-ui/r
 import { PasswordInput } from "../../../components/ui/password-input";
 import { resetPassword } from "../../../services/user-service";
 import { ApiError } from "../../../services/api";
+import { Panel } from "../../../components/ui/panel";
 
 export function ResetPasswordPage() {
     const [searchParams] = useSearchParams();
@@ -20,11 +21,13 @@ export function ResetPasswordPage() {
     if (!userId || !token) {
         return (
             <Center mt={8}>
-                <VStack gap={3} maxW="sm" textAlign="center">
-                    <Heading size="md">Invalid reset link</Heading>
-                    <Text>This password reset link is missing some information. Please request a new one.</Text>
-                    <Link asChild variant="underline"><RouterLink to="/password-reset">Request a new link</RouterLink></Link>
-                </VStack>
+                <Panel maxW="sm">
+                    <VStack gap={3} textAlign="center">
+                        <Heading size="md">Invalid reset link</Heading>
+                        <Text>This password reset link is missing some information. Please request a new one.</Text>
+                        <Link asChild variant="underline"><RouterLink to="/password-reset">Request a new link</RouterLink></Link>
+                    </VStack>
+                </Panel>
             </Center>
         );
     }
@@ -32,11 +35,13 @@ export function ResetPasswordPage() {
     if (succeeded) {
         return (
             <Center mt={8}>
-                <VStack gap={3} maxW="sm" textAlign="center">
-                    <Heading size="md">Password reset</Heading>
-                    <Text>Your password has been reset. You can now log in with your new password.</Text>
-                    <Button colorPalette="blue" onClick={() => navigate("/")}>Go to Predictathon</Button>
-                </VStack>
+                <Panel maxW="sm">
+                    <VStack gap={3} textAlign="center">
+                        <Heading size="md">Password reset</Heading>
+                        <Text>Your password has been reset. You can now log in with your new password.</Text>
+                        <Button colorPalette="blue" onClick={() => navigate("/")}>Go to Predictathon</Button>
+                    </VStack>
+                </Panel>
             </Center>
         );
     }
@@ -63,33 +68,35 @@ export function ResetPasswordPage() {
 
     return (
         <Center mt={8}>
-            <VStack gap={4} maxW="sm" width="full">
-                <Heading size="md">Choose a new password</Heading>
+            <Panel maxW="sm" width="full">
+                <VStack gap={4}>
+                    <Heading size="md">Choose a new password</Heading>
 
-                <Field.Root>
-                    <Field.Label>New password</Field.Label>
-                    <PasswordInput disabled={submitting} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                </Field.Root>
+                    <Field.Root>
+                        <Field.Label>New password</Field.Label>
+                        <PasswordInput disabled={submitting} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                    </Field.Root>
 
-                <Field.Root>
-                    <Field.Label>Confirm new password</Field.Label>
-                    <PasswordInput disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-                </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Confirm new password</Field.Label>
+                        <PasswordInput disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                    </Field.Root>
 
-                {error && (
-                    <Text fontSize="sm" color="fg.error">{error}</Text>
-                )}
+                    {error && (
+                        <Text fontSize="sm" color="fg.error">{error}</Text>
+                    )}
 
-                <Button
-                    alignSelf="flex-end"
-                    loading={submitting}
-                    disabled={!newPassword || !confirmPassword}
-                    colorPalette="blue"
-                    onClick={submit}
-                >
-                    Reset password
-                </Button>
-            </VStack>
+                    <Button
+                        alignSelf="flex-end"
+                        loading={submitting}
+                        disabled={!newPassword || !confirmPassword}
+                        colorPalette="blue"
+                        onClick={submit}
+                    >
+                        Reset password
+                    </Button>
+                </VStack>
+            </Panel>
         </Center>
     );
 }

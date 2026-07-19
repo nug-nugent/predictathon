@@ -8,6 +8,7 @@ import { useNavigate } from "react-router";
 import { getAllCompetitions, createCompetition, type CompetitionAdmin } from "../../../../services/competition-admin-service";
 import { formatDateOnly } from "../../../../utils/formatDateOnly";
 import { ApiError } from "../../../../services/api";
+import { Panel } from "../../../../components/ui/panel";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "GBP" });
 
@@ -55,62 +56,64 @@ export function CompetitionsAdminPage() {
                 <Button size="sm" colorPalette="blue" onClick={() => setAdding(true)}>Add competition</Button>
             </HStack>
 
-            <Table.Root size="sm" variant="line" striped showColumnBorder>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.ColumnHeader>Name</Table.ColumnHeader>
-                        <Table.ColumnHeader>Start date</Table.ColumnHeader>
-                        <Table.ColumnHeader>End date</Table.ColumnHeader>
-                        <Table.ColumnHeader textAlign="right">Entrance fee</Table.ColumnHeader>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {pageCompetitions.map((c) => (
-                        <Table.Row
-                            key={c.competitionID}
-                            onClick={() => navigate(`/admin/tournaments/${c.competitionID}`)}
-                            cursor="pointer"
-                            _hover={{ bg: "bg.muted" }}
-                        >
-                            <Table.Cell>{c.prependNameWithThe ? "The " : ""}{c.competitionName}</Table.Cell>
-                            <Table.Cell>{formatDateOnly(c.startDate)}</Table.Cell>
-                            <Table.Cell>{formatDateOnly(c.endDate)}</Table.Cell>
-                            <Table.Cell textAlign="right">{currencyFormatter.format(c.entranceFee)}</Table.Cell>
+            <Panel overflowX="auto">
+                <Table.Root size="sm" variant="line" striped showColumnBorder>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Name</Table.ColumnHeader>
+                            <Table.ColumnHeader>Start date</Table.ColumnHeader>
+                            <Table.ColumnHeader>End date</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="right">Entrance fee</Table.ColumnHeader>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
+                    </Table.Header>
+                    <Table.Body>
+                        {pageCompetitions.map((c) => (
+                            <Table.Row
+                                key={c.competitionID}
+                                onClick={() => navigate(`/admin/tournaments/${c.competitionID}`)}
+                                cursor="pointer"
+                                _hover={{ bg: "bg.muted" }}
+                            >
+                                <Table.Cell>{c.prependNameWithThe ? "The " : ""}{c.competitionName}</Table.Cell>
+                                <Table.Cell>{formatDateOnly(c.startDate)}</Table.Cell>
+                                <Table.Cell>{formatDateOnly(c.endDate)}</Table.Cell>
+                                <Table.Cell textAlign="right">{currencyFormatter.format(c.entranceFee)}</Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
 
-            {competitions.length === 0 && (
-                <Center mt={4}>
-                    <Text color="fg.muted">No competitions found.</Text>
-                </Center>
-            )}
+                {competitions.length === 0 && (
+                    <Center mt={4}>
+                        <Text color="fg.muted">No competitions found.</Text>
+                    </Center>
+                )}
 
-            {competitions.length > PAGE_SIZE && (
-                <Pagination.Root
-                    count={competitions.length}
-                    pageSize={PAGE_SIZE}
-                    page={page}
-                    onPageChange={(e) => setPage(e.page)}
-                >
-                    <ButtonGroup variant="ghost" size="sm" justifyContent="center">
-                        <Pagination.PrevTrigger asChild>
-                            <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                        </Pagination.PrevTrigger>
-                        <Pagination.Items
-                            render={(p) => (
-                                <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                    {p.value}
-                                </IconButton>
-                            )}
-                        />
-                        <Pagination.NextTrigger asChild>
-                            <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                        </Pagination.NextTrigger>
-                    </ButtonGroup>
-                </Pagination.Root>
-            )}
+                {competitions.length > PAGE_SIZE && (
+                    <Pagination.Root
+                        count={competitions.length}
+                        pageSize={PAGE_SIZE}
+                        page={page}
+                        onPageChange={(e) => setPage(e.page)}
+                    >
+                        <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
+                            <Pagination.PrevTrigger asChild>
+                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
+                            </Pagination.PrevTrigger>
+                            <Pagination.Items
+                                render={(p) => (
+                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
+                                        {p.value}
+                                    </IconButton>
+                                )}
+                            />
+                            <Pagination.NextTrigger asChild>
+                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
+                            </Pagination.NextTrigger>
+                        </ButtonGroup>
+                    </Pagination.Root>
+                )}
+            </Panel>
 
             {adding && (
                 <AddCompetitionDialog

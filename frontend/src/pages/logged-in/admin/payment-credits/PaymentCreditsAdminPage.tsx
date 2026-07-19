@@ -9,6 +9,7 @@ import {
     getPaymentCredits, createPaymentCredit, deletePaymentCredit, type PaymentCreditAdmin,
 } from "../../../../services/payment-credit-admin-service";
 import { ApiError } from "../../../../services/api";
+import { Panel } from "../../../../components/ui/panel";
 
 const PAGE_SIZE = 20;
 
@@ -60,72 +61,74 @@ export function PaymentCreditsAdminPage() {
                 </Button>
             </HStack>
 
-            <Table.Root size="sm" variant="line" striped showColumnBorder>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.ColumnHeader>Competition</Table.ColumnHeader>
-                        <Table.ColumnHeader>Expected username</Table.ColumnHeader>
-                        <Table.ColumnHeader>Payment code</Table.ColumnHeader>
-                        <Table.ColumnHeader>Issued</Table.ColumnHeader>
-                        <Table.ColumnHeader>Status</Table.ColumnHeader>
-                        <Table.ColumnHeader textAlign="center">Delete</Table.ColumnHeader>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {pageCredits.map((c) => (
-                        <Table.Row key={c.paymentCreditID}>
-                            <Table.Cell>{c.competitionName}</Table.Cell>
-                            <Table.Cell>{c.expectedUsername}</Table.Cell>
-                            <Table.Cell fontFamily="mono">{c.uniquePaymentCode}</Table.Cell>
-                            <Table.Cell>{new Date(c.issueDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
-                            <Table.Cell>
-                                {c.creditUsed
-                                    ? <Badge colorPalette="gray" size="sm">Used</Badge>
-                                    : <Badge colorPalette="green" size="sm">Unused</Badge>}
-                            </Table.Cell>
-                            <Table.Cell textAlign="center">
-                                <IconButton
-                                    aria-label="Delete credit" size="xs" variant="ghost" colorPalette="red"
-                                    onClick={() => setDeleting(c)}
-                                >
-                                    <Trash2 size={16} />
-                                </IconButton>
-                            </Table.Cell>
+            <Panel overflowX="auto">
+                <Table.Root size="sm" variant="line" striped showColumnBorder>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Competition</Table.ColumnHeader>
+                            <Table.ColumnHeader>Expected username</Table.ColumnHeader>
+                            <Table.ColumnHeader>Payment code</Table.ColumnHeader>
+                            <Table.ColumnHeader>Issued</Table.ColumnHeader>
+                            <Table.ColumnHeader>Status</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center">Delete</Table.ColumnHeader>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
+                    </Table.Header>
+                    <Table.Body>
+                        {pageCredits.map((c) => (
+                            <Table.Row key={c.paymentCreditID}>
+                                <Table.Cell>{c.competitionName}</Table.Cell>
+                                <Table.Cell>{c.expectedUsername}</Table.Cell>
+                                <Table.Cell fontFamily="mono">{c.uniquePaymentCode}</Table.Cell>
+                                <Table.Cell>{new Date(c.issueDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
+                                <Table.Cell>
+                                    {c.creditUsed
+                                        ? <Badge colorPalette="gray" size="sm">Used</Badge>
+                                        : <Badge colorPalette="green" size="sm">Unused</Badge>}
+                                </Table.Cell>
+                                <Table.Cell textAlign="center">
+                                    <IconButton
+                                        aria-label="Delete credit" size="xs" variant="ghost" colorPalette="red"
+                                        onClick={() => setDeleting(c)}
+                                    >
+                                        <Trash2 size={16} />
+                                    </IconButton>
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
 
-            {credits.length === 0 && (
-                <Center mt={4}>
-                    <Text color="fg.muted">No payment credits found.</Text>
-                </Center>
-            )}
+                {credits.length === 0 && (
+                    <Center mt={4}>
+                        <Text color="fg.muted">No payment credits found.</Text>
+                    </Center>
+                )}
 
-            {credits.length > PAGE_SIZE && (
-                <Pagination.Root
-                    count={credits.length}
-                    pageSize={PAGE_SIZE}
-                    page={page}
-                    onPageChange={(e) => setPage(e.page)}
-                >
-                    <ButtonGroup variant="ghost" size="sm" justifyContent="center">
-                        <Pagination.PrevTrigger asChild>
-                            <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                        </Pagination.PrevTrigger>
-                        <Pagination.Items
-                            render={(p) => (
-                                <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                    {p.value}
-                                </IconButton>
-                            )}
-                        />
-                        <Pagination.NextTrigger asChild>
-                            <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                        </Pagination.NextTrigger>
-                    </ButtonGroup>
-                </Pagination.Root>
-            )}
+                {credits.length > PAGE_SIZE && (
+                    <Pagination.Root
+                        count={credits.length}
+                        pageSize={PAGE_SIZE}
+                        page={page}
+                        onPageChange={(e) => setPage(e.page)}
+                    >
+                        <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
+                            <Pagination.PrevTrigger asChild>
+                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
+                            </Pagination.PrevTrigger>
+                            <Pagination.Items
+                                render={(p) => (
+                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
+                                        {p.value}
+                                    </IconButton>
+                                )}
+                            />
+                            <Pagination.NextTrigger asChild>
+                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
+                            </Pagination.NextTrigger>
+                        </ButtonGroup>
+                    </Pagination.Root>
+                )}
+            </Panel>
 
             {adding && (
                 <AddPaymentCreditDialog

@@ -5,6 +5,7 @@ import {
     capturePayPalOrder, createPayPalOrder, registerFree, registerWithPaymentCredit,
 } from "../../services/competition-registration-service";
 import { ApiError } from "../../services/api";
+import { Panel } from "../ui/panel";
 
 export function PaymentStep({
     competitionId, entranceFee, payPalPaymentAvailable, onRegistered,
@@ -54,49 +55,51 @@ export function PaymentStep({
     }
 
     return (
-        <VStack align="stretch" gap={4}>
-            <Heading size="sm">Pay your entry fee</Heading>
+        <Panel>
+            <VStack align="stretch" gap={4}>
+                <Heading size="sm">Pay your entry fee</Heading>
 
-            <VStack align="stretch" gap={2}>
-                <Field.Root>
-                    <Field.Label>Payment credit code</Field.Label>
-                    <Input size="sm" disabled={submitting} value={code} onChange={(e) => setCode(e.target.value)} />
-                </Field.Root>
-                <Button colorPalette="blue" loading={submitting} disabled={!code} onClick={redeemCode} alignSelf="flex-start">
-                    Redeem code
-                </Button>
+                <VStack align="stretch" gap={2}>
+                    <Field.Root>
+                        <Field.Label>Payment credit code</Field.Label>
+                        <Input size="sm" disabled={submitting} value={code} onChange={(e) => setCode(e.target.value)} />
+                    </Field.Root>
+                    <Button colorPalette="blue" loading={submitting} disabled={!code} onClick={redeemCode} alignSelf="flex-start">
+                        Redeem code
+                    </Button>
+                </VStack>
+
+                {payPalPaymentAvailable && import.meta.env.VITE_PAYPAL_CLIENT_ID && (
+                    <>
+                        <Separator />
+                        <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID, currency: "GBP" }}>
+                            <PayPalButtons
+                                style={{ layout: "vertical" }}
+                                disabled={submitting}
+                                createOrder={async () => {
+                                    const order = await createPayPalOrder(competitionId);
+                                    return order.orderId;
+                                }}
+                                onApprove={async (data) => {
+                                    setSubmitting(true);
+                                    setError(null);
+                                    try {
+                                        await capturePayPalOrder(competitionId, data.orderID);
+                                        onRegistered();
+                                    } catch (e) {
+                                        setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+                                    } finally {
+                                        setSubmitting(false);
+                                    }
+                                }}
+                                onError={() => setError("PayPal payment failed. Please try again.")}
+                            />
+                        </PayPalScriptProvider>
+                    </>
+                )}
+
+                {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
             </VStack>
-
-            {payPalPaymentAvailable && import.meta.env.VITE_PAYPAL_CLIENT_ID && (
-                <>
-                    <Separator />
-                    <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID, currency: "GBP" }}>
-                        <PayPalButtons
-                            style={{ layout: "vertical" }}
-                            disabled={submitting}
-                            createOrder={async () => {
-                                const order = await createPayPalOrder(competitionId);
-                                return order.orderId;
-                            }}
-                            onApprove={async (data) => {
-                                setSubmitting(true);
-                                setError(null);
-                                try {
-                                    await capturePayPalOrder(competitionId, data.orderID);
-                                    onRegistered();
-                                } catch (e) {
-                                    setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
-                                } finally {
-                                    setSubmitting(false);
-                                }
-                            }}
-                            onError={() => setError("PayPal payment failed. Please try again.")}
-                        />
-                    </PayPalScriptProvider>
-                </>
-            )}
-
-            {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-        </VStack>
+        </Panel>
     );
 }

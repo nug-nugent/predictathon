@@ -13,6 +13,7 @@ import {
     getCompetitionForRegistration, registerFree, type CompetitionRegistrationDetails,
 } from "../../../services/competition-registration-service";
 import { ApiError } from "../../../services/api";
+import { Panel } from "../../../components/ui/panel";
 
 export function RegisterPage() {
     const [searchParams] = useSearchParams();
@@ -134,53 +135,55 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                     onRegistered={registrationComplete}
                 />
             ) : (
-                <VStack align="stretch" gap={3}>
-                    <Heading size="md">Create your account</Heading>
+                <Panel>
+                    <VStack align="stretch" gap={3}>
+                        <Heading size="md">Create your account</Heading>
 
-                    <HStack align="start">
+                        <HStack align="start">
+                            <Field.Root>
+                                <Field.Label>First name</Field.Label>
+                                <Input size="sm" maxLength={50} disabled={submitting} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Surname</Field.Label>
+                                <Input size="sm" maxLength={50} disabled={submitting} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
+                            </Field.Root>
+                        </HStack>
+
                         <Field.Root>
-                            <Field.Label>First name</Field.Label>
-                            <Input size="sm" maxLength={50} disabled={submitting} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
+                            <Field.Label>Username</Field.Label>
+                            <Input size="sm" maxLength={256} disabled={submitting} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
                         </Field.Root>
+
                         <Field.Root>
-                            <Field.Label>Surname</Field.Label>
-                            <Input size="sm" maxLength={50} disabled={submitting} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
+                            <Field.Label>Email</Field.Label>
+                            <Input size="sm" type="email" maxLength={256} disabled={submitting} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
                         </Field.Root>
-                    </HStack>
 
-                    <Field.Root>
-                        <Field.Label>Username</Field.Label>
-                        <Input size="sm" maxLength={256} disabled={submitting} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
-                    </Field.Root>
+                        <HStack align="start">
+                            <Field.Root>
+                                <Field.Label>Password</Field.Label>
+                                <PasswordInput size="sm" disabled={submitting} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Confirm password</Field.Label>
+                                <PasswordInput size="sm" disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                            </Field.Root>
+                        </HStack>
 
-                    <Field.Root>
-                        <Field.Label>Email</Field.Label>
-                        <Input size="sm" type="email" maxLength={256} disabled={submitting} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
-                    </Field.Root>
+                        {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
-                    <HStack align="start">
-                        <Field.Root>
-                            <Field.Label>Password</Field.Label>
-                            <PasswordInput size="sm" disabled={submitting} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
-                        </Field.Root>
-                        <Field.Root>
-                            <Field.Label>Confirm password</Field.Label>
-                            <PasswordInput size="sm" disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-                        </Field.Root>
-                    </HStack>
-
-                    {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-
-                    <Button
-                        alignSelf="flex-end"
-                        colorPalette="blue"
-                        loading={submitting}
-                        disabled={!fields.forenames || !fields.surname || !fields.userName || !fields.email || !fields.password || !confirmPassword}
-                        onClick={submitDetails}
-                    >
-                        {competition.entranceFee > 0 ? "Continue to payment" : "Register"}
-                    </Button>
-                </VStack>
+                        <Button
+                            alignSelf="flex-end"
+                            colorPalette="blue"
+                            loading={submitting}
+                            disabled={!fields.forenames || !fields.surname || !fields.userName || !fields.email || !fields.password || !confirmPassword}
+                            onClick={submitDetails}
+                        >
+                            {competition.entranceFee > 0 ? "Continue to payment" : "Register"}
+                        </Button>
+                    </VStack>
+                </Panel>
             )}
         </VStack>
     );
