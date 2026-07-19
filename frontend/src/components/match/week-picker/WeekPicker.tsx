@@ -1,4 +1,4 @@
-import { HStack, IconButton, NativeSelect, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, IconButton, NativeSelect, Text } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 type WeekPickerProps = {
@@ -52,28 +52,35 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange }: WeekPickerProp
     const nextMonthWeek = findNextMonthWeek();
 
     return (
-        <HStack justify="center" gap={{ base: 1, md: 3 }} py={2} wrap="wrap">
-            <NavButton enabled={!!prevMonthWeek} label="Month" onClick={() => prevMonthWeek && onWeekChange(prevMonthWeek)}>
-                <ChevronsLeft size={16} />
-            </NavButton>
-            <NavButton enabled={prevWeekEnabled} label="Week" onClick={() => prevWeekEnabled && onWeekChange(weeks[index - 1])}>
-                <ChevronLeft size={16} />
-            </NavButton>
+        <Flex justify="center" align="center" gap={{ base: 0, md: 4 }} wrap="wrap">
+            <HStack justify="center" gap={{ base: 1, md: 3 }} py={2} wrap="wrap">
+                <NavButton enabled={!!prevMonthWeek} label="Month" onClick={() => prevMonthWeek && onWeekChange(prevMonthWeek)}>
+                    <ChevronsLeft size={16} />
+                </NavButton>
+                <NavButton enabled={prevWeekEnabled} label="Week" onClick={() => prevWeekEnabled && onWeekChange(weeks[index - 1])}>
+                    <ChevronLeft size={16} />
+                </NavButton>
 
-            <NativeSelect.Root width="auto" size="sm">
-                <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
-                    {weeks.map((w) => <option key={w} value={w}>{formatWeek(w)}</option>)}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-            </NativeSelect.Root>
+                <NativeSelect.Root width="auto" size="sm">
+                    <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
+                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w)}</option>)}
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                </NativeSelect.Root>
 
-            <NavButton enabled={nextWeekEnabled} label="Week" onClick={() => nextWeekEnabled && onWeekChange(weeks[index + 1])} isRight>
-                <ChevronRight size={16} />
-            </NavButton>
-            <NavButton enabled={!!nextMonthWeek} label="Month" onClick={() => nextMonthWeek && onWeekChange(nextMonthWeek)} isRight>
-                <ChevronsRight size={16} />
-            </NavButton>
-        </HStack>
+                <NavButton enabled={nextWeekEnabled} label="Week" onClick={() => nextWeekEnabled && onWeekChange(weeks[index + 1])} isRight>
+                    <ChevronRight size={16} />
+                </NavButton>
+                <NavButton enabled={!!nextMonthWeek} label="Month" onClick={() => nextMonthWeek && onWeekChange(nextMonthWeek)} isRight>
+                    <ChevronsRight size={16} />
+                </NavButton>
+            </HStack>
+
+            {/* Invisible spacer matching MatchStatus's width (and MatchRow's gap before it) below,
+                so this picker's centerpoint lines up with the score column rather than the full
+                row width - MatchStatus's fixed-width column throws off a plain center otherwise. */}
+            <Box aria-hidden width={{ base: "0", md: "140px" }} flexShrink={0} />
+        </Flex>
     );
 }
 

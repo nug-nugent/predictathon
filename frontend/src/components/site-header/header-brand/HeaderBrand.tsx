@@ -23,36 +23,57 @@ export function HeaderBrand({
     const logo = <Image src={football} mr={2} boxSize={{ base: "30px", md: "34px" }} />;
 
     if (variant === "loggedOut") {
-        return (
+        const heading = (
+            <Heading
+                as={headingAs}
+                size={{ base: "2xl", md: "3xl" }}
+                color={wordmarkColor}
+                fontWeight="extrabold"
+                textTransform="uppercase"
+            >
+                Predictathon
+            </Heading>
+        );
+
+        return linkToHome ? (
+            <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+                {logo}
+                {heading}
+            </Link>
+        ) : (
             <>
-                {linkToHome ? <Link to="/">{logo}</Link> : logo}
-                <Heading
-                    as={headingAs}
-                    size={{ base: "2xl", md: "3xl" }}
-                    color={wordmarkColor}
-                    fontWeight="extrabold"
-                    textTransform="uppercase"
-                >
-                    Predictathon
-                </Heading>
+                {logo}
+                {heading}
             </>
         );
     }
+
+    const heading = (
+        <Heading
+            as={headingAs}
+            size={{ base: "xl", md: "2xl" }}
+            lineHeight="1"
+            color={wordmarkColor}
+            fontWeight="extrabold"
+            textTransform="uppercase"
+        >
+            Predictathon
+        </Heading>
+    );
 
     return (
         <>
             {linkToHome ? <Link to="/">{logo}</Link> : logo}
             <Stack display={{ base: "none", sm: "block" }} gap="0">
-                <Heading
-                    as={headingAs}
-                    size={{ base: "xl", md: "2xl" }}
-                    lineHeight="1"
-                    color={wordmarkColor}
-                    fontWeight="extrabold"
-                    textTransform="uppercase"
-                >
-                    Predictathon
-                </Heading>
+                {/* Only the logo + wordmark link home - the CompetitionSelector below is itself
+                    interactive, so it can't sit inside the same anchor. */}
+                {linkToHome ? (
+                    <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+                        {heading}
+                    </Link>
+                ) : (
+                    heading
+                )}
                 <Stack
                     gap="0"
                     color={subtitleColor}
