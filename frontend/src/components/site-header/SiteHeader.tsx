@@ -1,16 +1,15 @@
-import { Box, Flex, Heading, IconButton, Spacer, Container, Image, Stack } from "@chakra-ui/react";
+import { Box, Flex, IconButton, Spacer, Container } from "@chakra-ui/react";
 import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
-import { Link } from "react-router";
-import football from "../../assets/football.png";
 import { UserMenu } from "./user-menu/UserMenu";
-import { CompetitionSelector } from "./competition-selector/CompetitionSelector";
+import { HeaderBrand } from "./header-brand/HeaderBrand";
+import { ColorModeButton } from "../ui/color-mode";
 
 export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => void }) {
     const { user } = useUser();
 
     return (
-        <Box bg="blue.fg" color="blue.contrast">
+        <Box bg="brand.headerBg" borderBottomWidth="1px" borderBottomColor="brand.headerBorder">
             <Container maxW="6xl">
                 <Flex alignItems="center" h={{ base: "50px", md: "60px" }}>
                     {user && (
@@ -21,30 +20,17 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                             <IconButton
                                 variant="plain"
                                 size="md"
-                                color="blue.contrast"
+                                color="brand.wordmarkFg"
                                 onClick={onMenuButtonClick}>
                                 <Menu />
                             </IconButton>
                         </Box>
                     )}
 
-                    <Link to="/">
-                        <Image src={football} mr={2} boxSize={{ base: "30px", md: "34px" }} />
-                    </Link> 
+                    <HeaderBrand variant={user ? "loggedIn" : "loggedOut"} linkToHome />
 
-                    {user ? (
-                        <Stack display={{ base: "none", sm: "block" }} gap="0">
-                            <Heading  size={{ base: "xl", md: "2xl" }}  lineHeight="1">
-                                Predictathon
-                            </Heading>
-                            <CompetitionSelector />
-                        </Stack>
-                    ) : (
-                        <Heading size={{ base: "2xl", md: "3xl" }}>
-                            Predictathon
-                        </Heading>
-                    )}
                     <Spacer />
+                    <ColorModeButton color="brand.wordmarkFg" mr={user ? 2 : 0} />
                     {user && <UserMenu />}
                 </Flex>
             </Container>

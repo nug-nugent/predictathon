@@ -1,4 +1,4 @@
-import { Box, Heading, List} from "@chakra-ui/react";
+import { Box, List, Text } from "@chakra-ui/react";
 import { CalendarPlus, ChartColumn, Dices, Home, Info, Medal, MessagesSquare, TableProperties, Ticket, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
 import { useUser } from "../../hooks/useUser";
@@ -21,7 +21,8 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
 
                 {roles.length > 0 && (
                     <>
-                        <Heading size={"sm"} mt={2}>Admin</Heading>
+                        <Text mt={4} mb={1} px={3} fontSize="11px" fontWeight="bold" textTransform="uppercase"
+                            letterSpacing="wide" color="nav.sectionLabel">Admin</Text>
                         {roles.includes(Role.CompetitionAdministrator) && (
                             <NavItem to="/admin/tournaments" icon={<Trophy size={20} />} label="Tournaments" />
                         )}

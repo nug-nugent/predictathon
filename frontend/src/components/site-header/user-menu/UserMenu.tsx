@@ -27,8 +27,8 @@ export function UserMenu() {
         <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}
             positioning={{ placement: "bottom-end", offset: { crossAxis: -10, mainAxis: 2 } }}>
             <Popover.Trigger asChild>
-                <Button size={{ base: "xs", md: "md" }} variant="surface" rounded="full" pr="8px" pl="0" maxWidth={{ base: "200px", md: "unset" }}>
-                    <Avatar.Root size={{ base: "xs", md: "md" }}>
+                <Button size={{ base: "xs", md: "md" }} bg="surface.avatarChip" color="fg" rounded="full" pr="8px" pl="0" maxWidth={{ base: "200px", md: "unset" }}>
+                    <Avatar.Root size={{ base: "xs", md: "md" }} bg="surface.avatarCircle" color="surface.avatarCircleFg">
                         <Avatar.Image src={user.avatarUrl} />
                         <Avatar.Fallback name={user.name} />
                     </Avatar.Root>

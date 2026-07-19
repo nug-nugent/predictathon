@@ -91,7 +91,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     const awayCrest = crestUrl(match.awayTeamImage);
 
     return (
-        <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} py={2} px={{ base: 2, md: 4 }} gap={2}>
+        <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} borderTopColor="border.hairline" py={2} px={{ base: 2, md: 4 }} gap={2}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
                 <HStack flex="1" minW="0" justify="flex-end" gap={2}>
                     <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)} crest={homeCrest} crestPosition="after" />
@@ -99,10 +99,12 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
                 <HStack gap={1}>
                     <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange} />
+                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange}
+                        bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                     <Text>-</Text>
                     <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange} />
+                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange}
+                        bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>

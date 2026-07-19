@@ -33,12 +33,12 @@ function formatCountdown(minutes: number): string {
 }
 
 function getColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
-    if (status !== "Pre") return "gray.500";
-    if (saveState === "cutoff" || saveState === "error") return "red.500";
-    if (saveState === "saving") return "blue.500";
-    if (saveState === "saved") return "green.500";
+    if (status !== "Pre") return "fg.muted";
+    if (saveState === "cutoff" || saveState === "error") return "fg.error";
+    if (saveState === "saving") return "fg.info";
+    if (saveState === "saved") return "fg.success";
 
-    return minutesToPredict < 1440 ? "orange.500" : "gray.500";
+    return minutesToPredict < 1440 ? "status.urgent" : "status.relaxed";
 }
 
 function getText(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {

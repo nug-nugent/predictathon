@@ -1,11 +1,10 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, Stack, Image, Heading, CloseButton, Center, Spinner } from "@chakra-ui/react";
+import { Box, Container, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner } from "@chakra-ui/react";
 import { Outlet } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
 import { SiteHeader } from "../site-header/SiteHeader";
-import { CompetitionSelector } from "../site-header/competition-selector/CompetitionSelector";
+import { HeaderBrand } from "../site-header/header-brand/HeaderBrand";
 import { useState } from "react";
-import football from "../../assets/football.png";
 
 export function SiteLayout() {
     const { user, isLoading } = useUser();
@@ -29,16 +28,10 @@ export function SiteLayout() {
                 <Portal>
                     <Drawer.Backdrop />
                     <Drawer.Positioner>
-                        <Drawer.Content>
-                            <Drawer.Header>
+                        <Drawer.Content bg="surface.sidebar">
+                            <Drawer.Header borderBottomWidth="1px" borderBottomColor="border.hairline">
                                 <HStack alignItems={"center"}>
-                                    <Image src={football} mr={"2"} boxSize={{ base: "30px", md: "34px" }} />
-                                    <Stack gap="0">
-                                        <Heading as="h1" size={{ base: "xl", md: "2xl" }} lineHeight="1">
-                                            Predictathon
-                                        </Heading>
-                                        <CompetitionSelector />
-                                    </Stack>
+                                    <HeaderBrand variant="loggedIn" headingAs="h1" wordmarkColor="fg" subtitleColor="fg.muted" />
                                 </HStack>
                             </Drawer.Header>
                             <Drawer.Body mt={0} ml={6}>
@@ -55,7 +48,8 @@ export function SiteLayout() {
             <Container maxW="6xl">
                 <Flex>
                     {user && (
-                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3}>
+                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3} p={2}
+                            bg="surface.sidebar" borderWidth="1px" borderColor="border.hairline" borderRadius="card">
                             <SideNavigation />
                         </Box>
                     )}
