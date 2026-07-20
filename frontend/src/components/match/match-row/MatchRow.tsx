@@ -35,6 +35,13 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     const homeInputRef = useRef<HTMLInputElement>(null);
     const awayInputRef = useRef<HTMLInputElement>(null);
 
+    // Editing an existing prediction fires a save per digit change (home, then away), so two POSTs
+    // can overlap. Chaining them guarantees the server processes them in entry order (last write
+    // wins with the *latest* values), and the sequence number keeps a superseded save's outcome
+    // from clobbering the UI state of the one that matters.
+    const saveChain = useRef<Promise<void>>(Promise.resolve());
+    const saveSeq = useRef(0);
+
     useEffect(() => {
         if (hasFocus && document.activeElement !== awayInputRef.current) {
             homeInputRef.current?.focus();
@@ -43,21 +50,28 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
     const locked = status !== "Pre" || saveState === "cutoff";
 
-    const save = async (homeValue: string, awayValue: string, focusNext: boolean) => {
+    const save = (homeValue: string, awayValue: string, focusNext: boolean) => {
         if (homeValue === "" || awayValue === "") return;
 
+        const seq = ++saveSeq.current;
         setSaveState("saving");
-        try {
-            await savePrediction(match.matchID, Number(homeValue), Number(awayValue));
-            setSaveState("saved");
-            onSaved(match.matchID);
 
-            if (focusNext) {
-                awayInputRef.current?.blur();
+        saveChain.current = saveChain.current.then(async () => {
+            try {
+                await savePrediction(match.matchID, Number(homeValue), Number(awayValue));
+                if (saveSeq.current !== seq) return;
+
+                setSaveState("saved");
+                onSaved(match.matchID);
+
+                if (focusNext) {
+                    awayInputRef.current?.blur();
+                }
+            } catch (error) {
+                if (saveSeq.current !== seq) return;
+                setSaveState(error instanceof ApiError && error.status === 409 ? "cutoff" : "error");
             }
-        } catch (error) {
-            setSaveState(error instanceof ApiError && error.status === 409 ? "cutoff" : "error");
-        }
+        });
     };
 
     const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
@@ -111,7 +125,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                     <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
                 </HStack>
 
-                <MatchStatus matchId={match.matchID} myUsername={user?.name} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
+                <MatchStatus matchId={match.matchID} myUserId={user?.id} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
                     actualHomeGoals={match.actualHomeTeamGoals} actualAwayGoals={match.actualAwayTeamGoals} score={match.score} />
             </Flex>
         </Flex>

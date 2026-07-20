@@ -171,13 +171,23 @@ function UserEditDialog({ user, onClose, onSaved }: {
 
         try {
             await updateUserRoles(user.id, roles);
+        } catch (e) {
+            setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+            setSaving(false);
+            return;
+        }
+
+        // Separate try/catch: at this point the roles ARE saved, so a lockout failure needs to
+        // say so - a generic error would leave the admin thinking nothing was applied.
+        try {
             if (locked !== user.isLockedOut) {
                 await setUserLocked(user.id, locked);
             }
 
             onSaved();
         } catch (e) {
-            setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+            const detail = e instanceof ApiError ? e.messages.join(" ") : "Something went wrong.";
+            setError(`Roles were saved, but updating the lock status failed: ${detail}`);
         } finally {
             setSaving(false);
         }

@@ -18,9 +18,10 @@ export function CompetitionRegistrationPage() {
     useEffect(() => {
         if (!id) return;
 
-        setError(null);
+        // Error is cleared in the success callback (not synchronously here) so this stays safe to
+        // run directly in an effect - see react-hooks/set-state-in-effect.
         getCompetitionForRegistration(id)
-            .then(setCompetition)
+            .then((c) => { setCompetition(c); setError(null); })
             .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
     }, [id]);
 

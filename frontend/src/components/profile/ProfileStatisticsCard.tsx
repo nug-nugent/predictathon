@@ -3,7 +3,7 @@ import { Center, Heading, Spinner, Table, Text } from "@chakra-ui/react";
 import { getLeagueTable } from "../../services/league-service";
 import { getCompetitionWeeks, computeDefaultWeek } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
-import { toDateOnly } from "../../utils/toDateOnly";
+import { weekEnd } from "../../utils/matchWeek";
 import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
 
@@ -14,16 +14,6 @@ type Stats = {
     lastWeek: WeekStat | null;
     thisWeek: WeekStat | null;
 };
-
-function addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
-function weekEnd(weekStart: string): string {
-    return toDateOnly(addDays(new Date(weekStart), 6));
-}
 
 async function findRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string): Promise<WeekStat | null> {
     const table = await getLeagueTable(competitionId, dateFrom, dateTo);

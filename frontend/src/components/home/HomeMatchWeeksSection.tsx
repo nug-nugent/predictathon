@@ -3,13 +3,7 @@ import { Center, Spinner, Text, VStack } from "@chakra-ui/react";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../services/prediction-service";
 import { HomeMatchSummary } from "./HomeMatchSummary";
 import { ApiError } from "../../services/api";
-import { toDateOnly } from "../../utils/toDateOnly";
-
-function addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
+import { weekEnd } from "../../utils/matchWeek";
 
 export function HomeMatchWeeksSection({ competitionId }: { competitionId: string }) {
     const [state, setState] = useState<{
@@ -42,7 +36,7 @@ export function HomeMatchWeeksSection({ competitionId }: { competitionId: string
 
                 if (cancelled) return;
 
-                const currentWeekEnd = toDateOnly(addDays(new Date(currentWeek), 6));
+                const currentWeekEnd = weekEnd(currentWeek);
                 const currentTitle = new Date(currentWeekEnd) < new Date() ? "Last Matches" : "Current Matches";
 
                 setState({ currentTitle, currentMatches, futureMatches });

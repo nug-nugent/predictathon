@@ -2,17 +2,22 @@ import { ChakraProvider } from '@chakra-ui/react'
 import type { Preview } from '@storybook/react-vite'
 import { predictTheme } from '../src/theme.ts'
 import { UserProvider } from '../src/providers/UserProvider'
+import { ColorModeProvider } from '../src/components/ui/color-mode'
 import { BrowserRouter } from 'react-router';
 
 const preview: Preview = {
   decorators: [
+    // Mirrors main.tsx's provider nesting - anything a component pulls from context there
+    // (color mode, user) must be available here too or its stories crash.
     (Story, { parameters }) => (
       <ChakraProvider value={predictTheme}>
-        <UserProvider mockUser={parameters.user ?? null}>
-          <BrowserRouter>
-            <Story />
-          </BrowserRouter>
-        </UserProvider>
+        <ColorModeProvider>
+          <UserProvider mockUser={parameters.user ?? null}>
+            <BrowserRouter>
+              <Story />
+            </BrowserRouter>
+          </UserProvider>
+        </ColorModeProvider>
       </ChakraProvider>
     )
   ],

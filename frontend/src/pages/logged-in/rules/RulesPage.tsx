@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Heading, List, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
+import { getCompetitionDetails } from "../../../services/competition-service";
 import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
 
@@ -15,6 +17,19 @@ export function RulesPage() {
     const { competitions, currentCompetitionId } = useCompetition();
     const competitionName = competitions.find((c) => c.competitionID === currentCompetitionId)?.competitionName ?? "the competition";
 
+    // Whether this competition awards the 2-point tier (correct winner + their exact goal tally).
+    // Defaults to true while loading (or with no competition selected) - it's the standard scheme;
+    // the rare no-two-pointers competition swaps the bullets in once details arrive.
+    const [allowTwoPointers, setAllowTwoPointers] = useState(true);
+
+    useEffect(() => {
+        if (!currentCompetitionId) return;
+
+        getCompetitionDetails(currentCompetitionId)
+            .then((details) => setAllowTwoPointers(details.allowTwoPointers))
+            .catch(() => { /* best-effort - fall back to describing the standard scheme */ });
+    }, [currentCompetitionId]);
+
     return (
         <VStack align="stretch" gap={6} maxW="container.md">
             <PageHeading textAlign="center">Rules of the game</PageHeading>
@@ -29,8 +44,14 @@ export function RulesPage() {
                 </Text>
                 <List.Root mb={4} ps={4}>
                     <List.Item>If the result was 4-2 you would receive the maximum <Points value={3}>3 points</Points> for a perfect prediction.</List.Item>
-                    <List.Item>If the result was 4-0, 4-1, or 4-3 you would score <Points value={2}>2 points</Points> because you said that {EXAMPLE_TEAM_1} would win and score 4 goals.</List.Item>
-                    <List.Item>If the result was e.g. 2-1, 3-0, 5-1, or 1-0 you would score <Points value={1}>1 point</Points>, as you correctly predicted the winning team, but not the score.</List.Item>
+                    {allowTwoPointers ? (
+                        <>
+                            <List.Item>If the result was 4-0, 4-1, or 4-3 you would score <Points value={2}>2 points</Points> because you said that {EXAMPLE_TEAM_1} would win and score 4 goals.</List.Item>
+                            <List.Item>If the result was e.g. 2-1, 3-0, 5-1, or 1-0 you would score <Points value={1}>1 point</Points>, as you correctly predicted the winning team, but not the score.</List.Item>
+                        </>
+                    ) : (
+                        <List.Item>If the result was any other {EXAMPLE_TEAM_1} win - e.g. 4-1, 2-1, or 3-0 - you would score <Points value={1}>1 point</Points>, as you correctly predicted the winning team, but not the score.</List.Item>
+                    )}
                     <List.Item>If the game ended in a draw, {EXAMPLE_TEAM_2} won, or you failed to make a prediction, you would score <Points value={0}>0 points</Points>.</List.Item>
                 </List.Root>
                 <Text mb={2}>
@@ -60,7 +81,7 @@ export function RulesPage() {
                     At the end of the competition, players on equal points will be separated by goal difference.
                 </Text>
                 <Text>
-                    In the event of a tie, they'll then be separated firstly by the number of 3-pointers they've scored, then 2-pointers, and finally 1-pointers.
+                    In the event of a tie, they'll then be separated firstly by the number of 3-pointers they've scored, {allowTwoPointers ? "then 2-pointers, " : ""}and finally 1-pointers.
                 </Text>
             </Panel>
         </VStack>

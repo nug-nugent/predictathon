@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
 import { getAllCompetitions, createCompetition, type CompetitionAdmin } from "../../../../services/competition-admin-service";
 import { formatDateOnly } from "../../../../utils/formatDateOnly";
+import { toDateOnly } from "../../../../utils/toDateOnly";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
@@ -133,8 +134,6 @@ function defaultDates(): { startDate: string; endDate: string } {
     const start = new Date();
     const end = new Date();
     end.setFullYear(end.getFullYear() + 1);
-
-    const toDateOnly = (d: Date) => d.toISOString().slice(0, 10);
 
     return { startDate: toDateOnly(start), endDate: toDateOnly(end) };
 }

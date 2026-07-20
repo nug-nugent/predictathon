@@ -57,7 +57,7 @@ export function ProfilePage() {
 
     return (
         <VStack align="stretch" gap={4}>
-            <ProfileCard profile={profile} isOwnProfile={profile.username === user?.name} />
+            <ProfileCard profile={profile} isOwnProfile={profile.userID === user?.id} />
             <ProfileCompetitionContent userId={id} />
         </VStack>
     );

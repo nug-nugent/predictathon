@@ -72,6 +72,9 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
     });
     const [confirmPassword, setConfirmPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    // Set once the account itself exists, so a retry after a later failure (e.g. the free
+    // competition-registration call) doesn't re-submit registration and hit "username taken".
+    const [accountCreated, setAccountCreated] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const update = (patch: Partial<RegisterFields>) => setFields((f) => ({ ...f, ...patch }));
@@ -95,8 +98,11 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
         setError(null);
 
         try {
-            const user = await registerUser(fields);
-            setUser(user);
+            if (!accountCreated) {
+                const user = await registerUser(fields);
+                setUser(user);
+                setAccountCreated(true);
+            }
 
             if (competition.entranceFee <= 0) {
                 await registerFree(competition.competitionID);
@@ -142,32 +148,32 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                         <HStack align="start">
                             <Field.Root>
                                 <Field.Label>First name</Field.Label>
-                                <Input size="sm" maxLength={50} disabled={submitting} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
+                                <Input size="sm" maxLength={50} disabled={submitting || accountCreated} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Surname</Field.Label>
-                                <Input size="sm" maxLength={50} disabled={submitting} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
+                                <Input size="sm" maxLength={50} disabled={submitting || accountCreated} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
                             </Field.Root>
                         </HStack>
 
                         <Field.Root>
                             <Field.Label>Username</Field.Label>
-                            <Input size="sm" maxLength={256} disabled={submitting} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
+                            <Input size="sm" maxLength={256} disabled={submitting || accountCreated} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
                         </Field.Root>
 
                         <Field.Root>
                             <Field.Label>Email</Field.Label>
-                            <Input size="sm" type="email" maxLength={256} disabled={submitting} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
+                            <Input size="sm" type="email" maxLength={256} disabled={submitting || accountCreated} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
                         </Field.Root>
 
                         <HStack align="start">
                             <Field.Root>
                                 <Field.Label>Password</Field.Label>
-                                <PasswordInput size="sm" disabled={submitting} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
+                                <PasswordInput size="sm" disabled={submitting || accountCreated} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Confirm password</Field.Label>
-                                <PasswordInput size="sm" disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                                <PasswordInput size="sm" disabled={submitting || accountCreated} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </Field.Root>
                         </HStack>
 

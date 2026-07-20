@@ -136,13 +136,25 @@ export function setSessionExpiredHandler(handler: (() => void) | null): void {
 
 type RefreshResult = { token: string; expiresAtUtc: string };
 
+// The single in-flight refresh call, shared by every concurrent 401. Without this, N requests
+// failing at once would fire N parallel /Auth/Refresh calls - and since the API rotates the
+// refresh token on use, all but the winner would fail and spuriously log the user out.
+let refreshInFlight: Promise<RefreshResult> | null = null;
+
 /// Exchanges the HttpOnly refresh-token cookie for a fresh access token, updating the in-memory
 /// token store immediately so subsequent requests (including an in-flight retry) pick it up.
-/// Throws (ApiError) if there's no valid session.
-export async function refreshAccessToken(): Promise<RefreshResult> {
-    const result = await postJson<RefreshResult>("/Auth/Refresh", {});
-    currentToken = result.token;
-    return result;
+/// Concurrent callers share one refresh request. Throws (ApiError) if there's no valid session.
+export function refreshAccessToken(): Promise<RefreshResult> {
+    refreshInFlight ??= postJson<RefreshResult>("/Auth/Refresh", {})
+        .then((result) => {
+            currentToken = result.token;
+            return result;
+        })
+        .finally(() => {
+            refreshInFlight = null;
+        });
+
+    return refreshInFlight;
 }
 
 function authHeaders(): HeadersInit {

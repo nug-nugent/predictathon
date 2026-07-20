@@ -22,9 +22,10 @@ export function ProfileEditPage() {
     const reload = () => {
         if (!targetId) return;
 
-        setError(null);
+        // Error is cleared in the success callback (not synchronously here) so this stays safe to
+        // call directly from an effect - see react-hooks/set-state-in-effect.
         getUserProfileForEdit(targetId)
-            .then(setProfile)
+            .then((p) => { setProfile(p); setError(null); })
             .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
     };
 

@@ -12,7 +12,7 @@ import { addReaction, removeReaction, type MessageReaction } from "../../service
 import { getReactionImageUrl } from "../../services/api";
 import { CUSTOM_REACTION_CATEGORY } from "../../constants/messageReactions";
 
-type ReactionGroup = { reactionName: string; imageUrl: string; usernames: string[] };
+type ReactionGroup = { reactionName: string; imageUrl: string; userIds: string[]; usernames: string[] };
 
 function groupReactions(reactions: MessageReaction[]): ReactionGroup[] {
     const groups = new Map<string, ReactionGroup>();
@@ -20,11 +20,13 @@ function groupReactions(reactions: MessageReaction[]): ReactionGroup[] {
     for (const reaction of reactions) {
         const existing = groups.get(reaction.reactionName);
         if (existing) {
+            existing.userIds.push(reaction.userID);
             existing.usernames.push(reaction.username);
         } else {
             groups.set(reaction.reactionName, {
                 reactionName: reaction.reactionName,
                 imageUrl: reaction.imageUrl,
+                userIds: [reaction.userID],
                 usernames: [reaction.username],
             });
         }
@@ -99,11 +101,16 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
         if (busy) return;
         setBusy(true);
         try {
-            const hasReacted = groups.some((g) => g.reactionName === reactionName && g.usernames.includes(user?.name ?? ""));
+            const hasReacted = user !== null
+                && groups.some((g) => g.reactionName === reactionName && g.userIds.includes(user.id));
             const updated = hasReacted
                 ? await removeReaction(messageId, reactionName)
                 : await addReaction(messageId, reactionName, imageUrl);
             onChanged(updated);
+        } catch (error) {
+            // Leave the pills as they were - the server state didn't change, so there's nothing
+            // to roll back; the user can simply click again.
+            console.error("Failed to toggle reaction", error);
         } finally {
             setBusy(false);
         }
@@ -113,16 +120,21 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
     // pill, which toggles. Stable across renders (keyed only on messageId) so the emoji-mart
     // Picker instance isn't torn down and rebuilt every time this component re-renders.
     const handlePickerSelect = useCallback(async (reactionName: string, imageUrl: string) => {
-        const updated = await addReaction(messageId, reactionName, imageUrl);
-        onChanged(updated);
-        setPickerOpen(false);
+        try {
+            const updated = await addReaction(messageId, reactionName, imageUrl);
+            onChanged(updated);
+        } catch (error) {
+            console.error("Failed to add reaction", error);
+        } finally {
+            setPickerOpen(false);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messageId]);
 
     return (
         <HStack gap={1} wrap="wrap" mt={1}>
             {groups.map((group) => {
-                const mine = group.usernames.includes(user?.name ?? "");
+                const mine = user !== null && group.userIds.includes(user.id);
                 return (
                     <Button
                         key={group.reactionName}

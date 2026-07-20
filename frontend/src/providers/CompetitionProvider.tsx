@@ -17,7 +17,11 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
 
     const [competitions, setCompetitions] = useState<UserCompetitionRegistration[]>([]);
     const [currentCompetitionId, setCurrentCompetitionIdState] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    // The logged-in identity (by name, matching the fetch effect's key) whose registrations the
+    // state above currently reflects - set by the fetch effect's callbacks when a load settles.
+    // isLoading is derived from it rather than stored, so the effect never has to set state
+    // synchronously (react-hooks/set-state-in-effect).
+    const [loadedForUser, setLoadedForUser] = useState<string | null>(null);
 
     // Re-fetches just the list, leaving currentCompetitionId alone - callers that just registered
     // for a new competition follow this with an explicit setCurrentCompetitionId to switch to it.
@@ -32,21 +36,24 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         if (!user) {
-            setCompetitions([]);
-            setCurrentCompetitionIdState(null);
-            setIsLoading(false);
-
-            // Only clear on a genuine logout - `user` also starts out null while UserProvider's
-            // silent session-refresh is still in flight on initial load, which isn't a logout.
+            // No synchronous state resets here (react-hooks/set-state-in-effect) - while logged
+            // out, the context value below is derived to empty regardless of what state holds,
+            // and the next login's fetch overwrites it anyway. sessionStorage is an external
+            // system, so clearing it does belong in an effect - but only on a genuine logout:
+            // `user` is also null while UserProvider's silent session-refresh is still in flight
+            // on initial load, which isn't a logout.
             if (!userLoading) {
                 sessionStorage.removeItem(STORAGE_KEY);
             }
             return;
         }
 
-        setIsLoading(true);
+        let cancelled = false;
+        const userName = user.name;
+
         getMyRegisteredCompetitions()
             .then((list) => {
+                if (cancelled) return;
                 setCompetitions(list);
 
                 const stored = sessionStorage.getItem(STORAGE_KEY);
@@ -55,6 +62,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
                 const resolved = storedStillValid ? stored : (dbDefault ?? list[0]?.competitionID ?? null);
 
                 setCurrentCompetitionIdState(resolved);
+                setLoadedForUser(userName);
 
                 if (resolved) {
                     sessionStorage.setItem(STORAGE_KEY, resolved);
@@ -63,10 +71,13 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
                 }
             })
             .catch(() => {
+                if (cancelled) return;
                 setCompetitions([]);
                 setCurrentCompetitionIdState(null);
-            })
-            .finally(() => setIsLoading(false));
+                setLoadedForUser(userName);
+            });
+
+        return () => { cancelled = true; };
         // Re-fetches once per logged-in identity (login/logout/switch user), not on every render -
         // `user` is a fresh object each refresh cycle, so we key on the stable `name` instead.
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,15 +88,28 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
         sessionStorage.setItem(STORAGE_KEY, competitionId);
     };
 
+    // On a genuine logout, forget which user the state was loaded for, so a later login (even of
+    // the same account) starts with isLoading=true until its own fetch lands. Done as a guarded
+    // render-time adjustment (React's "adjusting state when a prop changes" pattern) rather than
+    // in the effect above, which must not set state synchronously.
+    if (!user && !userLoading && loadedForUser !== null) {
+        setLoadedForUser(null);
+    }
+
+    // While logged out, expose empty values rather than clearing state in the effect above - the
+    // stale state from a previous login is never visible (a new login flips isLoading back on
+    // until its own fetch lands, so consumers keep gating on it).
+    const loggedIn = user !== null;
+    const isLoading = userLoading || (loggedIn && loadedForUser !== user.name);
     const contextValue = useMemo(
         () => ({
-            competitions,
-            currentCompetitionId,
+            competitions: loggedIn ? competitions : [],
+            currentCompetitionId: loggedIn ? currentCompetitionId : null,
             setCurrentCompetitionId,
             refreshCompetitions,
             isLoading,
         }),
-        [competitions, currentCompetitionId, refreshCompetitions, isLoading]
+        [loggedIn, competitions, currentCompetitionId, refreshCompetitions, isLoading]
     );
 
     return (

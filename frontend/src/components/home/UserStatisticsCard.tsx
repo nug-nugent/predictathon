@@ -5,7 +5,7 @@ import { useUser } from "../../hooks/useUser";
 import { getLeagueTable } from "../../services/league-service";
 import { getCompetitionWeeks, getMatchesForWeek, getNextUnpredictedMatch, computeDefaultWeek } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
-import { toDateOnly } from "../../utils/toDateOnly";
+import { weekEnd } from "../../utils/matchWeek";
 import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
 
@@ -19,19 +19,9 @@ type Stats = {
     nextDueMatchDateTime: string | null;
 };
 
-function addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
-function weekEnd(weekStart: string): string {
-    return toDateOnly(addDays(new Date(weekStart), 6));
-}
-
-async function findMyRow(competitionId: string, username: string, dateFrom?: string, dateTo?: string): Promise<WeekStat | null> {
+async function findMyRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string): Promise<WeekStat | null> {
     const table = await getLeagueTable(competitionId, dateFrom, dateTo);
-    const mine = table.find((r) => r.username === username);
+    const mine = table.find((r) => r.userID === userId);
     return mine ? { points: mine.score, position: mine.leaguePosition } : null;
 }
 
@@ -66,7 +56,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
             try {
                 const [weeks, overall, nextDue] = await Promise.all([
                     getCompetitionWeeks(competitionId),
-                    findMyRow(competitionId, user.name),
+                    findMyRow(competitionId, user.id),
                     getNextUnpredictedMatch(competitionId),
                 ]);
 
@@ -75,7 +65,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                 const previousWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
 
                 const lastWeek = previousWeek
-                    ? await findMyRow(competitionId, user.name, previousWeek, weekEnd(previousWeek))
+                    ? await findMyRow(competitionId, user.id, previousWeek, weekEnd(previousWeek))
                     : null;
 
                 // Only show "this week" once at least one match in it has actually been played.
@@ -83,7 +73,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                 if (currentWeek) {
                     const currentWeekMatches = await getMatchesForWeek(competitionId, currentWeek);
                     if (currentWeekMatches.some((m) => m.actualHomeTeamGoals !== null)) {
-                        thisWeek = await findMyRow(competitionId, user.name, currentWeek, weekEnd(currentWeek));
+                        thisWeek = await findMyRow(competitionId, user.id, currentWeek, weekEnd(currentWeek));
                     }
                 }
 

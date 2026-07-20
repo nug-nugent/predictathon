@@ -36,9 +36,10 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
     const [error, setError] = useState<ApiError | null>(null);
 
     const reload = () => {
-        setError(null);
+        // Error is cleared in the success callback (not synchronously here) so this stays safe to
+        // call directly from an effect - see react-hooks/set-state-in-effect.
         getTeamDetail(competitionId, teamId)
-            .then(setTeam)
+            .then((t) => { setTeam(t); setError(null); })
             .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
     };
 
@@ -49,7 +50,7 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
             <Center mt={4}>
                 <VStack gap={3}>
                     <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={reload}>Try again</Button>
+                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
                 </VStack>
             </Center>
         );

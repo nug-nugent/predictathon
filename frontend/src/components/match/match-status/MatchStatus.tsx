@@ -7,7 +7,7 @@ import { PredictionsSummary } from "../predictions-summary/PredictionsSummary";
 
 type MatchStatusProps = {
     matchId: string;
-    myUsername: string | undefined;
+    myUserId: string | undefined;
     status: MatchStatusValue;
     minutesToPredict: number;
     saveState: SaveState;
@@ -51,17 +51,23 @@ function getText(status: MatchStatusValue, saveState: SaveState, minutesToPredic
     return formatCountdown(minutesToPredict);
 }
 
-export function MatchStatus({ matchId, myUsername, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
+export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
     const [open, setOpen] = useState(false);
     const [predictions, setPredictions] = useState<MatchPredictionListItem[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
 
+    // Refetches on every open (not just the first): a match can move During -> Post while this
+    // row stays mounted, and the cached list's scores would be stale. Already-loaded data stays
+    // visible while the silent refresh is in flight, and a previous failure doesn't block retrying.
     const handleOpenChange = (isOpen: boolean) => {
         setOpen(isOpen);
 
-        if (isOpen && predictions === null && !loadFailed) {
+        if (isOpen) {
             getMatchPredictions(matchId)
-                .then(setPredictions)
+                .then((loaded) => {
+                    setPredictions(loaded);
+                    setLoadFailed(false);
+                })
                 .catch(() => setLoadFailed(true));
         }
     };
@@ -112,7 +118,7 @@ export function MatchStatus({ matchId, myUsername, status, minutesToPredict, sav
                                             <Table.Body>
                                                 {predictions.map((p) => (
                                                     <Table.Row key={p.userID}>
-                                                        <Table.Cell fontSize="0.8em" fontWeight={p.username === myUsername ? "bold" : "normal"}>{p.username}</Table.Cell>
+                                                        <Table.Cell fontSize="0.8em" fontWeight={p.userID === myUserId ? "bold" : "normal"}>{p.username}</Table.Cell>
                                                         <Table.Cell fontSize="0.8em" textAlign="center">
                                                             {p.homeTeamGoals ?? "L"} - {p.awayTeamGoals ?? "L"}
                                                         </Table.Cell>

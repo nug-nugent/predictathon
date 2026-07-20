@@ -34,6 +34,7 @@ export type CompetitionDetails = {
     competitionID: string;
     competitionName: string;
     duplicateFixturesAllowed: boolean;
+    allowTwoPointers: boolean;
 };
 
 export async function getCompetitionDetails(competitionId: string): Promise<CompetitionDetails> {
