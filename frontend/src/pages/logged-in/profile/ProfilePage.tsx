@@ -1,151 +1,104 @@
-import { useEffect, useState } from "react";
-import { Button, Center, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
+import { SimpleGrid, VStack } from "@chakra-ui/react";
 import { useParams } from "react-router";
 import { useUser } from "../../../hooks/useUser";
 import { useCompetition } from "../../../hooks/useCompetition";
 import {
     getUserProfile, getUserPredictionHistory, getUserLeagueTable, getUserLeagueHistory,
-    type UserProfile, type CompetitionUserLeagueTableItem, type UserCompetitionLeagueHistoryItem,
+    type CompetitionUserLeagueTableItem,
 } from "../../../services/profile-service";
 import { getCompetitionDetails } from "../../../services/competition-service";
 import { getLeagueTable } from "../../../services/league-service";
-import type { MatchPrediction } from "../../../services/prediction-service";
 import { ProfileCard } from "../../../components/profile/ProfileCard";
 import { ProfileStatisticsCard } from "../../../components/profile/ProfileStatisticsCard";
 import { ProfilePredictionsTable } from "../../../components/profile/ProfilePredictionsTable";
 import { ProfileLeagueTable } from "../../../components/profile/ProfileLeagueTable";
 import { ProfileLeagueHistoryChart } from "../../../components/profile/ProfileLeagueHistoryChart";
-import { ApiError } from "../../../services/api";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function ProfilePage() {
     const { id } = useParams<{ id: string }>();
-    const { user } = useUser();
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        if (!id) return;
-        getUserProfile(id)
-            .then(setProfile)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [id]);
 
     if (!id) {
         return null;
     }
 
+    return <ProfileLoader key={id} userId={id} />;
+}
+
+function ProfileLoader({ userId }: { userId: string }) {
+    const { user } = useUser();
+    const { data: profile, error, reload } = useAsyncData(() => getUserProfile(userId), [userId]);
+
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (profile === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (
         <VStack align="stretch" gap={4}>
             <ProfileCard profile={profile} isOwnProfile={profile.userID === user?.id} />
-            <ProfileCompetitionContent userId={id} />
+            <ProfileCompetitionContent userId={userId} username={profile.username} />
         </VStack>
     );
 }
 
-function ProfileCompetitionContent({ userId }: { userId: string }) {
+function ProfileCompetitionContent({ userId, username }: { userId: string; username: string }) {
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!currentCompetitionId) {
         return null;
     }
 
-    return <ProfileCompetitionData key={`${userId}-${currentCompetitionId}`} userId={userId} competitionId={currentCompetitionId} />;
+    return <ProfileCompetitionData key={`${userId}-${currentCompetitionId}`} userId={userId} username={username} competitionId={currentCompetitionId} />;
 }
 
-function ProfileCompetitionData({ userId, competitionId }: { userId: string; competitionId: string }) {
-    const [predictions, setPredictions] = useState<MatchPrediction[] | null>(null);
-    const [leagueTable, setLeagueTable] = useState<CompetitionUserLeagueTableItem[] | "hidden" | null>(null);
-    const [history, setHistory] = useState<UserCompetitionLeagueHistoryItem[] | null>(null);
-    const [worstPosition, setWorstPosition] = useState<number>(1);
-    const [username, setUsername] = useState<string | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
+function ProfileCompetitionData({ userId, username, competitionId }: { userId: string; username: string; competitionId: string }) {
+    const { data, error } = useAsyncData(async () => {
+        const [predictions, competition, history, table] = await Promise.all([
+            getUserPredictionHistory(competitionId, userId),
+            getCompetitionDetails(competitionId),
+            getUserLeagueHistory(competitionId, userId),
+            getLeagueTable(competitionId),
+        ]);
 
-    useEffect(() => {
-        let cancelled = false;
+        // The what-if league table is meaningless when duplicate fixtures are allowed (the same
+        // fixture can occur twice), so it's hidden for those competitions.
+        const leagueTable: CompetitionUserLeagueTableItem[] | "hidden" = competition.duplicateFixturesAllowed
+            ? "hidden"
+            : await getUserLeagueTable(competitionId, userId);
 
-        const load = async () => {
-            try {
-                const [profile, matchHistory, competition, leagueHistory, table] = await Promise.all([
-                    getUserProfile(userId),
-                    getUserPredictionHistory(competitionId, userId),
-                    getCompetitionDetails(competitionId),
-                    getUserLeagueHistory(competitionId, userId),
-                    getLeagueTable(competitionId),
-                ]);
-
-                if (cancelled) return;
-                setUsername(profile.username);
-                setPredictions(matchHistory);
-                setHistory(leagueHistory);
-                setWorstPosition(table.reduce((max, r) => Math.max(max, r.leaguePosition), 1));
-
-                if (competition.duplicateFixturesAllowed) {
-                    setLeagueTable("hidden");
-                } else {
-                    setLeagueTable(await getUserLeagueTable(competitionId, userId));
-                }
-            } catch (err) {
-                if (!cancelled) setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
-            }
+        return {
+            predictions,
+            history,
+            leagueTable,
+            worstPosition: table.reduce((max, r) => Math.max(max, r.leaguePosition), 1),
         };
-
-        load();
-        return () => { cancelled = true; };
     }, [userId, competitionId]);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
-    if (predictions === null || leagueTable === null || username === null || history === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+    if (data === null) {
+        return <LoadingSpinner />;
     }
 
     return (
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap={6}>
             <VStack align="stretch" gap={4}>
                 <ProfileStatisticsCard competitionId={competitionId} userId={userId} />
-                <ProfileLeagueHistoryChart history={history} worstPosition={worstPosition} />
-                {leagueTable !== "hidden" && <ProfileLeagueTable username={username} table={leagueTable} />}
+                <ProfileLeagueHistoryChart history={data.history} worstPosition={data.worstPosition} />
+                {data.leagueTable !== "hidden" && <ProfileLeagueTable username={username} table={data.leagueTable} />}
             </VStack>
-            <ProfilePredictionsTable predictions={predictions} />
+            <ProfilePredictionsTable predictions={data.predictions} />
         </SimpleGrid>
     );
 }

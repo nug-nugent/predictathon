@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-    Badge, Button, ButtonGroup, Center, Checkbox, Dialog, Field, HStack, IconButton, Input,
-    Pagination, Portal, Spinner, Table, Text, VStack,
+    Badge, Button, Center, Checkbox, Dialog, Field, HStack, Input,
+    Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useUser } from "../../../../hooks/useUser";
 import { Role } from "../../../../constants/roles";
 import {
@@ -13,17 +12,17 @@ import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
+import { TablePagination } from "../../../../components/ui/table-pagination";
+import { useAsyncData } from "../../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 
 const PAGE_SIZE = 20;
 const ALL_ROLES = [Role.UserAdministrator, Role.CompetitionAdministrator, Role.MatchAdministrator];
 
 export function UsersPage() {
-    const [users, setUsers] = useState<UserAdmin[] | null>(null);
-    const [totalCount, setTotalCount] = useState(0);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
-    const [error, setError] = useState<ApiError | null>(null);
     const [editing, setEditing] = useState<UserAdmin | null>(null);
 
     // Debounce the free-text search so it doesn't refetch on every keystroke.
@@ -36,26 +35,12 @@ export function UsersPage() {
         return () => clearTimeout(timeout);
     }, [search]);
 
-    const reload = () => {
-        getUsers(page, PAGE_SIZE, debouncedSearch)
-            .then((result) => {
-                setUsers(result.items);
-                setTotalCount(result.totalCount);
-            })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [page, debouncedSearch]);
+    const { data, error, reload } = useAsyncData(() => getUsers(page, PAGE_SIZE, debouncedSearch), [page, debouncedSearch]);
+    const users = data?.items ?? null;
+    const totalCount = data?.totalCount ?? 0;
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     return (
@@ -67,9 +52,7 @@ export function UsersPage() {
             />
 
             {users === null ? (
-                <Center mt={4}>
-                    <Spinner />
-                </Center>
+                <LoadingSpinner />
             ) : (
                 <Panel overflowX="auto">
                     <Table.Root size="sm" variant="line" striped showColumnBorder>
@@ -109,30 +92,7 @@ export function UsersPage() {
                         </Center>
                     )}
 
-                    {totalCount > PAGE_SIZE && (
-                        <Pagination.Root
-                            count={totalCount}
-                            pageSize={PAGE_SIZE}
-                            page={page}
-                            onPageChange={(e) => setPage(e.page)}
-                        >
-                            <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
-                                <Pagination.PrevTrigger asChild>
-                                    <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                                </Pagination.PrevTrigger>
-                                <Pagination.Items
-                                    render={(p) => (
-                                        <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                            {p.value}
-                                        </IconButton>
-                                    )}
-                                />
-                                <Pagination.NextTrigger asChild>
-                                    <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                                </Pagination.NextTrigger>
-                            </ButtonGroup>
-                        </Pagination.Root>
-                    )}
+                    <TablePagination count={totalCount} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
                 </Panel>
             )}
 

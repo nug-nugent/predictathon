@@ -1,68 +1,44 @@
-import { useEffect, useState } from "react";
-import { Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { VStack } from "@chakra-ui/react";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../services/prediction-service";
 import { HomeMatchSummary } from "./HomeMatchSummary";
-import { ApiError } from "../../services/api";
 import { weekEnd } from "../../utils/matchWeek";
+import { useAsyncData } from "../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../components/ui/async-state";
+
+type WeeksSummary = {
+    currentTitle: string;
+    currentMatches: MatchPrediction[];
+    futureMatches: MatchPrediction[] | null;
+};
 
 export function HomeMatchWeeksSection({ competitionId }: { competitionId: string }) {
-    const [state, setState] = useState<{
-        currentTitle: string;
-        currentMatches: MatchPrediction[];
-        futureMatches: MatchPrediction[] | null;
-    } | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
+    const { data: state, error } = useAsyncData<WeeksSummary>(async () => {
+        const weeks = await getCompetitionWeeks(competitionId);
+        const currentWeek = computeDefaultWeek(weeks);
 
-    useEffect(() => {
-        let cancelled = false;
+        if (!currentWeek) {
+            return { currentTitle: "Current Matches", currentMatches: [], futureMatches: null };
+        }
 
-        const load = async () => {
-            try {
-                const weeks = await getCompetitionWeeks(competitionId);
-                const currentWeek = computeDefaultWeek(weeks);
+        const currentIndex = weeks.indexOf(currentWeek);
+        const futureWeek = currentIndex < weeks.length - 1 ? weeks[currentIndex + 1] : null;
 
-                if (!currentWeek) {
-                    if (!cancelled) setState({ currentTitle: "Current Matches", currentMatches: [], futureMatches: null });
-                    return;
-                }
+        const [currentMatches, futureMatches] = await Promise.all([
+            getMatchesForWeek(competitionId, currentWeek),
+            futureWeek ? getMatchesForWeek(competitionId, futureWeek) : Promise.resolve(null),
+        ]);
 
-                const currentIndex = weeks.indexOf(currentWeek);
-                const futureWeek = currentIndex < weeks.length - 1 ? weeks[currentIndex + 1] : null;
+        const currentTitle = new Date(weekEnd(currentWeek)) < new Date() ? "Last Matches" : "Current Matches";
 
-                const [currentMatches, futureMatches] = await Promise.all([
-                    getMatchesForWeek(competitionId, currentWeek),
-                    futureWeek ? getMatchesForWeek(competitionId, futureWeek) : Promise.resolve(null),
-                ]);
-
-                if (cancelled) return;
-
-                const currentWeekEnd = weekEnd(currentWeek);
-                const currentTitle = new Date(currentWeekEnd) < new Date() ? "Last Matches" : "Current Matches";
-
-                setState({ currentTitle, currentMatches, futureMatches });
-            } catch (err) {
-                if (!cancelled) setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
-            }
-        };
-
-        load();
-        return () => { cancelled = true; };
+        return { currentTitle, currentMatches, futureMatches };
     }, [competitionId]);
 
     if (error) {
-        return (
-            <Center py={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
     if (state === null) {
-        return (
-            <Center py={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

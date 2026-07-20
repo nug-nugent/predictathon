@@ -17,7 +17,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
 
     const [competitions, setCompetitions] = useState<UserCompetitionRegistration[]>([]);
     const [currentCompetitionId, setCurrentCompetitionIdState] = useState<string | null>(null);
-    // The logged-in identity (by name, matching the fetch effect's key) whose registrations the
+    // The logged-in identity (by id, matching the fetch effect's key) whose registrations the
     // state above currently reflects - set by the fetch effect's callbacks when a load settles.
     // isLoading is derived from it rather than stored, so the effect never has to set state
     // synchronously (react-hooks/set-state-in-effect).
@@ -49,7 +49,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
         }
 
         let cancelled = false;
-        const userName = user.name;
+        const userId = user.id;
 
         getMyRegisteredCompetitions()
             .then((list) => {
@@ -62,7 +62,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
                 const resolved = storedStillValid ? stored : (dbDefault ?? list[0]?.competitionID ?? null);
 
                 setCurrentCompetitionIdState(resolved);
-                setLoadedForUser(userName);
+                setLoadedForUser(userId);
 
                 if (resolved) {
                     sessionStorage.setItem(STORAGE_KEY, resolved);
@@ -74,14 +74,15 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
                 if (cancelled) return;
                 setCompetitions([]);
                 setCurrentCompetitionIdState(null);
-                setLoadedForUser(userName);
+                setLoadedForUser(userId);
             });
 
         return () => { cancelled = true; };
         // Re-fetches once per logged-in identity (login/logout/switch user), not on every render -
-        // `user` is a fresh object each refresh cycle, so we key on the stable `name` instead.
+        // `user` is a fresh object each refresh cycle, so we key on the stable `id` instead
+        // (not `name`, which the user can change on the profile edit page).
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.name, userLoading]);
+    }, [user?.id, userLoading]);
 
     const setCurrentCompetitionId = (competitionId: string) => {
         setCurrentCompetitionIdState(competitionId);
@@ -100,7 +101,7 @@ export const CompetitionProvider = ({ children }: { children: React.ReactNode })
     // stale state from a previous login is never visible (a new login flips isLoading back on
     // until its own fetch lands, so consumers keep gating on it).
     const loggedIn = user !== null;
-    const isLoading = userLoading || (loggedIn && loadedForUser !== user.name);
+    const isLoading = userLoading || (loggedIn && loadedForUser !== user.id);
     const contextValue = useMemo(
         () => ({
             competitions: loggedIn ? competitions : [],

@@ -1,38 +1,18 @@
-import { useEffect, useState } from "react";
-import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
-import { getAllTimeStatistics, type AllTimeStatistics } from "../../../services/statistics-service";
+import { VStack } from "@chakra-ui/react";
+import { getAllTimeStatistics } from "../../../services/statistics-service";
 import { LeaderboardTable } from "../../../components/statistics/LeaderboardTable";
-import { ApiError } from "../../../services/api";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function AllTimeStatisticsTab() {
-    const [stats, setStats] = useState<AllTimeStatistics | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        getAllTimeStatistics()
-            .then(setStats)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, []);
+    const { data: stats, error, reload } = useAsyncData(getAllTimeStatistics, []);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (stats === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

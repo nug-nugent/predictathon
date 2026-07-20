@@ -1,29 +1,21 @@
-import { useEffect, useState } from "react";
-import { Button, Center, Heading, HStack, Link, Spinner, Table, Text } from "@chakra-ui/react";
+import { Button, Heading, HStack, Link, Table, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { useUser } from "../../hooks/useUser";
-import { getLeagueTable } from "../../services/league-service";
-import { getCompetitionWeeks, getMatchesForWeek, getNextUnpredictedMatch, computeDefaultWeek } from "../../services/prediction-service";
+import { getUserLeagueStats, type UserWeekStat } from "../../services/league-service";
+import { getMatchesForWeek, getNextUnpredictedMatch } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
 import { weekEnd } from "../../utils/matchWeek";
-import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
-
-type WeekStat = { points: number; position: number };
+import { useAsyncData } from "../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
 type Stats = {
-    overall: WeekStat | null;
-    lastWeek: WeekStat | null;
-    thisWeek: WeekStat | null;
+    overall: UserWeekStat | null;
+    lastWeek: UserWeekStat | null;
+    thisWeek: UserWeekStat | null;
     thisWeekLabel: "Current Matches" | "Last Matches";
     nextDueMatchDateTime: string | null;
 };
-
-async function findMyRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string): Promise<WeekStat | null> {
-    const table = await getLeagueTable(competitionId, dateFrom, dateTo);
-    const mine = table.find((r) => r.userID === userId);
-    return mine ? { points: mine.score, position: mine.leaguePosition } : null;
-}
 
 // Renders "in 2 days" / "in 5 hours" / "in 12 minutes" for the countdown to a match's prediction
 // deadline (5 minutes before kickoff, mirroring the server-side cutoff).
@@ -45,72 +37,47 @@ function countdownColor(deadline: Date, now: Date): string {
 
 export function UserStatisticsCard({ competitionId }: { competitionId: string }) {
     const { user } = useUser();
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
+    const userId = user?.id;
 
-    useEffect(() => {
-        if (!user) return;
-        let cancelled = false;
+    const { data: stats, error } = useAsyncData<Stats | null>(async () => {
+        if (!userId) return null;
 
-        const load = async () => {
-            try {
-                const [weeks, overall, nextDue] = await Promise.all([
-                    getCompetitionWeeks(competitionId),
-                    findMyRow(competitionId, user.id),
-                    getNextUnpredictedMatch(competitionId),
-                ]);
+        const [leagueStats, nextDue] = await Promise.all([
+            getUserLeagueStats(competitionId, userId),
+            getNextUnpredictedMatch(competitionId),
+        ]);
 
-                const currentWeek = computeDefaultWeek(weeks);
-                const currentIndex = weeks.indexOf(currentWeek);
-                const previousWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
-
-                const lastWeek = previousWeek
-                    ? await findMyRow(competitionId, user.id, previousWeek, weekEnd(previousWeek))
-                    : null;
-
-                // Only show "this week" once at least one match in it has actually been played.
-                let thisWeek: WeekStat | null = null;
-                if (currentWeek) {
-                    const currentWeekMatches = await getMatchesForWeek(competitionId, currentWeek);
-                    if (currentWeekMatches.some((m) => m.actualHomeTeamGoals !== null)) {
-                        thisWeek = await findMyRow(competitionId, user.id, currentWeek, weekEnd(currentWeek));
-                    }
-                }
-
-                if (cancelled) return;
-
-                setStats({
-                    overall,
-                    lastWeek,
-                    thisWeek,
-                    thisWeekLabel: currentWeek && new Date(weekEnd(currentWeek)) < new Date() ? "Last Matches" : "Current Matches",
-                    nextDueMatchDateTime: nextDue?.matchDateTime ?? null,
-                });
-            } catch (err) {
-                if (!cancelled) setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
+        // Only show "this week" once at least one match in it has actually been played.
+        let thisWeek = leagueStats.thisWeek;
+        if (thisWeek && leagueStats.currentWeek) {
+            const currentWeekMatches = await getMatchesForWeek(competitionId, leagueStats.currentWeek);
+            if (!currentWeekMatches.some((m) => m.actualHomeTeamGoals !== null)) {
+                thisWeek = null;
             }
-        };
+        }
 
-        load();
-        return () => { cancelled = true; };
-    }, [competitionId, user]);
+        const thisWeekLabel: Stats["thisWeekLabel"] =
+            leagueStats.currentWeek && new Date(weekEnd(leagueStats.currentWeek)) < new Date()
+                ? "Last Matches"
+                : "Current Matches";
+
+        return {
+            overall: leagueStats.overall,
+            lastWeek: leagueStats.lastWeek,
+            thisWeek,
+            thisWeekLabel,
+            nextDueMatchDateTime: nextDue?.matchDateTime ?? null,
+        };
+    }, [competitionId, userId]);
 
     if (!user) return null;
 
     if (error) {
-        return (
-            <Center py={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
     if (stats === null) {
-        return (
-            <Center py={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     const now = new Date();

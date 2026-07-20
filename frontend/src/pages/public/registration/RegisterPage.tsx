@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link as RouterLink, useSearchParams } from "react-router";
 import {
-    Button, Center, Field, Heading, HStack, Input, Link, Spinner, Text, VStack,
+    Button, Center, Field, Heading, HStack, Input, Link, Text, VStack,
 } from "@chakra-ui/react";
 import { PasswordInput } from "../../../components/ui/password-input";
 import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
@@ -14,21 +14,12 @@ import {
 } from "../../../services/competition-registration-service";
 import { ApiError } from "../../../services/api";
 import { Panel } from "../../../components/ui/panel";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function RegisterPage() {
     const [searchParams] = useSearchParams();
     const competitionId = searchParams.get("competitionId");
-
-    const [competition, setCompetition] = useState<CompetitionRegistrationDetails | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    useEffect(() => {
-        if (!competitionId) return;
-
-        getCompetitionForRegistration(competitionId)
-            .then(setCompetition)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    }, [competitionId]);
 
     if (!competitionId) {
         return (
@@ -41,20 +32,18 @@ export function RegisterPage() {
         );
     }
 
+    return <RegisterLoader key={competitionId} competitionId={competitionId} />;
+}
+
+function RegisterLoader({ competitionId }: { competitionId: string }) {
+    const { data: competition, error } = useAsyncData(() => getCompetitionForRegistration(competitionId), [competitionId]);
+
     if (error) {
-        return (
-            <Center mt={8}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
     if (competition === null) {
-        return (
-            <Center mt={8}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return <RegisterForm competition={competition} />;

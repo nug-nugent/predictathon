@@ -1,22 +1,17 @@
-import { useEffect, useState } from "react";
-import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Center, Text } from "@chakra-ui/react";
 import { useCompetition } from "../../../../hooks/useCompetition";
 import { getMatchesForProcessing } from "../../../../services/match-processing-service";
-import { getTeamsForCompetition, type Team } from "../../../../services/team-service";
-import { ApiError } from "../../../../services/api";
+import { getTeamsForCompetition } from "../../../../services/team-service";
 import { ResultsList } from "./ResultsList";
-import type { MatchAdmin } from "../../../../services/match-admin-service";
 import { PageHeading } from "../../../../components/ui/page-heading";
+import { useAsyncData } from "../../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 
 export function ProcessResultsPage() {
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!currentCompetitionId) {
@@ -31,47 +26,26 @@ export function ProcessResultsPage() {
 }
 
 function ProcessResultsLoader({ competitionId }: { competitionId: string }) {
-    const [matches, setMatches] = useState<MatchAdmin[] | null>(null);
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        Promise.all([
+    const { data, error, reload } = useAsyncData(async () => {
+        const [matches, teams] = await Promise.all([
             getMatchesForProcessing(competitionId),
             getTeamsForCompetition(competitionId),
-        ])
-            .then(([matchList, teamList]) => {
-                setMatches(matchList);
-                setTeams(teamList);
-            })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [competitionId]);
+        ]);
+        return { matches, teams };
+    }, [competitionId]);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
-    if (matches === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+    if (data === null) {
+        return <LoadingSpinner />;
     }
 
     return (
         <>
             <PageHeading mb={4}>Process Results</PageHeading>
-            <ResultsList matches={matches} teams={teams} />
+            <ResultsList matches={data.matches} teams={data.teams} />
         </>
     );
 }

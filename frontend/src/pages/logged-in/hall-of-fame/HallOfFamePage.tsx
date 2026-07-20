@@ -1,11 +1,11 @@
-import { Button, Center, Heading, HStack, Image, Spinner, Text, VStack } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Heading, HStack, Image, Text, VStack } from "@chakra-ui/react";
 import { Link } from "react-router";
 import { getHallOfFame, type HallOfFameItem } from "../../../services/hall-of-fame-service";
-import { ApiError } from "../../../services/api";
 import { competitionImageUrl } from "../../../utils/competitionImageUrl";
 import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 function PlaceEntry({ label, name, userId, color }: { label: string; name: string | null; userId: string | null; color: string }) {
     if (!name) return null;
@@ -36,34 +36,14 @@ function HallOfFameEntry({ item }: { item: HallOfFameItem }) {
 }
 
 export function HallOfFamePage() {
-    const [items, setItems] = useState<HallOfFameItem[] | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        getHallOfFame()
-            .then(setItems)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, []);
+    const { data: items, error, reload } = useAsyncData(getHallOfFame, []);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (items === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

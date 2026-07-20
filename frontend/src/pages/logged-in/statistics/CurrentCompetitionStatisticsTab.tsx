@@ -1,21 +1,17 @@
-import { useEffect, useState } from "react";
-import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Center, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { getCurrentCompetitionStatistics, type CurrentCompetitionStatistics } from "../../../services/statistics-service";
+import { getCurrentCompetitionStatistics } from "../../../services/statistics-service";
 import { PredictableTeamsTable } from "../../../components/statistics/PredictableTeamsTable";
 import { PredictableMatchesTable } from "../../../components/statistics/PredictableMatchesTable";
 import { BestPredictionsTable } from "../../../components/statistics/BestPredictionsTable";
-import { ApiError } from "../../../services/api";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function CurrentCompetitionStatisticsTab() {
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!currentCompetitionId) {
@@ -30,34 +26,14 @@ export function CurrentCompetitionStatisticsTab() {
 }
 
 function CurrentCompetitionStats({ competitionId }: { competitionId: string }) {
-    const [stats, setStats] = useState<CurrentCompetitionStatistics | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        getCurrentCompetitionStatistics(competitionId)
-            .then(setStats)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [competitionId]);
+    const { data: stats, error, reload } = useAsyncData(() => getCurrentCompetitionStatistics(competitionId), [competitionId]);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (stats === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

@@ -1,5 +1,4 @@
 import { Box, Center, Heading, Link, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
 import { useUser } from "../../../hooks/useUser";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { Link as RouterLink } from "react-router";
@@ -8,21 +7,16 @@ import { CompetitionRegistrationsCard } from "../../../components/home/Competiti
 import { HomeMatchWeeksSection } from "../../../components/home/HomeMatchWeeksSection";
 import { LoginForm } from "../../../components/site-header/login-button/LoginForm";
 import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
-import {
-    getCompetitionsOpenForRegistration, type CompetitionRegistrationSummary,
-} from "../../../services/competition-registration-service";
-import { ApiError } from "../../../services/api";
+import { getCompetitionsOpenForRegistration } from "../../../services/competition-registration-service";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { LoadingSpinner } from "../../../components/ui/async-state";
 
 export function HomePage() {
     const { user, isLoading: userLoading } = useUser();
 
     if (userLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!user) {
@@ -33,14 +27,7 @@ export function HomePage() {
 }
 
 function LoggedOutLanding() {
-    const [competitions, setCompetitions] = useState<CompetitionRegistrationSummary[] | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    useEffect(() => {
-        getCompetitionsOpenForRegistration()
-            .then(setCompetitions)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    }, []);
+    const { data: competitions, error } = useAsyncData(getCompetitionsOpenForRegistration, []);
 
     return (
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} maxW="container.md" mx="auto">
@@ -78,11 +65,7 @@ function Dashboard() {
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!currentCompetitionId) {

@@ -16,43 +16,28 @@ import {
 } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
+import { useAsyncData } from "../../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 
 export function CompetitionEditPage() {
     const { id } = useParams<{ id: string }>();
-    const [competition, setCompetition] = useState<CompetitionAdmin | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        if (!id) return;
-
-        getCompetition(id)
-            .then(setCompetition)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [id]);
 
     if (!id) {
         return null;
     }
 
+    return <CompetitionEditLoader key={id} id={id} />;
+}
+
+function CompetitionEditLoader({ id }: { id: string }) {
+    const { data: competition, error, reload } = useAsyncData(() => getCompetition(id), [id]);
+
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (competition === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return <CompetitionEditForm key={competition.competitionID} competition={competition} onReload={reload} />;

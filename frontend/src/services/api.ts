@@ -207,14 +207,14 @@ export async function putJsonAuthenticated<TResponse>(path: string, body: unknow
     return handleJsonResponse<TResponse>(response);
 }
 
-export async function deleteAuthenticated(path: string): Promise<void> {
-    const response = await authenticatedFetch(path, { method: "DELETE" });
-    return handleJsonResponse<void>(response);
-}
-
 export async function deleteJsonAuthenticated<TResponse>(path: string): Promise<TResponse> {
     const response = await authenticatedFetch(path, { method: "DELETE" });
     return handleJsonResponse<TResponse>(response);
+}
+
+// For DELETE endpoints whose response body callers don't care about.
+export async function deleteAuthenticated(path: string): Promise<void> {
+    return deleteJsonAuthenticated<void>(path);
 }
 
 // No Content-Type header - the browser sets the multipart boundary itself when the body is a

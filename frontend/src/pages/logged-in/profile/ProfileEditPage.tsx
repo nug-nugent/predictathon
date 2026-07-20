@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import {
-    Avatar, Box, Button, Center, Checkbox, Field, Heading, HStack, Input, Link, Spinner, Text, Textarea, VStack,
+    Avatar, Box, Button, Center, Checkbox, Field, Heading, HStack, Input, Link, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import { ArrowLeft, Camera } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
@@ -10,54 +10,37 @@ import { getUserProfileForEdit, updateProfile, type UserProfileEdit } from "../.
 import { ApiError } from "../../../services/api";
 import { Panel } from "../../../components/ui/panel";
 import { AvatarUploadDialog } from "../../../components/profile/AvatarUploadDialog";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function ProfileEditPage() {
     const { id: routeId } = useParams<{ id: string }>();
     const { user } = useUser();
     const targetId = routeId ?? user?.id;
 
-    const [profile, setProfile] = useState<UserProfileEdit | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        if (!targetId) return;
-
-        // Error is cleared in the success callback (not synchronously here) so this stays safe to
-        // call directly from an effect - see react-hooks/set-state-in-effect.
-        getUserProfileForEdit(targetId)
-            .then((p) => { setProfile(p); setError(null); })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [targetId]);
-
     if (!targetId) {
         return null;
     }
 
+    return <ProfileEditLoader key={targetId} targetId={targetId} />;
+}
+
+function ProfileEditLoader({ targetId }: { targetId: string }) {
+    const { data: profile, error, reload } = useAsyncData(() => getUserProfileForEdit(targetId), [targetId]);
+
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>
-                        {error.status === 403
-                            ? "You don't have permission to edit this profile."
-                            : error.messages.join(" ")}
-                    </Text>
-                    {error.status !== 403 && (
-                        <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                    )}
-                </VStack>
-            </Center>
-        );
+        // A 403 means this user simply may not edit that profile - retrying won't change that.
+        return error.status === 403
+            ? (
+                <Center mt={4}>
+                    <Text>You don't have permission to edit this profile.</Text>
+                </Center>
+            )
+            : <ErrorState error={error} onRetry={reload} />;
     }
 
     if (profile === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return <ProfileEditForm key={profile.userId} profile={profile} />;

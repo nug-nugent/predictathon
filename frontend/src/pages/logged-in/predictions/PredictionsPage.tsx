@@ -1,4 +1,4 @@
-import { Button, Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Center, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../../services/prediction-service";
@@ -6,16 +6,13 @@ import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
 import { MatchList } from "../../../components/match/match-list/MatchList";
 import { ApiError } from "../../../services/api";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function PredictionsPage() {
   const { currentCompetitionId, isLoading } = useCompetition();
 
   if (isLoading) {
-    return (
-      <Center mt={4}>
-        <Spinner />
-      </Center>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!currentCompetitionId) {
@@ -33,17 +30,6 @@ export function PredictionsPage() {
 
 function toApiErrorOrGeneric(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]);
-}
-
-function ErrorState({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
-  return (
-    <Center mt={4}>
-      <VStack gap={3}>
-        <Text>{error.messages.join(" ")}</Text>
-        <Button onClick={onRetry}>Try again</Button>
-      </VStack>
-    </Center>
-  );
 }
 
 function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
@@ -104,11 +90,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
     if (error) {
       return <ErrorState error={error} onRetry={() => { setError(null); setRetryCount((c) => c + 1); }} />;
     }
-    return (
-      <Center mt={4}>
-        <Spinner />
-      </Center>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -119,9 +101,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       {error ? (
         <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />
       ) : matches === null ? (
-        <Center mt={4}>
-          <Spinner />
-        </Center>
+        <LoadingSpinner />
       ) : (
         <MatchList key={selectedWeek} matches={matches} />
       )}

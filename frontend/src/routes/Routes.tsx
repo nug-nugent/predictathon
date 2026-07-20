@@ -28,13 +28,13 @@ export function SiteRoutes() {
     return (
         <Routes>
             <Route path="/" element={<SiteLayout />}>
-                // Public routes
+                {/* Public routes */}
                 <Route index element={<HomePage />} />
                 <Route path="register" element={<RegisterPage />} />
                 <Route path="password-reset" element={<ForgotPasswordPage />} />
                 <Route path="password-reset/confirm" element={<ResetPasswordPage />} />
 
-                // Protected routes for logged in users
+                {/* Protected routes for logged in users */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="predictions" element={<PredictionsPage />} />
                     <Route path="league" element={<LeaguePage />} />
@@ -54,7 +54,7 @@ export function SiteRoutes() {
                     <Route path="competition/:id/register" element={<CompetitionRegistrationPage />} />
                 </Route>
 
-                // Protected routes for admin users - each gated behind the specific role it needs
+                {/* Protected routes for admin users - each gated behind the specific role it needs */}
                 <Route path="admin">
                     <Route element={<ProtectedRoute allowedRoles={[Role.CompetitionAdministrator]} />}>
                         <Route path="tournaments" element={<CompetitionsAdminPage />} />
@@ -70,7 +70,7 @@ export function SiteRoutes() {
                     </Route>
                 </Route>
 
-                // Catch-all redirect back home for unknown paths
+                {/* Catch-all redirect back home for unknown paths */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
         </Routes>

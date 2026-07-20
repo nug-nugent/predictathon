@@ -1,23 +1,19 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { Button, Center, Heading, HStack, Image, SimpleGrid, Spinner, Table, Text, VStack } from "@chakra-ui/react";
+import { Center, Heading, HStack, Image, SimpleGrid, Table, Text } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { getTeamDetail, type TeamDetail } from "../../../services/team-service";
+import { getTeamDetail } from "../../../services/team-service";
 import { PredictableMatchesTable } from "../../../components/statistics/PredictableMatchesTable";
 import { crestUrl } from "../../../utils/crestUrl";
-import { ApiError } from "../../../services/api";
 import { Panel } from "../../../components/ui/panel";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function TeamDetailPage() {
     const { teamId } = useParams<{ teamId: string }>();
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!teamId || !currentCompetitionId) {
@@ -32,36 +28,14 @@ export function TeamDetailPage() {
 }
 
 function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; teamId: string }) {
-    const [team, setTeam] = useState<TeamDetail | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    const reload = () => {
-        // Error is cleared in the success callback (not synchronously here) so this stays safe to
-        // call directly from an effect - see react-hooks/set-state-in-effect.
-        getTeamDetail(competitionId, teamId)
-            .then((t) => { setTeam(t); setError(null); })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, [competitionId, teamId]);
+    const { data: team, error, reload } = useAsyncData(() => getTeamDetail(competitionId, teamId), [competitionId, teamId]);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (team === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     const crest = crestUrl(team.imageName);

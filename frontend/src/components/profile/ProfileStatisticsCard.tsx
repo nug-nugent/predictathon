@@ -1,77 +1,19 @@
-import { useEffect, useState } from "react";
-import { Center, Heading, Spinner, Table, Text } from "@chakra-ui/react";
-import { getLeagueTable } from "../../services/league-service";
-import { getCompetitionWeeks, computeDefaultWeek } from "../../services/prediction-service";
+import { Heading, Table } from "@chakra-ui/react";
+import { getUserLeagueStats } from "../../services/league-service";
 import { ordinal } from "../../utils/ordinal";
-import { weekEnd } from "../../utils/matchWeek";
-import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
-
-type WeekStat = { points: number; position: number };
-
-type Stats = {
-    overall: WeekStat | null;
-    lastWeek: WeekStat | null;
-    thisWeek: WeekStat | null;
-};
-
-async function findRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string): Promise<WeekStat | null> {
-    const table = await getLeagueTable(competitionId, dateFrom, dateTo);
-    const mine = table.find((r) => r.userID === userId);
-    return mine ? { points: mine.score, position: mine.leaguePosition } : null;
-}
+import { useAsyncData } from "../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
 export function ProfileStatisticsCard({ competitionId, userId }: { competitionId: string; userId: string }) {
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        const load = async () => {
-            try {
-                const [weeks, overall] = await Promise.all([
-                    getCompetitionWeeks(competitionId),
-                    findRow(competitionId, userId),
-                ]);
-
-                const currentWeek = computeDefaultWeek(weeks);
-                const currentIndex = weeks.indexOf(currentWeek);
-                const previousWeek = currentIndex > 0 ? weeks[currentIndex - 1] : null;
-
-                const lastWeek = previousWeek
-                    ? await findRow(competitionId, userId, previousWeek, weekEnd(previousWeek))
-                    : null;
-                const thisWeek = currentWeek
-                    ? await findRow(competitionId, userId, currentWeek, weekEnd(currentWeek))
-                    : null;
-
-                if (cancelled) return;
-
-                setStats({ overall, lastWeek, thisWeek });
-            } catch (err) {
-                if (!cancelled) setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
-            }
-        };
-
-        load();
-        return () => { cancelled = true; };
-    }, [competitionId, userId]);
+    const { data: stats, error } = useAsyncData(() => getUserLeagueStats(competitionId, userId), [competitionId, userId]);
 
     if (error) {
-        return (
-            <Center py={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
     if (stats === null) {
-        return (
-            <Center py={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

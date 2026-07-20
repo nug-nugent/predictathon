@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ButtonGroup, Heading, IconButton, Link, Pagination, Table, Text, VStack } from "@chakra-ui/react";
+import { Heading, Link, Table, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { BestPrediction } from "../../services/statistics-service";
 import { Panel } from "../ui/panel";
+import { TablePagination } from "../ui/table-pagination";
 
 const PAGE_SIZE = 10;
 
@@ -50,25 +50,7 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                     </Table.Body>
                 </Table.Root>
 
-                {predictions.length > PAGE_SIZE && (
-                    <Pagination.Root count={predictions.length} pageSize={PAGE_SIZE} page={page} onPageChange={(e) => setPage(e.page)}>
-                        <ButtonGroup variant="ghost" size="sm" justifyContent="center">
-                            <Pagination.PrevTrigger asChild>
-                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                            </Pagination.PrevTrigger>
-                            <Pagination.Items
-                                render={(p) => (
-                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                        {p.value}
-                                    </IconButton>
-                                )}
-                            />
-                            <Pagination.NextTrigger asChild>
-                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                            </Pagination.NextTrigger>
-                        </ButtonGroup>
-                    </Pagination.Root>
-                )}
+                <TablePagination count={predictions.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
             </VStack>
         </Panel>
     );

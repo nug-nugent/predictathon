@@ -1,48 +1,34 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Center, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Heading, VStack } from "@chakra-ui/react";
 import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
 import { PaymentStep } from "../../../components/registration/PaymentStep";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { getCompetitionForRegistration, type CompetitionRegistrationDetails } from "../../../services/competition-registration-service";
-import { ApiError } from "../../../services/api";
+import { getCompetitionForRegistration } from "../../../services/competition-registration-service";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function CompetitionRegistrationPage() {
     const { id } = useParams<{ id: string }>();
-    const { setCurrentCompetitionId, refreshCompetitions } = useCompetition();
-    const navigate = useNavigate();
-
-    const [competition, setCompetition] = useState<CompetitionRegistrationDetails | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
-
-    useEffect(() => {
-        if (!id) return;
-
-        // Error is cleared in the success callback (not synchronously here) so this stays safe to
-        // run directly in an effect - see react-hooks/set-state-in-effect.
-        getCompetitionForRegistration(id)
-            .then((c) => { setCompetition(c); setError(null); })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    }, [id]);
 
     if (!id) {
         return null;
     }
 
+    return <CompetitionRegistrationLoader key={id} id={id} />;
+}
+
+function CompetitionRegistrationLoader({ id }: { id: string }) {
+    const { setCurrentCompetitionId, refreshCompetitions } = useCompetition();
+    const navigate = useNavigate();
+
+    const { data: competition, error } = useAsyncData(() => getCompetitionForRegistration(id), [id]);
+
     if (error) {
-        return (
-            <Center mt={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+        return <ErrorState error={error} />;
     }
 
     if (competition === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

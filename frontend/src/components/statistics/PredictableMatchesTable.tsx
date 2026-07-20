@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ButtonGroup, Heading, IconButton, Pagination, Table, Text, VStack } from "@chakra-ui/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Heading, Table, Text, VStack } from "@chakra-ui/react";
 import type { PredictableMatch } from "../../services/statistics-service";
 import { ScoreComparisonIcon } from "./ScoreComparisonIcon";
 import { Panel } from "../ui/panel";
+import { TablePagination } from "../ui/table-pagination";
 
 const PAGE_SIZE = 5;
 
@@ -48,25 +48,7 @@ export function PredictableMatchesTable({ title, matches }: { title: string; mat
                     </Table.Body>
                 </Table.Root>
 
-                {matches.length > PAGE_SIZE && (
-                    <Pagination.Root count={matches.length} pageSize={PAGE_SIZE} page={page} onPageChange={(e) => setPage(e.page)}>
-                        <ButtonGroup variant="ghost" size="sm" justifyContent="center">
-                            <Pagination.PrevTrigger asChild>
-                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                            </Pagination.PrevTrigger>
-                            <Pagination.Items
-                                render={(p) => (
-                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                        {p.value}
-                                    </IconButton>
-                                )}
-                            />
-                            <Pagination.NextTrigger asChild>
-                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                            </Pagination.NextTrigger>
-                        </ButtonGroup>
-                    </Pagination.Root>
-                )}
+                <TablePagination count={matches.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
             </VStack>
         </Panel>
     );

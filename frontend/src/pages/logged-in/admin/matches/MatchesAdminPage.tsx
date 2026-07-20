@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-    Button, ButtonGroup, Center, Checkbox, Dialog, Field, HStack, IconButton, Input, NativeSelect,
-    Pagination, Portal, Spinner, Table, Text, VStack,
+    Button, Center, Checkbox, Dialog, Field, HStack, Input, NativeSelect,
+    Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCompetition } from "../../../../hooks/useCompetition";
 import {
     getMatchesForAdmin, createMatch, updateMatch, deleteMatch,
@@ -11,9 +10,12 @@ import {
 } from "../../../../services/match-admin-service";
 import { getTeamsForCompetition, type Team } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
+import { useAsyncData } from "../../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
+import { TablePagination } from "../../../../components/ui/table-pagination";
 
 const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     competitionID: competitionId,
@@ -40,11 +42,7 @@ export function MatchesAdminPage() {
     const { currentCompetitionId, isLoading } = useCompetition();
 
     if (isLoading) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (!currentCompetitionId) {
@@ -61,48 +59,30 @@ export function MatchesAdminPage() {
 const PAGE_SIZE = 20;
 
 function MatchesAdminTable({ competitionId }: { competitionId: string }) {
-    const [matches, setMatches] = useState<MatchAdmin[] | null>(null);
-    const [teams, setTeams] = useState<Team[]>([]);
     const [includePlayed, setIncludePlayed] = useState(false);
-    const [error, setError] = useState<ApiError | null>(null);
     const [editing, setEditing] = useState<MatchAdmin | "new" | null>(null);
     const [page, setPage] = useState(1);
 
-    const reload = () => {
-        Promise.all([
+    const { data, error, reload } = useAsyncData(async () => {
+        const [matches, teams] = await Promise.all([
             getMatchesForAdmin(competitionId, includePlayed),
             getTeamsForCompetition(competitionId),
-        ])
-            .then(([matchList, teamList]) => {
-                setMatches(matchList);
-                setTeams(teamList);
-            })
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
+        ]);
+        return { matches, teams };
+    }, [competitionId, includePlayed]);
 
-    useEffect(reload, [competitionId, includePlayed]);
+    if (error) {
+        return <ErrorState error={error} onRetry={reload} />;
+    }
+
+    if (data === null) {
+        return <LoadingSpinner />;
+    }
+
+    const { matches, teams } = data;
 
     const teamName = (teamId: string | null, tbc: string | null) =>
         teams.find((t) => t.teamID === teamId)?.teamName ?? tbc ?? "TBC";
-
-    if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
-    }
-
-    if (matches === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
-    }
 
     const pageMatches = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -152,30 +132,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                     </Center>
                 )}
 
-                {matches.length > PAGE_SIZE && (
-                    <Pagination.Root
-                        count={matches.length}
-                        pageSize={PAGE_SIZE}
-                        page={page}
-                        onPageChange={(e) => setPage(e.page)}
-                    >
-                        <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
-                            <Pagination.PrevTrigger asChild>
-                                <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
-                            </Pagination.PrevTrigger>
-                            <Pagination.Items
-                                render={(p) => (
-                                    <IconButton variant={{ base: "ghost", _selected: "outline" }} onClick={() => setPage(p.value)}>
-                                        {p.value}
-                                    </IconButton>
-                                )}
-                            />
-                            <Pagination.NextTrigger asChild>
-                                <IconButton aria-label="Next page"><ChevronRight /></IconButton>
-                            </Pagination.NextTrigger>
-                        </ButtonGroup>
-                    </Pagination.Root>
-                )}
+                <TablePagination count={matches.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
             </Panel>
 
             {editing !== null && (

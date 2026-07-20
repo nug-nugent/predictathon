@@ -1,45 +1,26 @@
-import { useEffect, useState } from "react";
-import { Button, Center, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
+import { Button, HStack, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router";
 import { Plus } from "lucide-react";
-import { getThreads, type MessageThreadSummary } from "../../../services/messageboard-service";
-import { ApiError } from "../../../services/api";
+import { getThreads } from "../../../services/messageboard-service";
 import { ThreadListItem } from "../../../components/messageboard/ThreadListItem";
 import { NewThreadDialog } from "../../../components/messageboard/NewThreadDialog";
 import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { useAsyncData } from "../../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function BoardPage() {
     const navigate = useNavigate();
-    const [threads, setThreads] = useState<MessageThreadSummary[] | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-
-    const reload = () => {
-        getThreads()
-            .then(setThreads)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    };
-
-    useEffect(reload, []);
+    const { data: threads, error, reload } = useAsyncData(getThreads, []);
 
     if (error) {
-        return (
-            <Center mt={4}>
-                <VStack gap={3}>
-                    <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
-                </VStack>
-            </Center>
-        );
+        return <ErrorState error={error} onRetry={reload} />;
     }
 
     if (threads === null) {
-        return (
-            <Center mt={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     return (

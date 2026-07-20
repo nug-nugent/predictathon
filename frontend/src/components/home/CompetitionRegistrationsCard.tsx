@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Center, Heading, Image, Spinner, Table, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
+import { Heading, Image, Table, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router";
 import { useCompetition } from "../../hooks/useCompetition";
 import {
@@ -10,19 +10,16 @@ import { formatDateOnly } from "../../utils/formatDateOnly";
 import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
 import { ClickableRow } from "../ui/clickable-row";
+import { useAsyncData } from "../../hooks/useAsyncData";
+import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
 export function CompetitionRegistrationsCard() {
     const { setCurrentCompetitionId } = useCompetition();
     const navigate = useNavigate();
-    const [registrations, setRegistrations] = useState<UserCompetitionRegistration[] | null>(null);
-    const [error, setError] = useState<ApiError | null>(null);
+    const { data: registrations, error } = useAsyncData(getAllCompetitionRegistrations, []);
+    // A failure switching to a competition, distinct from the list failing to load.
+    const [switchError, setSwitchError] = useState<ApiError | null>(null);
     const [switching, setSwitching] = useState<string | null>(null);
-
-    useEffect(() => {
-        getAllCompetitionRegistrations()
-            .then(setRegistrations)
-            .catch((err) => setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."])));
-    }, []);
 
     const selectCompetition = async (registration: UserCompetitionRegistration) => {
         if (!registration.registered) {
@@ -35,26 +32,18 @@ export function CompetitionRegistrationsCard() {
             await setDefaultCompetition(registration.competitionID);
             setCurrentCompetitionId(registration.competitionID);
         } catch (err) {
-            setError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
+            setSwitchError(err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]));
         } finally {
             setSwitching(null);
         }
     };
 
-    if (error) {
-        return (
-            <Center py={4}>
-                <Text>{error.messages.join(" ")}</Text>
-            </Center>
-        );
+    if (error || switchError) {
+        return <ErrorState error={(error ?? switchError)!} />;
     }
 
     if (registrations === null) {
-        return (
-            <Center py={4}>
-                <Spinner />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     // Matches legacy: hide the whole widget when there's nothing worth choosing between.
