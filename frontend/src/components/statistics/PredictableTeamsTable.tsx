@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import type { PredictableTeam } from "../../services/statistics-service";
 import { crestUrl } from "../../utils/crestUrl";
 import { Panel } from "../ui/panel";
+import { ClickableRow } from "../ui/clickable-row";
 
 export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
                                 </Table.Cell>
                             </Table.Row>
                         ) : teams.map((t) => (
-                            <Table.Row key={t.teamID} onClick={() => navigate(`/team/${t.teamID}`)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
+                            <ClickableRow key={t.teamID} onActivate={() => navigate(`/team/${t.teamID}`)}>
                                 <Table.Cell>
                                     <HStack gap={2}>
                                         {crestUrl(t.teamImage) && <Image src={crestUrl(t.teamImage)} h="16px" alt="" />}
@@ -34,7 +35,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
                                     </HStack>
                                 </Table.Cell>
                                 <Table.Cell textAlign="center">{t.averageScore.toFixed(2)}</Table.Cell>
-                            </Table.Row>
+                            </ClickableRow>
                         ))}
                     </Table.Body>
                 </Table.Root>

@@ -18,6 +18,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                             display={{ base: "block", lg: "none" }}
                         >
                             <IconButton
+                                aria-label="Open navigation menu"
                                 variant="plain"
                                 size="md"
                                 color="brand.wordmarkFg"

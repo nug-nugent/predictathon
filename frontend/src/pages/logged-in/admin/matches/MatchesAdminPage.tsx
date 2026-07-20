@@ -13,6 +13,7 @@ import { getTeamsForCompetition, type Team } from "../../../../services/team-ser
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
+import { ClickableRow } from "../../../../components/ui/clickable-row";
 
 const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     competitionID: competitionId,
@@ -130,7 +131,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                     </Table.Header>
                     <Table.Body>
                         {pageMatches.map((m) => (
-                            <Table.Row key={m.matchID} onClick={() => setEditing(m)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
+                            <ClickableRow key={m.matchID} onActivate={() => setEditing(m)}>
                                 <Table.Cell>{teamName(m.homeTeamID, m.homeTeamTBC)}</Table.Cell>
                                 <Table.Cell>{teamName(m.awayTeamID, m.awayTeamTBC)}</Table.Cell>
                                 {/* "medium" spells the month, so it reads unambiguously regardless of
@@ -140,7 +141,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                                 <Table.Cell textAlign="center">
                                     {m.matchPlayed ? `${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"}` : ""}
                                 </Table.Cell>
-                            </Table.Row>
+                            </ClickableRow>
                         ))}
                     </Table.Body>
                 </Table.Root>

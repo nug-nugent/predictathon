@@ -11,6 +11,7 @@ import { toDateOnly } from "../../../../utils/toDateOnly";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
+import { ClickableRow } from "../../../../components/ui/clickable-row";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "GBP" });
 
@@ -71,17 +72,15 @@ export function CompetitionsAdminPage() {
                     </Table.Header>
                     <Table.Body>
                         {pageCompetitions.map((c) => (
-                            <Table.Row
+                            <ClickableRow
                                 key={c.competitionID}
-                                onClick={() => navigate(`/admin/tournaments/${c.competitionID}`)}
-                                cursor="pointer"
-                                _hover={{ bg: "bg.muted" }}
+                                onActivate={() => navigate(`/admin/tournaments/${c.competitionID}`)}
                             >
                                 <Table.Cell>{c.prependNameWithThe ? "The " : ""}{c.competitionName}</Table.Cell>
                                 <Table.Cell>{formatDateOnly(c.startDate)}</Table.Cell>
                                 <Table.Cell>{formatDateOnly(c.endDate)}</Table.Cell>
                                 <Table.Cell textAlign="right">{currencyFormatter.format(c.entranceFee)}</Table.Cell>
-                            </Table.Row>
+                            </ClickableRow>
                         ))}
                     </Table.Body>
                 </Table.Root>

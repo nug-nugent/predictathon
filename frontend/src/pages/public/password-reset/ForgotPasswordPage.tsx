@@ -37,26 +37,29 @@ export function ForgotPasswordPage() {
     return (
         <Center mt={8}>
             <Panel maxW="sm" width="full">
-                <VStack gap={4}>
+                {/* A real <form> (rather than an Enter keydown handler) so submission works the
+                    way browsers and assistive tech expect. */}
+                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); submit(); }}>
                     <Heading size="md">Reset your password</Heading>
                     <Text fontSize="sm" color="fg.muted">Enter your username or email and we'll send you a link to reset your password.</Text>
 
                     <Field.Root>
                         <Field.Label>Email / Username</Field.Label>
                         <Input
+                            name="username"
+                            autoComplete="username"
                             disabled={submitting}
                             value={userNameOrEmail}
                             onChange={(e) => setUserNameOrEmail(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && submit()}
                         />
                     </Field.Root>
 
                     <Button
+                        type="submit"
                         alignSelf="flex-end"
                         loading={submitting}
                         disabled={!userNameOrEmail}
                         colorPalette="blue"
-                        onClick={submit}
                     >
                         Send reset link
                     </Button>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PasswordInput } from "../../ui/password-input";
 import { Panel } from "../../ui/panel";
 import { useUser } from "../../../hooks/useUser";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { loginUser } from "../../../services/user-service";
 import { ApiError, PASSWORD_RESET_REQUIRED_ERROR_TYPE } from "../../../services/api";
 
@@ -19,6 +19,11 @@ export function LoginForm() {
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
     const { setUser } = useUser();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Set by ProtectedRoute when a logged-out visit to a protected URL bounced here - return the
+    // user there after login rather than to Home. Same-app paths only (it always starts with "/").
+    const returnTo = (location.state as { from?: string } | null)?.from;
 
     const goToPasswordReset = () => {
         navigate("/password-reset");
@@ -32,7 +37,7 @@ export function LoginForm() {
         try {
             const user = await loginUser(username, password, rememberMe);
             setUser(user);
-            navigate("/");
+            navigate(returnTo?.startsWith("/") ? returnTo : "/");
         } catch (e) {
             if (e instanceof ApiError && e.type === PASSWORD_RESET_REQUIRED_ERROR_TYPE) {
                 setNeedsPasswordReset(true);
@@ -62,17 +67,21 @@ export function LoginForm() {
 
     return (
         <Panel>
-            <Stack gap="4">
+            {/* A real <form> (not a click handler) so Enter submits and password managers can
+                recognise and fill the login - paired with the autocomplete hints below. */}
+            <Stack as="form" gap="4" onSubmit={(e) => { e.preventDefault(); login(); }}>
                 <Text fontWeight="semibold">Login</Text>
 
                 <Field.Root>
                     <Field.Label>Email / Username</Field.Label>
-                    <Input size="sm" disabled={isLoggingIn} value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <Input size="sm" name="username" autoComplete="username" disabled={isLoggingIn}
+                        value={username} onChange={(e) => setUsername(e.target.value)} />
                 </Field.Root>
 
                 <Field.Root>
                     <Field.Label>Password</Field.Label>
-                    <PasswordInput size="sm" disabled={isLoggingIn} value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <PasswordInput size="sm" name="password" autoComplete="current-password" disabled={isLoggingIn}
+                        value={password} onChange={(e) => setPassword(e.target.value)} />
                 </Field.Root>
 
                 <Checkbox.Root checked={rememberMe} disabled={isLoggingIn}
@@ -89,7 +98,7 @@ export function LoginForm() {
 
                 <HStack justifyContent={"space-between"}>
                     <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>
-                    <Button loading={isLoggingIn} size="sm" colorPalette="blue" onClick={login}>Login</Button>
+                    <Button type="submit" loading={isLoggingIn} size="sm" colorPalette="blue">Login</Button>
                 </HStack>
             </Stack>
         </Panel>

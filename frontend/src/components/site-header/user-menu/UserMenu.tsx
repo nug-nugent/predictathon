@@ -40,9 +40,11 @@ export function UserMenu() {
                 <Popover.Positioner>
                     <Popover.Content width="100%" rounded="sm" p="0">
                         <Stack gap="0" onClick={() => setOpen(false)}>
-                            <Link to="/profile/edit">
-                               <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue"><UserPen /> Edit Profile</Button>
-                            </Link>
+                            {/* asChild renders the Button *as* the Link's anchor - nesting a real
+                                <button> inside an <a> is invalid HTML and double-stops keyboard tabbing. */}
+                            <Button asChild size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue">
+                                <Link to="/profile/edit"><UserPen /> Edit Profile</Link>
+                            </Button>
                             <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue" onClick={handleLogout}><LogOut /> Logout</Button>
                         </Stack>
                     </Popover.Content>

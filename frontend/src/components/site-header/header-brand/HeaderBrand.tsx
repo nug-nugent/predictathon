@@ -20,7 +20,8 @@ export function HeaderBrand({
     wordmarkColor = "brand.wordmarkFg",
     subtitleColor = "brand.subtitleFg",
 }: HeaderBrandProps) {
-    const logo = <Image src={football} mr={2} boxSize={{ base: "30px", md: "34px" }} />;
+    // alt="": decorative - it always sits beside the "Predictathon" wordmark text.
+    const logo = <Image src={football} alt="" mr={2} boxSize={{ base: "30px", md: "34px" }} />;
 
     if (variant === "loggedOut") {
         const heading = (

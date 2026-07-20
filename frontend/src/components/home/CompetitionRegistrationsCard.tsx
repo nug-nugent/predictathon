@@ -9,6 +9,7 @@ import { competitionImageUrl } from "../../utils/competitionImageUrl";
 import { formatDateOnly } from "../../utils/formatDateOnly";
 import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
+import { ClickableRow } from "../ui/clickable-row";
 
 export function CompetitionRegistrationsCard() {
     const { setCurrentCompetitionId } = useCompetition();
@@ -67,12 +68,10 @@ export function CompetitionRegistrationsCard() {
             <Table.Root size="sm" variant="line">
                 <Table.Body>
                     {registrations.map((r) => (
-                        <Table.Row
+                        <ClickableRow
                             key={r.competitionID}
-                            cursor="pointer"
                             opacity={switching === r.competitionID ? 0.6 : 1}
-                            _hover={{ bg: "bg.muted" }}
-                            onClick={() => selectCompetition(r)}
+                            onActivate={() => selectCompetition(r)}
                         >
                             <Table.Cell width="48px">
                                 {competitionImageUrl(r.imageFilename) && (
@@ -96,7 +95,7 @@ export function CompetitionRegistrationsCard() {
                                     </VStack>
                                 )}
                             </Table.Cell>
-                        </Table.Row>
+                        </ClickableRow>
                     ))}
                 </Table.Body>
             </Table.Root>

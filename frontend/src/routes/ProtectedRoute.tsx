@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useUser } from "../hooks/useUser";
 import type { Role } from "../constants/roles";
 
@@ -10,9 +10,12 @@ type ProtectedRouteProps = {
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     const { user } = useUser();
+    const location = useLocation();
 
     if (!user) {
-        return <Navigate to="/" replace />;
+        // Carry the URL the user was trying to reach, so the login form can return them there
+        // instead of dumping them on Home (see LoginForm).
+        return <Navigate to="/" replace state={{ from: location.pathname + location.search }} />;
     }
 
     if (allowedRoles && !allowedRoles.some(role => user.roles.includes(role))) {

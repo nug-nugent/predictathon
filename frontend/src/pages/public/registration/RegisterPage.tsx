@@ -142,49 +142,51 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                 />
             ) : (
                 <Panel>
-                    <VStack align="stretch" gap={3}>
+                    {/* A real <form> so Enter submits and password managers recognise the signup -
+                        paired with the autocomplete hints below. */}
+                    <VStack as="form" align="stretch" gap={3} onSubmit={(e) => { e.preventDefault(); submitDetails(); }}>
                         <Heading size="md">Create your account</Heading>
 
                         <HStack align="start">
                             <Field.Root>
                                 <Field.Label>First name</Field.Label>
-                                <Input size="sm" maxLength={50} disabled={submitting || accountCreated} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
+                                <Input size="sm" name="forenames" autoComplete="given-name" maxLength={50} disabled={submitting || accountCreated} value={fields.forenames} onChange={(e) => update({ forenames: e.target.value })} />
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Surname</Field.Label>
-                                <Input size="sm" maxLength={50} disabled={submitting || accountCreated} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
+                                <Input size="sm" name="surname" autoComplete="family-name" maxLength={50} disabled={submitting || accountCreated} value={fields.surname} onChange={(e) => update({ surname: e.target.value })} />
                             </Field.Root>
                         </HStack>
 
                         <Field.Root>
                             <Field.Label>Username</Field.Label>
-                            <Input size="sm" maxLength={256} disabled={submitting || accountCreated} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
+                            <Input size="sm" name="username" autoComplete="username" maxLength={256} disabled={submitting || accountCreated} value={fields.userName} onChange={(e) => update({ userName: e.target.value })} />
                         </Field.Root>
 
                         <Field.Root>
                             <Field.Label>Email</Field.Label>
-                            <Input size="sm" type="email" maxLength={256} disabled={submitting || accountCreated} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
+                            <Input size="sm" name="email" type="email" autoComplete="email" maxLength={256} disabled={submitting || accountCreated} value={fields.email} onChange={(e) => update({ email: e.target.value })} />
                         </Field.Root>
 
                         <HStack align="start">
                             <Field.Root>
                                 <Field.Label>Password</Field.Label>
-                                <PasswordInput size="sm" disabled={submitting || accountCreated} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
+                                <PasswordInput size="sm" name="new-password" autoComplete="new-password" disabled={submitting || accountCreated} value={fields.password} onChange={(e) => update({ password: e.target.value })} />
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Confirm password</Field.Label>
-                                <PasswordInput size="sm" disabled={submitting || accountCreated} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                                <PasswordInput size="sm" name="confirm-password" autoComplete="new-password" disabled={submitting || accountCreated} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </Field.Root>
                         </HStack>
 
                         {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
                         <Button
+                            type="submit"
                             alignSelf="flex-end"
                             colorPalette="blue"
                             loading={submitting}
                             disabled={!fields.forenames || !fields.surname || !fields.userName || !fields.email || !fields.password || !confirmPassword}
-                            onClick={submitDetails}
                         >
                             {competition.entranceFee > 0 ? "Continue to payment" : "Register"}
                         </Button>

@@ -6,7 +6,11 @@ export function NavItem({ to, icon, label, onClick }: { to: string; icon: React.
         <List.Item>
             <NavLink to={to} onClick={onClick}>
                 {({ isActive }) => (
+                    // as="span": the NavLink anchor is the interactive element; rendering a real
+                    // <button> inside it is invalid HTML and double-stops keyboard tabbing. The
+                    // span just carries the button styling.
                     <Button
+                        as="span"
                         variant="ghost"
                         justifyContent="flex-start"
                         py={{ base: 8, lg: 6 }}

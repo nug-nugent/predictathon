@@ -69,17 +69,19 @@ export function ResetPasswordPage() {
     return (
         <Center mt={8}>
             <Panel maxW="sm" width="full">
-                <VStack gap={4}>
+                {/* A real <form> so Enter submits and password managers offer to save the new
+                    password - paired with the autocomplete hints below. */}
+                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); submit(); }}>
                     <Heading size="md">Choose a new password</Heading>
 
                     <Field.Root>
                         <Field.Label>New password</Field.Label>
-                        <PasswordInput disabled={submitting} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                        <PasswordInput name="new-password" autoComplete="new-password" disabled={submitting} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                     </Field.Root>
 
                     <Field.Root>
                         <Field.Label>Confirm new password</Field.Label>
-                        <PasswordInput disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                        <PasswordInput name="confirm-password" autoComplete="new-password" disabled={submitting} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                     </Field.Root>
 
                     {error && (
@@ -87,11 +89,11 @@ export function ResetPasswordPage() {
                     )}
 
                     <Button
+                        type="submit"
                         alignSelf="flex-end"
                         loading={submitting}
                         disabled={!newPassword || !confirmPassword}
                         colorPalette="blue"
-                        onClick={submit}
                     >
                         Reset password
                     </Button>

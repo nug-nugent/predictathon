@@ -12,6 +12,7 @@ import {
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
+import { ClickableRow } from "../../../../components/ui/clickable-row";
 
 const PAGE_SIZE = 20;
 const ALL_ROLES = [Role.UserAdministrator, Role.CompetitionAdministrator, Role.MatchAdministrator];
@@ -83,7 +84,7 @@ export function UsersPage() {
                         </Table.Header>
                         <Table.Body>
                             {users.map((u) => (
-                                <Table.Row key={u.id} onClick={() => setEditing(u)} cursor="pointer" _hover={{ bg: "bg.muted" }}>
+                                <ClickableRow key={u.id} onActivate={() => setEditing(u)}>
                                     <Table.Cell>{u.userName}</Table.Cell>
                                     <Table.Cell>{[u.forenames, u.surname].filter(Boolean).join(" ")}</Table.Cell>
                                     <Table.Cell>{u.email}</Table.Cell>
@@ -97,7 +98,7 @@ export function UsersPage() {
                                             ? <Badge colorPalette="red" size="sm">Locked</Badge>
                                             : <Badge colorPalette="green" size="sm">Active</Badge>}
                                     </Table.Cell>
-                                </Table.Row>
+                                </ClickableRow>
                             ))}
                         </Table.Body>
                     </Table.Root>
