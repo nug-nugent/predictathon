@@ -31,10 +31,15 @@ Backend:
 ```
 dotnet build Predictathon.slnx
 dotnet run --project WebApi              # https://localhost:7046
-dotnet test                               # all tests
+dotnet test UnitTests                     # fast, no DB needed
 dotnet test --filter FullyQualifiedName~CompetitionModelTests   # single test/class
 ```
 Tests use xUnit + FluentAssertions + AutoFixture/AutoFixture.Xunit2 + Bogus (`UnitTests/`, referencing `Application` only).
+
+`IntegrationTests/` covers logic that only really lives in SQL (stored procedures, set-based aggregates like scoring and the league table) against a real SQL Server instance — not meaningfully testable via `UnitTests`' EF InMemory fake. It requires the `PREDICTATHON_TEST_CONNECTION` env var pointing at a migrated database (e.g. the Docker dev stack's `Server=localhost,14330;Database=Predictathon;User Id=sa;Password=<MSSQL_SA_PASSWORD from .env.docker>;TrustServerCertificate=true`); without it, `IntegrationTests` fails fast with a message explaining how to set it up — this also means a bare `dotnet test` (no project/filter) will fail on `IntegrationTests` unless that env var is set. Each test creates and cleans up its own rows, so it's safe to run against a shared dev DB.
+```
+dotnet test IntegrationTests              # needs PREDICTATHON_TEST_CONNECTION set
+```
 
 Frontend (`frontend/`):
 ```
@@ -58,6 +63,7 @@ Backend is a layered solution (`Predictathon.slnx`):
 - **WebApi** — ASP.NET Core Web API: `Controllers/`, `Program.cs` composition root, a SignalR hub (`Hubs/MessageboardHub.cs`) for the live message board, JWT bearer auth (access token in memory, HttpOnly refresh-token cookie), config-driven CORS allow-list (no permissive dev fallback).
 - **Database** — SSDT database project (see schema-change rule above); `Pre-Deployment`/`Post-Deployment` scripts, `Security/Identity.sql`.
 - **UnitTests** — xUnit tests against `Application`.
+- **IntegrationTests** — xUnit tests against a real SQL Server instance (stored procedures, set-based SQL logic like scoring/league table aggregation) — see Common commands above.
 
 Auth: ASP.NET Core Identity under a dedicated `Identity` SQL schema (`Identity.Users`, `Identity.Roles`), JWT bearer + refresh-token cookie with silent refresh. The legacy `dbo.User` table has been fully retired/dropped — `Identity.Users` is the sole source of user data.
 
