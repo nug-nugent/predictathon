@@ -6,15 +6,34 @@ type PredictedWinnerBarProps = {
     awayWin: number;
 };
 
+// Whole-number percentages that always sum to exactly 100 (largest-remainder method) - rounding
+// each share independently can display a 99% or 101% total.
+function toPercentages(counts: number[]): number[] {
+    const total = counts.reduce((sum, c) => sum + c, 0);
+    const exact = counts.map((c) => (100 * c) / total);
+    const floored = exact.map(Math.floor);
+
+    let leftover = 100 - floored.reduce((sum, p) => sum + p, 0);
+    const byLargestFraction = exact
+        .map((value, index) => ({ fraction: value - floored[index], index }))
+        .sort((a, b) => b.fraction - a.fraction);
+
+    for (const { index } of byLargestFraction) {
+        if (leftover <= 0) break;
+        floored[index] += 1;
+        leftover -= 1;
+    }
+
+    return floored;
+}
+
 export function PredictedWinnerBar({ homeWin, draw, awayWin }: PredictedWinnerBarProps) {
     const total = homeWin + draw + awayWin;
     if (total === 0) {
         return null;
     }
 
-    const homePercent = Math.round((100 * homeWin) / total);
-    const drawPercent = Math.round((100 * draw) / total);
-    const awayPercent = Math.round((100 * awayWin) / total);
+    const [homePercent, drawPercent, awayPercent] = toPercentages([homeWin, draw, awayWin]);
 
     return (
         <VStack gap={1} w="100%">

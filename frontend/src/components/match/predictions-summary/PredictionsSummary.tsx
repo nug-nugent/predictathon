@@ -44,7 +44,8 @@ function computeSummary(predictions: MatchPredictionListItem[]): Summary {
         }
     }
 
-    const topScores = [...scoresList].sort((a, b) => scoreCounts[a] - scoreCounts[b]).reverse().slice(0, 4);
+    // Descending by count; the stable sort keeps ties in first-seen order.
+    const topScores = [...scoresList].sort((a, b) => scoreCounts[b] - scoreCounts[a]).slice(0, 4);
 
     return { topScores, scoreCounts, pointCounts, homeWin, draw, awayWin };
 }

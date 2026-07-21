@@ -8,7 +8,8 @@ type WeekPickerProps = {
 };
 
 function formatWeek(week: string): string {
-    return new Date(week).toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" });
+    // Browser locale (not a hardcoded one) - matches every other date in the app.
+    return new Date(week).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
 // Clamps the day-of-month to the last day of the target month (matches date-fns' addMonths), so

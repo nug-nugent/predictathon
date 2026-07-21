@@ -42,12 +42,13 @@ export function MessageItem({ message, onReactionsChanged }: {
 
                 {message.youTubeVideoID && (
                     <Box w="100%" maxW="480px" aspectRatio={16 / 9}>
+                        {/* youtube-nocookie: no tracking cookies until playback starts. */}
                         <iframe
                             width="100%"
                             height="100%"
-                            src={`https://www.youtube.com/embed/${message.youTubeVideoID}`}
+                            style={{ border: 0 }}
+                            src={`https://www.youtube-nocookie.com/embed/${message.youTubeVideoID}`}
                             title="YouTube video"
-                            frameBorder="0"
                             allowFullScreen
                         />
                     </Box>

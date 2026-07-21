@@ -24,7 +24,7 @@ export function HomeMatchSummary({ title, matches }: { title: string; matches: M
                                     </HStack>
                                 </Table.Cell>
                                 <Table.Cell textAlign="center" whiteSpace="nowrap">
-                                    {m.actualHomeTeamGoals ?? ""}-{m.actualAwayTeamGoals ?? ""}
+                                    {m.actualHomeTeamGoals !== null ? `${m.actualHomeTeamGoals}-${m.actualAwayTeamGoals}` : ""}
                                 </Table.Cell>
                                 <Table.Cell>
                                     <HStack gap={2}>

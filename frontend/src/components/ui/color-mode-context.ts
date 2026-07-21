@@ -6,6 +6,8 @@ export type ColorModeContextValue = {
     toggleColorMode: () => void;
 };
 
+// Also hardcoded in index.html's pre-mount boot script (which can't import this module) - keep
+// the two in sync by hand if this ever changes.
 export const STORAGE_KEY = "predictathon-color-mode";
 export const ColorModeContext = createContext<ColorModeContextValue | null>(null);
 

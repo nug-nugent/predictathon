@@ -15,6 +15,14 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path alias - mirrored in vite.config.ts's resolve.alias so both tsc and the dev/build
+       server agree on it. New code may use "@/..." instead of a long "../../../.." chain;
+       existing imports are left as-is rather than mechanically rewritten. No baseUrl: it's
+       deprecated in this TS version, and paths resolve relative to this file without it. */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
