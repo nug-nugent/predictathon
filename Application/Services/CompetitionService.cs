@@ -25,16 +25,19 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         _appDbContext = appDbContext ?? throw new ArgumentNullException(nameof(appDbContext));
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Competition>> GetCompetitionListAsync()
     {
         return await _appDbContext.Competition.OrderByDescending(c => c.StartDate).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Competition>> GetCompetitionListForLoginPageAsync()
     {
         return await _appDbContext.Competition.Where(c => c.RegistrationAvailableOnLoginPage).OrderByDescending(c => c.StartDate).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<UserCompetitionRegistrationListItem>> GetUserCompetitionRegistrationListAsync(Guid userId)
     {
         var parameters = new List<SqlParameter>
@@ -47,6 +50,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return results;
     }
 
+    /// <inheritdoc />
     public async Task<Result> SetDefaultCompetitionAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default)
     {
         var registrations = await _appDbContext.UserCompetition
@@ -70,6 +74,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<UserCompetitionLeagueHistoryItem>> GetUserCompetitionLeagueHistoryAsync(Guid userId, Guid competitionId, CancellationToken cancellationToken = default)
     {
         var parameters = new List<SqlParameter>
@@ -81,6 +86,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return await _appDbContext.CallStoredProcedureAsync<UserCompetitionLeagueHistoryItem>("UserCompetitionLeagueHistoryListGet", parameters, cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task SetUserCompetitionLeagueHistoryAsync()
     {
         var competitions = await _appDbContext.Competition.ToListAsync();
@@ -97,6 +103,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         }
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CompetitionRealLeagueTableItem>> CompetitionRealLeagueTableGetAsync(Guid competitionId)
     {
         var parameters = new List<SqlParameter>
@@ -109,6 +116,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return results;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CompetitionUserLeagueTableItem>> CompetitionUserLeagueTableGetAsync(Guid competitionId, Guid userId)
     {
         var parameters = new List<SqlParameter>
@@ -122,6 +130,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         return results;
     }
 
+    /// <inheritdoc />
     public async Task<IList<DateTime>> GetCompetitionWeeksAsync(Guid competitionId)
     {
         var knownFriday = new DateTime(1990, 1, 5);

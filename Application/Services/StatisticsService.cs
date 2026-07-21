@@ -24,6 +24,7 @@ public class StatisticsService : IStatisticsService
 
     // A DbContext (and the ADO.NET connection it wraps) isn't safe for concurrent operations, so
     // these calls run sequentially on the one scoped context rather than via Task.WhenAll.
+    /// <inheritdoc />
     public async Task<AllTimeStatisticsModel> GetAllTimeStatisticsAsync(CancellationToken cancellationToken = default)
     {
         return new AllTimeStatisticsModel
@@ -36,6 +37,7 @@ public class StatisticsService : IStatisticsService
         };
     }
 
+    /// <inheritdoc />
     public async Task<CurrentCompetitionStatisticsModel> GetCurrentCompetitionStatisticsAsync(Guid competitionId, Guid userId, CancellationToken cancellationToken = default)
     {
         var predictableTeams = await _dbContext.CallStoredProcedureAsync<PredictableTeamListItem>(

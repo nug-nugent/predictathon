@@ -36,6 +36,7 @@ public class AvatarService : IAvatarService
         _configuration = configuration;
     }
 
+    /// <inheritdoc />
     public async Task<Result> UploadAvatarAsync(Guid userId, Stream imageStream, AvatarCropRect crop, CancellationToken cancellationToken = default)
     {
         Image image;
@@ -86,6 +87,7 @@ public class AvatarService : IAvatarService
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task RemoveAvatarAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         DeleteIfExists(GetFilePath(userId, small: false));
@@ -94,6 +96,7 @@ public class AvatarService : IAvatarService
         await SetImageUploadedAsync(userId, false, cancellationToken);
     }
 
+    /// <inheritdoc />
     public string? GetAvatarUrl(Guid userId, bool imageUploaded)
     {
         if (!imageUploaded)

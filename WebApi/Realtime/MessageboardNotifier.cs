@@ -14,10 +14,12 @@ public class MessageboardNotifier : IMessageboardNotifier
         _hubContext = hubContext;
     }
 
+    /// <inheritdoc />
     public Task NotifyNewMessageAsync(Guid threadId, MessageModel message, CancellationToken cancellationToken = default)
         => _hubContext.Clients.Group(MessageboardHub.GroupName(threadId))
             .SendAsync("NewMessage", message, cancellationToken);
 
+    /// <inheritdoc />
     public Task NotifyReactionsChangedAsync(Guid threadId, Guid messageId, IReadOnlyList<MessageReactionModel> reactions, CancellationToken cancellationToken = default)
         => _hubContext.Clients.Group(MessageboardHub.GroupName(threadId))
             .SendAsync("ReactionsChanged", messageId, reactions, cancellationToken);

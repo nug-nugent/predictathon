@@ -44,6 +44,7 @@ public class UserService : IUserService
         _updateProfileValidator = updateProfileValidator;
     }
 
+    /// <inheritdoc />
     public async Task<UserProfileModel?> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -64,6 +65,7 @@ public class UserService : IUserService
         };
     }
 
+    /// <inheritdoc />
     public async Task<UserProfileEditModel?> GetProfileForEditAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -71,6 +73,7 @@ public class UserService : IUserService
         return user is null ? null : ToEditModel(user);
     }
 
+    /// <inheritdoc />
     public async Task<Result<UserProfileEditModel>> UpdateProfileAsync(Guid userId, UpdateProfileModel model, bool allowAdminFields, CancellationToken cancellationToken = default)
     {
         if (_updateProfileValidator is not null)
@@ -157,6 +160,7 @@ public class UserService : IUserService
         return Result.Ok(ToEditModel(user));
     }
 
+    /// <inheritdoc />
     public async Task<PagedResult<UserAdminListItem>> GetUsersForAdminAsync(int page, int pageSize, string? search, CancellationToken cancellationToken = default)
     {
         var query = _userManager.Users.AsNoTracking();
@@ -208,6 +212,7 @@ public class UserService : IUserService
         };
     }
 
+    /// <inheritdoc />
     public async Task<Result> UpdateUserRolesAsync(Guid userId, IReadOnlyList<string> roles, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         var validRoles = new[] { RoleConstants.MatchAdministrator, RoleConstants.UserAdministrator, RoleConstants.CompetitionAdministrator };
@@ -256,6 +261,7 @@ public class UserService : IUserService
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task<Result> SetUserLockedAsync(Guid userId, bool locked, Guid currentUserId, CancellationToken cancellationToken = default)
     {
         if (locked && userId == currentUserId)
@@ -278,6 +284,7 @@ public class UserService : IUserService
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task SendPredictionEmailRemindersAsync(CancellationToken cancellationToken = default)
     {
         var overduePredictions = await _dbContext.CallStoredProcedureAsync<UserOverduePredictionsItem>(

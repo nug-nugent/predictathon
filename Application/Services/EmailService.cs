@@ -19,6 +19,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken = default)
     {
         var host = _configuration["Smtp:Host"];

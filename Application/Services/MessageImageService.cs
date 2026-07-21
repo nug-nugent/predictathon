@@ -29,9 +29,11 @@ public class MessageImageService : IMessageImageService
         _configuration = configuration;
     }
 
+    /// <inheritdoc />
     public async Task<Result> SaveFromStreamAsync(Guid messageId, Stream imageStream, CancellationToken cancellationToken = default)
         => await SaveAsync(messageId, imageStream, cancellationToken);
 
+    /// <inheritdoc />
     public async Task<Result> SaveFromUrlAsync(Guid messageId, string imageUrl, CancellationToken cancellationToken = default)
     {
         Stream downloadStream;
@@ -50,6 +52,7 @@ public class MessageImageService : IMessageImageService
         }
     }
 
+    /// <inheritdoc />
     public string? GetImageUrl(Guid messageId, bool hasLinkedImage)
     {
         if (!hasLinkedImage)

@@ -37,6 +37,7 @@ public class MessageboardService : IMessageboardService
         _userManager = userManager;
     }
 
+    /// <inheritdoc />
     public async Task<Result<List<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -56,6 +57,7 @@ public class MessageboardService : IMessageboardService
         return Result.Ok(threads);
     }
 
+    /// <inheritdoc />
     public async Task<Result<MessageThreadModel>> GetThreadAsync(Guid threadId, Guid userId, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -78,6 +80,7 @@ public class MessageboardService : IMessageboardService
         });
     }
 
+    /// <inheritdoc />
     public async Task<Result<List<MessageModel>>> GetMessagesAsync(Guid threadId, Guid userId, int take, Guid? beforeMessageId, CancellationToken cancellationToken = default)
     {
         var threadResult = await GetThreadAsync(threadId, userId, cancellationToken);
@@ -113,6 +116,7 @@ public class MessageboardService : IMessageboardService
         return Result.Ok(messages.Select(m => MapMessage(m, users)).ToList());
     }
 
+    /// <inheritdoc />
     public async Task<Result<MessageThreadModel>> CreateThreadAsync(Guid userId, string subject, string firstMessageContent, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -157,6 +161,7 @@ public class MessageboardService : IMessageboardService
         });
     }
 
+    /// <inheritdoc />
     public async Task<Result<MessageModel>> PostMessageAsync(
         Guid threadId,
         Guid userId,
@@ -251,6 +256,7 @@ public class MessageboardService : IMessageboardService
         return Result.Ok(model);
     }
 
+    /// <inheritdoc />
     public async Task<Result<List<MessageReactionModel>>> AddReactionAsync(Guid messageId, Guid userId, string reactionName, string imageUrl, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -289,6 +295,7 @@ public class MessageboardService : IMessageboardService
         return Result.Ok(reactions);
     }
 
+    /// <inheritdoc />
     public async Task<Result<List<MessageReactionModel>>> RemoveReactionAsync(Guid messageId, Guid userId, string reactionName, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -318,6 +325,7 @@ public class MessageboardService : IMessageboardService
         return Result.Ok(reactions);
     }
 
+    /// <inheritdoc />
     public async Task<Result> MarkThreadReadAsync(Guid threadId, Guid userId, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);

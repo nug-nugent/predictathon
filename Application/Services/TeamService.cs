@@ -22,6 +22,7 @@ public class TeamService : ITeamService
         _dbContext = dbContext;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<TeamModel>> GetForCompetitionAsync(Guid competitionId, CancellationToken cancellationToken = default)
     {
         var teams = await _dbContext.TeamCompetition
@@ -33,6 +34,7 @@ public class TeamService : ITeamService
         return teams.Adapt<List<TeamModel>>();
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<TeamCompetitionModel>> GetAssignedForCompetitionAsync(Guid competitionId, CancellationToken cancellationToken = default)
     {
         var teams = await _dbContext.TeamCompetition
@@ -49,6 +51,7 @@ public class TeamService : ITeamService
         return teams;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<TeamModel>> GetUnassignedForCompetitionAsync(Guid competitionId, CancellationToken cancellationToken = default)
     {
         var assignedTeamIds = _dbContext.TeamCompetition
@@ -63,6 +66,7 @@ public class TeamService : ITeamService
         return teams.Adapt<List<TeamModel>>();
     }
 
+    /// <inheritdoc />
     public async Task<Result> AddToCompetitionAsync(Guid competitionId, Guid teamId, CancellationToken cancellationToken = default)
     {
         var teamCompetition = new TeamCompetition
@@ -78,6 +82,7 @@ public class TeamService : ITeamService
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task<Result> RemoveFromCompetitionAsync(Guid teamCompetitionId, CancellationToken cancellationToken = default)
     {
         var entity = await _dbContext.TeamCompetition.FirstOrDefaultAsync(tc => tc.TeamCompetitionID == teamCompetitionId, cancellationToken);
@@ -93,6 +98,7 @@ public class TeamService : ITeamService
         return Result.Ok();
     }
 
+    /// <inheritdoc />
     public async Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default)
     {
         var team = await _dbContext.Team.FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);
