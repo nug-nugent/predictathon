@@ -133,7 +133,14 @@ public class AvatarService : IAvatarService
         }
     }
 
-    private static Rectangle ClampToImageBounds(AvatarCropRect crop, int imageWidth, int imageHeight)
+    /// <summary>
+    /// Clamps a client-supplied crop rectangle to the bounds of the source image, so an out-of-range
+    /// or negative crop can't be passed to ImageSharp's Crop.
+    /// </summary>
+    /// <param name="crop">The requested crop rectangle, in the source image's pixel coordinates.</param>
+    /// <param name="imageWidth">The source image's width, in pixels.</param>
+    /// <param name="imageHeight">The source image's height, in pixels.</param>
+    internal static Rectangle ClampToImageBounds(AvatarCropRect crop, int imageWidth, int imageHeight)
     {
         var x = Math.Clamp(crop.X, 0, imageWidth);
         var y = Math.Clamp(crop.Y, 0, imageHeight);
