@@ -62,6 +62,9 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
     const [includePlayed, setIncludePlayed] = useState(false);
     const [editing, setEditing] = useState<MatchAdmin | "new" | null>(null);
     const [page, setPage] = useState(1);
+    const [homeTeamFilter, setHomeTeamFilter] = useState("");
+    const [awayTeamFilter, setAwayTeamFilter] = useState("");
+    const [eitherTeamFilter, setEitherTeamFilter] = useState("");
 
     const { data, error, reload } = useAsyncData(async () => {
         const [matches, teams] = await Promise.all([
@@ -79,23 +82,71 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
         return <LoadingSpinner />;
     }
 
-    const { matches, teams } = data;
+    const { teams } = data;
 
     const teamName = (teamId: string | null, tbc: string | null) =>
         teams.find((t) => t.teamID === teamId)?.teamName ?? tbc ?? "TBC";
+
+    const matches = data.matches.filter((m) =>
+        (!homeTeamFilter || m.homeTeamID === homeTeamFilter) &&
+        (!awayTeamFilter || m.awayTeamID === awayTeamFilter) &&
+        (!eitherTeamFilter || m.homeTeamID === eitherTeamFilter || m.awayTeamID === eitherTeamFilter)
+    );
 
     const pageMatches = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
         <VStack align="stretch" gap={4}>
             <PageHeading>Matches</PageHeading>
-            <HStack justify="space-between">
+            <HStack justify="space-between" wrap="wrap" gap={3}>
                 <Checkbox.Root checked={includePlayed} onCheckedChange={(e) => { setIncludePlayed(!!e.checked); setPage(1); }}>
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
                     <Checkbox.Label>Include played matches</Checkbox.Label>
                 </Checkbox.Root>
                 <Button size="sm" colorPalette="blue" onClick={() => setEditing("new")}>Add match</Button>
+            </HStack>
+
+            <HStack wrap="wrap" gap={3} align="end">
+                <Field.Root maxW="200px">
+                    <Field.Label>Home team</Field.Label>
+                    <NativeSelect.Root size="sm">
+                        <NativeSelect.Field
+                            value={homeTeamFilter}
+                            onChange={(e) => { setHomeTeamFilter(e.target.value); setPage(1); }}
+                        >
+                            <option value="">Any</option>
+                            {teams.map((t) => <option key={t.teamID} value={t.teamID}>{t.teamName}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW="200px">
+                    <Field.Label>Away team</Field.Label>
+                    <NativeSelect.Root size="sm">
+                        <NativeSelect.Field
+                            value={awayTeamFilter}
+                            onChange={(e) => { setAwayTeamFilter(e.target.value); setPage(1); }}
+                        >
+                            <option value="">Any</option>
+                            {teams.map((t) => <option key={t.teamID} value={t.teamID}>{t.teamName}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW="200px">
+                    <Field.Label>Home or away team</Field.Label>
+                    <NativeSelect.Root size="sm">
+                        <NativeSelect.Field
+                            value={eitherTeamFilter}
+                            onChange={(e) => { setEitherTeamFilter(e.target.value); setPage(1); }}
+                        >
+                            <option value="">Any</option>
+                            {teams.map((t) => <option key={t.teamID} value={t.teamID}>{t.teamName}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
             </HStack>
 
             <Panel overflowX="auto">
