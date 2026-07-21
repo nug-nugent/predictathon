@@ -64,7 +64,7 @@ export function NewThreadDialog({ open, onClose, onCreated }: {
                                 colorPalette="blue"
                                 loading={saving}
                                 disabled={!subject.trim() || !content.trim()}
-                                onClick={handleCreate}
+                                onClick={() => { void handleCreate(); }}
                             >
                                 Create thread
                             </Button>

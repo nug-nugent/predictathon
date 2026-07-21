@@ -31,6 +31,15 @@ function CompetitionRegistrationLoader({ id }: { id: string }) {
         return <LoadingSpinner />;
     }
 
+    const handleRegistered = async () => {
+        // Refresh the shared competitions list before switching to the new one, so it
+        // shows up in the header's CompetitionSelector rather than staying stuck on
+        // the snapshot fetched before this registration happened.
+        await refreshCompetitions();
+        setCurrentCompetitionId(competition.competitionID);
+        void navigate("/");
+    };
+
     return (
         <VStack align="stretch" gap={6} maxW="container.sm" mx="auto">
             <Heading size="lg">Join a competition</Heading>
@@ -39,14 +48,7 @@ function CompetitionRegistrationLoader({ id }: { id: string }) {
                 competitionId={competition.competitionID}
                 entranceFee={competition.entranceFee}
                 payPalPaymentAvailable={competition.payPalPaymentAvailable}
-                onRegistered={async () => {
-                    // Refresh the shared competitions list before switching to the new one, so it
-                    // shows up in the header's CompetitionSelector rather than staying stuck on
-                    // the snapshot fetched before this registration happened.
-                    await refreshCompetitions();
-                    setCurrentCompetitionId(competition.competitionID);
-                    navigate("/");
-                }}
+                onRegistered={() => { void handleRegistered(); }}
             />
         </VStack>
     );

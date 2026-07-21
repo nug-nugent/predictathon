@@ -50,7 +50,7 @@ async function toApiError(response: Response): Promise<ApiError> {
     let type: string | undefined;
 
     try {
-        const problem: ProblemDetails = await response.json();
+        const problem = (await response.json()) as ProblemDetails;
         type = problem.type;
         if (problem.errors) {
             messages = Object.values(problem.errors).flat();
@@ -79,7 +79,7 @@ async function handleJsonResponse<TResponse>(response: Response): Promise<TRespo
         return undefined as TResponse;
     }
 
-    return response.json();
+    return response.json() as Promise<TResponse>;
 }
 
 async function doFetch(path: string, init: RequestInit): Promise<Response> {

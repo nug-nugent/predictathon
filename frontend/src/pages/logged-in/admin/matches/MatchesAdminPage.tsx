@@ -316,7 +316,7 @@ function MatchEditDialog({ competitionId, match, teams, onClose, onSaved }: {
                             )}
                             <HStack>
                                 <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>
-                                <Button colorPalette="blue" loading={saving} disabled={busy} onClick={save}>Save</Button>
+                                <Button colorPalette="blue" loading={saving} disabled={busy} onClick={() => { void save(); }}>Save</Button>
                             </HStack>
                         </Dialog.Footer>
                     </Dialog.Content>
@@ -336,7 +336,7 @@ function MatchEditDialog({ competitionId, match, teams, onClose, onSaved }: {
                             </Dialog.Body>
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setConfirmingDelete(false)}>Cancel</Button>
-                                <Button colorPalette="red" onClick={onDelete}>Delete</Button>
+                                <Button colorPalette="red" onClick={() => { void onDelete(); }}>Delete</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>

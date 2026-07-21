@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
     Button, Center, Dialog, Field, HStack, Input,
     Portal, Table, Text, VStack,
@@ -57,7 +57,7 @@ export function CompetitionsAdminPage() {
                         {pageCompetitions.map((c) => (
                             <ClickableRow
                                 key={c.competitionID}
-                                onActivate={() => navigate(`/admin/tournaments/${c.competitionID}`)}
+                                onActivate={() => { void navigate(`/admin/tournaments/${c.competitionID}`); }}
                             >
                                 <Table.Cell>{c.prependNameWithThe ? "The " : ""}{c.competitionName}</Table.Cell>
                                 <Table.Cell>{formatDateOnly(c.startDate)}</Table.Cell>
@@ -80,7 +80,7 @@ export function CompetitionsAdminPage() {
             {adding && (
                 <AddCompetitionDialog
                     onClose={() => setAdding(false)}
-                    onCreated={(id) => navigate(`/admin/tournaments/${id}`)}
+                    onCreated={(id) => { void navigate(`/admin/tournaments/${id}`); }}
                 />
             )}
         </VStack>
@@ -101,6 +101,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
     const [name, setName] = useState("");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
 
     const save = async () => {
         if (!name.trim()) {
@@ -139,7 +140,9 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
     };
 
     return (
-        <Dialog.Root open onOpenChange={(e) => { if (!e.open) onClose(); }}>
+        // initialFocusEl (not the Input's own autoFocus) so the dialog's own focus trap decides
+        // when to apply it, instead of racing a raw DOM autofocus against that trap.
+        <Dialog.Root open onOpenChange={(e) => { if (!e.open) onClose(); }} initialFocusEl={() => nameInputRef.current}>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -151,7 +154,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                             <VStack align="stretch" gap={3}>
                                 <Field.Root>
                                     <Field.Label>Competition name</Field.Label>
-                                    <Input size="sm" maxLength={50} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                                    <Input ref={nameInputRef} size="sm" maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
                                 </Field.Root>
                                 <Text fontSize="sm" color="fg.muted">
                                     You can set the dates, entrance fee, and other details after creating it.
@@ -161,7 +164,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Add</Button>
+                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

@@ -144,7 +144,7 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                         rounded="full"
                         px={2}
                         title={group.usernames.join(", ")}
-                        onClick={() => toggle(group.reactionName, group.imageUrl)}
+                        onClick={() => { void toggle(group.reactionName, group.imageUrl); }}
                     >
                         <Image src={group.imageUrl} boxSize="14px" alt={group.reactionName} />
                         {group.usernames.length}
@@ -162,7 +162,7 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                     <Popover.Positioner>
                         <Popover.Content width="auto" p={0} borderWidth={0}>
                             <Popover.Body p={0}>
-                                <EmojiPicker onSelect={handlePickerSelect} />
+                                <EmojiPicker onSelect={(reactionName, imageUrl) => { void handlePickerSelect(reactionName, imageUrl); }} />
                             </Popover.Body>
                         </Popover.Content>
                     </Popover.Positioner>

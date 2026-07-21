@@ -148,13 +148,13 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
                         </Dialog.Body>
                         <Dialog.Footer justifyContent={hasAvatar ? "space-between" : "flex-end"}>
                             {hasAvatar && (
-                                <Button variant="ghost" colorPalette="red" loading={removing} disabled={busy} onClick={handleRemove}>
+                                <Button variant="ghost" colorPalette="red" loading={removing} disabled={busy} onClick={() => { void handleRemove(); }}>
                                     Remove photo
                                 </Button>
                             )}
                             <HStack>
                                 <Button variant="ghost" disabled={busy} onClick={handleClose}>Cancel</Button>
-                                <Button colorPalette="blue" loading={saving} disabled={busy || !croppedAreaPixels} onClick={handleSave}>
+                                <Button colorPalette="blue" loading={saving} disabled={busy || !croppedAreaPixels} onClick={() => { void handleSave(); }}>
                                     Save
                                 </Button>
                             </HStack>

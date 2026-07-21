@@ -231,7 +231,7 @@ function UserEditDialog({ user, onClose, onSaved }: {
                                     <Button
                                         size="sm" variant="outline" alignSelf="flex-start"
                                         loading={sendingReset} disabled={sendingReset || resetSent}
-                                        onClick={sendResetEmail}
+                                        onClick={() => { void sendResetEmail(); }}
                                     >
                                         {resetSent ? "Reset email sent" : "Send password reset email"}
                                     </Button>
@@ -242,7 +242,7 @@ function UserEditDialog({ user, onClose, onSaved }: {
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
+                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

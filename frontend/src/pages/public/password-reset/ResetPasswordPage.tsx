@@ -39,7 +39,7 @@ export function ResetPasswordPage() {
                     <VStack gap={3} textAlign="center">
                         <Heading size="md">Password reset</Heading>
                         <Text>Your password has been reset. You can now log in with your new password.</Text>
-                        <Button colorPalette="blue" onClick={() => navigate("/")}>Go to Predictathon</Button>
+                        <Button colorPalette="blue" onClick={() => { void navigate("/"); }}>Go to Predictathon</Button>
                     </VStack>
                 </Panel>
             </Center>
@@ -71,7 +71,7 @@ export function ResetPasswordPage() {
             <Panel maxW="sm" width="full">
                 {/* A real <form> so Enter submits and password managers offer to save the new
                     password - paired with the autocomplete hints below. */}
-                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); void submit(); }}>
                     <Heading size="md">Choose a new password</Heading>
 
                     <Field.Root>

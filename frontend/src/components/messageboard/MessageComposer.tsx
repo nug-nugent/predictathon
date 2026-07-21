@@ -108,7 +108,7 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
                     </Button>
                 </HStack>
                 <Box>
-                    <Button size="sm" colorPalette="blue" loading={posting} disabled={!canSubmit} onClick={handleSubmit}>
+                    <Button size="sm" colorPalette="blue" loading={posting} disabled={!canSubmit} onClick={() => { void handleSubmit(); }}>
                         Post
                     </Button>
                 </Box>

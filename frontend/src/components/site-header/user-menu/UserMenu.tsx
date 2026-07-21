@@ -20,7 +20,7 @@ export function UserMenu() {
         }
 
         setUser(null);
-        navigate("/");
+        void navigate("/");
     }
 
     return user && (
@@ -45,7 +45,7 @@ export function UserMenu() {
                             <Button asChild size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue">
                                 <Link to="/profile/edit"><UserPen /> Edit Profile</Link>
                             </Button>
-                            <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue" onClick={handleLogout}><LogOut /> Logout</Button>
+                            <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue" onClick={() => { void handleLogout(); }}><LogOut /> Logout</Button>
                         </Stack>
                     </Popover.Content>
                 </Popover.Positioner>

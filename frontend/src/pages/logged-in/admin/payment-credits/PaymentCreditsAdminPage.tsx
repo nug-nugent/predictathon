@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
     Badge, Button, Center, Dialog, Field, HStack, IconButton, Input,
     NativeSelect, Portal, Table, Text, VStack,
@@ -121,6 +121,7 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
     const [expectedUsername, setExpectedUsername] = useState("");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const usernameInputRef = useRef<HTMLInputElement>(null);
 
     const save = async () => {
         if (!competitionId) {
@@ -146,7 +147,9 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
     };
 
     return (
-        <Dialog.Root open onOpenChange={(e) => { if (!e.open) onClose(); }}>
+        // initialFocusEl (not the Input's own autoFocus) so the dialog's own focus trap decides
+        // when to apply it, instead of racing a raw DOM autofocus against that trap.
+        <Dialog.Root open onOpenChange={(e) => { if (!e.open) onClose(); }} initialFocusEl={() => usernameInputRef.current}>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -175,8 +178,9 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
                                 <Field.Root>
                                     <Field.Label>For user (expected username)</Field.Label>
                                     <Input
+                                        ref={usernameInputRef}
                                         size="sm" maxLength={50} value={expectedUsername}
-                                        onChange={(e) => setExpectedUsername(e.target.value)} autoFocus
+                                        onChange={(e) => setExpectedUsername(e.target.value)}
                                     />
                                 </Field.Root>
                                 <Text fontSize="sm" color="fg.muted">
@@ -187,7 +191,7 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Add</Button>
+                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
@@ -237,7 +241,7 @@ function DeleteConfirmDialog({ credit, onClose, onDeleted }: {
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={deleting} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="red" loading={deleting} disabled={deleting} onClick={confirmDelete}>Delete</Button>
+                            <Button colorPalette="red" loading={deleting} disabled={deleting} onClick={() => { void confirmDelete(); }}>Delete</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

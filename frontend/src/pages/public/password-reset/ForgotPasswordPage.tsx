@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
             <Panel maxW="sm" width="full">
                 {/* A real <form> (rather than an Enter keydown handler) so submission works the
                     way browsers and assistive tech expect. */}
-                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+                <VStack as="form" gap={4} onSubmit={(e) => { e.preventDefault(); void submit(); }}>
                     <Heading size="md">Reset your password</Heading>
                     <Text fontSize="sm" color="fg.muted">Enter your username or email and we'll send you a link to reset your password.</Text>
 

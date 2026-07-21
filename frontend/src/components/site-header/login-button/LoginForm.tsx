@@ -26,7 +26,7 @@ export function LoginForm() {
     const returnTo = (location.state as { from?: string } | null)?.from;
 
     const goToPasswordReset = () => {
-        navigate("/password-reset");
+        void navigate("/password-reset");
     }
 
     const login = async () => {
@@ -37,7 +37,7 @@ export function LoginForm() {
         try {
             const user = await loginUser(username, password, rememberMe);
             setUser(user);
-            navigate(returnTo?.startsWith("/") ? returnTo : "/");
+            void navigate(returnTo?.startsWith("/") ? returnTo : "/");
         } catch (e) {
             if (e instanceof ApiError && e.type === PASSWORD_RESET_REQUIRED_ERROR_TYPE) {
                 setNeedsPasswordReset(true);
@@ -69,7 +69,7 @@ export function LoginForm() {
         <Panel>
             {/* A real <form> (not a click handler) so Enter submits and password managers can
                 recognise and fill the login - paired with the autocomplete hints below. */}
-            <Stack as="form" gap="4" onSubmit={(e) => { e.preventDefault(); login(); }}>
+            <Stack as="form" gap="4" onSubmit={(e) => { e.preventDefault(); void login(); }}>
                 <Text fontWeight="semibold">Login</Text>
 
                 <Field.Root>

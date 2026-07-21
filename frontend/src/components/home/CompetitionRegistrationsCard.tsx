@@ -23,7 +23,7 @@ export function CompetitionRegistrationsCard() {
 
     const selectCompetition = async (registration: UserCompetitionRegistration) => {
         if (!registration.registered) {
-            navigate(`/competition/${registration.competitionID}/register`);
+            void navigate(`/competition/${registration.competitionID}/register`);
             return;
         }
 
@@ -60,7 +60,7 @@ export function CompetitionRegistrationsCard() {
                         <ClickableRow
                             key={r.competitionID}
                             opacity={switching === r.competitionID ? 0.6 : 1}
-                            onActivate={() => selectCompetition(r)}
+                            onActivate={() => { void selectCompetition(r); }}
                         >
                             <Table.Cell width="48px">
                                 {competitionImageUrl(r.imageFilename) && (

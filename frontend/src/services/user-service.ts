@@ -32,7 +32,7 @@ const ROLE_CLAIM = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role
 function decodeJwtPayload(token: string): Record<string, unknown> {
     const payload = token.split(".")[1];
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
+    return JSON.parse(atob(base64)) as Record<string, unknown>;
 }
 
 function extractRoles(claimValue: unknown): Role[] {

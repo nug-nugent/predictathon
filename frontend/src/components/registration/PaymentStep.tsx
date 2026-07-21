@@ -49,7 +49,7 @@ export function PaymentStep({
         return (
             <VStack align="stretch" gap={3}>
                 {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-                <Button colorPalette="blue" loading={submitting} onClick={joinFree}>Join competition</Button>
+                <Button colorPalette="blue" loading={submitting} onClick={() => { void joinFree(); }}>Join competition</Button>
             </VStack>
         );
     }
@@ -64,7 +64,7 @@ export function PaymentStep({
                         <Field.Label>Payment credit code</Field.Label>
                         <Input size="sm" disabled={submitting} value={code} onChange={(e) => setCode(e.target.value)} />
                     </Field.Root>
-                    <Button colorPalette="blue" loading={submitting} disabled={!code} onClick={redeemCode} alignSelf="flex-start">
+                    <Button colorPalette="blue" loading={submitting} disabled={!code} onClick={() => { void redeemCode(); }} alignSelf="flex-start">
                         Redeem code
                     </Button>
                 </VStack>

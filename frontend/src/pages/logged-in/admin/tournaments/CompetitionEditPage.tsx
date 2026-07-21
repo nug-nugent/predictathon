@@ -180,7 +180,7 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
 
                     <HStack justify="flex-end">
                         {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
-                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={save}>Save</Button>
+                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
                     </HStack>
                 </VStack>
             </Panel>
@@ -253,7 +253,7 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                             </NativeSelect.Field>
                             <NativeSelect.Indicator />
                         </NativeSelect.Root>
-                        <Button size="sm" disabled={!selectedTeamId} onClick={addTeam}>Add</Button>
+                        <Button size="sm" disabled={!selectedTeamId} onClick={() => { void addTeam(); }}>Add</Button>
                     </HStack>
 
                     {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
@@ -294,7 +294,7 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                             </Dialog.Body>
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setRemoving(null)}>Cancel</Button>
-                                <Button colorPalette="red" onClick={confirmRemove}>Remove</Button>
+                                <Button colorPalette="red" onClick={() => { void confirmRemove(); }}>Remove</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>

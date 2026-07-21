@@ -74,7 +74,7 @@ export function ResultRow({
         if (value === null) return;
 
         setHomeInput(value);
-        save(value, awayInput, false);
+        void save(value, awayInput, false);
         if (value !== "") {
             awayInputRef.current?.focus();
         }
@@ -85,7 +85,7 @@ export function ResultRow({
         if (value === null) return;
 
         setAwayInput(value);
-        save(homeInput, value, true);
+        void save(homeInput, value, true);
     };
 
     const statusText = !eligible

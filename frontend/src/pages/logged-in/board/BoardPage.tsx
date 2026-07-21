@@ -41,7 +41,7 @@ export function BoardPage() {
             <NewThreadDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
-                onCreated={(threadId) => navigate(`/board/${threadId}`)}
+                onCreated={(threadId) => { void navigate(`/board/${threadId}`); }}
             />
         </VStack>
     );

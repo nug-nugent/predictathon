@@ -73,7 +73,8 @@ export function ThreadPage() {
         });
 
         return () => {
-            disconnectPromise.then((disconnect) => disconnect());
+            // Fire-and-forget at unmount - nothing meaningful to do with a failed disconnect here.
+            disconnectPromise.then((disconnect) => { void disconnect(); }).catch(() => {});
         };
     }, [id]);
 
@@ -121,7 +122,7 @@ export function ThreadPage() {
             <Panel>
                 {hasMore && (
                     <Center mb={2}>
-                        <Button size="xs" variant="ghost" loading={loadingOlder} onClick={loadOlder}>
+                        <Button size="xs" variant="ghost" loading={loadingOlder} onClick={() => { void loadOlder(); }}>
                             Load older messages
                         </Button>
                     </Center>

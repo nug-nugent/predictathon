@@ -127,13 +127,13 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                     competitionId={competition.competitionID}
                     entranceFee={competition.entranceFee}
                     payPalPaymentAvailable={competition.payPalPaymentAvailable}
-                    onRegistered={registrationComplete}
+                    onRegistered={() => { void registrationComplete(); }}
                 />
             ) : (
                 <Panel>
                     {/* A real <form> so Enter submits and password managers recognise the signup -
                         paired with the autocomplete hints below. */}
-                    <VStack as="form" align="stretch" gap={3} onSubmit={(e) => { e.preventDefault(); submitDetails(); }}>
+                    <VStack as="form" align="stretch" gap={3} onSubmit={(e) => { e.preventDefault(); void submitDetails(); }}>
                         <Heading size="md">Create your account</Heading>
 
                         <HStack align="start">

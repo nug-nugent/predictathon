@@ -27,7 +27,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
                                 </Table.Cell>
                             </Table.Row>
                         ) : teams.map((t) => (
-                            <ClickableRow key={t.teamID} onActivate={() => navigate(`/team/${t.teamID}`)}>
+                            <ClickableRow key={t.teamID} onActivate={() => { void navigate(`/team/${t.teamID}`); }}>
                                 <Table.Cell>
                                     <HStack gap={2}>
                                         {crestUrl(t.teamImage) && <Image src={crestUrl(t.teamImage)} h="16px" alt="" />}
