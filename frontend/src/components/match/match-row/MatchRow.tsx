@@ -107,23 +107,31 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     return (
         <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} borderTopColor="border.hairline" py={2} px={{ base: 2, md: 4 }} gap={2}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
-                <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                    <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)} crest={homeCrest} crestPosition="after" />
-                </HStack>
+                <Flex flex="1" minW="0" direction="column" gap={1}>
+                    <Flex align="center" gap={{ base: 2, md: 4 }}>
+                        <HStack flex="1" minW="0" justify="flex-end" gap={2}>
+                            <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)} crest={homeCrest} crestPosition="after" />
+                        </HStack>
 
-                <HStack gap={1}>
-                    <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange}
-                        bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
-                    <Text>-</Text>
-                    <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange}
-                        bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
-                </HStack>
+                        <HStack gap={1}>
+                            <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center"
+                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange}
+                                bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
+                            <Text>-</Text>
+                            <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center"
+                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange}
+                                bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
+                        </HStack>
 
-                <HStack flex="1" minW="0" gap={2}>
-                    <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
-                </HStack>
+                        <HStack flex="1" minW="0" gap={2}>
+                            <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
+                        </HStack>
+                    </Flex>
+
+                    {match.description && (
+                        <Text fontSize="0.75em" color="fg.muted" textAlign="center">{match.description}</Text>
+                    )}
+                </Flex>
 
                 <Box flexBasis={{ base: "100%", md: "auto" }}>
                     <MatchStatus matchId={match.matchID} myUserId={user?.id} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
