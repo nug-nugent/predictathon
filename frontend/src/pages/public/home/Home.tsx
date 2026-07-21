@@ -79,8 +79,8 @@ function Dashboard() {
     return (
         <>
             <PageHeading mb={4}>Home</PageHeading>
-            <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={6}>
-                <VStack align="stretch" gap={4}>
+            <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
+                <VStack align="stretch" gap={3}>
                     <UserStatisticsCard competitionId={currentCompetitionId} />
                     <CompetitionRegistrationsCard />
                 </VStack>
