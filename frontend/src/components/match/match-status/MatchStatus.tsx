@@ -73,14 +73,14 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
     };
 
     return (
-        <VStack gap={1} align={{ base: "flex-start", md: "flex-end" }} width={{ base: "auto", md: "140px" }} flexShrink={0}>
+        <VStack gap={1} align={{ base: "center", md: "flex-end" }} width={{ base: "full", md: "140px" }} flexShrink={0} pt={{ base: 1, md: 0 }}>
             {status === "Post" ? (
                 <VStack gap={0} width="full" fontSize="0.85em">
-                    <Text>Result: {actualHomeGoals} - {actualAwayGoals}</Text>
-                    <Text color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
+                    <Text textAlign={{ base: "center", md: "right" }} width="full">Result: {actualHomeGoals} - {actualAwayGoals}</Text>
+                    <Text textAlign={{ base: "center", md: "right" }} width="full" color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
-                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width="full" textAlign={{ base: "left", md: "right" }}>
+                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width="full" textAlign={{ base: "center", md: "right" }}>
                     {getText(status, saveState, minutesToPredict)}
                 </Text>
             )}

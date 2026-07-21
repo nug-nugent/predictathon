@@ -10,7 +10,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
     return (
         <Box bg="brand.headerBg" borderBottomWidth="1px" borderBottomColor="brand.headerBorder">
             <Container maxW="6xl">
-                <Flex alignItems="center" h={{ base: "50px", md: "60px" }}>
+                <Flex alignItems="center" h={{ base: "60px", md: "76px" }}>
                     {user && (
                         <Box
                             ml="-10px" mr={2}

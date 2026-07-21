@@ -1,4 +1,4 @@
-import { Flex, HStack, Input, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
 import { ApiError } from "../../../services/api";
 import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
@@ -125,8 +125,10 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                     <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
                 </HStack>
 
-                <MatchStatus matchId={match.matchID} myUserId={user?.id} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
-                    actualHomeGoals={match.actualHomeTeamGoals} actualAwayGoals={match.actualAwayTeamGoals} score={match.score} />
+                <Box flexBasis={{ base: "100%", md: "auto" }}>
+                    <MatchStatus matchId={match.matchID} myUserId={user?.id} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
+                        actualHomeGoals={match.actualHomeTeamGoals} actualAwayGoals={match.actualAwayTeamGoals} score={match.score} />
+                </Box>
             </Flex>
         </Flex>
     );

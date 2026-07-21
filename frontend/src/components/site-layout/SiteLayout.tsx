@@ -54,7 +54,7 @@ export function SiteLayout() {
                         </Box>
                     )}
 
-                    <Box mt={4} flexGrow={1}>
+                    <Box mt={3} flexGrow={1}>
                         {/* page content */}
                         <Outlet />
                     </Box>

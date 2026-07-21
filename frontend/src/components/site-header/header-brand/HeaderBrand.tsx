@@ -21,7 +21,7 @@ export function HeaderBrand({
     subtitleColor = "brand.subtitleFg",
 }: HeaderBrandProps) {
     // alt="": decorative - it always sits beside the "Predictathon" wordmark text.
-    const logo = <Image src={football} alt="" mr={2} boxSize={{ base: "30px", md: "34px" }} />;
+    const logo = <Image src={football} alt="" mr={2} boxSize={{ base: "36px", md: "44px" }} />;
 
     if (variant === "loggedOut") {
         const heading = (
@@ -52,7 +52,7 @@ export function HeaderBrand({
     const heading = (
         <Heading
             as={headingAs}
-            size={{ base: "xl", md: "2xl" }}
+            size={{ base: "2xl", md: "3xl" }}
             lineHeight="1"
             color={wordmarkColor}
             fontWeight="extrabold"
@@ -80,7 +80,7 @@ export function HeaderBrand({
                     color={subtitleColor}
                     fontFamily="body"
                     fontWeight="bold"
-                    fontSize="10px"
+                    fontSize="11px"
                     textTransform="uppercase"
                 >
                     <CompetitionSelector />
