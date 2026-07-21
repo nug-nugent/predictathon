@@ -3,7 +3,6 @@ import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { UserMenu } from "./user-menu/UserMenu";
 import { HeaderBrand } from "./header-brand/HeaderBrand";
-import { ColorModeButton } from "../ui/color-mode";
 
 export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => void }) {
     const { user } = useUser();
@@ -31,7 +30,6 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                     <HeaderBrand variant={user ? "loggedIn" : "loggedOut"} linkToHome />
 
                     <Spacer />
-                    <ColorModeButton color="brand.wordmarkFg" mr={user ? 2 : 0} />
                     {user && <UserMenu />}
                 </Flex>
             </Container>

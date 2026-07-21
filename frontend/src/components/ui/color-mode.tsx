@@ -1,7 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { IconButton, type IconButtonProps } from "@chakra-ui/react";
-import { Moon, Sun } from "lucide-react";
-import { ColorModeContext, STORAGE_KEY, useColorMode, type ColorMode } from "./color-mode-context";
+import { ColorModeContext, STORAGE_KEY, type ColorMode } from "./color-mode-context";
 
 function getInitialColorMode(): ColorMode {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -24,22 +22,5 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
         >
             {children}
         </ColorModeContext.Provider>
-    );
-}
-
-export function ColorModeButton(props: Omit<IconButtonProps, "aria-label">) {
-    const { colorMode, toggleColorMode } = useColorMode();
-    const isDark = colorMode === "dark";
-
-    return (
-        <IconButton
-            aria-label="Toggle color mode" variant="ghost" size="sm" onClick={toggleColorMode}
-            // The default ghost hover fill (a flat grey square) looks out of place against the
-            // header's solid color - darkening the icon itself instead reads as a much cleaner hover cue.
-            _hover={{ bg: "transparent", color: isDark ? "brand.wordmarkFg" : "gray.900" }}
-            {...props}
-        >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </IconButton>
     );
 }

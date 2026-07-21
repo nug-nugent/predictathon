@@ -1,13 +1,15 @@
 import { Avatar, Button, Popover, Portal, Text, Stack } from "@chakra-ui/react";
 import { useUser } from "../../../hooks/useUser";
-import { ChevronDown, LogOut, UserPen } from "lucide-react";
+import { ChevronDown, LogOut, Moon, Sun, UserPen } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
 import { logoutUser } from "../../../services/user-service";
+import { useColorMode } from "../../ui/color-mode-context";
 
 export function UserMenu() {
     const [open, setOpen] = useState(false);
     const { user, setUser } = useUser();
+    const { colorMode, toggleColorMode } = useColorMode();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -44,6 +46,14 @@ export function UserMenu() {
                                 <button> inside an <a> is invalid HTML and double-stops keyboard tabbing. */}
                             <Button asChild size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue">
                                 <Link to="/profile/edit"><UserPen /> Edit Profile</Link>
+                            </Button>
+                            <Button
+                                size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue"
+                                // Stop the Stack's onClick from also closing the popover, so the user can
+                                // see the effect of the toggle immediately without it dismissing.
+                                onClick={(e) => { e.stopPropagation(); toggleColorMode(); }}
+                            >
+                                {colorMode === "dark" ? <Sun /> : <Moon />} {colorMode === "dark" ? "Light Mode" : "Dark Mode"}
                             </Button>
                             <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue" onClick={() => { void handleLogout(); }}><LogOut /> Logout</Button>
                         </Stack>
