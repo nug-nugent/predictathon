@@ -27,11 +27,6 @@ export const UserProvider = ({ mockUser, children }: { mockUser?: User | null, c
             return;
         }
 
-        // One-time cleanup: earlier versions of this app persisted the user/token to Web Storage.
-        // That's no longer how sessions work - clear any leftovers so they don't linger unused.
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('user');
-
         refreshSession()
             .then(setUser)
             .catch(() => setUser(null))
