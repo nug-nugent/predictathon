@@ -170,7 +170,8 @@ function MatchEditDialog({ competitionId, match, teams, onClose, onSaved }: {
             // stored and compared as naive local time throughout the app (see the prediction
             // cutoff logic), so round-tripping through Date/toISOString here would shift it by
             // the browser's UTC offset.
-            const payload = { ...form, matchDateTime: form.matchDateTime ? `${form.matchDateTime}:00` : "" };
+            const localDateTime = toDateTimeLocal(form.matchDateTime);
+            const payload = { ...form, matchDateTime: localDateTime ? `${localDateTime}:00` : "" };
 
             if (match) {
                 await updateMatch(match.matchID, { ...payload, matchID: match.matchID });
