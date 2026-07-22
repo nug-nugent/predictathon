@@ -15,6 +15,8 @@ Predictathon is a football score-prediction competition site for a private group
 
 ## Common commands
 
+Keep the test projects in sync with the code: when a change touches business logic, a stored procedure/set-based SQL aggregate, or a user-facing flow, update the relevant suite (`UnitTests`, `IntegrationTests`, or `e2e`) in the same change rather than leaving it to a follow-up.
+
 ### Docker dev stack (recommended — no local SQL Server/.NET/Node needed)
 
 ```
