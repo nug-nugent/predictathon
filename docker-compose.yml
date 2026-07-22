@@ -50,6 +50,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Server=db,1433;Database=Predictathon;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true
       Cors__AllowedOrigins__0: http://localhost:5174
+      Avatars__PublicBaseUrl: http://localhost:7047
+      MessageImages__PublicBaseUrl: http://localhost:7047
     ports:
       - "7047:7046"
     depends_on:
