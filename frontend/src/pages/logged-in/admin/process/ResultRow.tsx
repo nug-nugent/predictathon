@@ -1,5 +1,5 @@
 import { Flex, HStack, Image, Input, Text } from "@chakra-ui/react";
-import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type MouseEvent } from "react";
 import { ApiError } from "../../../../services/api";
 import { saveMatchResult } from "../../../../services/match-processing-service";
 import { parseDigit } from "../../../../utils/parseDigit";
@@ -41,9 +41,9 @@ export function ResultRow({
     }, [hasFocus]);
 
     const eligible = isResultEligible(matchDateTime, now);
-    // Locked once saved too - corrections after the fact belong on the fixture admin page, where
-    // goals become editable once a match is marked played.
-    const locked = !eligible || saveState === "saving" || saveState === "saved";
+    // Stays editable after a save so a mis-entered score can be corrected here, rather than
+    // forcing a trip to the fixture admin page.
+    const locked = !eligible || saveState === "saving";
 
     const save = async (homeValue: string, awayValue: string, focusNext: boolean) => {
         if (homeValue === "" || awayValue === "") return;
@@ -67,6 +67,13 @@ export function ResultRow({
     const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
         event.target.select();
         onFocus(matchId);
+    };
+
+    // Without this, the mouse-click's own mouseup handler runs after onFocus and collapses the
+    // selection back to a caret at the click position - so a click only appears to select on
+    // keyboard-driven focus (tab), not on the click that's the common case here.
+    const onInputMouseUp = (event: MouseEvent<HTMLInputElement>) => {
+        event.preventDefault();
     };
 
     const onHomeChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -108,10 +115,10 @@ export function ResultRow({
 
                 <HStack gap={1}>
                     <Input ref={homeInputRef} value={homeInput} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange} />
+                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onHomeChange} />
                     <Text>-</Text>
                     <Input ref={awayInputRef} value={awayInput} autoComplete="off" textAlign="center"
-                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange} />
+                        size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onAwayChange} />
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>

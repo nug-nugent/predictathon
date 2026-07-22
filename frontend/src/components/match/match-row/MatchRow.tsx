@@ -1,5 +1,5 @@
 import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
-import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type MouseEvent } from "react";
 import { ApiError } from "../../../services/api";
 import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
 import { computeMatchStatus, type SaveState } from "../matchStatus";
@@ -79,6 +79,13 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         onFocus(match.matchID);
     };
 
+    // Without this, the mouse-click's own mouseup handler runs after onFocus and collapses the
+    // selection back to a caret at the click position - so a click only appears to select on
+    // keyboard-driven focus (tab), not on the click that's the common case here.
+    const onInputMouseUp = (event: MouseEvent<HTMLInputElement>) => {
+        event.preventDefault();
+    };
+
     const onHomeChange = (event: ChangeEvent<HTMLInputElement>) => {
         const value = parseDigit(event.target.value);
         if (value === null) return;
@@ -115,11 +122,11 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
                         <HStack gap={1}>
                             <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center"
-                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onHomeChange}
+                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onHomeChange}
                                 bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                             <Text>-</Text>
                             <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center"
-                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onChange={onAwayChange}
+                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onAwayChange}
                                 bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                         </HStack>
 

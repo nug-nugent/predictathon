@@ -33,6 +33,10 @@ export function ResultsList({ matches, teams }: ResultsListProps) {
     );
 
     const handleSaved = (matchId: string) => {
+        // Already saved once means this is a correction, not a first-time entry - don't yank
+        // focus away to the next match while the admin is still fixing this one.
+        if (savedIds.has(matchId)) return;
+
         const updated = new Set(savedIds);
         updated.add(matchId);
         setSavedIds(updated);
