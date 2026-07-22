@@ -48,7 +48,15 @@ npm run build             # tsc -b && vite build
 npm run lint               # ESLint (type-checked + a11y rules are on)
 npm run storybook          # Storybook dev server on :6006
 ```
-There is no frontend test runner configured yet (no vitest/jest).
+There is no frontend unit/component test runner configured yet (no vitest/jest).
+
+End-to-end (`e2e/`):
+```
+npm install                        # first run only
+npx playwright install chromium    # first run only
+npm test                            # needs the app running — see e2e/README.md
+```
+Playwright tests drive the real app in a browser (login, predictions, etc.) against the Docker dev stack's frontend (`http://localhost:5174`) by default; override with `PLAYWRIGHT_BASE_URL` to target the native host workflow instead. They log in using the seeded `DemoPredictor`/`DemoAdmin` accounts, so only point them at the Docker/sample dataset, never a real deployment. Note: `PageHeading` elements (page titles like "Home"/"Predictions") are hidden at desktop widths by design — don't assert on them; use the user-menu chip or page-specific controls instead.
 
 ### Database schema changes
 
