@@ -401,5 +401,14 @@ Data/
 
 /UI/Web/Scripts/Dist/
 /UI/Web/Uploads/
+/WebApi/Uploads/
 .DS_Store
 storybook-static
+
+# Docker local dev secrets
+.env.docker
+
+# Playwright
+/e2e/test-results/
+/e2e/playwright-report/
+/e2e/playwright/.cache/

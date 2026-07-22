@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ecbe63d7-5807-4d6a-9363-ee2ef7df13f5</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Predictathon.Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\Predictathon.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\Base\" />
+  </ItemGroup>
+
+  <!-- Vendored reaction images (standard-emoji SVGs + Predictathon's custom reactions) - static,
+       checked into source control, served via the /reactions static-files mapping in Program.cs.
+       Not under wwwroot, so needs an explicit copy-to-output rule for a real publish. -->
+  <ItemGroup>
+    <Content Include="Assets\Reactions\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

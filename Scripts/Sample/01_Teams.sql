@@ -1,0 +1,129 @@
+/*
+Generated via sp_generate_merge.sql against David's real local dev DB (dbo.Team, 2026-07-18).
+All real team names/short names/crest filenames accumulated over ~10 years of tournament imports -
+no PII. To regenerate after dbo.Team changes, install sp_generate_merge.sql as a session-scoped temp
+proc (see that file's header) and run:
+
+  EXEC [#sp_generate_merge] @table_name = 'Team', @schema = 'dbo', @results_to_text = NULL,
+    @include_use_db = 0, @nologo = 1, @quiet = 1, @delete_if_not_matched = 0,
+    @batch_separator = NULL, @output = @output OUTPUT;
+
+(@delete_if_not_matched = 0 is deliberate - this script should only ever add/update teams, never
+delete rows a future dbo.Team might have gained since this was last generated.)
+*/
+
+SET NOCOUNT ON
+MERGE INTO [dbo].[Team] WITH (SERIALIZABLE) AS [Target]
+USING (VALUES
+  ('47B08B51-B7F3-4D5D-9136-013EE7473C09','Ghana','Ghana','International/Ghana.gif')
+ ,('84E90FCC-4367-4429-A966-02578AF34002','Serbia','Serbia','International/Europe/Serbia.gif')
+ ,('B5102EE3-73C2-453D-A228-041BACB690D1','Switzerland','Switzerland','International/Europe/Switzerland.gif')
+ ,('5671552F-58E6-4942-AAF7-04507ADAD6F9','West Bromwich Albion','West Brom','WestBrom.gif')
+ ,('D5C1438E-2733-4FA8-99B9-099F1D4AF53C','Cameroon','Cameroon','International/Cameroon.gif')
+ ,('400087E4-7224-46D9-8FFC-13B5122AB2FF','Scotland','Scotland','International/Europe/Scotland.gif')
+ ,('0D5F48CB-4DFB-45D5-9702-1576A7724F23','Brazil','Brazil','International/Brazil.gif')
+ ,('716CCC7A-EDE1-4B67-816D-162DB3FC958E','Haiti','Haiti','International/Haiti.png')
+ ,('68437EBC-A838-4AC9-9D18-175F2CD42DC6','Bosnia-Herzegovina','Bosnia','International/Europe/Bosnia.gif')
+ ,('3B8C770C-A7B2-4082-BA72-181EF1CEA994','West Ham United','West Ham','WestHam.gif')
+ ,('A1124BBF-23A4-427C-AE3E-19B81DF5EAB5','South Korea','South Korea','International/SouthKorea.gif')
+ ,('6A05141D-32D9-4D10-964C-1C5826F36793','Saudi Arabia','Saudi Arabia','International/SaudiArabia.gif')
+ ,('DBF34CBC-5E4B-4E33-A871-1C6928F7206B','Republic of Ireland','Ireland','International/Europe/Ireland.gif')
+ ,('C3496F44-36A1-49C0-8057-1C6A16900114','Arsenal','Arsenal','Arsenal.gif')
+ ,('49374102-D2D9-488F-9C82-1DF3660E8E7E','Blackburn Rovers','Blackburn','Blackburn.gif')
+ ,('AF2C4430-EE57-4EE6-AF5E-1EAEE3971325','Newcastle United','Newcastle','Newcastle.gif')
+ ,('6AC9FF1E-B32D-4CB0-B30F-25D91E2D152D','Iraq','Iraq','International/Iraq.png')
+ ,('F79B9FA3-FB0B-4ECC-8074-25F47400DB33','Germany','Germany','International/Europe/Germany.gif')
+ ,('AB3581B7-F134-49EB-AEC1-2B6295BFD238','Denmark','Denmark','International/Europe/Denmark.gif')
+ ,('F85886D4-E4BD-42E4-BE32-2C6DD3D08BB0','Sheffield United','Sheff Utd','SheffUtd.gif')
+ ,('7D2F6CE3-D09B-4FBD-8799-3061B632121A','New Zealand','New Zealand','International/NewZealand.png')
+ ,('3873D14B-2096-4519-9A6E-3D5E1F3F8ABE','Panama','Panama','International/Panama.gif')
+ ,('493109E9-0BAC-4959-974E-48A2A9024E84','Reading','Reading','Reading.gif')
+ ,('145CAF0E-5050-4098-8C7D-4C9BCBF3E07D','Paraguay','Paraguay','International/Paraguay.png')
+ ,('7C8677FC-E653-46D4-A4CE-5134E143A1F0','Morocco','Morocco','International/Morocco.gif')
+ ,('11F7EF58-668D-4972-BCD3-583E3BA4B14D','Liverpool','Liverpool','Liverpool.gif')
+ ,('4955EAD6-BABC-486B-8370-58442290241B','Jordan','Jordan','International/Jordan.png')
+ ,('9B018A8B-9A38-4E75-92FF-5BD658F559BF','Sunderland','Sunderland','Sunderland.gif')
+ ,('6A9285B9-9EC7-4336-969F-5C93E32CD66C','Nigeria','Nigeria','International/Nigeria.gif')
+ ,('26864295-E023-48DA-B99F-5E986BBAD66B','USA','USA','International/USA.gif')
+ ,('B9E136F5-957B-47FF-A806-5F744382A2FE','Sweden','Sweden','International/Europe/Sweden.gif')
+ ,('382117BD-6B76-46CE-91CF-5FB0BD06E9FD','Ivory Coast','Ivory Coast','International/IvoryCoast.gif')
+ ,('BA818767-67E5-4488-81A1-60D7278CFAC4','Wigan Athletic','Wigan','Wigan.gif')
+ ,('831DC56C-61CD-4E0F-89C7-61AAFCB42FC4','Wales','Wales','International/Europe/Wales.gif')
+ ,('9B7B1330-D83A-42ED-9913-61ABD862124F','Crystal Palace','Crystal Palace','CrystalPalace.gif')
+ ,('F386071E-E336-4468-9449-62BB56F854C9','Mexico','Mexico','International/Mexico.gif')
+ ,('E3D0873E-1821-41E5-9C8D-67683029531B','Tunisia','Tunisia','International/Tunisia.gif')
+ ,('EEAE9B7C-6A7E-4F91-9D00-6A29125E22A8','Austria','Austria','International/Europe/Austria.gif')
+ ,('0887860A-33D8-47F5-B1BA-6FB0E619AD7A','Ukraine','Ukraine','International/Europe/Ukraine.gif')
+ ,('54AE3FEB-05C2-464F-8BDD-70AB56AB2A77','Belgium','Belgium','International/Europe/Belgium.gif')
+ ,('435C85FF-B2D3-4255-83A5-72F0A6AFBE8E','Southampton','Southampton','Southampton.gif')
+ ,('83A2DB41-FE4E-459E-9AD2-7522D9AB80EB','Egypt','Egypt','International/Egypt.gif')
+ ,('4E73D425-20D0-46E9-9EEB-75A2D932C1D0','Wolverhampton Wanderers','Wolves','Wolves.gif')
+ ,('20C534C6-E850-4D8C-8AE3-75FCECE2424F','Cape Verde','Cape Verde','International/CapeVerde.png')
+ ,('5DEA7410-C53C-40D4-87D1-76D2C4971682','Greece','Greece','International/Europe/Greece.gif')
+ ,('CAAF81FE-3A72-4C99-B361-77E8D7C51260','Leeds United','Leeds','Leeds.gif')
+ ,('B9EDEC0B-8C7B-4DB0-B860-792451234248','Czech Republic','Czech Republic','International/Europe/CzechRepublic.gif')
+ ,('2312B1A0-737E-4009-81B8-797557C2B4A3','Brentford','Brentford','Brentford.gif')
+ ,('259F3EE5-90A8-4937-AB55-7DB15465B7AC','Nottingham Forest','Nottingham Forest','NottinghamForest.gif')
+ ,('63EC80F7-70E1-4D01-B3C9-7E7FA550E9EE','Queens Park Rangers','QPR','QPR.gif')
+ ,('06537817-58D0-4C54-A825-7FFE0D23530C','Curacao','Curacao','International/Curacao.png')
+ ,('7CDC5D0C-A659-4EFE-B447-82160FCB7B18','Bournemouth','Bournemouth','Bournemouth.gif')
+ ,('773B0DD1-9019-4234-961C-838794632693','Honduras','Honduras','International/Honduras.gif')
+ ,('A0896698-CA4E-4CFC-8D6B-870967B68268','Huddersfield Town','Huddersfield','Huddersfield.gif')
+ ,('CD2D8104-377A-4BE6-8FCB-87196DA4B1C5','Swansea City','Swansea','Swansea.gif')
+ ,('7DC90CD8-B356-44F9-9083-873F269E46AA','Burnley','Burnley','Burnley.gif')
+ ,('8CA815EE-3AD8-4B97-BD31-8B6634B34584','Tottenham Hotspur','Tottenham','Spurs.gif')
+ ,('A0981D60-F0EE-4DAC-88C6-8E5AA916247B','Uruguay','Uruguay','International/Uruguay.gif')
+ ,('335DF488-AB0A-4845-A1F1-90E11DC61B39','Qatar','Qatar','International/Qatar.gif')
+ ,('69BB73A4-04C0-4498-BD7D-913ABF5013E1','Iran','Iran','International/Iran.gif')
+ ,('074E7506-E7B8-4267-9A04-92F6C4FB1221','Middlesbrough','Middlesbrough','Middlesbrough.gif')
+ ,('B88E7FBD-C239-48FF-BEF7-96FA6EDCD0D8','Costa Rica','Costa Rica','International/CostaRica.gif')
+ ,('352447EE-EFB8-4AFD-AB78-986230D9F593','Croatia','Croatia','International/Europe/Croatia.gif')
+ ,('7FCCEAD8-F7E5-424E-BF85-9A4914777F8A','Cardiff City','Cardiff','CardiffCity.gif')
+ ,('0D6C9C86-0754-490F-990C-A1E5C21C1FFC','Japan','Japan','International/Japan.gif')
+ ,('7606A741-A64F-41F2-BA0E-A3ECDAF911DE','Manchester United','Man Utd','ManUtd.gif')
+ ,('88B89EDB-8804-4873-9D05-AA6B2C6B1A29','Italy','Italy','International/Europe/Italy.gif')
+ ,('0C5DC135-4786-44EC-B45D-AC79D0C37D58','Manchester City','Man City','ManCity.gif')
+ ,('44A1125F-CBD8-475A-A589-B6C49DB9C4F5','Brighton & Hove Albion','Brighton','Brighton.gif')
+ ,('3586E607-7CD5-469C-BDD5-B88CCA05E033','Australia','Australia','International/Australia.gif')
+ ,('1888BEC3-88D5-46D3-8F22-BA16598F92E0','Netherlands','Netherlands','International/Europe/Netherlands.gif')
+ ,('56506E9F-AB34-4206-9ADA-BA2BBA34A77B','Turkey','Turkey','International/Europe/Turkey.gif')
+ ,('F2939A32-9A99-4DDA-AED7-BCCD37767300','Chelsea','Chelsea','Chelsea.gif')
+ ,('AF20194D-203B-4B64-BEC3-BDED30E06C31','Algeria','Algeria','International/Algeria.gif')
+ ,('E777CECE-FE34-44E4-B0EE-BF70CA3892F4','Portugal','Portugal','International/Europe/Portugal.gif')
+ ,('6B370833-D47F-4882-AD64-BF9C466FEFFC','Uzbekistan','Uzbekistan','International/Uzbekistan.png')
+ ,('593CC788-2307-4160-B5BE-C2584DD82D9F','Canada','Canada','International/Canada.gif')
+ ,('729CA748-2DF6-4238-B641-C835694EB596','Poland','Poland','International/Europe/Poland.gif')
+ ,('412B2DF7-72DE-43E5-A50B-C8382FFBBFA8','DR Congo','DR Congo','International/DRCongo.png')
+ ,('34442774-DA6A-4768-8464-D05808FC068B','Norway','Norway','International/Europe/Norway.gif')
+ ,('12D0D43C-5B65-41C9-BB7E-D3A06EF192F8','Hull City','Hull','HullCity.gif')
+ ,('E0D12C63-224A-4680-863F-D3EC4F255BD2','Watford','Watford','Watford.gif')
+ ,('1981453A-33B5-4D5B-A23A-D8B2F5F66C95','Everton','Everton','Everton.gif')
+ ,('DB8B05CD-A12E-40B9-9B88-D8C0F566D970','Peru','Peru','International/Peru.gif')
+ ,('D898166D-0629-416C-B0A8-DA4C9414BF56','Chile','Chile','International/Chile.gif')
+ ,('E0939C55-3237-46F2-A14E-DA7B41CBA4E6','South Africa','South Africa','International/SouthAfrica.png')
+ ,('6AD75FB4-D0F4-4D14-9949-DBC8ED161543','Spain','Spain','International/Europe/Spain.gif')
+ ,('53C0B07F-46E9-4311-A32E-DCEBDF06D2C3','Argentina','Argentina','International/Argentina.gif')
+ ,('072265B7-4B46-4DB4-A6BA-E26968CB3528','Senegal','Senegal','International/Senegal.gif')
+ ,('9B77F055-2F66-4642-9AD8-E3CBCF7E3621','Norwich City','Norwich','Norwich.gif')
+ ,('52AAD13D-6B19-48A9-85F0-E927604BE341','Fulham','Fulham','Fulham.gif')
+ ,('36FA40DA-60C5-40C4-B6F6-EAB6B97984B0','Iceland','Iceland','International/Europe/Iceland.gif')
+ ,('B82228E0-1A32-423D-A93D-EC163B6E97FE','France','France','International/Europe/France.gif')
+ ,('43964850-311E-4838-A368-ECBF0EF2302A','Russia','Russia','International/Europe/Russia.gif')
+ ,('8DC22F7B-26DC-4A1C-9339-EFCCE7FC3DB7','England','England','International/Europe/England.gif')
+ ,('A457C5E4-1BEF-4A3C-A2D4-F3D3A27E6E61','Aston Villa','Aston Villa','AstonVilla.gif')
+ ,('FD144C1E-82E5-49B2-AA45-F736B9BC86B0','Stoke City','Stoke','Stoke.gif')
+ ,('E41FCB72-D7DF-4F40-A844-FAAAF9335388','Leicester City','Leicester','Leicester.gif')
+ ,('A11C05D2-68BE-4BE8-B236-FEEFF79EA173','Ecuador','Ecuador','International/Ecuador.gif')
+) AS [Source] ([TeamID],[TeamName],[ShortName],[ImageName])
+ON ([Target].[TeamID] = [Source].[TeamID])
+WHEN MATCHED AND EXISTS (SELECT [Source].[TeamName], [Source].[ShortName], [Source].[ImageName]
+                 EXCEPT  SELECT [Target].[TeamName], [Target].[ShortName], [Target].[ImageName]) THEN
+ UPDATE SET
+  [Target].[TeamName] = [Source].[TeamName],
+  [Target].[ShortName] = [Source].[ShortName],
+  [Target].[ImageName] = [Source].[ImageName]
+WHEN NOT MATCHED BY TARGET THEN
+ INSERT([TeamID],[TeamName],[ShortName],[ImageName])
+ VALUES([Source].[TeamID],[Source].[TeamName],[Source].[ShortName],[Source].[ImageName]);
+SET NOCOUNT OFF
+GO

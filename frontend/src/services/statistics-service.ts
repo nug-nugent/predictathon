@@ -1,0 +1,79 @@
+import { getJsonAuthenticated } from "./api";
+
+// Matches Application/Models/AllTimeStatisticsModel.cs.
+export type CompetitionWinner = { userID: string; username: string; wins: number; secondPlaces: number; thirdPlaces: number };
+export type HighestAllTimeScore = { userID: string; username: string; totalScore: number };
+export type HighestAverageScore = { userID: string; username: string; averageScore: number };
+export type HighestPercentageCorrect = { userID: string; username: string; correctPredictionPercentage: number };
+export type MostPredictions = { userID: string; username: string; totalPredictions: number };
+
+export type AllTimeStatistics = {
+    competitionWinners: CompetitionWinner[];
+    highestAllTimeScores: HighestAllTimeScore[];
+    highestAverageScores: HighestAverageScore[];
+    highestPercentageCorrect: HighestPercentageCorrect[];
+    mostPredictions: MostPredictions[];
+};
+
+// Matches Application/Models/CurrentCompetitionStatisticsModel.cs.
+export type PredictableTeam = {
+    teamID: string;
+    shortName: string;
+    teamName: string;
+    teamImage: string | null;
+    averageScore: number;
+};
+
+export type PredictableMatch = {
+    matchID: string;
+    matchDateTime: string;
+    homeTeam: string | null;
+    homeTeamShortName: string;
+    awayTeam: string | null;
+    awayTeamShortName: string;
+    homeTeamGoals: number | null;
+    awayTeamGoals: number | null;
+    predictionHomeTeamGoals: number | null;
+    predictionAwayTeamGoals: number | null;
+    yourPredictionScore: number;
+    averagePredictionScore: number;
+    description: string | null;
+    knockout: boolean;
+};
+
+export type BestPrediction = {
+    userID: string;
+    username: string;
+    matchID: string;
+    matchDateTime: string;
+    homeTeam: string | null;
+    homeTeamShortName: string;
+    awayTeam: string | null;
+    awayTeamShortName: string;
+    homeTeamGoals: number | null;
+    awayTeamGoals: number | null;
+    predictionHomeTeamGoals: number | null;
+    predictionAwayTeamGoals: number | null;
+    predictionScore: number;
+    averagePredictionScore: number;
+    scoreDifference: number;
+    description: string | null;
+    knockout: boolean;
+};
+
+export type CurrentCompetitionStatistics = {
+    predictableTeams: PredictableTeam[];
+    mostPredictableMatches: PredictableMatch[];
+    leastPredictableMatches: PredictableMatch[];
+    bestPredictions: BestPrediction[];
+};
+
+/// Every all-time (not competition-scoped) statistics widget.
+export async function getAllTimeStatistics(): Promise<AllTimeStatistics> {
+    return getJsonAuthenticated<AllTimeStatistics>("/Statistics/AllTime");
+}
+
+/// Every statistics widget scoped to a specific competition, personalised to the current user.
+export async function getCurrentCompetitionStatistics(competitionId: string): Promise<CurrentCompetitionStatistics> {
+    return getJsonAuthenticated<CurrentCompetitionStatistics>(`/Statistics/CurrentCompetition/${competitionId}`);
+}

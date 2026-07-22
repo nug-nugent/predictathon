@@ -11,15 +11,15 @@ BEGIN
 
 	-- Total all-time points
 	SELECT TOP 10
-		[User].Username
-		, [User].UserID
+		[User].UserName AS Username
+		, [User].Id AS UserID
 		, TotalScore = SUM(Prediction.Score)
 	FROM
-		[User]
-		INNER JOIN Prediction ON [User].UserID = Prediction.UserID
+		[Identity].[Users] AS [User]
+		INNER JOIN Prediction ON [User].Id = Prediction.UserID
 	GROUP BY
-		[User].Username
-		, [User].UserID
+		[User].UserName
+		, [User].Id
 	ORDER BY
 		SUM(Prediction.Score) DESC;
 END

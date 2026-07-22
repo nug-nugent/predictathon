@@ -1,16 +1,16 @@
 ﻿CREATE TABLE [dbo].[PaymentCredit] (
     [PaymentCreditID]   UNIQUEIDENTIFIER NOT NULL,
-    [ExpectedUsername]  VARCHAR (50)     COLLATE Latin1_General_CI_AI NULL,
+    [ExpectedUsername]  VARCHAR (50)     NULL,
     [ForCompetitionID]  UNIQUEIDENTIFIER NOT NULL,
-    [UniquePaymentCode] VARCHAR (10)     COLLATE Latin1_General_CI_AI NOT NULL,
+    [UniquePaymentCode] VARCHAR (10)     NOT NULL,
     [CreditUsed]        BIT              CONSTRAINT [DF_PaymentCredit_CreditUsed] DEFAULT ((0)) NOT NULL,
     [UsedByUserID]      UNIQUEIDENTIFIER NULL,
     [IssuedByUserID]    UNIQUEIDENTIFIER NOT NULL,
     [IssueDate]         DATETIME         NOT NULL,
     CONSTRAINT [PK_PaymentCredit] PRIMARY KEY CLUSTERED ([PaymentCreditID] ASC),
     CONSTRAINT [FK_PaymentCredit_Competition] FOREIGN KEY ([ForCompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_PaymentCredit_IssuedByUser] FOREIGN KEY ([IssuedByUserID]) REFERENCES [dbo].[User] ([UserID]),
-    CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [dbo].[User] ([UserID])
+    CONSTRAINT [FK_PaymentCredit_IssuedByUser] FOREIGN KEY ([IssuedByUserID]) REFERENCES [Identity].[Users] ([Id]),
+    CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 

@@ -17,18 +17,18 @@ BEGIN
 	FROM
 		(
 		SELECT
-			[User].Username
-			, [User].UserID
+			[User].UserName AS Username
+			, [User].Id AS UserID
 			, TotalPredictions = COUNT(1)
 			, CorrectPredictions = SUM(CASE WHEN Prediction.Score > 0 THEN 1 ELSE 0 END)
 		FROM
-			[User]
-			INNER JOIN Prediction ON [User].UserID = Prediction.UserID
+			[Identity].[Users] AS [User]
+			INNER JOIN Prediction ON [User].Id = Prediction.UserID
 		WHERE
 			Prediction.Score IS NOT NULL
 		GROUP BY
-			[User].Username
-			, [User].UserID
+			[User].UserName
+			, [User].Id
 		) PredictionCount
 	WHERE
 		PredictionCount.CorrectPredictions > 0

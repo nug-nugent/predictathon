@@ -15,7 +15,7 @@ BEGIN
 
 	SELECT TOP 50
 		Prediction.UserID
-		, [User].Username
+		, [User].UserName AS Username
 		, MatchAveragePrediction.*
 		, PredictionHomeTeamGoals = Prediction.HomeTeamGoals
 		, PredictionAwayTeamGoals = Prediction.AwayTeamGoals
@@ -58,7 +58,7 @@ BEGIN
 			, Match.Description
 			, Match.Knockout) MatchAveragePrediction
 		INNER JOIN Prediction ON MatchAveragePrediction.MatchID = Prediction.MatchID
-		INNER JOIN [User] ON Prediction.UserID = [User].UserID
+		INNER JOIN [Identity].[Users] AS [User] ON Prediction.UserID = [User].Id
 	WHERE
 		(ISNULL(Prediction.Score, 0) - AveragePredictionScore) > 0
 	ORDER BY

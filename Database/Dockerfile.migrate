@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+WORKDIR /src
+COPY Database/ ./Database/
+
+RUN dotnet build Database/Predictathon.Database.csproj -c Release -o /out
+RUN dotnet tool install --global microsoft.sqlpackage
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+ENTRYPOINT ["/bin/sh", "-c", "sqlpackage /Action:Publish /SourceFile:/out/Predictathon.Database.dacpac /TargetConnectionString:\"Server=db,1433;Database=Predictathon;User Id=sa;Password=$MSSQL_SA_PASSWORD;TrustServerCertificate=True;\""]

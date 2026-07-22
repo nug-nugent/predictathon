@@ -12,13 +12,13 @@ BEGIN
 	SET NOCOUNT ON;
 	
 	SELECT
-		[User].Username
+		[User].UserName AS Username
 		, UserCompetitionLeagueHistory.[Date]
 		, UserCompetitionLeagueHistory.Score
-		, UserCompetitionLeagueHistory.LeaguePosition		
+		, UserCompetitionLeagueHistory.LeaguePosition
 	FROM
-		[User]
-		INNER JOIN UserCompetition ON [User].UserID = UserCompetition.UserID
+		[Identity].[Users] AS [User]
+		INNER JOIN UserCompetition ON [User].Id = UserCompetition.UserID
 		INNER JOIN UserCompetitionLeagueHistory ON UserCompetition.UserCompetitionID = UserCompetitionLeagueHistory.UserCompetitionID
 	WHERE
 		UserCompetition.UserID = @UserID

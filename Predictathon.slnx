@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="copilot-instructions.md" />
+  </Folder>
+  <Project Path="Application/Predictathon.Application.csproj" />
+  <Project Path="Database/Predictathon.Database.csproj" />
+  <Project Path="Domain/Predictathon.Domain.csproj" />
+  <Project Path="Infrastructure/Predictathon.Infrastructure.csproj" />
+  <Project Path="IntegrationTests/Predictathon.IntegrationTests.csproj" />
+  <Project Path="UnitTests/Predictathon.UnitTests.csproj" />
+  <Project Path="WebApi/Predictathon.WebApi.csproj" />
+</Solution>

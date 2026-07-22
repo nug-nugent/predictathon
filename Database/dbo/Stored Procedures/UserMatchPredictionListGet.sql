@@ -20,9 +20,11 @@ BEGIN
 		Match.MatchID
 		, Prediction.PredictionID
 		, Match.MatchDateTime
+		, Match.HomeTeamID
 		, HomeTeam = ISNULL(HomeTeam.TeamName, Match.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
 		, HomeTeamImage = HomeTeam.ImageName
+		, Match.AwayTeamID
 		, AwayTeam = ISNULL(AwayTeam.TeamName, Match.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
 		, AwayTeamImage = AwayTeam.ImageName

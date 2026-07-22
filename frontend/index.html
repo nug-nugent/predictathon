@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Predictathon - predict football scores, climb the league table, and compete with friends." />
+    <title>Predictathon</title>
+  </head>
+  <body>
+    <script>
+      // Sets the color-mode class before first paint, so there's no flash of the wrong theme
+      // while React mounts. Runs before any JS module loads, so it can't import
+      // src/components/ui/color-mode-context.ts's STORAGE_KEY - this string must be kept in sync
+      // with that constant by hand.
+      (function () {
+        try {
+          var stored = localStorage.getItem("predictathon-color-mode");
+          var mode = stored === "light" || stored === "dark"
+            ? stored
+            : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.classList.add(mode);
+        } catch (e) {}
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

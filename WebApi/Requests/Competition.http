@@ -1,0 +1,144 @@
+@Predictathon.WebApi_HostAddress = https://localhost:7046/api
+@CompetitionId = d8447aaf-6fab-430e-9d5a-7d5e8eb6704e
+@NewCompetitionId = 4B9AB625-F871-4BAC-8639-1940C4D7E5D0
+#38893FFB-7EF3-4F27-8766-0B32FDF8F2EF
+
+GET {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
+Accept: application/json
+
+### Create competition — valid (server-generated id)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionName": "Summer Predictathon",
+  "Information": "Predictathon for summer event",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10",
+  "EntranceFee": 0.00,
+  "OpenForRegistration": true
+}
+
+### Create competition — valid (client-supplied id using dynamic GUID)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionID": "{{NewCompetitionId}}",
+  "CompetitionName": "Team Challenge",
+  "StartDate": "2026-08-01",
+  "EndDate": "2026-08-05"
+}
+
+### Create competition — invalid (missing Content-Type)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Accept: application/json
+
+{
+  "CompetitionName": "No Content-Type",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
+
+### Create competition — invalid (malformed JSON)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionName": "Broken JSON", 
+  "StartDate": "2026-07-01",
+}
+
+### Create competition — invalid (bad GUID)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "CompetitionID": "not-a-guid",
+  "CompetitionName": "Bad GUID Example",
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
+
+### Create competition — invalid (missing required field)
+POST {{Predictathon.WebApi_HostAddress}}/Competition
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "StartDate": "2026-07-01",
+  "EndDate": "2026-07-10"
+}
+
+### Valid PUT - update competition (expect 200)
+PUT {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "CompetitionID": "{{CompetitionId}}",
+  "CompetitionName": "Autumn Invitational",
+  "PrependNameWithThe": false,
+  "StartDate": "2026-09-01",
+  "EndDate": "2026-09-05",
+  "DuplicateFixturesAllowed": false,
+  "OpenForRegistration": true,
+  "RegistrationAvailableOnLoginPage": true,
+  "ShowInHallOfFame": false,
+  "EntranceFee": 12.50,
+  "PayPalPaymentAvailable": true,
+  "Information": "A friendly competition for clubs across the region.",
+  "ImageFilename": "autumn-invitational.png",
+  "DefaultToNeutralGround": true,
+  "AllowTwoPointers": false
+}
+
+### Invalid PUT - validation error (StartDate after EndDate -> expect 400 with validation ProblemDetails)
+PUT {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "CompetitionID": "{{CompetitionId}}",
+  "CompetitionName": "",
+  "PrependNameWithThe": false,
+  "StartDate": "2026-09-10",
+  "EndDate": "2026-09-05",
+  "DuplicateFixturesAllowed": false,
+  "OpenForRegistration": true,
+  "RegistrationAvailableOnLoginPage": true,
+  "ShowInHallOfFame": false,
+  "EntranceFee": -5.00,
+  "PayPalPaymentAvailable": true,
+  "Information": null,
+  "ImageFilename": null,
+  "DefaultToNeutralGround": true,
+  "AllowTwoPointers": false
+}
+
+### Invalid PUT - JSON schema validation error (expect 400 with validation ProblemDetails)
+PUT {{Predictathon.WebApi_HostAddress}}/Competition/{{CompetitionId}}
+Content-Type: application/json
+Accept: application/problem+json
+
+{
+  "CompetitionID": "{{CompetitionId}}",
+  "CompetitionNameXX": "",
+  ".PrependNameWithThe": false,
+  "StartDate": "2026-09-10",
+  "EndDate": "2026-09-05",
+  "DuplicateFixturesAllowed": false,
+  "OpenForRegistration": true,
+  "RegistrationAvailableOnLoginPage": true,
+  "ShowInHallOfFame": false,
+  "EntranceFee": -5.00,
+  "PayPalPaymentAvailable": true,
+  "Information": null,
+  "ImageFilename": null,
+  "DefaultToNeutralGround": true,
+  "AllowTwoPointers": false
+}

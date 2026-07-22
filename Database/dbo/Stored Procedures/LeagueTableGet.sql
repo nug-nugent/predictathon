@@ -15,15 +15,15 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		[User].Username
-		, [User].UserID
-		, LeaguePosition = ROW_NUMBER() OVER(ORDER BY 
+		[User].UserName AS Username
+		, [User].Id AS UserID
+		, LeaguePosition = ROW_NUMBER() OVER(ORDER BY
 											ISNULL(SUM(Prediction.Score), 0) DESC --Total points
 											, ISNULL(SUM(Prediction.GoalDifference), 0) DESC --GD
 											, SUM(CASE WHEN Prediction.Score = 3 THEN 1 ELSE 0 END) DESC --3-pointers
 											, SUM(CASE WHEN Prediction.Score = 2 THEN 1 ELSE 0 END) DESC --2-pointers
 											, SUM(CASE WHEN Prediction.Score = 1 THEN 1 ELSE 0 END) DESC --1-pointers
-											, [User].Username --Username
+											, [User].UserName --Username
 										)
 		, PreviousLeaguePosition = CASE WHEN @DateForComparison IS NULL THEN NULL ELSE (
 									SELECT TOP 1
@@ -43,8 +43,8 @@ BEGIN
 		, NoPointers = SUM(CASE WHEN Prediction.Score = 0 THEN 1 ELSE 0 END)
 		, NoPredictions = SUM(CASE WHEN Prediction.PredictionID IS NULL AND Match.MatchID IS NOT NULL THEN 1 ELSE 0 END)
 	FROM
-		[User]
-		INNER JOIN UserCompetition ON [User].UserID = UserCompetition.UserID
+		[Identity].[Users] AS [User]
+		INNER JOIN UserCompetition ON [User].Id = UserCompetition.UserID
 		CROSS JOIN (
 			SELECT
 				Match.MatchID
@@ -59,12 +59,12 @@ BEGIN
 			SELECT
 				MatchID = NULL
 			) Match
-		LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID AND [User].UserID = Prediction.UserID
+		LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID AND [User].Id = Prediction.UserID
 	WHERE
 		UserCompetition.CompetitionID = @CompetitionID
 	GROUP BY
-		[User].Username
-		, [User].UserID
+		[User].UserName
+		, [User].Id
 		, UserCompetition.UserCompetitionID
 	ORDER BY
 		LeaguePosition;

@@ -15,17 +15,17 @@ BEGIN
 		, HallOfFame.CompetitionName
 		, HallOfFame.EndDate
 		, HallOfFame.ImageFilename
-		, Winner = ISNULL(Winner.Username, HallOfFame.Winner)
+		, Winner = ISNULL(Winner.UserName, HallOfFame.Winner)
 		, HallOfFame.WinnerUserID
-		, SecondPlace = ISNULL(SecondPlace.Username, HallOfFame.SecondPlace)
+		, SecondPlace = ISNULL(SecondPlace.UserName, HallOfFame.SecondPlace)
 		, HallOfFame.SecondPlaceUserID
-		, ThirdPlace = ISNULL(ThirdPlace.Username, HallOfFame.ThirdPlace)
+		, ThirdPlace = ISNULL(ThirdPlace.UserName, HallOfFame.ThirdPlace)
 		, HallOfFame.ThirdPlaceUserID
 	FROM
 		HallOfFame
-		LEFT JOIN [User] Winner ON HallOfFame.WinnerUserID = Winner.UserID
-		LEFT JOIN [User] SecondPlace ON HallOfFame.SecondPlaceUserID = SecondPlace.UserID
-		LEFT JOIN [User] ThirdPlace ON HallOfFame.ThirdPlaceUserID = ThirdPlace.UserID
+		LEFT JOIN [Identity].[Users] Winner ON HallOfFame.WinnerUserID = Winner.Id
+		LEFT JOIN [Identity].[Users] SecondPlace ON HallOfFame.SecondPlaceUserID = SecondPlace.Id
+		LEFT JOIN [Identity].[Users] ThirdPlace ON HallOfFame.ThirdPlaceUserID = ThirdPlace.Id
 	ORDER BY
 		HallOfFame.EndDate DESC
 END
