@@ -14,6 +14,9 @@ import {
     addTeamToCompetition, removeTeamFromCompetition,
     type AssignedTeam, type Team,
 } from "../../../../services/team-service";
+import {
+    getHallOfFameGenerationStatus, generateHallOfFame, type HallOfFameItem,
+} from "../../../../services/hall-of-fame-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
@@ -186,6 +189,8 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
             </Panel>
 
             <TeamsSection competitionId={form.competitionID} />
+
+            <HallOfFameSection competitionId={form.competitionID} />
         </VStack>
     );
 }
@@ -295,6 +300,115 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setRemoving(null)}>Cancel</Button>
                                 <Button colorPalette="red" onClick={() => { void confirmRemove(); }}>Remove</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+        </>
+    );
+}
+
+function HallOfFameSection({ competitionId }: { competitionId: string }) {
+    const { data: status, error, reload } = useAsyncData(() => getHallOfFameGenerationStatus(competitionId), [competitionId]);
+    const [confirming, setConfirming] = useState(false);
+    const [generating, setGenerating] = useState(false);
+    const [generateError, setGenerateError] = useState<string | null>(null);
+    const [generated, setGenerated] = useState<HallOfFameItem | null>(null);
+
+    const generate = async () => {
+        setConfirming(false);
+        setGenerating(true);
+        setGenerateError(null);
+
+        try {
+            const result = await generateHallOfFame(competitionId);
+            setGenerated(result);
+            reload();
+        } catch (e) {
+            setGenerateError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    if (error) {
+        return (
+            <Panel>
+                <Heading size="md" mb={3}>Hall of Fame</Heading>
+                <ErrorState error={error} onRetry={reload} />
+            </Panel>
+        );
+    }
+
+    if (status === null) {
+        return (
+            <Panel>
+                <Heading size="md" mb={3}>Hall of Fame</Heading>
+                <Center><Spinner size="sm" /></Center>
+            </Panel>
+        );
+    }
+
+    const alreadyGenerated = status.alreadyGenerated || generated !== null;
+
+    return (
+        <>
+            <Panel>
+                <VStack align="stretch" gap={3}>
+                    <Heading size="md">Hall of Fame</Heading>
+
+                    {alreadyGenerated ? (
+                        <Text color="fg.muted">
+                            This competition already has a Hall of Fame entry.{" "}
+                            <Link asChild><RouterLink to="/hof">View Hall of Fame</RouterLink></Link>
+                        </Text>
+                    ) : status.allMatchesPlayed ? (
+                        <Text color="fg.muted">
+                            All matches have been played. Generating will add 1st, 2nd and 3rd place from the current league table.
+                        </Text>
+                    ) : (
+                        <Text color="fg.muted">Available once every match in this competition has been played.</Text>
+                    )}
+
+                    {generateError && <Text fontSize="sm" color="fg.error">{generateError}</Text>}
+
+                    {generated && (
+                        <Text fontSize="sm" color="fg.success">
+                            Added {generated.winner}, {generated.secondPlace} and {generated.thirdPlace} to the Hall of Fame.
+                        </Text>
+                    )}
+
+                    <HStack justify="flex-end">
+                        <Button
+                            colorPalette="blue" loading={generating}
+                            disabled={generating || alreadyGenerated || !status.allMatchesPlayed}
+                            onClick={() => setConfirming(true)}
+                        >
+                            Generate Hall of Fame entry
+                        </Button>
+                    </HStack>
+                </VStack>
+            </Panel>
+
+            <Dialog.Root role="alertdialog" open={confirming} onOpenChange={(e) => { if (!e.open) setConfirming(false); }}>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title>Generate Hall of Fame entry</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                <Text>
+                                    This will add the top 3 from the current league table to the Hall of Fame for this
+                                    competition. This can&apos;t be undone here - it would need to be removed directly
+                                    in the database.
+                                </Text>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
+                                <Button colorPalette="blue" onClick={() => { void generate(); }}>Generate</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>
