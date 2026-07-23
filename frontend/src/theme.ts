@@ -19,6 +19,28 @@ export const predictTheme = createSystem(defaultConfig, {
         },
       },
     },
+    recipes: {
+      input: {
+        variants: {
+          variant: {
+            outline: {
+              borderColor: "input.border",
+              _focusVisible: { borderColor: "input.borderFocus" },
+            },
+          },
+        },
+      },
+      textarea: {
+        variants: {
+          variant: {
+            outline: {
+              borderColor: "input.border",
+              _focusVisible: { borderColor: "input.borderFocus" },
+            },
+          },
+        },
+      },
+    },
     semanticTokens: {
       colors: {
         bg: {
