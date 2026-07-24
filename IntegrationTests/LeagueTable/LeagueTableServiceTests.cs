@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Services;
 using Predictathon.Domain.Entities;
 using Predictathon.Domain.Identity;
@@ -114,6 +115,117 @@ public class LeagueTableServiceTests
         }
     }
 
+    [Fact]
+    public async Task GetLeagueTableAsync_PopulatesPreviousLeaguePosition_FromHistorySnapshotBeforeComparisonDate()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var competition = new Competition
+        {
+            CompetitionID = Guid.NewGuid(),
+            CompetitionName = $"Integration Test {Guid.NewGuid():N}",
+            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30)),
+            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+        };
+        dbContext.Competition.Add(competition);
+
+        var leader = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"leader-{Guid.NewGuid():N}" };
+        var runnerUp = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"runner-up-{Guid.NewGuid():N}" };
+        dbContext.Users.AddRange(leader, runnerUp);
+
+        var leaderRegistration = new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = leader.Id, CompetitionID = competition.CompetitionID };
+        var runnerUpRegistration = new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = runnerUp.Id, CompetitionID = competition.CompetitionID };
+        dbContext.UserCompetition.AddRange(leaderRegistration, runnerUpRegistration);
+
+        var home = new Team { TeamID = Guid.NewGuid(), TeamName = $"Home {Guid.NewGuid():N}", ShortName = "HOM" };
+        var away = new Team { TeamID = Guid.NewGuid(), TeamName = $"Away {Guid.NewGuid():N}", ShortName = "AWY" };
+        dbContext.Team.AddRange(home, away);
+
+        var match = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competition.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-1),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 2,
+            AwayTeamGoals = 0,
+        };
+        dbContext.Match.Add(match);
+
+        // Leader is ahead today (a 3-pointer vs a 1-pointer), so should rank 1st.
+        dbContext.Prediction.AddRange(
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = match.MatchID, UserID = leader.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = match.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 1, AwayTeamGoals = 0, Score = 1, GoalDifference = -1 });
+
+        // But yesterday's snapshot had the two swapped - runnerUp was 1st, leader was 2nd.
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+        dbContext.UserCompetitionLeagueHistory.AddRange(
+            new UserCompetitionLeagueHistory { UserCompetitionLeagueHistoryID = Guid.NewGuid(), UserCompetitionID = leaderRegistration.UserCompetitionID, Date = yesterday, LeaguePosition = 2, Score = 1, AverageGoalDifference = 0, TotalGoalDifference = 0 },
+            new UserCompetitionLeagueHistory { UserCompetitionLeagueHistoryID = Guid.NewGuid(), UserCompetitionID = runnerUpRegistration.UserCompetitionID, Date = yesterday, LeaguePosition = 1, Score = 3, AverageGoalDifference = 0, TotalGoalDifference = 0 });
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            var service = new LeagueTableService(dbContext);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID, dateForComparison: today);
+
+            var leaderRow = table.Single(r => r.UserID == leader.Id);
+            var runnerUpRow = table.Single(r => r.UserID == runnerUp.Id);
+
+            leaderRow.LeaguePosition.Should().Be(1);
+            leaderRow.PreviousLeaguePosition.Should().Be(2);
+
+            runnerUpRow.LeaguePosition.Should().Be(2);
+            runnerUpRow.PreviousLeaguePosition.Should().Be(1);
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, competition.CompetitionID,
+                [match.MatchID],
+                [leader.Id, runnerUp.Id],
+                [home.TeamID, away.TeamID]);
+        }
+    }
+
+    [Fact]
+    public async Task GetLeagueTableAsync_LeavesPreviousLeaguePositionNull_WhenNoComparisonDateSupplied()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var competition = new Competition
+        {
+            CompetitionID = Guid.NewGuid(),
+            CompetitionName = $"Integration Test {Guid.NewGuid():N}",
+            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30)),
+            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+        };
+        dbContext.Competition.Add(competition);
+
+        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"user-{Guid.NewGuid():N}" };
+        dbContext.Users.Add(user);
+        dbContext.UserCompetition.Add(new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = user.Id, CompetitionID = competition.CompetitionID });
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            var service = new LeagueTableService(dbContext);
+
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID);
+
+            table.Single(r => r.UserID == user.Id).PreviousLeaguePosition.Should().BeNull();
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, competition.CompetitionID, [], [user.Id], []);
+        }
+    }
+
     private static async Task CleanUpAsync(
         ApplicationDbContext dbContext,
         Guid competitionId,
@@ -121,6 +233,12 @@ public class LeagueTableServiceTests
         IReadOnlyList<Guid> userIds,
         IReadOnlyList<Guid> teamIds)
     {
+        var userCompetitionIds = await dbContext.UserCompetition
+            .Where(uc => uc.CompetitionID == competitionId)
+            .Select(uc => uc.UserCompetitionID)
+            .ToListAsync();
+
+        dbContext.UserCompetitionLeagueHistory.RemoveRange(dbContext.UserCompetitionLeagueHistory.Where(h => userCompetitionIds.Contains(h.UserCompetitionID)));
         dbContext.Prediction.RemoveRange(dbContext.Prediction.Where(p => matchIds.Contains(p.MatchID)));
         dbContext.UserCompetition.RemoveRange(dbContext.UserCompetition.Where(uc => uc.CompetitionID == competitionId));
         dbContext.Match.RemoveRange(dbContext.Match.Where(m => matchIds.Contains(m.MatchID)));
