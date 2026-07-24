@@ -11,8 +11,10 @@ using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
+using Predictathon.WebApi.BackgroundServices;
 using Predictathon.WebApi.Extensions;
 using Predictathon.WebApi.Hubs;
+using Predictathon.WebApi.Options;
 using Predictathon.WebApi.Realtime;
 using System.Text;
 
@@ -46,7 +48,14 @@ builder.Services
     .AddDefaultTokenProviders();
 
 // Configure JWT bearer authentication
-var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+builder.Services.Configure<JwtOptions>(jwtSection);
+
+var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
+if (string.IsNullOrEmpty(jwtOptions.SigningKey))
+{
+    throw new InvalidOperationException($"'{JwtOptions.SectionName}:{nameof(JwtOptions.SigningKey)}' must be configured.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -55,11 +64,11 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtSection["Issuer"],
+            ValidIssuer = jwtOptions.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtSection["Audience"],
+            ValidAudience = jwtOptions.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["SigningKey"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
         };
@@ -89,13 +98,16 @@ builder.Services.AddScoped<IMessageboardNotifier, MessageboardNotifier>();
 
 // Configure CORS. No origins are allowed until Cors:AllowedOrigins is populated in config -
 // there's no permissive "just for dev" fallback, so nothing is silently left wide open.
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+var corsSection = builder.Configuration.GetSection(CorsOptions.SectionName);
+builder.Services.Configure<CorsOptions>(corsSection);
+
+var corsOptions = corsSection.Get<CorsOptions>() ?? new CorsOptions();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
-        policy.WithOrigins(allowedOrigins)
+        policy.WithOrigins(corsOptions.AllowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             // Needed so the browser sends/receives the HttpOnly refresh-token cookie cross-origin.
@@ -122,6 +134,19 @@ builder.Services.AddOpenApi();
 // Add all [ScopedService] services from the Application assembly
 builder.Services.AddApplication();
 
+// Runs the daily prediction-reminder and league-history scheduled tasks in-process, replacing the
+// old UptimeRobot-pinged TasksController endpoints.
+builder.Services.Configure<ScheduledTasksOptions>(builder.Configuration.GetSection(ScheduledTasksOptions.SectionName));
+builder.Services.AddHostedService<ScheduledTasksHostedService>();
+
+var avatarsSection = builder.Configuration.GetSection(AvatarsOptions.SectionName);
+builder.Services.Configure<AvatarsOptions>(avatarsSection);
+var avatarsOptions = avatarsSection.Get<AvatarsOptions>() ?? new AvatarsOptions();
+
+var messageImagesSection = builder.Configuration.GetSection(MessageImagesOptions.SectionName);
+builder.Services.Configure<MessageImagesOptions>(messageImagesSection);
+var messageImagesOptions = messageImagesSection.Get<MessageImagesOptions>() ?? new MessageImagesOptions();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -136,7 +161,7 @@ app.UseCors(FrontendCorsPolicy);
 
 // Serve uploaded avatars directly from disk. Images don't need CORS headers (only canvas pixel
 // reads would), so this works cross-origin from the frontend's own host as-is.
-var avatarsStoragePath = Path.GetFullPath(builder.Configuration["Avatars:StoragePath"] ?? "Uploads/Avatars");
+var avatarsStoragePath = Path.GetFullPath(avatarsOptions.StoragePath);
 Directory.CreateDirectory(avatarsStoragePath);
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -144,7 +169,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads/avatars"
 });
 
-var messageImagesStoragePath = Path.GetFullPath(builder.Configuration["MessageImages:StoragePath"] ?? "Uploads/MessageImages");
+var messageImagesStoragePath = Path.GetFullPath(messageImagesOptions.StoragePath);
 Directory.CreateDirectory(messageImagesStoragePath);
 app.UseStaticFiles(new StaticFileOptions
 {
