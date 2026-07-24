@@ -1,6 +1,7 @@
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -13,6 +14,7 @@ using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.BackgroundServices;
 using Predictathon.WebApi.Extensions;
+using Predictathon.WebApi.HealthChecks;
 using Predictathon.WebApi.Hubs;
 using Predictathon.WebApi.Options;
 using Predictathon.WebApi.Realtime;
@@ -147,6 +149,17 @@ var messageImagesSection = builder.Configuration.GetSection(MessageImagesOptions
 builder.Services.Configure<MessageImagesOptions>(messageImagesSection);
 var messageImagesOptions = messageImagesSection.Get<MessageImagesOptions>() ?? new MessageImagesOptions();
 
+// "/health" (bare true/false, for an external uptime monitor to keyword-match on) and
+// "/health/detailed" (per-check breakdown, for diagnosing which dependency is down) both run the
+// same checks - currently just the database, since almost every page needs it, so "process up but
+// DB unreachable" isn't a state worth calling healthy. Each is optionally gated by its own key below.
+var healthSection = builder.Configuration.GetSection(HealthOptions.SectionName);
+builder.Services.Configure<HealthOptions>(healthSection);
+var healthOptions = healthSection.Get<HealthOptions>() ?? new HealthOptions();
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>(name: "database", tags: ["db"]);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -194,6 +207,18 @@ app.UseApiProblemDetails();
 
 app.MapControllers();
 app.MapHub<MessageboardHub>("/hubs/messageboard");
+
+// Bare "true"/"false" body, nothing else - safe to point an external uptime monitor at.
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteBooleanAsync
+}).AddEndpointFilter(new ApiKeyEndpointFilter(healthOptions.ApiKey));
+
+// Full per-check breakdown, gated by its own key since it reveals more than "/health".
+app.MapHealthChecks("/health/detailed", new HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteDetailedAsync
+}).AddEndpointFilter(new ApiKeyEndpointFilter(healthOptions.DetailedApiKey));
 
 await app.SeedRolesAsync();
 
