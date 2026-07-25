@@ -5,10 +5,12 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { Link } from "react-router";
 import { useSearchParams } from "react-router";
 import { weekEnd } from "../../../utils/matchWeek";
+import { toDateOnly } from "../../../utils/toDateOnly";
 import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
+import { LeaguePositionChangeIcon } from "../../../components/league/LeaguePositionChangeIcon";
 
 // Optional ?date= filter, linked from the Home page's UserStatisticsCard rows.
 type DateFilter = "ThisWeek" | "LastWeek";
@@ -55,7 +57,10 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
   // be resolved to a match week and the full table is shown instead.
   const { data, error, reload } = useAsyncData(async () => {
     const range = dateFilter ? await resolveFilterRange(competitionId, dateFilter) : null;
-    const items = await getLeagueTable(competitionId, range?.dateFrom, range?.dateTo);
+    // Position-change arrows only make sense against the full, unfiltered table - a date-filtered
+    // view (?date=ThisWeek/LastWeek) already only covers a single match week.
+    const dateForComparison = dateFilter ? undefined : toDateOnly(new Date());
+    const items = await getLeagueTable(competitionId, range?.dateFrom, range?.dateTo, dateForComparison);
     return { items, filterApplied: range !== null };
   }, [competitionId, dateFilter]);
 
@@ -90,6 +95,7 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
         <Table.Root size="sm" variant="line" striped showColumnBorder stickyHeader>
           <Table.ColumnGroup>
             <Table.Column htmlWidth="20px" />
+            <Table.Column htmlWidth="20px" />
             <Table.Column htmlWidth="50%" />
             <Table.Column />
             <Table.Column />
@@ -102,6 +108,7 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POS</Table.ColumnHeader>
+              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}></Table.ColumnHeader>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>NAME</Table.ColumnHeader>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>3</Table.ColumnHeader>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>2</Table.ColumnHeader>
@@ -116,6 +123,9 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
             {items.map((item) => (
               <Table.Row key={item.userID}>
                 <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
+                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
+                  <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
+                </Table.Cell>
                 <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>

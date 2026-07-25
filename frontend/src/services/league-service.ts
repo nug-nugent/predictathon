@@ -17,10 +17,11 @@ export type LeagueTableItem = {
     noPredictions: number;
 };
 
-export async function getLeagueTable(competitionId: string, dateFrom?: string, dateTo?: string): Promise<LeagueTableItem[]> {
+export async function getLeagueTable(competitionId: string, dateFrom?: string, dateTo?: string, dateForComparison?: string): Promise<LeagueTableItem[]> {
     const params = new URLSearchParams();
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
+    if (dateForComparison) params.set("dateForComparison", dateForComparison);
     const query = params.toString();
 
     return getJsonAuthenticated<LeagueTableItem[]>(`/League/${competitionId}${query ? `?${query}` : ""}`);
