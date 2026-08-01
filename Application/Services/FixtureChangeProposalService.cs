@@ -26,8 +26,12 @@ public class FixtureChangeProposalService : IFixtureChangeProposalService
     /// <inheritdoc />
     public async Task<Result> DetectChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Skip competitions that have already finished - nothing left to reschedule, and no point
+        // spending API calls (or free-tier rate limit) checking a season that's over.
+        var today = DateOnly.FromDateTime(UkClock.Now);
+
         var competitions = await _dbContext.Competition
-            .Where(c => c.ExternalApiCompetitionCode != null)
+            .Where(c => c.ExternalApiCompetitionCode != null && c.EndDate >= today)
             .ToListAsync(cancellationToken);
 
         foreach (var competition in competitions)

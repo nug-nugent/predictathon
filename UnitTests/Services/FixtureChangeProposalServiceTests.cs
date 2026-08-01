@@ -11,12 +11,12 @@ namespace Predictathon.UnitTests.Services;
 
 public class FixtureChangeProposalServiceTests
 {
-    private static DomainEntities.Competition MakeCompetition() => new()
+    private static DomainEntities.Competition MakeCompetition(DateOnly? startDate = null, DateOnly? endDate = null) => new()
     {
         CompetitionID = Guid.NewGuid(),
         CompetitionName = "Premier League 2026/27",
-        StartDate = new DateOnly(2026, 8, 15),
-        EndDate = new DateOnly(2027, 5, 24),
+        StartDate = startDate ?? new DateOnly(2026, 8, 15),
+        EndDate = endDate ?? new DateOnly(2027, 5, 24),
         ExternalApiCompetitionCode = "PL",
     };
 
@@ -68,6 +68,29 @@ public class FixtureChangeProposalServiceTests
         proposal.Status.Should().Be(FixtureChangeProposalStatuses.Pending);
         proposal.PreviousMatchDateTime.Should().Be(match.MatchDateTime);
         proposal.ProposedMatchDateTime.Should().Be(UkClock.ToUkLocal(newKickoffUtc));
+    }
+
+    [Fact]
+    public async Task DetectChangesAsync_CompetitionAlreadyFinished_IsSkipped()
+    {
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var finishedCompetition = MakeCompetition(
+            startDate: DateOnly.FromDateTime(UkClock.Now).AddYears(-1),
+            endDate: DateOnly.FromDateTime(UkClock.Now).AddDays(-1));
+        var originalKickoffUtc = new DateTime(2026, 8, 15, 14, 0, 0, DateTimeKind.Utc);
+        var match = MakeMatch(finishedCompetition.CompetitionID, externalMatchId: 100, UkClock.ToUkLocal(originalKickoffUtc));
+        dbContext.Competition.Add(finishedCompetition);
+        dbContext.Match.Add(match);
+        await dbContext.SaveChangesAsync();
+
+        // If the finished competition weren't skipped, this mismatch would otherwise raise a proposal.
+        var newKickoffUtc = new DateTime(2026, 8, 16, 18, 0, 0, DateTimeKind.Utc);
+        externalMatchDataService.Fixtures = [MakeFixture(100, newKickoffUtc)];
+
+        var result = await service.DetectChangesAsync();
+
+        result.IsSuccess.Should().BeTrue();
+        dbContext.FixtureChangeProposal.Should().BeEmpty();
     }
 
     [Fact]
