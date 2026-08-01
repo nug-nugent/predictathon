@@ -47,6 +47,14 @@ public class FixtureChangeProposalService : IFixtureChangeProposalService
                 .Where(m => m.CompetitionID == competition.CompetitionID && m.ExternalMatchID != null)
                 .ToListAsync(cancellationToken);
 
+            // Batch-fetched once per competition rather than queried per match inside the loop
+            // below - a full season is ~380 matches, and this used to mean 380 individual
+            // round trips (an N+1) on every sync run.
+            var matchIds = matches.Select(m => m.MatchID).ToList();
+            var pendingProposalsByMatchId = await _dbContext.FixtureChangeProposal
+                .Where(p => matchIds.Contains(p.MatchID) && p.Status == FixtureChangeProposalStatuses.Pending)
+                .ToDictionaryAsync(p => p.MatchID, cancellationToken);
+
             foreach (var match in matches)
             {
                 if (!fixturesByExternalId.TryGetValue(match.ExternalMatchID!.Value, out var fixture))
@@ -54,7 +62,8 @@ public class FixtureChangeProposalService : IFixtureChangeProposalService
                     continue;
                 }
 
-                await ReconcileMatchAsync(match, fixture, cancellationToken);
+                pendingProposalsByMatchId.TryGetValue(match.MatchID, out var pendingProposal);
+                await ReconcileMatchAsync(match, fixture, pendingProposal, cancellationToken);
             }
         }
 
@@ -65,15 +74,12 @@ public class FixtureChangeProposalService : IFixtureChangeProposalService
 
     /// <summary>
     /// Compares one match's stored kickoff against the externally-reported kickoff, and upserts,
-    /// refreshes, or auto-dismisses its pending proposal as needed.
+    /// refreshes, or auto-dismisses its pending proposal as needed. <paramref name="pendingProposal"/>
+    /// is looked up by the caller (batched across the whole competition) rather than queried here.
     /// </summary>
-    private async Task ReconcileMatchAsync(Match match, ExternalFixture fixture, CancellationToken cancellationToken)
+    private async Task ReconcileMatchAsync(Match match, ExternalFixture fixture, FixtureChangeProposal? pendingProposal, CancellationToken cancellationToken)
     {
         var externalKickoff = UkClock.ToUkLocal(fixture.KickoffUtc);
-
-        var pendingProposal = await _dbContext.FixtureChangeProposal
-            .FirstOrDefaultAsync(p => p.MatchID == match.MatchID && p.Status == FixtureChangeProposalStatuses.Pending, cancellationToken);
-
         var matchesStoredKickoff = externalKickoff == match.MatchDateTime;
 
         if (pendingProposal is null)
