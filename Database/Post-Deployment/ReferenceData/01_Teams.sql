@@ -1,19 +1,14 @@
 /*
-Generated via [dbo].[sp_generate_merge] against David's real local dev DB (dbo.Team, 2026-07-18).
-All real team names/short names/crest filenames accumulated over ~10 years of tournament imports -
-no PII. To regenerate after dbo.Team changes, run:
+
+Generated via [dbo].[sp_generate_merge]. To regenerate after dbo.Team changes, run:
 
     EXEC [dbo].[sp_generate_merge] @table_name = 'Team', @schema = 'dbo', @results_to_text = 0,
     @include_use_db = 0, @nologo = 1, @quiet = 1, @delete_if_not_matched = 0;
 
 ExternalApiCode values are football-data.org team IDs (https://api.football-data.org/v4), fetched
 directly from GET /v4/competitions/PL/teams?season=2026 (the 20 clubs confirmed for the 2026/27
-Premier League season) plus season=2025 (last season, for Wolves/Burnley/West Ham - relegated this
-season but worth keeping mapped for whenever they're next promoted). These IDs are stable per club
-regardless of division, so they don't need to be re-verified each season. Coventry City had no
-existing Team row (first-ever PL promotion in David's ~10 years of data) - added below with a
-freshly-generated GUID; ImageName references Coventry.png, to be uploaded to
-frontend/public/team-crests/ separately.
+Premier League season) plus season=2025 (last season, for Wolves/Burnley/West Ham).
+
 */
 
 SET NOCOUNT ON

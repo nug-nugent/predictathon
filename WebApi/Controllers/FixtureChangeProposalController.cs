@@ -30,8 +30,9 @@ public class FixtureChangeProposalController : ApiControllerBase
     }
 
     /// <summary>
-    /// Run a fixture-change detection pass immediately, rather than waiting for the next scheduled
-    /// interval - mainly useful for verifying the sync picks up a reschedule without waiting hours.
+    /// Run a fixture-change detection pass immediately. This is the only way detection runs -
+    /// there's no background schedule, by design, so it only ever costs an external API call when
+    /// an admin actually asks for one.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("SyncNow")]

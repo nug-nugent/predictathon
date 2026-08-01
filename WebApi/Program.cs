@@ -148,10 +148,6 @@ builder.Services.AddHostedService<ScheduledTasksHostedService>();
 builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection(PayPalOptions.SectionName));
 builder.Services.Configure<FootballDataApiOptions>(builder.Configuration.GetSection(FootballDataApiOptions.SectionName));
 
-// Periodically checks Premier League fixtures against football-data.org for reschedules.
-builder.Services.Configure<FixtureSyncOptions>(builder.Configuration.GetSection(FixtureSyncOptions.SectionName));
-builder.Services.AddHostedService<FixtureSyncHostedService>();
-
 var avatarsSection = builder.Configuration.GetSection(AvatarsOptions.SectionName);
 builder.Services.Configure<AvatarsOptions>(avatarsSection);
 var avatarsOptions = avatarsSection.Get<AvatarsOptions>() ?? new AvatarsOptions();
