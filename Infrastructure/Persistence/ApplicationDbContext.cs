@@ -17,6 +17,8 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     public virtual DbSet<Competition> Competition => Set<Competition>();
 
+    public virtual DbSet<FixtureChangeProposal> FixtureChangeProposal => Set<FixtureChangeProposal>();
+
     public virtual DbSet<HallOfFame> HallOfFame => Set<HallOfFame>();
 
     public virtual DbSet<Match> Match => Set<Match>();
@@ -54,11 +56,38 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.EntranceFee).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.ExternalApiCompetitionCode)
+                .HasMaxLength(10)
+                .IsUnicode(false);
             entity.Property(e => e.ImageFilename)
                 .HasMaxLength(40)
                 .IsUnicode(false);
             entity.Property(e => e.Information).IsUnicode(false);
             entity.Property(e => e.PayPalPaymentAvailable).HasDefaultValue(true, "DF_Competition_PayPalPaymentAvailable");
+            entity.Property(e => e.AllowTwoPointers).HasDefaultValue(true, "DF_Competition_AllowTwoPointers");
+        });
+
+        modelBuilder.Entity<FixtureChangeProposal>(entity =>
+        {
+            entity.HasIndex(e => e.MatchID, "IX_FixtureChangeProposal_MatchID_Pending")
+                .IsUnique()
+                .HasFilter("([Status]='Pending')");
+
+            entity.Property(e => e.DetectedAtUtc)
+                .HasDefaultValueSql("sysutcdatetime()", "DF_FixtureChangeProposal_DetectedAtUtc")
+                .HasColumnType("datetime");
+            entity.Property(e => e.PreviousMatchDateTime).HasColumnType("datetime");
+            entity.Property(e => e.ProposedMatchDateTime).HasColumnType("datetime");
+            entity.Property(e => e.ResolvedAtUtc).HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("Pending", "DF_FixtureChangeProposal_Status");
+
+            entity.HasOne(d => d.Match).WithMany(p => p.FixtureChangeProposal)
+                .HasForeignKey(d => d.MatchID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_FixtureChangeProposal_Match");
         });
 
         modelBuilder.Entity<HallOfFame>(entity =>
@@ -87,6 +116,10 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
         modelBuilder.Entity<Match>(entity =>
         {
+            entity.HasIndex(e => e.ExternalMatchID, "IX_Match_ExternalMatchID")
+                .IsUnique()
+                .HasFilter("([ExternalMatchID] IS NOT NULL)");
+
             entity.Property(e => e.MatchID).ValueGeneratedNever();
             entity.Property(e => e.AwayTeamTBC)
                 .HasMaxLength(50)
@@ -217,6 +250,9 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
         modelBuilder.Entity<Team>(entity =>
         {
             entity.Property(e => e.TeamID).ValueGeneratedNever();
+            entity.Property(e => e.ExternalApiCode)
+                .HasMaxLength(10)
+                .IsUnicode(false);
             entity.Property(e => e.ImageName)
                 .HasMaxLength(50)
                 .IsUnicode(false);

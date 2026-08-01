@@ -10,6 +10,7 @@ using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
+using Predictathon.Application.Options;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.BackgroundServices;
@@ -140,6 +141,12 @@ builder.Services.AddApplication();
 // old UptimeRobot-pinged TasksController endpoints.
 builder.Services.Configure<ScheduledTasksOptions>(builder.Configuration.GetSection(ScheduledTasksOptions.SectionName));
 builder.Services.AddHostedService<ScheduledTasksHostedService>();
+
+// PayPal and football-data.org settings, bound in the Application layer's own Options types (rather
+// than alongside the WebApi/Options above) since Application-layer services consume them directly
+// and Application can't reference the WebApi project.
+builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection(PayPalOptions.SectionName));
+builder.Services.Configure<FootballDataApiOptions>(builder.Configuration.GetSection(FootballDataApiOptions.SectionName));
 
 var avatarsSection = builder.Configuration.GetSection(AvatarsOptions.SectionName);
 builder.Services.Configure<AvatarsOptions>(avatarsSection);

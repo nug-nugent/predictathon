@@ -12,16 +12,19 @@ public class CompetitionController : ApiControllerBase
 {
     private readonly ICompetitionService _competitionService;
     private readonly IUserCompetitionService _userCompetitionService;
+    private readonly IFixtureImportService _fixtureImportService;
     private readonly ILogger<CompetitionController> _logger;
 
     public CompetitionController(
         ICompetitionService competitionService,
         IUserCompetitionService userCompetitionService,
+        IFixtureImportService fixtureImportService,
         ILogger<CompetitionController> logger
     )
     {
         _competitionService = competitionService;
         _userCompetitionService = userCompetitionService;
+        _fixtureImportService = fixtureImportService;
         _logger = logger;
     }
 
@@ -227,6 +230,22 @@ public class CompetitionController : ApiControllerBase
         var result = await _competitionService.DeleteById(id, cancellationToken);
 
         // Convert service Result into ActionResult with consistent ProblemDetails on failure.
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Import a competition's full season fixture list (matches and team assignments) from the
+    /// external data source configured via ExternalApiCompetitionCode, refining StartDate/EndDate to
+    /// the actual fixture range. Safe to re-run - already-imported fixtures are skipped.
+    /// </summary>
+    /// <param name="id">The competition to import fixtures into.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{id:guid}/ImportFixtures")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<FixtureImportSummary?>> ImportFixtures(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _fixtureImportService.ImportSeasonAsync(id, cancellationToken);
+
         return FromResult(result);
     }
 }

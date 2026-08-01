@@ -128,7 +128,8 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                 information: null,
                 imageFilename: null,
                 defaultToNeutralGround: false,
-                allowTwoPointers: false,
+                allowTwoPointers: true,
+                externalApiCompetitionCode: null,
             });
 
             onCreated(created.competitionID);

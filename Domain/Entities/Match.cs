@@ -34,9 +34,13 @@ public partial class Match
 
     public bool Knockout { get; set; }
 
+    public int? ExternalMatchID { get; set; }
+
     public virtual Team? AwayTeam { get; set; }
 
     public virtual Competition Competition { get; set; } = null!;
+
+    public virtual ICollection<FixtureChangeProposal> FixtureChangeProposal { get; set; } = new List<FixtureChangeProposal>();
 
     public virtual Team? HomeTeam { get; set; }
 

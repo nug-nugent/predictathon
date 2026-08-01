@@ -7,11 +7,3 @@
     CONSTRAINT [FK_TeamCompetition_Team] FOREIGN KEY ([TeamID]) REFERENCES [dbo].[Team] ([TeamID])
 );
 
-
-GO
-ALTER TABLE [dbo].[TeamCompetition] NOCHECK CONSTRAINT [FK_TeamCompetition_Competition];
-
-
-GO
-ALTER TABLE [dbo].[TeamCompetition] NOCHECK CONSTRAINT [FK_TeamCompetition_Team];
-

@@ -9,6 +9,15 @@ Retires the legacy dbo.User table.
    Migrated accounts get PasswordHash = NULL - AuthService.Login detects that and directs the user
    through password reset instead of a normal login failure (see PasswordResetRequiredError).
 
+The whole thing (not just steps 2-4) is guarded by dbo.User still existing. Originally only 2-4 had
+that guard - step 1 dropped the FK constraints unconditionally on every deployment, on the theory
+that it was harmless once dbo.User was gone (nothing left to protect by dropping them). That held
+right up until a later deployment needed to change one of those same FKs' definitions (e.g.
+enabling WITH CHECK) - SSDT's own generated script then tried to drop the same constraint this
+script had just unconditionally dropped a moment earlier, and failed with "is not a constraint"
+since it was already gone. Guarding step 1 too makes this a true no-op once dbo.User is retired,
+which is what "idempotent" was always meant to cover.
+
 Idempotent: safe to re-run against a database this has already run against, and safe to re-run
 after dbo.User itself has been dropped by a later deployment.
 */
@@ -16,25 +25,23 @@ after dbo.User itself has been dropped by a later deployment.
 SET QUOTED_IDENTIFIER ON;
 SET NOCOUNT ON;
 
--- 1. Drop FKs referencing dbo.User.
-IF OBJECT_ID('dbo.FK_HallOfFame_User', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User];
-IF OBJECT_ID('dbo.FK_HallOfFame_User1', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User1];
-IF OBJECT_ID('dbo.FK_HallOfFame_User2', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User2];
-IF OBJECT_ID('dbo.FK_MessageReaction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageReaction] DROP CONSTRAINT [FK_MessageReaction_User];
-IF OBJECT_ID('dbo.FK_Message_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Message] DROP CONSTRAINT [FK_Message_User];
-IF OBJECT_ID('dbo.FK_MessageRating_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageRating] DROP CONSTRAINT [FK_MessageRating_User];
-IF OBJECT_ID('dbo.FK_Transaction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Transaction] DROP CONSTRAINT [FK_Transaction_User];
-IF OBJECT_ID('dbo.FK_PaymentCredit_IssuedByUser', 'F') IS NOT NULL ALTER TABLE [dbo].[PaymentCredit] DROP CONSTRAINT [FK_PaymentCredit_IssuedByUser];
-IF OBJECT_ID('dbo.FK_PaymentCredit_UsedByUser', 'F') IS NOT NULL ALTER TABLE [dbo].[PaymentCredit] DROP CONSTRAINT [FK_PaymentCredit_UsedByUser];
-IF OBJECT_ID('dbo.FK_MessageThread_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageThread] DROP CONSTRAINT [FK_MessageThread_User];
-IF OBJECT_ID('dbo.FK_UserCompetition_User', 'F') IS NOT NULL ALTER TABLE [dbo].[UserCompetition] DROP CONSTRAINT [FK_UserCompetition_User];
-IF OBJECT_ID('dbo.FK_MessageThreadRead_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageThreadRead] DROP CONSTRAINT [FK_MessageThreadRead_User];
-IF OBJECT_ID('dbo.FK_Prediction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Prediction] DROP CONSTRAINT [FK_Prediction_User];
-
--- 2-4 only make sense while dbo.User still exists (guards re-running this script after a later
--- deployment has already dropped it).
 IF OBJECT_ID('dbo.User', 'U') IS NOT NULL
 BEGIN
+    -- 1. Drop FKs referencing dbo.User.
+    IF OBJECT_ID('dbo.FK_HallOfFame_User', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User];
+    IF OBJECT_ID('dbo.FK_HallOfFame_User1', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User1];
+    IF OBJECT_ID('dbo.FK_HallOfFame_User2', 'F') IS NOT NULL ALTER TABLE [dbo].[HallOfFame] DROP CONSTRAINT [FK_HallOfFame_User2];
+    IF OBJECT_ID('dbo.FK_MessageReaction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageReaction] DROP CONSTRAINT [FK_MessageReaction_User];
+    IF OBJECT_ID('dbo.FK_Message_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Message] DROP CONSTRAINT [FK_Message_User];
+    IF OBJECT_ID('dbo.FK_MessageRating_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageRating] DROP CONSTRAINT [FK_MessageRating_User];
+    IF OBJECT_ID('dbo.FK_Transaction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Transaction] DROP CONSTRAINT [FK_Transaction_User];
+    IF OBJECT_ID('dbo.FK_PaymentCredit_IssuedByUser', 'F') IS NOT NULL ALTER TABLE [dbo].[PaymentCredit] DROP CONSTRAINT [FK_PaymentCredit_IssuedByUser];
+    IF OBJECT_ID('dbo.FK_PaymentCredit_UsedByUser', 'F') IS NOT NULL ALTER TABLE [dbo].[PaymentCredit] DROP CONSTRAINT [FK_PaymentCredit_UsedByUser];
+    IF OBJECT_ID('dbo.FK_MessageThread_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageThread] DROP CONSTRAINT [FK_MessageThread_User];
+    IF OBJECT_ID('dbo.FK_UserCompetition_User', 'F') IS NOT NULL ALTER TABLE [dbo].[UserCompetition] DROP CONSTRAINT [FK_UserCompetition_User];
+    IF OBJECT_ID('dbo.FK_MessageThreadRead_User', 'F') IS NOT NULL ALTER TABLE [dbo].[MessageThreadRead] DROP CONSTRAINT [FK_MessageThreadRead_User];
+    IF OBJECT_ID('dbo.FK_Prediction_User', 'F') IS NOT NULL ALTER TABLE [dbo].[Prediction] DROP CONSTRAINT [FK_Prediction_User];
+
     -- 2. Seed the 3 admin roles if they don't already exist. Normally done by
     -- IdentityExtensions.SeedRolesAsync at app startup, but that isn't guaranteed to have run yet
     -- at DB-deploy time, and the role grants below need the roles to exist now.

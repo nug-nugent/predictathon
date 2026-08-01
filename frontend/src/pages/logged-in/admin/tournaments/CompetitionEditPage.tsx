@@ -7,7 +7,7 @@ import {
 import { ArrowLeft, X } from "lucide-react";
 import { useCompetition } from "../../../../hooks/useCompetition";
 import {
-    getCompetition, updateCompetition, type CompetitionAdmin,
+    getCompetition, updateCompetition, importFixtures, type CompetitionAdmin, type FixtureImportSummary,
 } from "../../../../services/competition-admin-service";
 import {
     getAssignedTeamsForCompetition, getUnassignedTeamsForCompetition,
@@ -18,6 +18,7 @@ import {
     getHallOfFameGenerationStatus, generateHallOfFame, type HallOfFameItem,
 } from "../../../../services/hall-of-fame-service";
 import { ApiError } from "../../../../services/api";
+import { formatDateOnly } from "../../../../utils/formatDateOnly";
 import { Panel } from "../../../../components/ui/panel";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
@@ -53,6 +54,9 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Bumped on a successful fixture import to force TeamsSection to remount and refetch - it
+    // fetches its own team list once on mount and has no other way to learn teams were just added.
+    const [teamsRefreshKey, setTeamsRefreshKey] = useState(0);
 
     const update = (patch: Partial<CompetitionAdmin>) => {
         setForm((f) => ({ ...f, ...patch }));
@@ -141,6 +145,18 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                         <Textarea rows={5} value={form.information ?? ""} onChange={(e) => update({ information: e.target.value || null })} />
                     </Field.Root>
 
+                    <Field.Root maxW="200px">
+                        <Field.Label>External API competition code</Field.Label>
+                        <Input
+                            size="sm" maxLength={10} placeholder="e.g. PL"
+                            value={form.externalApiCompetitionCode ?? ""}
+                            onChange={(e) => update({ externalApiCompetitionCode: e.target.value || null })}
+                        />
+                        <Field.HelperText>
+                            football-data.org's code for this competition. Required to import fixtures below.
+                        </Field.HelperText>
+                    </Field.Root>
+
                     <VStack align="stretch" gap={2}>
                         <Checkbox.Root checked={form.duplicateFixturesAllowed} onCheckedChange={(e) => update({ duplicateFixturesAllowed: !!e.checked })}>
                             <Checkbox.HiddenInput />
@@ -188,7 +204,12 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                 </VStack>
             </Panel>
 
-            <TeamsSection competitionId={form.competitionID} />
+            <TeamsSection key={teamsRefreshKey} competitionId={form.competitionID} />
+
+            <FixtureImportSection
+                competitionId={form.competitionID} externalApiCompetitionCode={form.externalApiCompetitionCode}
+                onImported={() => { onReload(); setTeamsRefreshKey((k) => k + 1); }}
+            />
 
             <HallOfFameSection competitionId={form.competitionID} />
         </VStack>
@@ -300,6 +321,97 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setRemoving(null)}>Cancel</Button>
                                 <Button colorPalette="red" onClick={() => { void confirmRemove(); }}>Remove</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+        </>
+    );
+}
+
+function FixtureImportSection({
+    competitionId, externalApiCompetitionCode, onImported,
+}: {
+    competitionId: string;
+    externalApiCompetitionCode: string | null;
+    onImported: () => void;
+}) {
+    const [confirming, setConfirming] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [summary, setSummary] = useState<FixtureImportSummary | null>(null);
+
+    const runImport = async () => {
+        setConfirming(false);
+        setImporting(true);
+        setError(null);
+
+        try {
+            const result = await importFixtures(competitionId);
+            setSummary(result);
+            onImported();
+        } catch (e) {
+            setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.");
+        } finally {
+            setImporting(false);
+        }
+    };
+
+    const canImport = !!externalApiCompetitionCode;
+
+    return (
+        <>
+            <Panel>
+                <VStack align="stretch" gap={3}>
+                    <Heading size="md">Fixture import</Heading>
+
+                    <Text color="fg.muted">
+                        {canImport
+                            ? "Imports the full season fixture list (and any missing team assignments) from the external data source, and refines the start/end dates above from the actual fixtures. Safe to re-run - already-imported fixtures are skipped."
+                            : "Set an external API competition code above first."}
+                    </Text>
+
+                    {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
+
+                    {summary && (
+                        <Text fontSize="sm" color="fg.success">
+                            Imported {summary.matchesImported} match{summary.matchesImported === 1 ? "" : "es"} and added{" "}
+                            {summary.teamsAdded} team{summary.teamsAdded === 1 ? "" : "s"}. Competition now runs{" "}
+                            {formatDateOnly(summary.startDate)} to {formatDateOnly(summary.endDate)}.
+                        </Text>
+                    )}
+
+                    <HStack justify="flex-end">
+                        <Button
+                            colorPalette="blue" loading={importing}
+                            disabled={importing || !canImport}
+                            onClick={() => setConfirming(true)}
+                        >
+                            Import season fixtures
+                        </Button>
+                    </HStack>
+                </VStack>
+            </Panel>
+
+            <Dialog.Root role="alertdialog" open={confirming} onOpenChange={(e) => { if (!e.open) setConfirming(false); }}>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title>Import season fixtures</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                <Text>
+                                    This will fetch the fixture list from the external data source and create any
+                                    matches and team assignments that don&apos;t already exist. It won&apos;t
+                                    duplicate or remove anything already imported.
+                                </Text>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
+                                <Button colorPalette="blue" onClick={() => { void runImport(); }}>Import</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>

@@ -38,6 +38,8 @@ public partial class Competition
 
     public bool AllowTwoPointers { get; set; }
 
+    public string? ExternalApiCompetitionCode { get; set; }
+
     public virtual ICollection<HallOfFame> HallOfFame { get; set; } = new List<HallOfFame>();
 
     public virtual ICollection<Match> Match { get; set; } = new List<Match>();

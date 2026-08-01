@@ -15,6 +15,7 @@ import { ProfileEditPage } from "../pages/logged-in/profile/ProfileEditPage";
 import { RulesPage } from "../pages/logged-in/rules/RulesPage";
 import { MatchesAdminPage } from "../pages/logged-in/admin/matches/MatchesAdminPage";
 import { ProcessResultsPage } from "../pages/logged-in/admin/process/ProcessResultsPage";
+import { FixtureChangesAdminPage } from "../pages/logged-in/admin/fixture-changes/FixtureChangesAdminPage";
 import { HallOfFamePage } from "../pages/logged-in/hall-of-fame/HallOfFamePage";
 import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/CompetitionsAdminPage";
 import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
@@ -63,6 +64,7 @@ export function SiteRoutes() {
                     <Route element={<ProtectedRoute allowedRoles={[Role.MatchAdministrator]} />}>
                         <Route path="matches" element={<MatchesAdminPage />} />
                         <Route path="process" element={<ProcessResultsPage />} />
+                        <Route path="fixture-changes" element={<FixtureChangesAdminPage />} />
                     </Route>
                     <Route element={<ProtectedRoute allowedRoles={[Role.UserAdministrator]} />}>
                         <Route path="users" element={<UsersPage />} />
