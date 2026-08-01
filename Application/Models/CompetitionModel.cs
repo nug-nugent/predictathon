@@ -32,6 +32,12 @@ public class CreateCompetitionModel
     public bool DefaultToNeutralGround { get; set; }
 
     public bool AllowTwoPointers { get; set; }
+
+    /// <summary>
+    /// The external fixture data source's competition code (e.g. "PL" for football-data.org's
+    /// Premier League), used by fixture import/sync. Null if this competition has no external source.
+    /// </summary>
+    public string? ExternalApiCompetitionCode { get; set; }
 }
 
 // Full model including the generated identifier.

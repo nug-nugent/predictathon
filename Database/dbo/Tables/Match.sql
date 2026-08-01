@@ -12,6 +12,7 @@
     [AwayTeamTBC]   VARCHAR (50)     NULL,
     [Description]   VARCHAR (50)     NULL,
     [Knockout]      BIT              CONSTRAINT [DF_Match_Knockout] DEFAULT ((0)) NOT NULL,
+    [ExternalMatchID] INT            NULL,
     CONSTRAINT [PK_Match] PRIMARY KEY CLUSTERED ([MatchID] ASC),
     CONSTRAINT [FK_Match_AwayTeam] FOREIGN KEY ([AwayTeamID]) REFERENCES [dbo].[Team] ([TeamID]),
     CONSTRAINT [FK_Match_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
@@ -20,13 +21,9 @@
 
 
 GO
-ALTER TABLE [dbo].[Match] NOCHECK CONSTRAINT [FK_Match_AwayTeam];
-
-
-GO
-ALTER TABLE [dbo].[Match] NOCHECK CONSTRAINT [FK_Match_Competition];
-
-
-GO
-ALTER TABLE [dbo].[Match] NOCHECK CONSTRAINT [FK_Match_HomeTeam];
+-- Links a Match to its external fixture-provider ID (e.g. football-data.org), so the fixture sync
+-- job can detect reschedules by ExternalMatchID rather than fuzzy-matching on teams/date. Filtered
+-- because most matches (older seasons, cup fixtures) have no external source and NULL shouldn't
+-- collide under a unique constraint.
+CREATE UNIQUE INDEX [IX_Match_ExternalMatchID] ON [dbo].[Match] ([ExternalMatchID] ASC) WHERE ([ExternalMatchID] IS NOT NULL);
 

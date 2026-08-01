@@ -23,15 +23,3 @@
     CONSTRAINT [FK_Transaction_UserCompetition1] FOREIGN KEY ([UserCompetitionID]) REFERENCES [dbo].[UserCompetition] ([UserCompetitionID])
 );
 
-
-GO
-ALTER TABLE [dbo].[Transaction] NOCHECK CONSTRAINT [FK_Transaction_Competition];
-
-
-GO
-ALTER TABLE [dbo].[Transaction] NOCHECK CONSTRAINT [FK_Transaction_User];
-
-
-GO
-ALTER TABLE [dbo].[Transaction] NOCHECK CONSTRAINT [FK_Transaction_UserCompetition1];
-

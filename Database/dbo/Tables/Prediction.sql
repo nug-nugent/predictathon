@@ -17,24 +17,6 @@
 
 
 GO
-ALTER TABLE [dbo].[Prediction] NOCHECK CONSTRAINT [FK_Prediction_Match];
-
-
-GO
-ALTER TABLE [dbo].[Prediction] NOCHECK CONSTRAINT [FK_Prediction_User];
-
-
-
-
-GO
-ALTER TABLE [dbo].[Prediction] NOCHECK CONSTRAINT [FK_Prediction_Match];
-
-
-GO
-ALTER TABLE [dbo].[Prediction] NOCHECK CONSTRAINT [FK_Prediction_User];
-
-
-GO
 CREATE NONCLUSTERED INDEX [IX_Prediction_UserID_Included]
     ON [dbo].[Prediction]([UserID] ASC)
     INCLUDE([MatchID], [Score], [GoalDifference]);

@@ -4,9 +4,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Interfaces;
+using Predictathon.Application.Options;
 
 namespace Predictathon.Application.Services;
 
@@ -23,16 +24,16 @@ public class PayPalService : IPayPalService
     private static readonly SemaphoreSlim TokenLock = new(1, 1);
 
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    private readonly IOptions<PayPalOptions> _options;
 
-    public PayPalService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public PayPalService(IHttpClientFactory httpClientFactory, IOptions<PayPalOptions> options)
     {
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
+        _options = options;
     }
 
     private string BaseUrl =>
-        string.Equals(_configuration["PayPal:Mode"], "live", StringComparison.OrdinalIgnoreCase)
+        string.Equals(_options.Value.Mode, "live", StringComparison.OrdinalIgnoreCase)
             ? "https://api-m.paypal.com"
             : "https://api-m.sandbox.paypal.com";
 
@@ -104,7 +105,7 @@ public class PayPalService : IPayPalService
             };
             request.Headers.Authorization = new AuthenticationHeaderValue(
                 "Basic",
-                Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_configuration["PayPal:ClientId"]}:{_configuration["PayPal:ClientSecret"]}")));
+                Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_options.Value.ClientId}:{_options.Value.ClientSecret}")));
 
             var client = _httpClientFactory.CreateClient(nameof(PayPalService));
             var response = await client.SendAsync(request, cancellationToken);

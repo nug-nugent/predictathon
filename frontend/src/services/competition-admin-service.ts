@@ -16,11 +16,20 @@ export type CreateCompetitionAdmin = {
     imageFilename: string | null;
     defaultToNeutralGround: boolean;
     allowTwoPointers: boolean;
+    externalApiCompetitionCode: string | null;
 };
 
 // Matches Application/Models/CompetitionModel.cs.
 export type CompetitionAdmin = CreateCompetitionAdmin & {
     competitionID: string;
+};
+
+// Matches Application/Models/FixtureImportSummary.cs.
+export type FixtureImportSummary = {
+    matchesImported: number;
+    teamsAdded: number;
+    startDate: string;
+    endDate: string;
 };
 
 /// Every competition, most recently started first.
@@ -42,4 +51,10 @@ export async function updateCompetition(competitionId: string, model: Competitio
 
 export async function deleteCompetition(competitionId: string): Promise<void> {
     return deleteAuthenticated(`/Competition/${competitionId}`);
+}
+
+/// Imports a competition's full season fixture list (matches and team assignments) from the
+/// external data source configured via its ExternalApiCompetitionCode.
+export async function importFixtures(competitionId: string): Promise<FixtureImportSummary> {
+    return postJsonAuthenticated<FixtureImportSummary>(`/Competition/${competitionId}/ImportFixtures`, undefined);
 }

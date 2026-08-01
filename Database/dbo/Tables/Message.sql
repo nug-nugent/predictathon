@@ -14,24 +14,6 @@
 
 
 GO
-ALTER TABLE [dbo].[Message] NOCHECK CONSTRAINT [FK_Message_MessageThread];
-
-
-GO
-ALTER TABLE [dbo].[Message] NOCHECK CONSTRAINT [FK_Message_User];
-
-
-
-
-GO
-ALTER TABLE [dbo].[Message] NOCHECK CONSTRAINT [FK_Message_MessageThread];
-
-
-GO
-ALTER TABLE [dbo].[Message] NOCHECK CONSTRAINT [FK_Message_User];
-
-
-GO
 CREATE NONCLUSTERED INDEX [IX_Message_MessageThreadID]
     ON [dbo].[Message]([MessageThreadID] ASC);
 

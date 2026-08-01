@@ -8,7 +8,3 @@
     CONSTRAINT [FK_MessageThread_User] FOREIGN KEY ([StartedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
-
-GO
-ALTER TABLE [dbo].[MessageThread] NOCHECK CONSTRAINT [FK_MessageThread_User];
-

@@ -12,11 +12,3 @@
     CONSTRAINT [FK_UserCompetition_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
-
-GO
-ALTER TABLE [dbo].[UserCompetition] NOCHECK CONSTRAINT [FK_UserCompetition_Competition];
-
-
-GO
-ALTER TABLE [dbo].[UserCompetition] NOCHECK CONSTRAINT [FK_UserCompetition_User];
-

@@ -16,6 +16,8 @@ public partial class Team
 
     public string? ImageName { get; set; }
 
+    public string? ExternalApiCode { get; set; }
+
     public virtual ICollection<Match> MatchAwayTeam { get; set; } = new List<Match>();
 
     public virtual ICollection<Match> MatchHomeTeam { get; set; } = new List<Match>();

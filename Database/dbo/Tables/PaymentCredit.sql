@@ -13,15 +13,3 @@
     CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
-
-GO
-ALTER TABLE [dbo].[PaymentCredit] NOCHECK CONSTRAINT [FK_PaymentCredit_Competition];
-
-
-GO
-ALTER TABLE [dbo].[PaymentCredit] NOCHECK CONSTRAINT [FK_PaymentCredit_IssuedByUser];
-
-
-GO
-ALTER TABLE [dbo].[PaymentCredit] NOCHECK CONSTRAINT [FK_PaymentCredit_UsedByUser];
-

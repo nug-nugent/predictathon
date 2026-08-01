@@ -17,19 +17,3 @@
     CONSTRAINT [FK_HallOfFame_User2] FOREIGN KEY ([ThirdPlaceUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
-
-GO
-ALTER TABLE [dbo].[HallOfFame] NOCHECK CONSTRAINT [FK_HallOfFame_Competition];
-
-
-GO
-ALTER TABLE [dbo].[HallOfFame] NOCHECK CONSTRAINT [FK_HallOfFame_User];
-
-
-GO
-ALTER TABLE [dbo].[HallOfFame] NOCHECK CONSTRAINT [FK_HallOfFame_User1];
-
-
-GO
-ALTER TABLE [dbo].[HallOfFame] NOCHECK CONSTRAINT [FK_HallOfFame_User2];
-

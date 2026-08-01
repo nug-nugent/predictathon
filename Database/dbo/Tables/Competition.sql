@@ -13,7 +13,8 @@
     [Information]                      VARCHAR (MAX)    NULL,
     [ImageFilename]                    VARCHAR (40)     NULL,
     [DefaultToNeutralGround]           BIT              CONSTRAINT [DF_Competition_DefaultToNeutralGround] DEFAULT ((0)) NOT NULL,
-    [AllowTwoPointers]                 BIT              CONSTRAINT [DF_Competition_AllowTwoPointers] DEFAULT ((0)) NOT NULL,
+    [AllowTwoPointers]                 BIT              CONSTRAINT [DF_Competition_AllowTwoPointers] DEFAULT ((1)) NOT NULL,
+    [ExternalApiCompetitionCode]       VARCHAR (10)     NULL,
     CONSTRAINT [PK_Competition] PRIMARY KEY CLUSTERED ([CompetitionID] ASC)
 );
 

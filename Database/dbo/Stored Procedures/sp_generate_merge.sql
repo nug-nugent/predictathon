@@ -1,53 +1,13 @@
 /*
-Vendored verbatim from https://raw.githubusercontent.com/dnlnln/generate-sql-merge/master/sp_generate_merge.sql
-(fetched 2026-07-18). Generates a MERGE statement that reproduces a table's current data - used to
-regenerate 01_Teams.sql (see that file's header for the exact command used).
 
-To install as a session-scoped temp proc (avoids any permanent footprint on whatever database you
-run it against), find-and-replace "sp_generate_merge" -> "#sp_generate_merge" throughout this file
-before running it, then EXEC [#sp_generate_merge] in the same session.
+Vendored from https://raw.githubusercontent.com/dnlnln/generate-sql-merge/master/sp_generate_merge.sql
+(originally fetched 2026-07-18, promoted from a manually-installed session-scoped temp proc to a
+permanent dbo procedure 2026-08-01). Generates a MERGE statement that reproduces a table's current
+data - used to regenerate reference-data seed/merge scripts.
+
 */
 
-SET NOCOUNT ON
-SET QUOTED_IDENTIFIER ON
-
-IF 'sp_generate_merge' LIKE '#%'
-BEGIN
-  -- Instal as a temp stored proc on any SQL edition
-  PRINT 'Installing sp_generate_merge as a temp stored procedure'
-END
-ELSE IF OBJECT_ID('sp_MS_marksystemobject', 'P') IS NOT NULL
-BEGIN
-  -- Install the proc on SQL Server Standard/Developer/Express/Enterprise
-  PRINT 'Installing sp_generate_merge as a system stored procedure in [master] database'
-  IF DB_NAME() != 'master'
-  BEGIN
-    RAISERROR ('Wrong database context. Please USE [master] to allow sp_generate_merge to be installed as a system stored procedure. See "INSTALLATION" for more information.', 16, 1)
-    SET NOEXEC ON
-  END
-END
-ELSE
-BEGIN
-  -- Install the proc on Azure SQL/Managed Instance
-  IF DB_NAME() = 'master'
-  BEGIN
-    RAISERROR ('Cannot install sp_generate_merge in master DB as system stored procedures cannot be created on this edition of SQL Server (i.e. Azure SQL or Managed Instance). Please install this proc in a user database or create it as a temporary proc instead. See "INSTALLATION" for more information.', 16, 1)
-    SET NOEXEC ON
-  END
-  ELSE
-  BEGIN
-    PRINT 'Warning: As this edition of SQL Server (i.e. Azure SQL or Managed Instance) does not allow system stored procedures to be created, sp_generate_merge will be installed within the current database context only: ' + QUOTENAME(DB_NAME()) + '. See "INSTALLATION" for more information.'
-  END
-END
--- Drop the proc if it already exists
-IF OBJECT_ID('sp_generate_merge', 'P') IS NOT NULL OR ('sp_generate_merge' LIKE '#%' AND OBJECT_ID('tempdb..sp_generate_merge', 'P') IS NOT NULL)
-BEGIN
-  PRINT '(dropping the existing procedure to allow it to be re-created)'
-  DROP PROC [sp_generate_merge]
-END
-GO
-
-CREATE PROC [sp_generate_merge]
+CREATE PROCEDURE [dbo].[sp_generate_merge]
 (
  @table_name nvarchar(776), -- The table/view for which the MERGE statement will be generated using the existing data. This parameter accepts unquoted single-part identifiers only (e.g. MyTable)
  @target_table nvarchar(776) = NULL, -- Use this parameter to specify a different table name into which the data will be inserted/updated/deleted. This parameter accepts unquoted single-part identifiers (e.g. MyTable) or quoted multi-part identifiers (e.g. [OtherDb].[dbo].[MyTable])
@@ -1116,19 +1076,3 @@ END
 SET NOCOUNT OFF
 RETURN 0
 END
-GO
-
-IF 'sp_generate_merge' NOT LIKE '#%'
-BEGIN
-  IF OBJECT_ID('sp_MS_marksystemobject', 'P') IS NOT NULL AND DB_NAME() = 'master'
-  BEGIN
-    PRINT 'Adding system object flag to allow procedure to be used within all databases'
-    EXEC sp_MS_marksystemobject 'sp_generate_merge'
-  END
-  PRINT 'Granting EXECUTE permission on stored procedure to all users'
-  GRANT EXEC ON [sp_generate_merge] TO [public]
-END
-PRINT 'Done'
-SET NOCOUNT OFF
-SET NOEXEC OFF
-GO
