@@ -1,4 +1,4 @@
-<Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
+<Project Sdk="MSBuild.Sdk.SqlProj/4.3.0">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<SqlServerVersion>Sql150</SqlServerVersion>
@@ -30,5 +30,14 @@
 		<!-- Seeds the 3 admin roles with fixed, well-known GUIDs (insert-only-when-missing, so
 		     existing environments are untouched). -->
 		<PostDeploy Include="Post-Deployment\Script.PostDeployment.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- sp_generate_merge (vendored utility, see StaticCodeAnalysis.SuppressMessages.xml) references
+		     sys.* catalog views in ways the static schema model can't resolve unambiguously. Scoped to
+		     just this file so the warning still fires if our own code ever hits it. -->
+		<Content Update="dbo\Stored Procedures\sp_generate_merge.sql">
+			<SuppressTSqlWarnings>71502</SuppressTSqlWarnings>
+		</Content>
 	</ItemGroup>
 </Project>

@@ -11,19 +11,19 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		CASE WHEN Prediction.PredictionID IS NULL THEN CAST(0x0 AS UNIQUEIDENTIFIER) ELSE Prediction.PredictionID END AS PredictionID
+		CASE WHEN p.PredictionID IS NULL THEN CAST(0x0 AS UNIQUEIDENTIFIER) ELSE p.PredictionID END AS PredictionID
 		, [User].UserName AS Username
 		, [User].Id AS UserID
-		, Prediction.HomeTeamGoals
-		, Prediction.AwayTeamGoals
-		, Prediction.Score
+		, p.HomeTeamGoals
+		, p.AwayTeamGoals
+		, p.Score
 	FROM
-		UserCompetition
-		INNER JOIN Match ON UserCompetition.CompetitionID = Match.CompetitionID AND Match.MatchID = @MatchID
-		INNER JOIN [Identity].[Users] AS [User] ON [User].Id = UserCompetition.UserID
-		LEFT JOIN Prediction ON Prediction.MatchID = Match.MatchID AND Prediction.UserID = [User].Id AND Prediction.Invalid = 0
+		[dbo].[UserCompetition] AS uc
+		INNER JOIN [dbo].[Match] AS m ON uc.CompetitionID = m.CompetitionID AND m.MatchID = @MatchID
+		INNER JOIN [Identity].[Users] AS [User] ON [User].Id = uc.UserID
+		LEFT JOIN [dbo].[Prediction] AS p ON p.MatchID = m.MatchID AND p.UserID = [User].Id AND p.Invalid = 0
 	ORDER BY
-		Prediction.Score DESC
-		, Prediction.GoalDifference DESC -- GD is always 0 or negative; 0 is the optimal result
+		p.Score DESC
+		, p.GoalDifference DESC -- GD is always 0 or negative; 0 is the optimal result
 		, [User].UserName;
 END;

@@ -16,27 +16,27 @@ BEGIN
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
 	SELECT
-		Team.TeamID
-		, Team.ShortName
-		, Team.TeamName
-		, TeamImage = Team.ImageName
-		, AverageScore = AVG(CAST(Prediction.Score AS DECIMAL(9,2)))
+		t.TeamID
+		, t.ShortName
+		, t.TeamName
+		, TeamImage = t.ImageName
+		, AverageScore = AVG(CAST(p.Score AS DECIMAL(9,2)))
 	FROM
-		Team
-		LEFT JOIN (SELECT TeamID FROM TeamCompetition WHERE CompetitionID = @CompetitionID) TeamCompetition ON Team.TeamID = TeamCompetition.TeamID
-		INNER JOIN Match ON Match.HomeTeamID = Team.TeamID OR Match.AwayTeamID = Team.TeamID
-		INNER JOIN Prediction ON Match.MatchID = Prediction.MatchID
+		[dbo].[Team] AS t
+		LEFT JOIN (SELECT tc.TeamID FROM [dbo].[TeamCompetition] AS tc WHERE tc.CompetitionID = @CompetitionID) TeamCompetition ON t.TeamID = TeamCompetition.TeamID
+		INNER JOIN [dbo].[Match] AS m ON m.HomeTeamID = t.TeamID OR m.AwayTeamID = t.TeamID
+		INNER JOIN [dbo].[Prediction] AS p ON m.MatchID = p.MatchID
 	WHERE
-		Prediction.Score IS NOT NULL
+		p.Score IS NOT NULL
 		AND (@CompetitionID IS NULL OR TeamCompetition.TeamID IS NOT NULL)
-		AND (@CompetitionID IS NULL OR Match.CompetitionID = @CompetitionID)
-		AND (@DateFrom IS NULL OR CAST(Match.MatchDateTime AS DATE) >= @DateFrom)
-		AND (@DateTo IS NULL OR CAST(Match.MatchDateTime AS DATE) <= @DateTo)
+		AND (@CompetitionID IS NULL OR m.CompetitionID = @CompetitionID)
+		AND (@DateFrom IS NULL OR CAST(m.MatchDateTime AS DATE) >= @DateFrom)
+		AND (@DateTo IS NULL OR CAST(m.MatchDateTime AS DATE) <= @DateTo)
 	GROUP BY
-		Team.TeamID
-		, Team.ShortName
-		, Team.TeamName
-		, Team.ImageName
+		t.TeamID
+		, t.ShortName
+		, t.TeamName
+		, t.ImageName
 	ORDER BY
 		AverageScore DESC;
 END;

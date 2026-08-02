@@ -15,49 +15,49 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		Match.MatchID
-		, Match.MatchDateTime
-		, HomeTeam = ISNULL(HomeTeam.TeamName, Match.HomeTeamTBC)
+		m.MatchID
+		, m.MatchDateTime
+		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
-		, AwayTeam = ISNULL(AwayTeam.TeamName, Match.AwayTeamTBC)
+		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
-		, HomeTeamGoals = Match.HomeTeamGoals
-		, AwayTeamGoals = Match.AwayTeamGoals
+		, HomeTeamGoals = m.HomeTeamGoals
+		, AwayTeamGoals = m.AwayTeamGoals
 		, PredictionHomeTeamGoals = YourPrediction.HomeTeamGoals
 		, PredictionAwayTeamGoals = YourPrediction.AwayTeamGoals
 		, YourPredictionScore = ISNULL(YourPrediction.Score, 0)
-		, AveragePredictionScore = ISNULL(AVG(CAST(Prediction.Score AS DECIMAL(4, 3))), 0)
-		, Match.Description
-		, Match.Knockout
+		, AveragePredictionScore = ISNULL(AVG(CAST(p.Score AS DECIMAL(4, 3))), CAST(0 AS DECIMAL(4, 3)))
+		, m.Description
+		, m.Knockout
 	FROM
-		Match
-		LEFT JOIN Team HomeTeam ON Match.HomeTeamID = HomeTeam.TeamID
-		LEFT JOIN Team AwayTeam ON Match.AwayTeamID = AwayTeam.TeamID
-		LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID
-		LEFT JOIN (SELECT MatchID, Score, HomeTeamGoals, AwayTeamGoals FROM Prediction WHERE UserID = @UserID) YourPrediction ON Match.MatchID = YourPrediction.MatchID
+		[dbo].[Match] AS m
+		LEFT JOIN [dbo].[Team] AS HomeTeam ON m.HomeTeamID = HomeTeam.TeamID
+		LEFT JOIN [dbo].[Team] AS AwayTeam ON m.AwayTeamID = AwayTeam.TeamID
+		LEFT JOIN [dbo].[Prediction] AS p ON m.MatchID = p.MatchID
+		LEFT JOIN (SELECT p.MatchID, p.Score, p.HomeTeamGoals, p.AwayTeamGoals FROM [dbo].[Prediction] AS p WHERE p.UserID = @UserID) YourPrediction ON m.MatchID = YourPrediction.MatchID
 	WHERE
-		Match.CompetitionID = @CompetitionID
-		AND (@DateFrom IS NULL OR Match.MatchDateTime >= @DateFrom) 
-		AND (@DateTo IS NULL OR Match.MatchDateTime <= @DateTo)
-		AND (@TeamID IS NULL OR Match.HomeTeamID = @TeamID OR Match.AwayTeamID = @TeamID)
-		AND Match.MatchPlayed = 1
+		m.CompetitionID = @CompetitionID
+		AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
+		AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
+		AND (@TeamID IS NULL OR m.HomeTeamID = @TeamID OR m.AwayTeamID = @TeamID)
+		AND m.MatchPlayed = 1
 	GROUP BY
-		Match.MatchID
-		, Match.MatchDateTime
+		m.MatchID
+		, m.MatchDateTime
 		, HomeTeam.TeamName
-		, Match.HomeTeamTBC
+		, m.HomeTeamTBC
 		, HomeTeam.ShortName
 		, AwayTeam.TeamName
-		, Match.AwayTeamTBC
+		, m.AwayTeamTBC
 		, AwayTeam.ShortName
-		, Match.HomeTeamGoals
-		, Match.AwayTeamGoals
+		, m.HomeTeamGoals
+		, m.AwayTeamGoals
 		, YourPrediction.Score
 		, YourPrediction.HomeTeamGoals
 		, YourPrediction.AwayTeamGoals
-		, Match.Description
-		, Match.Knockout
+		, m.Description
+		, m.Knockout
 	ORDER BY
-		Match.MatchDateTime DESC
+		m.MatchDateTime DESC
 		, HomeTeam.TeamName
 END

@@ -13,13 +13,13 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		Team.TeamID
+		t.TeamID
 		, Position =  RANK() OVER (ORDER BY (SUM(Results.Won) * 3) + SUM(Results.Drawn) DESC, SUM(Results.GoalsFor - Results.GoalsAgainst) DESC, SUM(Results.GoalsFor) DESC)
 		, Played = COUNT(Results.MatchID)
 		, Won = SUM(Results.Won)
 		, Lost = SUM(Results.Lost)
 		, Drawn = SUM(Results.Drawn)
-		, Team.ShortName
+		, t.ShortName
 		, Points = (SUM(Results.Won) * 3) + SUM(Results.Drawn)
 		, GoalsFor = SUM(Results.GoalsFor)
 		, GoalsAgainst = SUM(Results.GoalsAgainst)
@@ -27,42 +27,42 @@ BEGIN
 	FROM
 		--Home matches
 		(SELECT
-			Team.TeamID
-			, Match.MatchID
+			t.TeamID
+			, m.MatchID
 			, Won = CASE WHEN Prediction.HomeTeamGoals > Prediction.AwayTeamGoals THEN 1 ELSE 0 END
 			, Lost = CASE WHEN Prediction.HomeTeamGoals < Prediction.AwayTeamGoals THEN 1 ELSE 0 END
 			, Drawn = CASE WHEN ISNULL(Prediction.HomeTeamGoals, 0) = ISNULL(Prediction.AwayTeamGoals, 0) THEN 1 ELSE 0 END
 			, GoalsFor = Prediction.HomeTeamGoals
 			, GoalsAgainst = Prediction.AwayTeamGoals
 		FROM
-			Match
-			INNER JOIN Team ON Match.HomeTeamID = Team.TeamID
-			LEFT JOIN (SELECT * FROM Prediction WHERE UserID = @UserID) Prediction ON Match.MatchID = Prediction.MatchID
+			[dbo].[Match] AS m
+			INNER JOIN [dbo].[Team] AS t ON m.HomeTeamID = t.TeamID
+			LEFT JOIN (SELECT p.PredictionID, p.MatchID, p.UserID, p.HomeTeamGoals, p.AwayTeamGoals, p.Score, p.GoalDifference, p.PredictionHistoryID, p.Invalid, p.AutoUpdatedDueToLatePrediction FROM [dbo].[Prediction] AS p WHERE p.UserID = @UserID) Prediction ON m.MatchID = Prediction.MatchID
 		WHERE
-			Match.CompetitionID = @CompetitionID
-			AND Match.MatchPlayed = 1
+			m.CompetitionID = @CompetitionID
+			AND m.MatchPlayed = 1
 		--Away matches
 		UNION
 		SELECT
-			Team.TeamID
-			, Match.MatchID
+			t.TeamID
+			, m.MatchID
 			, Won = CASE WHEN Prediction.AwayTeamGoals > Prediction.HomeTeamGoals THEN 1 ELSE 0 END
 			, Lost = CASE WHEN Prediction.AwayTeamGoals < Prediction.HomeTeamGoals THEN 1 ELSE 0 END
 			, Drawn = CASE WHEN ISNULL(Prediction.AwayTeamGoals, 0) = ISNULL(Prediction.HomeTeamGoals, 0) THEN 1 ELSE 0 END
 			, GoalsFor = Prediction.AwayTeamGoals
 			, GoalsAgainst = Prediction.HomeTeamGoals
 		FROM
-			Match
-			INNER JOIN Team ON Match.AwayTeamID = Team.TeamID
-			LEFT JOIN (SELECT * FROM Prediction WHERE UserID = @UserID) Prediction ON Match.MatchID = Prediction.MatchID
+			[dbo].[Match] AS m
+			INNER JOIN [dbo].[Team] AS t ON m.AwayTeamID = t.TeamID
+			LEFT JOIN (SELECT p.PredictionID, p.MatchID, p.UserID, p.HomeTeamGoals, p.AwayTeamGoals, p.Score, p.GoalDifference, p.PredictionHistoryID, p.Invalid, p.AutoUpdatedDueToLatePrediction FROM [dbo].[Prediction] AS p WHERE p.UserID = @UserID) Prediction ON m.MatchID = Prediction.MatchID
 		WHERE
-			Match.CompetitionID = @CompetitionID
-			AND Match.MatchPlayed = 1) Results
-		INNER JOIN Team ON Results.TeamID = Team.TeamID
+			m.CompetitionID = @CompetitionID
+			AND m.MatchPlayed = 1) Results
+		INNER JOIN [dbo].[Team] AS t ON Results.TeamID = t.TeamID
 	GROUP BY
-		Team.TeamID
-		, Team.ShortName
+		t.TeamID
+		, t.ShortName
 	ORDER BY
 		Position
-		, Team.ShortName
+		, t.ShortName
 END

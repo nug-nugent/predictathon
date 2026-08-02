@@ -11,21 +11,21 @@ BEGIN
 
 	--	Highest percentage of 'correct' predictions (win/lose/draw only)
 	 SELECT TOP 10
- 		Username
-		, UserID
-		, CorrectPredictionPercentage = (CAST(CorrectPredictions AS DECIMAL(9, 2)) / CAST(TotalPredictions AS DECIMAL(9, 2))) * 100
+ 		PredictionCount.Username
+		, PredictionCount.UserID
+		, CorrectPredictionPercentage = (CAST(PredictionCount.CorrectPredictions AS DECIMAL(9, 2)) / CAST(PredictionCount.TotalPredictions AS DECIMAL(9, 2))) * 100
 	FROM
 		(
 		SELECT
 			[User].UserName AS Username
 			, [User].Id AS UserID
 			, TotalPredictions = COUNT(1)
-			, CorrectPredictions = SUM(CASE WHEN Prediction.Score > 0 THEN 1 ELSE 0 END)
+			, CorrectPredictions = SUM(CASE WHEN p.Score > 0 THEN 1 ELSE 0 END)
 		FROM
 			[Identity].[Users] AS [User]
-			INNER JOIN Prediction ON [User].Id = Prediction.UserID
+			INNER JOIN [dbo].[Prediction] AS p ON [User].Id = p.UserID
 		WHERE
-			Prediction.Score IS NOT NULL
+			p.Score IS NOT NULL
 		GROUP BY
 			[User].UserName
 			, [User].Id
@@ -33,5 +33,5 @@ BEGIN
 	WHERE
 		PredictionCount.CorrectPredictions > 0
 	ORDER BY
-		CAST(CorrectPredictions AS DECIMAL(9, 2)) / CAST(TotalPredictions AS DECIMAL(9, 2)) DESC;
+		CAST(PredictionCount.CorrectPredictions AS DECIMAL(9, 2)) / CAST(PredictionCount.TotalPredictions AS DECIMAL(9, 2)) DESC;
 END

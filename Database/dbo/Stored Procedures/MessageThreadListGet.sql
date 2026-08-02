@@ -29,7 +29,7 @@ BEGIN
 			, COUNT(m.MessageID) AS MessageCount
 			, MAX(m.MessageDateTime) AS LastMessageDate
 		FROM
-			[Message] m
+			[dbo].[Message] AS m
 		GROUP BY
 			m.MessageThreadID
 	),
@@ -40,7 +40,7 @@ BEGIN
 			, m.PostedByUserID
 			, ROW_NUMBER() OVER (PARTITION BY m.MessageThreadID ORDER BY m.MessageDateTime DESC, m.MessageID DESC) AS rn
 		FROM
-			[Message] m
+			[dbo].[Message] AS m
 	),
 	LastMessageData AS (
 		SELECT
@@ -68,11 +68,11 @@ BEGIN
 			ELSE CAST(0 AS BIT)
 		END
 	FROM
-		MessageThread mt
+		[dbo].[MessageThread] AS mt
 		LEFT JOIN MessageCounts mc ON mt.MessageThreadID = mc.MessageThreadID
 		LEFT JOIN LastMessageData lmd ON mt.MessageThreadID = lmd.MessageThreadID
 		LEFT JOIN [Identity].[Users] su ON mt.StartedByUserID = su.Id
-		LEFT JOIN MessageThreadRead rt ON rt.MessageThreadID = mt.MessageThreadID AND rt.UserID = @pUserID
+		LEFT JOIN [dbo].[MessageThreadRead] AS rt ON rt.MessageThreadID = mt.MessageThreadID AND rt.UserID = @pUserID
 	WHERE
 		(@pIncludeHiddenFromPublic = CAST(1 AS BIT) OR mt.HiddenFromPublic = 0)
 	ORDER BY

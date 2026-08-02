@@ -14,32 +14,32 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		Match.MatchID
-		, Match.MatchDateTime
-		, HomeTeam = ISNULL(HomeTeam.TeamName, Match.HomeTeamTBC)
+		m.MatchID
+		, m.MatchDateTime
+		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamID = HomeTeam.TeamID
 		, HomeTeamImage = HomeTeam.ImageName
-		, AwayTeam = ISNULL(AwayTeam.TeamName, Match.AwayTeamTBC)
+		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamID = AwayTeam.TeamID
 		, AwayTeamImage = AwayTeam.ImageName
-		, Match.MatchPlayed
-		, Match.HomeTeamGoals
-		, Match.AwayTeamGoals
-		, Match.NeutralGround
-		, Match.Description
-		, Match.HomeTeamTBC
-		, Match.AwayTeamTBC
-		, Match.Knockout
+		, m.MatchPlayed
+		, m.HomeTeamGoals
+		, m.AwayTeamGoals
+		, m.NeutralGround
+		, m.Description
+		, m.HomeTeamTBC
+		, m.AwayTeamTBC
+		, m.Knockout
 	FROM
-		Match
-		LEFT JOIN Team HomeTeam ON Match.HomeTeamID = HomeTeam.TeamID
-		LEFT JOIN Team AwayTeam ON Match.AwayTeamID = AwayTeam.TeamID
+		[dbo].[Match] AS m
+		LEFT JOIN [dbo].[Team] AS HomeTeam ON m.HomeTeamID = HomeTeam.TeamID
+		LEFT JOIN [dbo].[Team] AS AwayTeam ON m.AwayTeamID = AwayTeam.TeamID
 	WHERE
-		Match.CompetitionID = @CompetitionID
-		AND (@DateFrom IS NULL OR Match.MatchDateTime >= @DateFrom) 
-		AND (@DateTo IS NULL OR Match.MatchDateTime <= @DateTo)
-		AND (@UnprocessedOnly = 0 OR Match.MatchPlayed = 0)
+		m.CompetitionID = @CompetitionID
+		AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
+		AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
+		AND (@UnprocessedOnly = 0 OR m.MatchPlayed = 0)
 	ORDER BY
-		Match.MatchDateTime ASC
+		m.MatchDateTime ASC
 		, HomeTeam.TeamName
 END

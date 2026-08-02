@@ -13,13 +13,13 @@ BEGIN
 	SELECT TOP 10
 		[User].UserName AS Username
 		, [User].Id AS UserID
-		, TotalScore = SUM(Prediction.Score)
+		, TotalScore = SUM(p.Score)
 	FROM
 		[Identity].[Users] AS [User]
-		INNER JOIN Prediction ON [User].Id = Prediction.UserID
+		INNER JOIN [dbo].[Prediction] AS p ON [User].Id = p.UserID
 	GROUP BY
 		[User].UserName
 		, [User].Id
 	ORDER BY
-		SUM(Prediction.Score) DESC;
+		SUM(p.Score) DESC;
 END

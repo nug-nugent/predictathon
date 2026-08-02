@@ -17,35 +17,35 @@ BEGIN
 	SET @HidePastUnpredictedMatches = ISNULL(@HidePastUnpredictedMatches, 0)
 
 	SELECT
-		Match.MatchID
+		m.MatchID
 		, Prediction.PredictionID
-		, Match.MatchDateTime
-		, Match.HomeTeamID
-		, HomeTeam = ISNULL(HomeTeam.TeamName, Match.HomeTeamTBC)
+		, m.MatchDateTime
+		, m.HomeTeamID
+		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
 		, HomeTeamImage = HomeTeam.ImageName
-		, Match.AwayTeamID
-		, AwayTeam = ISNULL(AwayTeam.TeamName, Match.AwayTeamTBC)
+		, m.AwayTeamID
+		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
 		, AwayTeamImage = AwayTeam.ImageName
 		, Prediction.HomeTeamGoals
 		, Prediction.AwayTeamGoals
-		, ActualHomeTeamGoals = Match.HomeTeamGoals
-		, ActualAwayTeamGoals = Match.AwayTeamGoals
-		, Score = CASE WHEN Match.MatchPlayed = 1 AND Prediction.PredictionID IS NULL THEN 0 ELSE Prediction.Score END
-		, Match.Description
-		, Match.Knockout
+		, ActualHomeTeamGoals = m.HomeTeamGoals
+		, ActualAwayTeamGoals = m.AwayTeamGoals
+		, Score = CASE WHEN m.MatchPlayed = 1 AND Prediction.PredictionID IS NULL THEN 0 ELSE Prediction.Score END
+		, m.Description
+		, m.Knockout
 	FROM
-		Match
-		LEFT JOIN Team HomeTeam ON Match.HomeTeamID = HomeTeam.TeamID
-		LEFT JOIN Team AwayTeam ON Match.AwayTeamID = AwayTeam.TeamID
-		LEFT JOIN (SELECT * FROM Prediction WHERE UserID = @UserID) Prediction ON Match.MatchID = Prediction.MatchID
+		[dbo].[Match] AS m
+		LEFT JOIN [dbo].[Team] AS HomeTeam ON m.HomeTeamID = HomeTeam.TeamID
+		LEFT JOIN [dbo].[Team] AS AwayTeam ON m.AwayTeamID = AwayTeam.TeamID
+		LEFT JOIN (SELECT p.PredictionID, p.MatchID, p.UserID, p.HomeTeamGoals, p.AwayTeamGoals, p.Score, p.GoalDifference, p.PredictionHistoryID, p.Invalid, p.AutoUpdatedDueToLatePrediction FROM [dbo].[Prediction] AS p WHERE p.UserID = @UserID) Prediction ON m.MatchID = Prediction.MatchID
 	WHERE
-		Match.CompetitionID = @CompetitionID
-		AND (@DateFrom IS NULL OR Match.MatchDateTime >= @DateFrom) 
-		AND (@DateTo IS NULL OR Match.MatchDateTime <= @DateTo)
-		AND (@HidePastUnpredictedMatches = 0 OR Prediction.PredictionID IS NOT NULL OR Match.MatchDateTime < GETDATE())
+		m.CompetitionID = @CompetitionID
+		AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
+		AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
+		AND (@HidePastUnpredictedMatches = 0 OR Prediction.PredictionID IS NOT NULL OR m.MatchDateTime < GETDATE())
 	ORDER BY
-		Match.MatchDateTime ASC
+		m.MatchDateTime ASC
 		, HomeTeam.TeamName
 END

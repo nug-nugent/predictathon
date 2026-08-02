@@ -12,13 +12,13 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		Team.TeamID
+		t.TeamID
 		, Position =  RANK() OVER (ORDER BY (SUM(Results.Won) * 3) + SUM(Results.Drawn) DESC, SUM(Results.GoalsFor - Results.GoalsAgainst) DESC, SUM(Results.GoalsFor) DESC)
 		, Played = COUNT(Results.MatchID)
 		, Won = SUM(Results.Won)
 		, Lost = SUM(Results.Lost)
 		, Drawn = SUM(Results.Drawn)
-		, Team.ShortName
+		, t.ShortName
 		, GoalsFor = SUM(Results.GoalsFor)
 		, GoalsAgainst = SUM(Results.GoalsAgainst)
 		, Points = (SUM(Results.Won) * 3) + SUM(Results.Drawn)
@@ -26,40 +26,40 @@ BEGIN
 	FROM
 		--Home matches
 		(SELECT
-			Team.TeamID
-			, Match.MatchID
-			, Won = CASE WHEN Match.HomeTeamGoals > Match.AwayTeamGoals THEN 1 ELSE 0 END
-			, Lost = CASE WHEN Match.HomeTeamGoals < Match.AwayTeamGoals THEN 1 ELSE 0 END
-			, Drawn = CASE WHEN Match.HomeTeamGoals = Match.AwayTeamGoals THEN 1 ELSE 0 END
-			, GoalsFor = Match.HomeTeamGoals
-			, GoalsAgainst = Match.AwayTeamGoals
+			t.TeamID
+			, m.MatchID
+			, Won = CASE WHEN m.HomeTeamGoals > m.AwayTeamGoals THEN 1 ELSE 0 END
+			, Lost = CASE WHEN m.HomeTeamGoals < m.AwayTeamGoals THEN 1 ELSE 0 END
+			, Drawn = CASE WHEN m.HomeTeamGoals = m.AwayTeamGoals THEN 1 ELSE 0 END
+			, GoalsFor = m.HomeTeamGoals
+			, GoalsAgainst = m.AwayTeamGoals
 		FROM
-			Match
-			INNER JOIN Team ON Match.HomeTeamID = Team.TeamID
+			[dbo].[Match] AS m
+			INNER JOIN [dbo].[Team] AS t ON m.HomeTeamID = t.TeamID
 		WHERE
-			Match.CompetitionID = @CompetitionID
-			AND Match.MatchPlayed = 1
+			m.CompetitionID = @CompetitionID
+			AND m.MatchPlayed = 1
 		--Away matches
 		UNION
 		SELECT
-			Team.TeamID
-			, Match.MatchID
-			, Won = CASE WHEN Match.AwayTeamGoals > Match.HomeTeamGoals THEN 1 ELSE 0 END
-			, Lost = CASE WHEN Match.AwayTeamGoals < Match.HomeTeamGoals THEN 1 ELSE 0 END
-			, Drawn = CASE WHEN Match.AwayTeamGoals = Match.HomeTeamGoals THEN 1 ELSE 0 END
-			, GoalsFor = Match.AwayTeamGoals
-			, GoalsAgainst = Match.HomeTeamGoals
+			t.TeamID
+			, m.MatchID
+			, Won = CASE WHEN m.AwayTeamGoals > m.HomeTeamGoals THEN 1 ELSE 0 END
+			, Lost = CASE WHEN m.AwayTeamGoals < m.HomeTeamGoals THEN 1 ELSE 0 END
+			, Drawn = CASE WHEN m.AwayTeamGoals = m.HomeTeamGoals THEN 1 ELSE 0 END
+			, GoalsFor = m.AwayTeamGoals
+			, GoalsAgainst = m.HomeTeamGoals
 		FROM
-			Match
-			INNER JOIN Team ON Match.AwayTeamID = Team.TeamID
+			[dbo].[Match] AS m
+			INNER JOIN [dbo].[Team] AS t ON m.AwayTeamID = t.TeamID
 		WHERE
-			Match.CompetitionID = @CompetitionID
-			AND Match.MatchPlayed = 1) Results
-		INNER JOIN Team ON Results.TeamID = Team.TeamID
+			m.CompetitionID = @CompetitionID
+			AND m.MatchPlayed = 1) Results
+		INNER JOIN [dbo].[Team] AS t ON Results.TeamID = t.TeamID
 	GROUP BY
-		Team.TeamID
-		, Team.ShortName
+		t.TeamID
+		, t.ShortName
 	ORDER BY
 		Position
-		, Team.ShortName
+		, t.ShortName
 END

@@ -16,7 +16,7 @@ BEGIN
 		, TotalPredictions = COUNT(1)
 	FROM
 		[Identity].[Users] AS [User]
-		INNER JOIN Prediction ON [User].Id = Prediction.UserID
+		INNER JOIN [dbo].[Prediction] AS p ON [User].Id = p.UserID
 	GROUP BY
 		[User].UserName
 		, [User].Id

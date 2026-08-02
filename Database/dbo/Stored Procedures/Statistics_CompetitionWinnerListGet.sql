@@ -11,28 +11,28 @@ BEGIN
 
 	-- Most overall wins/2nds/3rds
 	SELECT
-		Username
-		, UserID
-		, Wins
-		, SecondPlaces
-		, ThirdPlaces
+		Winners.Username
+		, Winners.UserID
+		, Winners.Wins
+		, Winners.SecondPlaces
+		, Winners.ThirdPlaces
 	FROM
 		(
 		SELECT
 			[User].UserName AS Username
 			, [User].Id AS UserID
-			, Wins = (SELECT COUNT(1) FROM HallOfFame WHERE WinnerUserID = [User].Id)
-			, SecondPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE SecondPlaceUserID = [User].Id)
-			, ThirdPlaces = (SELECT COUNT(1) FROM HallOfFame WHERE ThirdPlaceUserID = [User].Id)
+			, Wins = (SELECT COUNT(1) FROM [dbo].[HallOfFame] AS hof WHERE hof.WinnerUserID = [User].Id)
+			, SecondPlaces = (SELECT COUNT(1) FROM [dbo].[HallOfFame] AS hof WHERE hof.SecondPlaceUserID = [User].Id)
+			, ThirdPlaces = (SELECT COUNT(1) FROM [dbo].[HallOfFame] AS hof WHERE hof.ThirdPlaceUserID = [User].Id)
 		FROM
 			[Identity].[Users] AS [User]
 		GROUP BY
 			[User].UserName
 			, [User].Id) Winners
 	WHERE
-		Wins + SecondPlaces + ThirdPlaces > 0
+		Winners.Wins + Winners.SecondPlaces + Winners.ThirdPlaces > 0
 	ORDER BY
-		Wins DESC
-		, SecondPlaces DESC
-		, ThirdPlaces DESC;
+		Winners.Wins DESC
+		, Winners.SecondPlaces DESC
+		, Winners.ThirdPlaces DESC;
 END;

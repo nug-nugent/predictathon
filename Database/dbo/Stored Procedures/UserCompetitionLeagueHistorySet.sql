@@ -14,22 +14,22 @@ BEGIN
 	SET NOCOUNT ON;
 
 	--when was the table last updated for this competition?
-	DECLARE @MaxLeagueHistoryDate DATE = ISNULL((SELECT 
-												MAX([Date]) 
-											FROM	
-												UserCompetitionLeagueHistory	
-												INNER JOIN UserCompetition ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID 
-											WHERE 
+	DECLARE @MaxLeagueHistoryDate DATE = ISNULL((SELECT
+												MAX([Date])
+											FROM
+												[dbo].[UserCompetitionLeagueHistory]
+												INNER JOIN [dbo].[UserCompetition] ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID
+											WHERE
 												UserCompetition.CompetitionID = @CompetitionID), DATEADD(DAY, -7, GETDATE()))
 
 	--if there've been any matches since that date, get some data in there...
-	IF EXISTS(SELECT MatchID FROM Match WHERE Match.CompetitionID = @CompetitionID AND Match.MatchPlayed = 1 AND Match.MatchDateTime >= @MaxLeagueHistoryDate)
+	IF EXISTS(SELECT MatchID FROM [dbo].[Match] WHERE Match.CompetitionID = @CompetitionID AND Match.MatchPlayed = 1 AND Match.MatchDateTime >= @MaxLeagueHistoryDate)
 	BEGIN
 		DELETE
-			UserCompetitionLeagueHistory
+			[dbo].[UserCompetitionLeagueHistory]
 		FROM
-			UserCompetitionLeagueHistory
-			INNER JOIN UserCompetition ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID
+			[dbo].[UserCompetitionLeagueHistory]
+			INNER JOIN [dbo].[UserCompetition] ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID
 		WHERE
 			[Date] = @Date
 			AND UserCompetition.CompetitionID = @CompetitionID
@@ -54,7 +54,7 @@ BEGIN
 			, AverageGoalDifference
 			, TotalGoalDifference
 		FROM
-			UserCompetition
+			[dbo].[UserCompetition]
 			INNER JOIN (
 				SELECT
 					[User].Id AS UserID
@@ -66,8 +66,8 @@ BEGIN
 														, SUM(CASE WHEN Prediction.Score = 1 THEN 1 ELSE 0 END) DESC
 														, [User].UserName
 													)
-					, Score = ISNULL(SUM(Prediction.Score), 0)
-					, AverageGoalDifference = CAST(ISNULL(AVG(CAST(Prediction.GoalDifference AS DECIMAL(9,2))), 0) AS DECIMAL(9,2))
+					, Score = ISNULL(SUM(Prediction.Score), CAST(0 AS INT))
+					, AverageGoalDifference = CAST(ISNULL(AVG(CAST(Prediction.GoalDifference AS DECIMAL(9,2))), CAST(0 AS DECIMAL(9,2))) AS DECIMAL(9,2))
 					, TotalGoalDifference = SUM(ISNULL(Prediction.GoalDifference, 0))
 					, ThreePointers = SUM(CASE WHEN Prediction.Score = 3 THEN 1 ELSE 0 END)
 					, TwoPointers = SUM(CASE WHEN Prediction.Score = 2 THEN 1 ELSE 0 END)
@@ -76,8 +76,8 @@ BEGIN
 					, NoPredictions = SUM(CASE WHEN Prediction.PredictionID IS NULL THEN 1 ELSE 0 END)
 				FROM
 					[Identity].[Users] AS [User]
-					CROSS JOIN Match
-					LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID AND [User].Id = Prediction.UserID
+					CROSS JOIN [dbo].[Match]
+					LEFT JOIN [dbo].[Prediction] ON Match.MatchID = Prediction.MatchID AND [User].Id = Prediction.UserID
 				WHERE
 					CAST(Match.MatchDateTime AS DATE) <= @Date
 					AND Match.CompetitionID = @CompetitionID

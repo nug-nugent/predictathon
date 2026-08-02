@@ -13,16 +13,16 @@ BEGIN
 	
 	SELECT
 		[User].UserName AS Username
-		, UserCompetitionLeagueHistory.[Date]
-		, UserCompetitionLeagueHistory.Score
-		, UserCompetitionLeagueHistory.LeaguePosition
+		, ulh.[Date]
+		, ulh.Score
+		, ulh.LeaguePosition
 	FROM
 		[Identity].[Users] AS [User]
-		INNER JOIN UserCompetition ON [User].Id = UserCompetition.UserID
-		INNER JOIN UserCompetitionLeagueHistory ON UserCompetition.UserCompetitionID = UserCompetitionLeagueHistory.UserCompetitionID
+		INNER JOIN [dbo].[UserCompetition] AS uc ON [User].Id = uc.UserID
+		INNER JOIN [dbo].[UserCompetitionLeagueHistory] AS ulh ON uc.UserCompetitionID = ulh.UserCompetitionID
 	WHERE
-		UserCompetition.UserID = @UserID
-		AND UserCompetition.CompetitionID = @CompetitionID
+		uc.UserID = @UserID
+		AND uc.CompetitionID = @CompetitionID
 	ORDER BY
-		UserCompetitionLeagueHistory.[Date] ASC
+		ulh.[Date] ASC
 END
