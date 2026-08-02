@@ -6,6 +6,7 @@ namespace Predictathon.Application.Interfaces.Persistence;
 public interface IApplicationDbContext : IGenericDbContext
 {
     DbSet<Competition> Competition { get; }
+    DbSet<ErrorLog> ErrorLog { get; }
     DbSet<FixtureChangeProposal> FixtureChangeProposal { get; }
     DbSet<HallOfFame> HallOfFame { get; }
     DbSet<Match> Match { get; }
