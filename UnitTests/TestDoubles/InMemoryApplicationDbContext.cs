@@ -21,6 +21,7 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
     {
     }
 
+    public DbSet<Entities.Announcement> Announcement => Set<Entities.Announcement>();
     public DbSet<Entities.Competition> Competition => Set<Entities.Competition>();
     public DbSet<Entities.ErrorLog> ErrorLog => Set<Entities.ErrorLog>();
     public DbSet<Entities.FixtureChangeProposal> FixtureChangeProposal => Set<Entities.FixtureChangeProposal>();

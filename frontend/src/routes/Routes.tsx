@@ -21,6 +21,7 @@ import { CompetitionsAdminPage } from "../pages/logged-in/admin/tournaments/Comp
 import { CompetitionEditPage } from "../pages/logged-in/admin/tournaments/CompetitionEditPage";
 import { PaymentCreditsAdminPage } from "../pages/logged-in/admin/payment-credits/PaymentCreditsAdminPage";
 import { ErrorLogAdminPage } from "../pages/logged-in/admin/errors/ErrorLogAdminPage";
+import { AnnouncementsAdminPage } from "../pages/logged-in/admin/announcements/AnnouncementsAdminPage";
 import { StatisticsPage } from "../pages/logged-in/statistics/StatisticsPage";
 import { RegisterPage } from "../pages/public/registration/RegisterPage";
 import { CompetitionRegistrationPage } from "../pages/logged-in/registration/CompetitionRegistrationPage";
@@ -71,6 +72,7 @@ export function SiteRoutes() {
                         <Route path="users" element={<UsersPage />} />
                         <Route path="payment-credits" element={<PaymentCreditsAdminPage />} />
                         <Route path="errors" element={<ErrorLogAdminPage />} />
+                        <Route path="announcements" element={<AnnouncementsAdminPage />} />
                     </Route>
                 </Route>
 
