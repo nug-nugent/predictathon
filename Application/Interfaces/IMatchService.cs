@@ -24,15 +24,6 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the earliest not-yet-predicted match at least 5 minutes from now for a user in a
-    /// competition, or null if every future match has already been predicted.
-    /// </summary>
-    Task<UserMatchPredictionListItem?> GetNextUnpredictedMatchAsync(
-        Guid userId,
-        Guid competitionId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Gets a user's prediction history for a competition, most recent first. Future matches are
     /// only included when <paramref name="includeFuture"/> is true (i.e. the viewer is the user
     /// themselves) - other users only see predictions for matches that have already kicked off.

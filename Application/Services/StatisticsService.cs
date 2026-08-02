@@ -53,10 +53,7 @@ public class StatisticsService : IStatisticsService
             ],
             cancellationToken);
 
-        var bestPredictions = await _dbContext.CallStoredProcedureAsync<BestPredictionListItem>(
-            "MatchPredictionAverageBiggestDifferencesGet",
-            [new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId }],
-            cancellationToken);
+        var bestPredictions = await GetBestPredictionsAsync(competitionId, cancellationToken: cancellationToken);
 
         return new CurrentCompetitionStatisticsModel
         {
@@ -72,4 +69,20 @@ public class StatisticsService : IStatisticsService
             BestPredictions = bestPredictions,
         };
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<BestPredictionListItem>> GetBestPredictionsAsync(Guid competitionId, DateOnly? dateFrom = null, DateOnly? dateTo = null, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.CallStoredProcedureAsync<BestPredictionListItem>(
+            "MatchPredictionAverageBiggestDifferencesGet",
+            [
+                new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+                new SqlParameter("@DateFrom", SqlDbType.Date) { Value = ToSqlValue(dateFrom) },
+                new SqlParameter("@DateTo", SqlDbType.Date) { Value = ToSqlValue(dateTo) },
+            ],
+            cancellationToken);
+    }
+
+    private static object ToSqlValue(DateOnly? date)
+        => date.HasValue ? date.Value.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
 }

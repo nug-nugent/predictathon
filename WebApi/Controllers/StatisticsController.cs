@@ -33,4 +33,19 @@ public class StatisticsController : ApiControllerBase
     {
         return Ok(await _statisticsService.GetCurrentCompetitionStatisticsAsync(competitionId, CurrentUserId, cancellationToken));
     }
+
+    /// <summary>
+    /// Get the predictions that beat the average prediction score for their match, best first,
+    /// optionally restricted to matches within a date range.
+    /// </summary>
+    /// <param name="competitionId">The competition to search within.</param>
+    /// <param name="dateFrom">Only include matches played on or after this date.</param>
+    /// <param name="dateTo">Only include matches played on or before this date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("CurrentCompetition/{competitionId:guid}/BestPredictions")]
+    public async Task<ActionResult<IReadOnlyList<BestPredictionListItem>>> GetBestPredictions(
+        Guid competitionId, [FromQuery] DateOnly? dateFrom, [FromQuery] DateOnly? dateTo, CancellationToken cancellationToken)
+    {
+        return Ok(await _statisticsService.GetBestPredictionsAsync(competitionId, dateFrom, dateTo, cancellationToken));
+    }
 }

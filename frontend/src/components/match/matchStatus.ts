@@ -11,8 +11,9 @@ export type ComputedMatchStatus = {
 
 // Kept in lockstep with the server's 2-minute save cutoff (PredictionService.SavePredictionAsync) -
 // showing "Pre"/editable any longer than the server actually allows would mean saves silently fail
-// right as a match approaches kickoff.
-const CUTOFF_MINUTES = 2;
+// right as a match approaches kickoff. Exported so other prediction-deadline UI (e.g. the Home
+// page's PredictionDeadlineCard) shares this one source of truth instead of hardcoding its own.
+export const CUTOFF_MINUTES = 2;
 
 export function computeMatchStatus(match: MatchPrediction, now: Date): ComputedMatchStatus {
     const kickoff = new Date(match.matchDateTime);

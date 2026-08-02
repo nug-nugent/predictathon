@@ -1,39 +1,21 @@
-import { Button, Heading, HStack, Link, Table, Text } from "@chakra-ui/react";
+import { Avatar, Button, Heading, HStack, Link, Table } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { getUserLeagueStats, type UserWeekStat } from "../../services/league-service";
-import { getMatchesForWeek, getNextUnpredictedMatch } from "../../services/prediction-service";
+import { getMatchesForWeek } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
 import { weekEnd } from "../../utils/matchWeek";
 import { Panel } from "../ui/panel";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
+import { LeaguePositionChangeIcon } from "../league/LeaguePositionChangeIcon";
 
 type Stats = {
     overall: UserWeekStat | null;
     lastWeek: UserWeekStat | null;
     thisWeek: UserWeekStat | null;
     thisWeekLabel: "Current Matches" | "Last Matches";
-    nextDueMatchDateTime: string | null;
 };
-
-// Renders "in 2 days" / "in 5 hours" / "in 12 minutes" for the countdown to a match's prediction
-// deadline (5 minutes before kickoff, mirroring the server-side cutoff).
-function formatCountdown(deadline: Date, now: Date): string {
-    const totalMinutes = Math.max(0, Math.round((deadline.getTime() - now.getTime()) / 60000));
-    const days = Math.floor(totalMinutes / 1440);
-    if (days >= 1) return `${days} day${days === 1 ? "" : "s"}`;
-    const hours = Math.floor(totalMinutes / 60);
-    if (hours >= 1) return `${hours} hour${hours === 1 ? "" : "s"}`;
-    return `${totalMinutes} minute${totalMinutes === 1 ? "" : "s"}`;
-}
-
-function countdownColor(deadline: Date, now: Date): string {
-    const days = Math.floor((deadline.getTime() - now.getTime()) / 86400000);
-    if (days <= 0) return "red.500";
-    if (days < 4) return "orange.600";
-    return "fg";
-}
 
 export function UserStatisticsCard({ competitionId }: { competitionId: string }) {
     const { user } = useUser();
@@ -42,10 +24,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
     const { data: stats, error } = useAsyncData<Stats | null>(async () => {
         if (!userId) return null;
 
-        const [leagueStats, nextDue] = await Promise.all([
-            getUserLeagueStats(competitionId, userId),
-            getNextUnpredictedMatch(competitionId),
-        ]);
+        const leagueStats = await getUserLeagueStats(competitionId, userId);
 
         // Only show "this week" once at least one match in it has actually been played.
         let thisWeek = leagueStats.thisWeek;
@@ -66,7 +45,6 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
             lastWeek: leagueStats.lastWeek,
             thisWeek,
             thisWeekLabel,
-            nextDueMatchDateTime: nextDue?.matchDateTime ?? null,
         };
     }, [competitionId, userId]);
 
@@ -80,13 +58,16 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
         return <LoadingSpinner />;
     }
 
-    const now = new Date();
-    const deadline = stats.nextDueMatchDateTime ? new Date(new Date(stats.nextDueMatchDateTime).getTime() - 5 * 60000) : null;
-
     return (
         <Panel>
             <HStack justify="space-between" mb={2}>
-                <Heading size="md">{user.name}</Heading>
+                <HStack gap={3}>
+                    <Avatar.Root size="md">
+                        <Avatar.Image src={user.avatarUrl} />
+                        <Avatar.Fallback name={user.name} />
+                    </Avatar.Root>
+                    <Heading size="md">{user.name}</Heading>
+                </HStack>
                 <Button asChild size="xs" variant="ghost">
                     <RouterLink to="/profile/edit">Edit User</RouterLink>
                 </Button>
@@ -95,7 +76,14 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                 <Table.Body>
                     <Table.Row>
                         <Table.Cell>League position:</Table.Cell>
-                        <Table.Cell>{stats.overall ? ordinal(stats.overall.position) : "N/A"}</Table.Cell>
+                        <Table.Cell>
+                            {stats.overall ? (
+                                <HStack gap={1}>
+                                    <span>{ordinal(stats.overall.position)}</span>
+                                    <LeaguePositionChangeIcon current={stats.overall.position} previous={stats.overall.previousPosition} />
+                                </HStack>
+                            ) : "N/A"}
+                        </Table.Cell>
                     </Table.Row>
                     <Table.Row>
                         <Table.Cell>Points:</Table.Cell>
@@ -117,20 +105,6 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                             <Table.Cell>{stats.thisWeek.points} ({ordinal(stats.thisWeek.position)} place)</Table.Cell>
                         </Table.Row>
                     )}
-                    <Table.Row>
-                        <Table.Cell>
-                            <Link asChild><RouterLink to="/predictions">Next prediction due in:</RouterLink></Link>
-                        </Table.Cell>
-                        <Table.Cell>
-                            {deadline ? (
-                                <Text as="span" color={countdownColor(deadline, now)} fontWeight={deadline.getTime() - now.getTime() < 4 * 86400000 ? "bold" : "normal"}>
-                                    {formatCountdown(deadline, now)}
-                                </Text>
-                            ) : (
-                                <Text as="span" color="green.500">All matches predicted!</Text>
-                            )}
-                        </Table.Cell>
-                    </Table.Row>
                 </Table.Body>
             </Table.Root>
         </Panel>

@@ -4,7 +4,10 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { Link as RouterLink } from "react-router";
 import { UserStatisticsCard } from "../../../components/home/UserStatisticsCard";
 import { CompetitionRegistrationsCard } from "../../../components/home/CompetitionRegistrationsCard";
-import { HomeMatchWeeksSection } from "../../../components/home/HomeMatchWeeksSection";
+import { PredictionDeadlineCard } from "../../../components/home/PredictionDeadlineCard";
+import { MiniLeagueTableCard } from "../../../components/home/MiniLeagueTableCard";
+import { PredictionOfTheWeekCard } from "../../../components/home/PredictionOfTheWeekCard";
+import { PersonalFormStripCard } from "../../../components/home/PersonalFormStripCard";
 import { LoginForm } from "../../../components/site-header/login-button/LoginForm";
 import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
 import { getCompetitionsOpenForRegistration } from "../../../services/competition-registration-service";
@@ -82,9 +85,14 @@ function Dashboard() {
             <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
                 <VStack align="stretch" gap={3}>
                     <UserStatisticsCard competitionId={currentCompetitionId} />
+                    <PredictionDeadlineCard competitionId={currentCompetitionId} />
                     <CompetitionRegistrationsCard />
                 </VStack>
-                <HomeMatchWeeksSection competitionId={currentCompetitionId} />
+                <VStack align="stretch" gap={3}>
+                    <MiniLeagueTableCard competitionId={currentCompetitionId} />
+                    <PredictionOfTheWeekCard competitionId={currentCompetitionId} />
+                    <PersonalFormStripCard competitionId={currentCompetitionId} />
+                </VStack>
             </SimpleGrid>
         </>
     );
