@@ -10,7 +10,6 @@ CREATE PROCEDURE [dbo].[UserCompetitionLeagueHistorySet]
 	, @CompetitionID UNIQUEIDENTIFIER
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	--when was the table last updated for this competition?
@@ -87,6 +86,7 @@ BEGIN
 			) LeagueTable ON UserCompetition.UserID = LeagueTable.UserID
 		WHERE
 			UserCompetition.CompetitionID = @CompetitionID
-		ORDER BY LeaguePosition
-	END
-END
+		ORDER BY 
+			LeaguePosition;
+	END;
+END;

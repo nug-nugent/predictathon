@@ -22,4 +22,4 @@ BEGIN
 		, [User].Id
 	ORDER BY
 		SUM(p.Score) DESC;
-END
+END;

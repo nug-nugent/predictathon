@@ -8,7 +8,6 @@ CREATE PROCEDURE [dbo].[UserCompetitionLeagueHistoryListGet]
 	, @CompetitionID UNIQUEIDENTIFIER
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
 	SELECT
@@ -24,5 +23,5 @@ BEGIN
 		uc.UserID = @UserID
 		AND uc.CompetitionID = @CompetitionID
 	ORDER BY
-		ulh.[Date] ASC
-END
+		ulh.[Date] ASC;
+END;

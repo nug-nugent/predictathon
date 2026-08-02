@@ -7,7 +7,6 @@ CREATE PROCEDURE [dbo].[UserCompetitionRegistrationListGet]
 	@UserID UNIQUEIDENTIFIER
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
 	SELECT
@@ -25,5 +24,5 @@ BEGIN
 	WHERE
 		(c.OpenForRegistration = 1 OR UserCompetition.UserCompetitionID IS NOT NULL)
 	ORDER BY
-		c.StartDate DESC
-END
+		c.StartDate DESC;
+END;

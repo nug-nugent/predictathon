@@ -6,7 +6,6 @@
 CREATE PROCEDURE [dbo].[Statistics_HighestPercentageCorrectPredictionsGet]
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	--	Highest percentage of 'correct' predictions (win/lose/draw only)
@@ -34,4 +33,4 @@ BEGIN
 		PredictionCount.CorrectPredictions > 0
 	ORDER BY
 		CAST(PredictionCount.CorrectPredictions AS DECIMAL(9, 2)) / CAST(PredictionCount.TotalPredictions AS DECIMAL(9, 2)) DESC;
-END
+END;

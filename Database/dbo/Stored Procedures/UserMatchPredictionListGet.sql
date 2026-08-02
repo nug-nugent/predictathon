@@ -11,10 +11,9 @@ CREATE PROCEDURE [dbo].[UserMatchPredictionListGet]
 	, @HidePastUnpredictedMatches BIT = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	SET @HidePastUnpredictedMatches = ISNULL(@HidePastUnpredictedMatches, 0)
+	SET @HidePastUnpredictedMatches = ISNULL(@HidePastUnpredictedMatches, 0);
 
 	SELECT
 		m.MatchID
@@ -47,5 +46,5 @@ BEGIN
 		AND (@HidePastUnpredictedMatches = 0 OR Prediction.PredictionID IS NOT NULL OR m.MatchDateTime < GETDATE())
 	ORDER BY
 		m.MatchDateTime ASC
-		, HomeTeam.TeamName
-END
+		, HomeTeam.TeamName;
+END;

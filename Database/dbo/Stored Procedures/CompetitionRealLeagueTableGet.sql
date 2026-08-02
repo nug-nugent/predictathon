@@ -8,7 +8,6 @@ CREATE PROCEDURE [dbo].[CompetitionRealLeagueTableGet]
 	@CompetitionID UNIQUEIDENTIFIER
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -61,5 +60,5 @@ BEGIN
 		, t.ShortName
 	ORDER BY
 		Position
-		, t.ShortName
-END
+		, t.ShortName;
+END;

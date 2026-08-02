@@ -6,7 +6,6 @@
 CREATE PROCEDURE [dbo].[HallOfFameListGet]
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -27,5 +26,5 @@ BEGIN
 		LEFT JOIN [Identity].[Users] SecondPlace ON hof.SecondPlaceUserID = SecondPlace.Id
 		LEFT JOIN [Identity].[Users] ThirdPlace ON hof.ThirdPlaceUserID = ThirdPlace.Id
 	ORDER BY
-		hof.EndDate DESC
-END
+		hof.EndDate DESC;
+END;

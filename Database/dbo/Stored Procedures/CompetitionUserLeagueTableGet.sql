@@ -3,13 +3,11 @@
 -- Create date: 08/10/2011
 -- Description:	Returns the league table as it would be for a given competition had every one of a user's predictions come true
 -- =============================================
-
 CREATE PROCEDURE [dbo].[CompetitionUserLeagueTableGet]
 	@CompetitionID UNIQUEIDENTIFIER
 	, @UserID UNIQUEIDENTIFIER
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -64,5 +62,5 @@ BEGIN
 		, t.ShortName
 	ORDER BY
 		Position
-		, t.ShortName
-END
+		, t.ShortName;
+END;

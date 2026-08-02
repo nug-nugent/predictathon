@@ -6,7 +6,6 @@
 CREATE PROCEDURE [dbo].[UserOverduePredictionsGet]
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -43,5 +42,5 @@ BEGIN
 		AND (PredictionsDue.LastEmailReminderSent IS NULL OR CAST(PredictionsDue.LastEmailReminderSent AS DATE) < CAST(DATEADD(DAY, -[User].EmailPredictionReminderDays, PredictionsDue.NextPredictionDue) AS DATE))
 	ORDER BY
 		[User].Id
-		, PredictionsDue.UserCompetitionID
-END
+		, PredictionsDue.UserCompetitionID;
+END;

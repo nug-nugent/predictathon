@@ -10,7 +10,6 @@ CREATE PROCEDURE [dbo].[MatchPredictionAverageBiggestDifferencesGet]
 	, @TeamID UNIQUEIDENTIFIER = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT TOP 50
@@ -71,5 +70,5 @@ BEGIN
 		(ISNULL(p.Score, CAST(0 AS INT)) - AveragePredictionScore) > 0
 	ORDER BY
 		ScoreDifference DESC
-		, MatchAveragePrediction.MatchDateTime DESC
-END
+		, MatchAveragePrediction.MatchDateTime DESC;
+END;

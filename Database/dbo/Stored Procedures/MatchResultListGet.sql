@@ -11,7 +11,6 @@ CREATE PROCEDURE [dbo].[MatchResultListGet]
 	, @TeamID UNIQUEIDENTIFIER = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -59,5 +58,5 @@ BEGIN
 		, m.Knockout
 	ORDER BY
 		m.MatchDateTime DESC
-		, HomeTeam.TeamName
-END
+		, HomeTeam.TeamName;
+END;

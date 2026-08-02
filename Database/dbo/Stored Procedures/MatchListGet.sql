@@ -10,7 +10,6 @@ CREATE PROCEDURE [dbo].[MatchListGet]
 	, @UnprocessedOnly BIT
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -41,5 +40,5 @@ BEGIN
 		AND (@UnprocessedOnly = 0 OR m.MatchPlayed = 0)
 	ORDER BY
 		m.MatchDateTime ASC
-		, HomeTeam.TeamName
-END
+		, HomeTeam.TeamName;
+END;

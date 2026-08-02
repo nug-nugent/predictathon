@@ -8,7 +8,6 @@ CREATE PROCEDURE [dbo].[TeamCompetitionListGet]
 	, @ReturnTeamsNotInCompetition BIT
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
@@ -21,5 +20,5 @@ BEGIN
 	WHERE
 		((@ReturnTeamsNotInCompetition = 1 AND TeamCompetition.TeamCompetitionID IS NULL) OR (@ReturnTeamsNotInCompetition = 0 AND TeamCompetition.TeamCompetitionID IS NOT NULL))
 	ORDER BY
-		t.TeamName
-END
+		t.TeamName;
+END;
