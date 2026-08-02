@@ -15,6 +15,8 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
     {
     }
 
+    public virtual DbSet<Announcement> Announcement => Set<Announcement>();
+
     public virtual DbSet<Competition> Competition => Set<Competition>();
 
     public virtual DbSet<ErrorLog> ErrorLog => Set<ErrorLog>();
@@ -51,6 +53,15 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Announcement>(entity =>
+        {
+            entity.Property(e => e.Content).HasMaxLength(2000);
+            entity.Property(e => e.ExpiryDateTimeUtc).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAtUtc)
+                .HasDefaultValueSql("sysutcdatetime()", "DF_Announcement_CreatedAtUtc")
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<Competition>(entity =>
         {
             entity.Property(e => e.CompetitionID).HasDefaultValueSql("newid()");

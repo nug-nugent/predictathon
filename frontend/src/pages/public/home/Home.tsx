@@ -11,6 +11,7 @@ import { PersonalFormStripCard } from "../../../components/home/PersonalFormStri
 import { LoginForm } from "../../../components/site-header/login-button/LoginForm";
 import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
 import { getCompetitionsOpenForRegistration } from "../../../services/competition-registration-service";
+import { AnnouncementFeed } from "../../../components/announcements/AnnouncementFeed";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { LoadingSpinner } from "../../../components/ui/async-state";
@@ -33,34 +34,37 @@ function LoggedOutLanding() {
     const { data: competitions, error } = useAsyncData(getCompetitionsOpenForRegistration, []);
 
     return (
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} maxW="container.md" mx="auto">
-            <LoginForm />
+        <>
+            <AnnouncementFeed audience="loginPage" />
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} maxW="container.md" mx="auto">
+                <LoginForm />
 
-            <VStack align="stretch" gap={3}>
-                <Heading size="md">Register</Heading>
+                <VStack align="stretch" gap={3}>
+                    <Heading size="md">Register</Heading>
 
-                {error && <Text>{error.messages.join(" ")}</Text>}
+                    {error && <Text>{error.messages.join(" ")}</Text>}
 
-                {competitions === null && !error && (
-                    <Center py={4}>
-                        <Spinner />
-                    </Center>
-                )}
+                    {competitions === null && !error && (
+                        <Center py={4}>
+                            <Spinner />
+                        </Center>
+                    )}
 
-                {competitions !== null && competitions.length === 0 && (
-                    <Text color="fg.muted">No competitions are currently open for registration.</Text>
-                )}
+                    {competitions !== null && competitions.length === 0 && (
+                        <Text color="fg.muted">No competitions are currently open for registration.</Text>
+                    )}
 
-                {competitions?.map((c) => (
-                    <Box key={c.competitionID}>
-                        <CompetitionSummaryCard competition={c} />
-                        <Link asChild variant="underline">
-                            <RouterLink to={`/register?competitionId=${c.competitionID}`}>Register for {c.competitionName}</RouterLink>
-                        </Link>
-                    </Box>
-                ))}
-            </VStack>
-        </SimpleGrid>
+                    {competitions?.map((c) => (
+                        <Box key={c.competitionID}>
+                            <CompetitionSummaryCard competition={c} />
+                            <Link asChild variant="underline">
+                                <RouterLink to={`/register?competitionId=${c.competitionID}`}>Register for {c.competitionName}</RouterLink>
+                            </Link>
+                        </Box>
+                    ))}
+                </VStack>
+            </SimpleGrid>
+        </>
     );
 }
 
@@ -81,6 +85,7 @@ function Dashboard() {
 
     return (
         <>
+            <AnnouncementFeed audience="all" />
             <PageHeading mb={4}>Home</PageHeading>
             <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
                 <VStack align="stretch" gap={3}>
