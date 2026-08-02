@@ -26,9 +26,11 @@ const string FrontendCorsPolicy = "Frontend";
 
 // Bootstrap logger so failures during host/config startup still get logged somewhere - it's
 // replaced by the fully-configured logger (file + SQL sinks, from the "Serilog" config section)
-// once UseSerilog below runs.
+// once UseSerilog below runs. The file sink matters on IIS hosting, where console output is
+// discarded - without it, a crash before UseSerilog takes effect would leave no trace at all.
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
+    .WriteTo.File("Logs/bootstrap-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
     .CreateBootstrapLogger();
 
 try
