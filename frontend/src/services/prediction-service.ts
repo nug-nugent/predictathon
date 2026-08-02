@@ -33,11 +33,6 @@ export async function getMatchesForWeek(competitionId: string, dateFrom: string)
     return getJsonAuthenticated<MatchPrediction[]>(`/Match/${competitionId}?dateFrom=${encodeURIComponent(dateFrom)}`);
 }
 
-/// The earliest not-yet-predicted match at least 5 minutes from now, or null if everything's predicted.
-export async function getNextUnpredictedMatch(competitionId: string): Promise<MatchPrediction | null> {
-    return getJsonAuthenticated<MatchPrediction | null>(`/Match/${competitionId}/NextUnpredicted`);
-}
-
 export async function savePrediction(matchId: string, homeTeamGoals: number, awayTeamGoals: number): Promise<void> {
     return postJsonAuthenticated<void>("/Prediction", { matchID: matchId, homeTeamGoals, awayTeamGoals });
 }

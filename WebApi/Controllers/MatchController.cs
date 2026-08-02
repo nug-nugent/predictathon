@@ -36,18 +36,6 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get the earliest not-yet-predicted match at least 5 minutes from now for the current user in
-    /// a competition, or null if every future match has already been predicted.
-    /// </summary>
-    [HttpGet("{competitionId:guid}/NextUnpredicted")]
-    public async Task<ActionResult<UserMatchPredictionListItem?>> GetNextUnpredicted(Guid competitionId, CancellationToken cancellationToken)
-    {
-        var match = await _matchService.GetNextUnpredictedMatchAsync(CurrentUserId, competitionId, cancellationToken);
-
-        return Ok(match);
-    }
-
-    /// <summary>
     /// Get a user's prediction history for a competition, most recent first. Future matches are
     /// only included when the caller is viewing their own history.
     /// </summary>

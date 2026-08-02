@@ -77,3 +77,14 @@ export async function getAllTimeStatistics(): Promise<AllTimeStatistics> {
 export async function getCurrentCompetitionStatistics(competitionId: string): Promise<CurrentCompetitionStatistics> {
     return getJsonAuthenticated<CurrentCompetitionStatistics>(`/Statistics/CurrentCompetition/${competitionId}`);
 }
+
+/// Predictions that beat the average prediction score for their match, best first, optionally
+/// restricted to matches within a date range.
+export async function getBestPredictions(competitionId: string, dateFrom?: string, dateTo?: string): Promise<BestPrediction[]> {
+    const params = new URLSearchParams();
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    const query = params.toString();
+
+    return getJsonAuthenticated<BestPrediction[]>(`/Statistics/CurrentCompetition/${competitionId}/BestPredictions${query ? `?${query}` : ""}`);
+}
