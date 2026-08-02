@@ -19,5 +19,6 @@ WHEN NOT MATCHED THEN
     INSERT ([Id], [Name], [NormalizedName], [ConcurrencyStamp])
     VALUES (CONVERT(UNIQUEIDENTIFIER, source.[Id]), source.[Name], source.[NormalizedName], CONVERT(NVARCHAR(MAX), NEWID()));
 
--- Real Team data
-:r ReferenceData\01_Teams.sql
+-- Real Team data (forward slash, not backslash - the Docker db-migrate image builds this dacpac on
+-- Linux, where a backslash is treated as part of the filename)
+:r ReferenceData/01_Teams.sql

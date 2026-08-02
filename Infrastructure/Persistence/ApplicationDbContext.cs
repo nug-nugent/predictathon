@@ -17,6 +17,8 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     public virtual DbSet<Competition> Competition => Set<Competition>();
 
+    public virtual DbSet<ErrorLog> ErrorLog => Set<ErrorLog>();
+
     public virtual DbSet<FixtureChangeProposal> FixtureChangeProposal => Set<FixtureChangeProposal>();
 
     public virtual DbSet<HallOfFame> HallOfFame => Set<HallOfFame>();
@@ -65,6 +67,11 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.Property(e => e.Information).IsUnicode(false);
             entity.Property(e => e.PayPalPaymentAvailable).HasDefaultValue(true, "DF_Competition_PayPalPaymentAvailable");
             entity.Property(e => e.AllowTwoPointers).HasDefaultValue(true, "DF_Competition_AllowTwoPointers");
+        });
+
+        modelBuilder.Entity<ErrorLog>(entity =>
+        {
+            entity.Property(e => e.Level).HasMaxLength(128);
         });
 
         modelBuilder.Entity<FixtureChangeProposal>(entity =>
