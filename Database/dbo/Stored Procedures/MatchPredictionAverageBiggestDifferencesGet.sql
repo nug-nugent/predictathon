@@ -10,58 +10,65 @@ CREATE PROCEDURE [dbo].[MatchPredictionAverageBiggestDifferencesGet]
 	, @TeamID UNIQUEIDENTIFIER = NULL
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT TOP 50
-		Prediction.UserID
+		p.UserID
 		, [User].UserName AS Username
-		, MatchAveragePrediction.*
-		, PredictionHomeTeamGoals = Prediction.HomeTeamGoals
-		, PredictionAwayTeamGoals = Prediction.AwayTeamGoals
-		, PredictionScore = ISNULL(Prediction.Score, 0)
-		, ScoreDifference = ISNULL(Prediction.Score, 0) - AveragePredictionScore
+		, MatchAveragePrediction.MatchID
+		, MatchAveragePrediction.MatchDateTime
+		, MatchAveragePrediction.HomeTeam
+		, MatchAveragePrediction.HomeTeamShortName
+		, MatchAveragePrediction.AwayTeam
+		, MatchAveragePrediction.AwayTeamShortName
+		, MatchAveragePrediction.HomeTeamGoals
+		, MatchAveragePrediction.AwayTeamGoals
+		, MatchAveragePrediction.AveragePredictionScore
+		, PredictionHomeTeamGoals = p.HomeTeamGoals
+		, PredictionAwayTeamGoals = p.AwayTeamGoals
+		, PredictionScore = ISNULL(p.Score, CAST(0 AS INT))
+		, ScoreDifference = ISNULL(p.Score, CAST(0 AS INT)) - AveragePredictionScore
 	FROM
 		(
 		SELECT
-			Match.MatchID
-			, Match.MatchDateTime
-			, HomeTeam = ISNULL(HomeTeam.TeamName, Match.HomeTeamTBC)
+			m.MatchID
+			, m.MatchDateTime
+			, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 			, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
-			, AwayTeam = ISNULL(AwayTeam.TeamName, Match.AwayTeamTBC)
+			, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 			, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
-			, HomeTeamGoals = Match.HomeTeamGoals
-			, AwayTeamGoals = Match.AwayTeamGoals
-			, AveragePredictionScore = ISNULL(AVG(CAST(Prediction.Score AS DECIMAL(4, 3))), 0)
+			, HomeTeamGoals = m.HomeTeamGoals
+			, AwayTeamGoals = m.AwayTeamGoals
+			, AveragePredictionScore = ISNULL(AVG(CAST(p.Score AS DECIMAL(4, 3))), CAST(0 AS DECIMAL(4, 3)))
 		FROM
-			Match
-			LEFT JOIN Team HomeTeam ON Match.HomeTeamID = HomeTeam.TeamID
-			LEFT JOIN Team AwayTeam ON Match.AwayTeamID = AwayTeam.TeamID
-			LEFT JOIN Prediction ON Match.MatchID = Prediction.MatchID
+			[dbo].[Match] AS m
+			LEFT JOIN [dbo].[Team] AS HomeTeam ON m.HomeTeamID = HomeTeam.TeamID
+			LEFT JOIN [dbo].[Team] AS AwayTeam ON m.AwayTeamID = AwayTeam.TeamID
+			LEFT JOIN [dbo].[Prediction] AS p ON m.MatchID = p.MatchID
 		WHERE
-			Match.CompetitionID = @CompetitionID
-			AND (@DateFrom IS NULL OR Match.MatchDateTime >= @DateFrom) 
-			AND (@DateTo IS NULL OR Match.MatchDateTime <= @DateTo)
-			AND (@TeamID IS NULL OR Match.HomeTeamID = @TeamID OR Match.AwayTeamID = @TeamID)
-			AND Match.MatchPlayed = 1
+			m.CompetitionID = @CompetitionID
+			AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
+			AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
+			AND (@TeamID IS NULL OR m.HomeTeamID = @TeamID OR m.AwayTeamID = @TeamID)
+			AND m.MatchPlayed = 1
 		GROUP BY
-			Match.MatchID
-			, Match.MatchDateTime
+			m.MatchID
+			, m.MatchDateTime
 			, HomeTeam.TeamName
-			, Match.HomeTeamTBC
+			, m.HomeTeamTBC
 			, HomeTeam.ShortName
 			, AwayTeam.TeamName
-			, Match.AwayTeamTBC
+			, m.AwayTeamTBC
 			, AwayTeam.ShortName
-			, Match.HomeTeamGoals
-			, Match.AwayTeamGoals
-			, Match.Description
-			, Match.Knockout) MatchAveragePrediction
-		INNER JOIN Prediction ON MatchAveragePrediction.MatchID = Prediction.MatchID
-		INNER JOIN [Identity].[Users] AS [User] ON Prediction.UserID = [User].Id
+			, m.HomeTeamGoals
+			, m.AwayTeamGoals
+			, m.Description
+			, m.Knockout) MatchAveragePrediction
+		INNER JOIN [dbo].[Prediction] AS p ON MatchAveragePrediction.MatchID = p.MatchID
+		INNER JOIN [Identity].[Users] AS [User] ON p.UserID = [User].Id
 	WHERE
-		(ISNULL(Prediction.Score, 0) - AveragePredictionScore) > 0
+		(ISNULL(p.Score, CAST(0 AS INT)) - AveragePredictionScore) > 0
 	ORDER BY
 		ScoreDifference DESC
-		, MatchDateTime DESC
-END
+		, MatchAveragePrediction.MatchDateTime DESC;
+END;

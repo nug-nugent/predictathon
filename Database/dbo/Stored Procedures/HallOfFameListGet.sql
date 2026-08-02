@@ -6,26 +6,25 @@
 CREATE PROCEDURE [dbo].[HallOfFameListGet]
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	SELECT
-		HallOfFame.HallOfFameID
-		, HallOfFame.CompetitionID
-		, HallOfFame.CompetitionName
-		, HallOfFame.EndDate
-		, HallOfFame.ImageFilename
-		, Winner = ISNULL(Winner.UserName, HallOfFame.Winner)
-		, HallOfFame.WinnerUserID
-		, SecondPlace = ISNULL(SecondPlace.UserName, HallOfFame.SecondPlace)
-		, HallOfFame.SecondPlaceUserID
-		, ThirdPlace = ISNULL(ThirdPlace.UserName, HallOfFame.ThirdPlace)
-		, HallOfFame.ThirdPlaceUserID
+		hof.HallOfFameID
+		, hof.CompetitionID
+		, hof.CompetitionName
+		, hof.EndDate
+		, hof.ImageFilename
+		, Winner = ISNULL(Winner.UserName, CAST(hof.Winner AS NVARCHAR(256)))
+		, hof.WinnerUserID
+		, SecondPlace = ISNULL(SecondPlace.UserName, CAST(hof.SecondPlace AS NVARCHAR(256)))
+		, hof.SecondPlaceUserID
+		, ThirdPlace = ISNULL(ThirdPlace.UserName, CAST(hof.ThirdPlace AS NVARCHAR(256)))
+		, hof.ThirdPlaceUserID
 	FROM
-		HallOfFame
-		LEFT JOIN [Identity].[Users] Winner ON HallOfFame.WinnerUserID = Winner.Id
-		LEFT JOIN [Identity].[Users] SecondPlace ON HallOfFame.SecondPlaceUserID = SecondPlace.Id
-		LEFT JOIN [Identity].[Users] ThirdPlace ON HallOfFame.ThirdPlaceUserID = ThirdPlace.Id
+		[dbo].[HallOfFame] AS hof
+		LEFT JOIN [Identity].[Users] Winner ON hof.WinnerUserID = Winner.Id
+		LEFT JOIN [Identity].[Users] SecondPlace ON hof.SecondPlaceUserID = SecondPlace.Id
+		LEFT JOIN [Identity].[Users] ThirdPlace ON hof.ThirdPlaceUserID = ThirdPlace.Id
 	ORDER BY
-		HallOfFame.EndDate DESC
-END
+		hof.EndDate DESC;
+END;

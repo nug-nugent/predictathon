@@ -6,7 +6,6 @@
 CREATE PROCEDURE [dbo].[Statistics_MostMatchesPredictedUserListGet]
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from interfering with SELECT statements.
 	SET NOCOUNT ON;
 
 	-- Users to have predicted the most matches altogether
@@ -16,10 +15,10 @@ BEGIN
 		, TotalPredictions = COUNT(1)
 	FROM
 		[Identity].[Users] AS [User]
-		INNER JOIN Prediction ON [User].Id = Prediction.UserID
+		INNER JOIN [dbo].[Prediction] AS p ON [User].Id = p.UserID
 	GROUP BY
 		[User].UserName
 		, [User].Id
 	ORDER BY
 		COUNT(1) DESC;
-END
+END;

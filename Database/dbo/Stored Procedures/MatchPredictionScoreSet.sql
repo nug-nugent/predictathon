@@ -16,7 +16,7 @@ BEGIN
 	-- Ensure that no predictions were made later than the current match date/time - if they were, attempt to make them valid by
 	-- reverting to the user's last valid prediction.
 	UPDATE
-		Prediction
+		[dbo].[Prediction]
 	SET
 		HomeTeamGoals = ISNULL(LatestValidPredictionHistory.HomeTeamGoals, Prediction.HomeTeamGoals)
 		, AwayTeamGoals = ISNULL(LatestValidPredictionHistory.AwayTeamGoals, Prediction.AwayTeamGoals)
@@ -24,38 +24,38 @@ BEGIN
 		, PredictionHistoryID = ISNULL(LatestValidPredictionHistory.PredictionHistoryID, Prediction.PredictionHistoryID)
 		, Invalid = CASE WHEN LatestValidPredictionHistory.PredictionHistoryID IS NULL THEN 1 ELSE 0 END
 	FROM
-		Prediction
-		INNER JOIN PredictionHistory CurrentPredictionHistory ON Prediction.PredictionHistoryID = CurrentPredictionHistory.PredictionHistoryID
-		INNER JOIN Match ON Prediction.MatchID = Match.MatchID
-		LEFT JOIN 
+		[dbo].[Prediction]
+		INNER JOIN [dbo].[PredictionHistory] CurrentPredictionHistory ON Prediction.PredictionHistoryID = CurrentPredictionHistory.PredictionHistoryID
+		INNER JOIN [dbo].[Match] ON Prediction.MatchID = Match.MatchID
+		LEFT JOIN
 		(
 			SELECT
 				Prediction.UserID
 				, Prediction.PredictionID
 				, LatestValidPredictionHistoryID = MAX(PredictionHistory.PredictionHistoryID)
 			FROM
-				PredictionHistory
-				INNER JOIN Prediction ON PredictionHistory.PredictionID = Prediction.PredictionID
-				INNER JOIN Match ON Prediction.MatchID = Match.MatchID
+				[dbo].[PredictionHistory]
+				INNER JOIN [dbo].[Prediction] ON PredictionHistory.PredictionID = Prediction.PredictionID
+				INNER JOIN [dbo].[Match] ON Prediction.MatchID = Match.MatchID
 			WHERE
 				Prediction.MatchID = @MatchID
 				AND PredictionHistory.PredictionDateTime <= Match.MatchDateTime
 			GROUP BY
 				Prediction.UserID
 				, Prediction.PredictionID
-		) LatestValidPredictionHistoryByUser ON 
+		) LatestValidPredictionHistoryByUser ON
 			Prediction.PredictionID = LatestValidPredictionHistoryByUser.PredictionID
 			AND Prediction.UserID = LatestValidPredictionHistoryByUser.UserID
-		LEFT JOIN PredictionHistory LatestValidPredictionHistory ON LatestValidPredictionHistoryByUser.LatestValidPredictionHistoryID = LatestValidPredictionHistory.PredictionHistoryID
+		LEFT JOIN [dbo].[PredictionHistory] LatestValidPredictionHistory ON LatestValidPredictionHistoryByUser.LatestValidPredictionHistoryID = LatestValidPredictionHistory.PredictionHistoryID
 	WHERE
 		Prediction.MatchID = @MatchID
 		AND CurrentPredictionHistory.PredictionDateTime > Match.MatchDateTime;
 
 	-- Set the Score and GoalDifference for every prediction for this Match
 	UPDATE
-		Prediction
+		[dbo].[Prediction]
 	SET
-		Score = 
+		Score =
 			CASE 
 				-- Unplayed match
 				WHEN Match.MatchPlayed = 0 THEN NULL
@@ -72,9 +72,9 @@ BEGIN
 			END
 		, GoalDifference = CASE WHEN Match.MatchPlayed = 0 THEN NULL ELSE ((ABS(Prediction.HomeTeamGoals - Match.HomeTeamGoals) + ABS(Prediction.AwayTeamGoals - Match.AwayTeamGoals)) * -1)  END
 	FROM
-		Prediction
-		INNER JOIN Match ON Prediction.MatchID = Match.MatchID
-		INNER JOIN Competition ON Match.CompetitionID = Competition.CompetitionID
+		[dbo].[Prediction]
+		INNER JOIN [dbo].[Match] ON Prediction.MatchID = Match.MatchID
+		INNER JOIN [dbo].[Competition] ON Match.CompetitionID = Competition.CompetitionID
 	WHERE
 		Match.MatchID = @MatchID
 		AND Prediction.Invalid = 0;
