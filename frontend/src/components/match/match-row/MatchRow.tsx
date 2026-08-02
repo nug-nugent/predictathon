@@ -20,8 +20,8 @@ type MatchRowProps = {
 };
 
 // Undecided future matches without a real team assigned should never render blank.
-function teamName(name: string | null, shortName: string): string {
-    return name || shortName || "TBC";
+function teamName(preferred: string | null, fallback: string | null): string {
+    return preferred || fallback || "TBC";
 }
 
 export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSaved }: MatchRowProps) {
@@ -117,7 +117,8 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                 <Flex flex="1" minW="0" direction="column" gap={1}>
                     <Flex align="center" gap={{ base: 2, md: 4 }}>
                         <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                            <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)} crest={homeCrest} crestPosition="after" />
+                            <TeamName teamId={match.homeTeamID} name={teamName(match.homeTeam, match.homeTeamShortName)}
+                                shortName={teamName(match.homeTeamShortName, match.homeTeam)} crest={homeCrest} crestPosition="after" />
                         </HStack>
 
                         <HStack gap={1}>
@@ -131,7 +132,8 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                         </HStack>
 
                         <HStack flex="1" minW="0" gap={2}>
-                            <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)} crest={awayCrest} crestPosition="before" />
+                            <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)}
+                                shortName={teamName(match.awayTeamShortName, match.awayTeam)} crest={awayCrest} crestPosition="before" />
                         </HStack>
                     </Flex>
 

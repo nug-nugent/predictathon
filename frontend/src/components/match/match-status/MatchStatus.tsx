@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, HStack, Popover, Portal, Spinner, Table, Text, VStack } from "@chakra-ui/react";
+import { Button, HStack, Popover, Portal, Spinner, Stack, Table, Text, VStack } from "@chakra-ui/react";
 import { ChevronDown } from "lucide-react";
 import type { MatchStatusValue, SaveState } from "../matchStatus";
 import { getMatchPredictions, type MatchPredictionListItem } from "../../../services/prediction-service";
@@ -72,15 +72,20 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
         }
     };
 
+    // Live matches have no fixed-width results block, so on mobile the status text and the
+    // "All predictions" trigger can sit side by side in one row instead of costing two.
+    const isDuring = status === "During";
+
     return (
-        <VStack gap={1} align={{ base: "center", md: "flex-end" }} width={{ base: "full", md: "140px" }} flexShrink={0} pt={{ base: 1, md: 0 }}>
+        <Stack gap={1} direction={{ base: isDuring ? "row" : "column", md: "column" }}
+            align={{ base: "center", md: "flex-end" }} justify="center" width={{ base: "full", md: "140px" }} flexShrink={0} pt={{ base: 1, md: 0 }}>
             {status === "Post" ? (
                 <VStack gap={0} width="full" fontSize="0.85em">
                     <Text textAlign={{ base: "center", md: "right" }} width="full">Result: {actualHomeGoals} - {actualAwayGoals}</Text>
                     <Text textAlign={{ base: "center", md: "right" }} width="full" color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
-                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width="full" textAlign={{ base: "center", md: "right" }}>
+                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width={{ base: isDuring ? "auto" : "full", md: "full" }} textAlign={{ base: "center", md: "right" }}>
                     {getText(status, saveState, minutesToPredict)}
                 </Text>
             )}
@@ -136,6 +141,6 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                     </Portal>
                 </Popover.Root>
             )}
-        </VStack>
+        </Stack>
     );
 }
