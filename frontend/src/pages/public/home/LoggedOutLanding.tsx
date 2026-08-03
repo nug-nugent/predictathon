@@ -19,8 +19,19 @@ export function LoggedOutLanding() {
         <Flex minH="100vh" direction={{ base: "column", lg: "row" }} bg="bg">
             <BrandRail stats={stats} />
 
-            <Box flex={1} px={{ base: 4, md: "56px" }} py={{ base: 8, lg: 12 }}>
-                <VStack align="stretch" gap={6} maxW="640px">
+            <Box flex={1} px={{ base: 4, md: "56px" }} py={{ base: 8, lg: 12 }} position="relative" overflow="hidden">
+                <Box
+                    position="absolute" top="-300px" right="-300px" boxSize="900px" borderRadius="full"
+                    bg="radial-gradient(circle at 30% 30%, oklch(0.55 0.15 150 / 0.16), transparent 70%)"
+                    pointerEvents="none" zIndex={0}
+                />
+                <Box
+                    position="absolute" bottom="-260px" right="120px" boxSize="700px" borderRadius="full"
+                    bg="radial-gradient(circle at 70% 70%, oklch(0.4 0.15 265 / 0.18), transparent 70%), {colors.bg}"
+                    pointerEvents="none" display={{ base: "none", lg: "block" }} zIndex={1}
+                />
+
+                <VStack align="stretch" gap={6} maxW="640px" position="relative" zIndex={2}>
                     <AnnouncementFeed audience="loginPage" />
 
                     <LoginForm />
@@ -69,7 +80,7 @@ function BrandRail({ stats }: { stats: PublicStats | null }) {
                     Predict the scores.<br />Beat your mates.
                 </Heading>
                 <Text fontSize="15px" color="whiteAlpha.900" lineHeight="1.6">
-                    Prediction leagues for your favourite football tournaments &mdash; Premier League, World Cup, European
+                    Prediction leagues for your favourite football tournaments - Premier League, World Cup, European
                     Championships. Giving you the bragging rights since 1998.
                 </Text>
 
