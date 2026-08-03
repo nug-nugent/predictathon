@@ -39,7 +39,7 @@ export function ResetPasswordPage() {
                     <VStack gap={3} textAlign="center">
                         <Heading size="md">Password reset</Heading>
                         <Text>Your password has been reset. You can now log in with your new password.</Text>
-                        <Button colorPalette="blue" onClick={() => { void navigate("/"); }}>Go to Predictathon</Button>
+                        <Button colorPalette="action" onClick={() => { void navigate("/"); }}>Go to Predictathon</Button>
                     </VStack>
                 </Panel>
             </Center>
@@ -93,7 +93,7 @@ export function ResetPasswordPage() {
                         alignSelf="flex-end"
                         loading={submitting}
                         disabled={!newPassword || !confirmPassword}
-                        colorPalette="blue"
+                        colorPalette="action"
                     >
                         Reset password
                     </Button>

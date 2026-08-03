@@ -27,7 +27,7 @@ export function BoardPage() {
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
             <HStack justify="space-between" mb={2}>
                 <PageHeading>Messageboard</PageHeading>
-                <Button size="sm" colorPalette="blue" onClick={() => setDialogOpen(true)} ml="auto">
+                <Button size="sm" colorPalette="action" onClick={() => setDialogOpen(true)} ml="auto">
                     <Plus size={16} /> New thread
                 </Button>
             </HStack>

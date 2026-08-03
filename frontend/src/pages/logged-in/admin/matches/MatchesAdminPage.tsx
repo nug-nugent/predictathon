@@ -104,7 +104,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                     <Checkbox.Control />
                     <Checkbox.Label>Include played matches</Checkbox.Label>
                 </Checkbox.Root>
-                <Button size="sm" colorPalette="blue" onClick={() => setEditing("new")}>Add match</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add match</Button>
             </HStack>
 
             <HStack wrap="wrap" gap={3} align="end">
@@ -368,7 +368,7 @@ function MatchEditDialog({ competitionId, match, teams, onClose, onSaved }: {
                             )}
                             <HStack>
                                 <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>
-                                <Button colorPalette="blue" loading={saving} disabled={busy} onClick={() => { void save(); }}>Save</Button>
+                                <Button colorPalette="action" loading={saving} disabled={busy} onClick={() => { void save(); }}>Save</Button>
                             </HStack>
                         </Dialog.Footer>
                     </Dialog.Content>

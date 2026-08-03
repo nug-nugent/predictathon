@@ -57,7 +57,7 @@ export function AnnouncementsAdminPage() {
         <VStack align="stretch" gap={4}>
             <PageHeading>Announcements</PageHeading>
             <HStack justify="flex-end">
-                <Button size="sm" colorPalette="blue" onClick={() => setEditing("new")}>Add announcement</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add announcement</Button>
             </HStack>
 
             <Panel overflowX="auto">
@@ -208,7 +208,7 @@ function AnnouncementEditDialog({ announcement, onClose, onSaved }: {
                             )}
                             <HStack>
                                 <Button variant="ghost" disabled={busy} onClick={onClose}>Cancel</Button>
-                                <Button colorPalette="blue" loading={saving} disabled={busy} onClick={() => { void save(); }}>Save</Button>
+                                <Button colorPalette="action" loading={saving} disabled={busy} onClick={() => { void save(); }}>Save</Button>
                             </HStack>
                         </Dialog.Footer>
                     </Dialog.Content>

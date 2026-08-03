@@ -44,18 +44,18 @@ export function UserMenu() {
                         <Stack gap="0" onClick={() => setOpen(false)}>
                             {/* asChild renders the Button *as* the Link's anchor - nesting a real
                                 <button> inside an <a> is invalid HTML and double-stops keyboard tabbing. */}
-                            <Button asChild size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue">
+                            <Button asChild size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="action">
                                 <Link to="/profile/edit"><UserPen /> Edit Profile</Link>
                             </Button>
                             <Button
-                                size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue"
+                                size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="action"
                                 // Stop the Stack's onClick from also closing the popover, so the user can
                                 // see the effect of the toggle immediately without it dismissing.
                                 onClick={(e) => { e.stopPropagation(); toggleColorMode(); }}
                             >
                                 {colorMode === "dark" ? <Sun /> : <Moon />} {colorMode === "dark" ? "Light Mode" : "Dark Mode"}
                             </Button>
-                            <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="blue" onClick={() => { void handleLogout(); }}><LogOut /> Logout</Button>
+                            <Button size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="action" onClick={() => { void handleLogout(); }}><LogOut /> Logout</Button>
                         </Stack>
                     </Popover.Content>
                 </Popover.Positioner>

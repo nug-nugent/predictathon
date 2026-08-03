@@ -59,7 +59,7 @@ export function ForgotPasswordPage() {
                         alignSelf="flex-end"
                         loading={submitting}
                         disabled={!userNameOrEmail}
-                        colorPalette="blue"
+                        colorPalette="action"
                     >
                         Send reset link
                     </Button>

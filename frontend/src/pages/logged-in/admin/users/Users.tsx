@@ -242,7 +242,7 @@ function UserEditDialog({ user, onClose, onSaved }: {
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
+                            <Button colorPalette="action" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

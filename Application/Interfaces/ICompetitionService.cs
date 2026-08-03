@@ -61,4 +61,10 @@ public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel
     /// </summary>
     /// <param name="competitionId">The competition to get weeks for.</param>
     Task<IList<System.DateTime>> GetCompetitionWeeksAsync(Guid competitionId);
+
+    /// <summary>
+    /// Gets site-wide stats shown on the pre-login landing page.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<PublicStatsModel> GetPublicStatsAsync(CancellationToken cancellationToken = default);
 }

@@ -140,7 +140,7 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                         key={group.reactionName}
                         size="2xs"
                         variant={mine ? "subtle" : "outline"}
-                        colorPalette={mine ? "blue" : "gray"}
+                        colorPalette={mine ? "action" : "gray"}
                         rounded="full"
                         px={2}
                         title={group.usernames.join(", ")}

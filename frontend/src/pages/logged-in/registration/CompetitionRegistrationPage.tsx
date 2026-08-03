@@ -41,7 +41,7 @@ function CompetitionRegistrationLoader({ id }: { id: string }) {
     };
 
     return (
-        <VStack align="stretch" gap={6} maxW="container.sm" mx="auto">
+        <VStack align="stretch" gap={6} maxW="lg" mx="auto">
             <Heading size="lg">Join a competition</Heading>
             <CompetitionSummaryCard competition={competition} />
             <PaymentStep

@@ -17,4 +17,8 @@ public class CompetitionRegistrationSummaryModel
     public decimal EntranceFee { get; set; }
 
     public string? Information { get; set; }
+
+    public string? ImageFilename { get; set; }
+
+    public bool AllowTwoPointers { get; set; }
 }

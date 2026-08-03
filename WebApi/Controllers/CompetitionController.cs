@@ -41,6 +41,16 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get site-wide stats for the pre-login landing page.
+    /// </summary>
+    [HttpGet("PublicStats")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PublicStatsModel>> GetPublicStats(CancellationToken cancellationToken)
+    {
+        return Ok(await _competitionService.GetPublicStatsAsync(cancellationToken));
+    }
+
+    /// <summary>
     /// Register the current user for a competition that has no entrance fee.
     /// </summary>
     [HttpPost("{id:guid}/Register/Free")]

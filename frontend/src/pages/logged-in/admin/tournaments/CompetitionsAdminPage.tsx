@@ -40,7 +40,7 @@ export function CompetitionsAdminPage() {
         <VStack align="stretch" gap={4}>
             <PageHeading>Tournaments</PageHeading>
             <HStack justify="flex-end">
-                <Button size="sm" colorPalette="blue" onClick={() => setAdding(true)}>Add competition</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setAdding(true)}>Add competition</Button>
             </HStack>
 
             <Panel overflowX="auto">
@@ -165,7 +165,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
+                            <Button colorPalette="action" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

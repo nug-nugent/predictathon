@@ -1,5 +1,5 @@
 import { Box, Container, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner } from "@chakra-ui/react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
 import { SiteHeader } from "../site-header/SiteHeader";
@@ -9,6 +9,7 @@ import { useState } from "react";
 export function SiteLayout() {
     const { user, isLoading } = useUser();
     const [sideNavOpen, setSideNavOpen] = useState(false);
+    const location = useLocation();
 
     // Avoids a flash of logged-out content (or a redirect out of a protected route) while the
     // silent session refresh on app load is still in flight.
@@ -18,6 +19,12 @@ export function SiteLayout() {
                 <Spinner size="xl" />
             </Center>
         );
+    }
+
+    // The logged-out landing page (LoggedOutLanding) owns its own full-bleed layout with its own
+    // brand rail, rather than sitting inside the standard header/container chrome.
+    if (!user && location.pathname === "/") {
+        return <Outlet />;
     }
 
     return (

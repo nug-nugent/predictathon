@@ -109,7 +109,7 @@ export function FixtureChangesAdminPage() {
                                                         Dismiss
                                                     </Button>
                                                     <Button
-                                                        size="xs" colorPalette="blue" loading={busy} disabled={busy}
+                                                        size="xs" colorPalette="action" loading={busy} disabled={busy}
                                                         onClick={() => { void runAction(confirmFixtureChange, p.fixtureChangeProposalID); }}
                                                     >
                                                         Confirm

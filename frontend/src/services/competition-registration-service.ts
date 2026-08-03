@@ -8,11 +8,24 @@ export type CompetitionRegistrationSummary = {
     endDate: string;
     entranceFee: number;
     information: string | null;
+    imageFilename: string | null;
+    allowTwoPointers: boolean;
 };
 
 /// Competitions currently open for registration, for the pre-login landing page.
 export async function getCompetitionsOpenForRegistration(): Promise<CompetitionRegistrationSummary[]> {
     return getJson<CompetitionRegistrationSummary[]>("/Competition/OpenForRegistration");
+}
+
+// Matches Application/Models/PublicStatsModel.cs.
+export type PublicStats = {
+    predictionsMadeCount: number;
+    completedCompetitionsCount: number;
+};
+
+/// Site-wide stats shown on the pre-login landing page.
+export async function getPublicStats(): Promise<PublicStats> {
+    return getJson<PublicStats>("/Competition/PublicStats");
 }
 
 // Just the fields the registration flow needs to display - the full CompetitionModel shape lives
@@ -25,6 +38,7 @@ export type CompetitionRegistrationDetails = {
     entranceFee: number;
     payPalPaymentAvailable: boolean;
     information: string | null;
+    imageFilename: string | null;
 };
 
 /// A competition's registration-relevant details. Public - reachable before login from /register.

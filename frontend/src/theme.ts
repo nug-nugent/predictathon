@@ -10,6 +10,11 @@ export const predictTheme = createSystem(defaultConfig, {
       radii: {
         card: { value: "12px" },
       },
+      shadows: {
+        // A crisp, subtle card shadow - used where a page wants more lift than the standard
+        // Panel border alone gives it (e.g. the logged-out landing page's login/spotlight cards).
+        cardRaised: { value: "0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 12px 32px oklch(0.2 0.02 260 / 0.08)" },
+      },
       colors: {
         points: {
           0: { value: "#EE0000" },
@@ -85,6 +90,19 @@ export const predictTheme = createSystem(defaultConfig, {
         status: {
           urgent: { value: { _light: "#D69A1F", _dark: "#E0A93A" } },
           relaxed: { value: { _light: "#2E9B4A", _dark: "#3FCB4A" } },
+        },
+        // Primary-action colour for buttons/checkboxes/links: the header's blue in light mode,
+        // switching to the same bright turquoise (and near-black contrast text) already used for
+        // the selected nav item in dark mode - see nav.activeBg/activeFg. Use via colorPalette="action".
+        action: {
+          contrast: { value: { _light: "white", _dark: "{colors.nav.activeFg}" } },
+          fg: { value: { _light: "oklch(0.4 0.15 265)", _dark: "{colors.nav.activeBg}" } },
+          subtle: { value: { _light: "{colors.blue.100}", _dark: "{colors.cyan.900}" } },
+          muted: { value: { _light: "{colors.blue.200}", _dark: "{colors.cyan.800}" } },
+          emphasized: { value: { _light: "{colors.blue.300}", _dark: "{colors.cyan.700}" } },
+          solid: { value: { _light: "oklch(0.4 0.15 265)", _dark: "{colors.nav.activeBg}" } },
+          focusRing: { value: { _light: "oklch(0.4 0.15 265)", _dark: "{colors.nav.activeBg}" } },
+          border: { value: { _light: "oklch(0.4 0.15 265)", _dark: "{colors.cyan.400}" } },
         },
       },
     },

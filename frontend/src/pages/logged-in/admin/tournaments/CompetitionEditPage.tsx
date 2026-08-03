@@ -199,7 +199,7 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
 
                     <HStack justify="flex-end">
                         {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
-                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
+                        <Button colorPalette="action" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
                     </HStack>
                 </VStack>
             </Panel>
@@ -384,7 +384,7 @@ function FixtureImportSection({
 
                     <HStack justify="flex-end">
                         <Button
-                            colorPalette="blue" loading={importing}
+                            colorPalette="action" loading={importing}
                             disabled={importing || !canImport}
                             onClick={() => setConfirming(true)}
                         >
@@ -411,7 +411,7 @@ function FixtureImportSection({
                             </Dialog.Body>
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-                                <Button colorPalette="blue" onClick={() => { void runImport(); }}>Import</Button>
+                                <Button colorPalette="action" onClick={() => { void runImport(); }}>Import</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>
@@ -493,7 +493,7 @@ function HallOfFameSection({ competitionId }: { competitionId: string }) {
 
                     <HStack justify="flex-end">
                         <Button
-                            colorPalette="blue" loading={generating}
+                            colorPalette="action" loading={generating}
                             disabled={generating || alreadyGenerated || !status.allMatchesPlayed}
                             onClick={() => setConfirming(true)}
                         >
@@ -520,7 +520,7 @@ function HallOfFameSection({ competitionId }: { competitionId: string }) {
                             </Dialog.Body>
                             <Dialog.Footer>
                                 <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-                                <Button colorPalette="blue" onClick={() => { void generate(); }}>Generate</Button>
+                                <Button colorPalette="action" onClick={() => { void generate(); }}>Generate</Button>
                             </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>
