@@ -154,7 +154,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
                             )}
                             <HStack>
                                 <Button variant="ghost" disabled={busy} onClick={handleClose}>Cancel</Button>
-                                <Button colorPalette="blue" loading={saving} disabled={busy || !croppedAreaPixels} onClick={() => { void handleSave(); }}>
+                                <Button colorPalette="action" loading={saving} disabled={busy || !croppedAreaPixels} onClick={() => { void handleSave(); }}>
                                     Save
                                 </Button>
                             </HStack>

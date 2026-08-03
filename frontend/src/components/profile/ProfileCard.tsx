@@ -50,7 +50,7 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
                             aria-label="Change photo"
                             size="2xs"
                             variant="solid"
-                            colorPalette="blue"
+                            colorPalette="action"
                             rounded="full"
                             position="absolute"
                             bottom="-2px"

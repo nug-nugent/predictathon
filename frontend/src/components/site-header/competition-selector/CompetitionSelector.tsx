@@ -56,7 +56,7 @@ export function CompetitionSelector() {
                                     p="6"
                                     justifyContent="flex-start"
                                     variant="ghost"
-                                    colorPalette="blue"
+                                    colorPalette="action"
                                     onClick={() => selectCompetition(c.competitionID)}
                                 >
                                     {c.competitionName}

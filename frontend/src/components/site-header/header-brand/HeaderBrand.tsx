@@ -11,6 +11,8 @@ type HeaderBrandProps = {
     /** Wordmark/subtitle colors depend on the background they sit on - default to the header's blue-block treatment. */
     wordmarkColor?: string;
     subtitleColor?: string;
+    /** Shrinks the "loggedOut" variant's wordmark - used where it's a small lockup rather than the page's main heading. */
+    compact?: boolean;
 };
 
 export function HeaderBrand({
@@ -19,15 +21,16 @@ export function HeaderBrand({
     headingAs,
     wordmarkColor = "brand.wordmarkFg",
     subtitleColor = "brand.subtitleFg",
+    compact = false,
 }: HeaderBrandProps) {
     // alt="": decorative - it always sits beside the "Predictathon" wordmark text.
-    const logo = <Image src={football} alt="" mr={2} boxSize={{ base: "36px", md: "44px" }} />;
+    const logo = <Image src={football} alt="" mr={2} boxSize={compact ? "40px" : { base: "36px", md: "44px" }} />;
 
     if (variant === "loggedOut") {
         const heading = (
             <Heading
                 as={headingAs}
-                size={{ base: "2xl", md: "3xl" }}
+                {...(compact ? { fontSize: "20px", lineHeight: "1" } : { size: { base: "2xl", md: "3xl" } })}
                 color={wordmarkColor}
                 fontWeight="extrabold"
                 textTransform="uppercase"

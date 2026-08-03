@@ -184,7 +184,7 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
 
                     <HStack justify="flex-end">
                         {saved && <Text fontSize="sm" color="fg.success">Your changes have been saved.</Text>}
-                        <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
+                        <Button colorPalette="action" loading={saving} disabled={saving} onClick={() => { void save(); }}>Save</Button>
                     </HStack>
                 </VStack>
             </Panel>

@@ -153,4 +153,14 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
 
         return weeks;
     }
+
+    /// <inheritdoc />
+    public async Task<PublicStatsModel> GetPublicStatsAsync(CancellationToken cancellationToken = default)
+    {
+        return new PublicStatsModel
+        {
+            PredictionsMadeCount = await _appDbContext.Prediction.CountAsync(cancellationToken),
+            CompletedCompetitionsCount = await _appDbContext.HallOfFame.CountAsync(cancellationToken),
+        };
+    }
 }

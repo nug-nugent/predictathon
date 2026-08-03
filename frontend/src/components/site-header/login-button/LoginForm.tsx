@@ -1,4 +1,4 @@
-import { Button, Checkbox, Field, HStack, Input, Link, Stack, Text } from "@chakra-ui/react";
+import { Button, Checkbox, Field, HStack, Heading, Input, Link, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { PasswordInput } from "../../ui/password-input";
 import { Panel } from "../../ui/panel";
@@ -51,13 +51,13 @@ export function LoginForm() {
 
     if (needsPasswordReset) {
         return (
-            <Panel>
+            <Panel borderRadius="16px" boxShadow="cardRaised" py={{ base: "24px", md: "40px" }} px={{ base: "20px", md: "36px" }}>
                 <Stack gap="3">
                     <Text fontWeight="semibold">We've upgraded our security</Text>
-                    <Text fontSize="sm" color="fg.muted">
+                    <Text fontSize="15px" color="fg.muted">
                         You'll need to reset your password before you can log in again. It only takes a minute.
                     </Text>
-                    <Button size="sm" colorPalette="blue" alignSelf="flex-start" onClick={goToPasswordReset}>
+                    <Button h="44px" fontSize="15px" colorPalette="action" alignSelf="flex-start" onClick={goToPasswordReset}>
                         Reset your password
                     </Button>
                 </Stack>
@@ -66,27 +66,30 @@ export function LoginForm() {
     }
 
     return (
-        <Panel>
+        <Panel borderRadius="16px" boxShadow="cardRaised" py={{ base: "24px", md: "40px" }} px={{ base: "20px", md: "36px" }}>
             {/* A real <form> (not a click handler) so Enter submits and password managers can
                 recognise and fill the login - paired with the autocomplete hints below. */}
             <Stack as="form" gap="4" onSubmit={(e) => { e.preventDefault(); void login(); }}>
-                <Text fontWeight="semibold">Login</Text>
+                <Stack gap="1">
+                    <Heading fontSize="24px" lineHeight="1.2">Already registered?</Heading>
+                    <Text fontSize="15px" color="fg.muted">Log in to make your predictions.</Text>
+                </Stack>
 
                 <Field.Root>
-                    <Field.Label>Email / Username</Field.Label>
-                    <Input size="sm" name="username" autoComplete="username" disabled={isLoggingIn}
+                    <Field.Label fontSize="14.5px">Email or username</Field.Label>
+                    <Input h="44px" fontSize="15px" name="username" autoComplete="username" disabled={isLoggingIn}
                         value={username} onChange={(e) => setUsername(e.target.value)} />
                 </Field.Root>
 
                 <Field.Root>
-                    <Field.Label>Password</Field.Label>
-                    <PasswordInput size="sm" name="password" autoComplete="current-password" disabled={isLoggingIn}
+                    <Field.Label fontSize="14.5px">Password</Field.Label>
+                    <PasswordInput h="44px" fontSize="15px" name="password" autoComplete="current-password" disabled={isLoggingIn}
                         value={password} onChange={(e) => setPassword(e.target.value)} />
                 </Field.Root>
 
                 <Checkbox.Root checked={rememberMe} disabled={isLoggingIn}
                     onCheckedChange={(e) => setRememberMe(!!e.checked)}
-                    colorPalette="blue">
+                    colorPalette="action">
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
                     <Checkbox.Label>Remember me</Checkbox.Label>
@@ -97,8 +100,8 @@ export function LoginForm() {
                 )}
 
                 <HStack justifyContent={"space-between"}>
-                    <Link variant="underline" onClick={goToPasswordReset}>Forgotten password?</Link>
-                    <Button type="submit" loading={isLoggingIn} size="sm" colorPalette="blue">Login</Button>
+                    <Link variant="underline" colorPalette="action" onClick={goToPasswordReset}>Forgotten password?</Link>
+                    <Button type="submit" loading={isLoggingIn} h="44px" fontSize="15px" colorPalette="action">Login</Button>
                 </HStack>
             </Stack>
         </Panel>

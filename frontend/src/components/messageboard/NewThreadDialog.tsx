@@ -61,7 +61,7 @@ export function NewThreadDialog({ open, onClose, onCreated }: {
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={handleClose}>Cancel</Button>
                             <Button
-                                colorPalette="blue"
+                                colorPalette="action"
                                 loading={saving}
                                 disabled={!subject.trim() || !content.trim()}
                                 onClick={() => { void handleCreate(); }}

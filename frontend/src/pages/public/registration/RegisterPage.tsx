@@ -119,7 +119,7 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
     }
 
     return (
-        <VStack align="stretch" gap={6} maxW="container.sm" mx="auto">
+        <VStack align="stretch" gap={6} maxW="lg" mx="auto">
             <CompetitionSummaryCard competition={competition} />
 
             {step === "payment" ? (
@@ -173,7 +173,7 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                         <Button
                             type="submit"
                             alignSelf="flex-end"
-                            colorPalette="blue"
+                            colorPalette="action"
                             loading={submitting}
                             disabled={!fields.forenames || !fields.surname || !fields.userName || !fields.email || !fields.password || !confirmPassword}
                         >

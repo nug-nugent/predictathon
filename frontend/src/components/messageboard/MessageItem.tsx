@@ -7,7 +7,7 @@ import { ReactionBar } from "./ReactionBar";
 const markdownComponents = {
     p: ({ children }: { children?: React.ReactNode }) => <Text mb={2} _last={{ mb: 0 }}>{children}</Text>,
     a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
-        <Link href={href} target="_blank" rel="noopener noreferrer" colorPalette="blue">{children}</Link>
+        <Link href={href} target="_blank" rel="noopener noreferrer" colorPalette="action">{children}</Link>
     ),
 };
 

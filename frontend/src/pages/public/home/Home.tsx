@@ -1,19 +1,15 @@
-import { Box, Center, Heading, Link, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Center, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { useUser } from "../../../hooks/useUser";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { Link as RouterLink } from "react-router";
 import { UserStatisticsCard } from "../../../components/home/UserStatisticsCard";
 import { CompetitionRegistrationsCard } from "../../../components/home/CompetitionRegistrationsCard";
 import { PredictionDeadlineCard } from "../../../components/home/PredictionDeadlineCard";
 import { MiniLeagueTableCard } from "../../../components/home/MiniLeagueTableCard";
 import { PredictionOfTheWeekCard } from "../../../components/home/PredictionOfTheWeekCard";
 import { PersonalFormStripCard } from "../../../components/home/PersonalFormStripCard";
-import { LoginForm } from "../../../components/site-header/login-button/LoginForm";
-import { CompetitionSummaryCard } from "../../../components/registration/CompetitionSummaryCard";
-import { getCompetitionsOpenForRegistration } from "../../../services/competition-registration-service";
+import { LoggedOutLanding } from "./LoggedOutLanding";
 import { AnnouncementFeed } from "../../../components/announcements/AnnouncementFeed";
 import { PageHeading } from "../../../components/ui/page-heading";
-import { useAsyncData } from "../../../hooks/useAsyncData";
 import { LoadingSpinner } from "../../../components/ui/async-state";
 
 export function HomePage() {
@@ -28,44 +24,6 @@ export function HomePage() {
     }
 
     return <Dashboard />;
-}
-
-function LoggedOutLanding() {
-    const { data: competitions, error } = useAsyncData(getCompetitionsOpenForRegistration, []);
-
-    return (
-        <>
-            <AnnouncementFeed audience="loginPage" />
-            <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} maxW="container.md" mx="auto">
-                <LoginForm />
-
-                <VStack align="stretch" gap={3}>
-                    <Heading size="md">Register</Heading>
-
-                    {error && <Text>{error.messages.join(" ")}</Text>}
-
-                    {competitions === null && !error && (
-                        <Center py={4}>
-                            <Spinner />
-                        </Center>
-                    )}
-
-                    {competitions !== null && competitions.length === 0 && (
-                        <Text color="fg.muted">No competitions are currently open for registration.</Text>
-                    )}
-
-                    {competitions?.map((c) => (
-                        <Box key={c.competitionID}>
-                            <CompetitionSummaryCard competition={c} />
-                            <Link asChild variant="underline">
-                                <RouterLink to={`/register?competitionId=${c.competitionID}`}>Register for {c.competitionName}</RouterLink>
-                            </Link>
-                        </Box>
-                    ))}
-                </VStack>
-            </SimpleGrid>
-        </>
-    );
 }
 
 function Dashboard() {

@@ -42,7 +42,7 @@ export function PaymentCreditsAdminPage() {
         <VStack align="stretch" gap={4}>
             <PageHeading>Payment Credits</PageHeading>
             <HStack justify="flex-end">
-                <Button size="sm" colorPalette="blue" onClick={() => setAdding(true)} disabled={competitions.length === 0}>
+                <Button size="sm" colorPalette="action" onClick={() => setAdding(true)} disabled={competitions.length === 0}>
                     Add credit
                 </Button>
             </HStack>
@@ -191,7 +191,7 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
                         </Dialog.Body>
                         <Dialog.Footer>
                             <Button variant="ghost" disabled={saving} onClick={onClose}>Cancel</Button>
-                            <Button colorPalette="blue" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
+                            <Button colorPalette="action" loading={saving} disabled={saving} onClick={() => { void save(); }}>Add</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
