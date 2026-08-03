@@ -22,12 +22,18 @@ export function LoggedOutLanding() {
             <Box flex={1} px={{ base: 4, md: "56px" }} py={{ base: 8, lg: 12 }} position="relative" overflow="hidden">
                 <Box
                     position="absolute" top="-300px" right="-300px" boxSize="900px" borderRadius="full"
-                    bg="radial-gradient(circle at 30% 30%, oklch(0.55 0.15 150 / 0.16), transparent 70%)"
+                    bg={{
+                        _light: "radial-gradient(circle at 30% 30%, oklch(0.55 0.15 150 / 0.16), transparent 70%)",
+                        _dark: "radial-gradient(circle at 30% 30%, oklch(0.75 0 0 / 0.10), transparent 70%)",
+                    }}
                     pointerEvents="none" zIndex={0}
                 />
                 <Box
                     position="absolute" bottom="-260px" right="120px" boxSize="700px" borderRadius="full"
-                    bg="radial-gradient(circle at 70% 70%, oklch(0.4 0.15 265 / 0.18), transparent 70%), {colors.bg}"
+                    bg={{
+                        _light: "radial-gradient(circle at 70% 70%, oklch(0.4 0.15 265 / 0.18), transparent 70%), {colors.bg}",
+                        _dark: "radial-gradient(circle at 70% 70%, oklch(0.5 0 0 / 0.14), transparent 70%), {colors.bg}",
+                    }}
                     pointerEvents="none" display={{ base: "none", lg: "block" }} zIndex={1}
                 />
 
