@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
@@ -10,10 +11,7 @@ namespace Predictathon.WebApi.Controllers;
 
 public class AuthController : ApiControllerBase
 {
-    // Scoped to /api/Auth - the browser never sends this cookie on ordinary API calls, only to
-    // the endpoints that actually need it.
     private const string RefreshTokenCookieName = "RefreshToken";
-    private const string RefreshTokenCookiePath = "/api/Auth";
 
     private readonly IAuthService _authService;
 
@@ -23,12 +21,22 @@ public class AuthController : ApiControllerBase
     }
 
     /// <summary>
+    /// The path the refresh-token cookie is scoped to, so the browser only sends it to the
+    /// endpoints that need it. Built from <see cref="HttpRequest.PathBase"/> rather than a fixed
+    /// "/api/Auth" string, since the browser evaluates a cookie's Path against the full URL it's
+    /// calling - which includes any IIS virtual-application segment (e.g. "/api") that ASP.NET
+    /// Core's own routing has already stripped away by the time this code runs.
+    /// </summary>
+    private string RefreshTokenCookiePath => $"{Request.PathBase}/Auth";
+
+    /// <summary>
     /// Register a new user.
     /// </summary>
     /// <param name="model"></param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPost("Register")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthResultModel?>> Register(RegisterModel model, CancellationToken cancellationToken)
     {
         var result = await _authService.Register(model, cancellationToken);
@@ -43,6 +51,7 @@ public class AuthController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPost("Login")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthResultModel?>> Login(LoginModel model, CancellationToken cancellationToken)
     {
         var result = await _authService.Login(model, cancellationToken);
@@ -89,6 +98,7 @@ public class AuthController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPost("ForgotPassword")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult> ForgotPassword(ForgotPasswordModel model, CancellationToken cancellationToken)
     {
         var result = await _authService.ForgotPassword(model, cancellationToken);
@@ -102,6 +112,7 @@ public class AuthController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpPost("ResetPassword")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult> ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken)
     {
         var result = await _authService.ResetPassword(model, cancellationToken);

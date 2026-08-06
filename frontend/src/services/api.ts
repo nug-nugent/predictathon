@@ -1,20 +1,21 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-// The API host root (without the /api suffix), for non-REST endpoints - SignalR hubs, static
-// asset folders like /reactions - that aren't mounted under /api.
-function getApiOrigin(): string {
-    return API_BASE_URL.replace(/\/api\/?$/, "");
-}
+// Falls back to a same-origin relative path when unset, so a production build that never had
+// VITE_API_BASE_URL configured still works for the common case of the API being hosted as an IIS
+// sub-application (e.g. "/api") under the same domain as the frontend, rather than silently
+// sending requests to "undefined/...". This is also the correct base for the non-REST endpoints
+// below (SignalR hub, static /reactions mount) - whatever prefix routes a request to the API at
+// all (an IIS virtual-application segment, or a distinct origin/port in dev) applies uniformly to
+// everything the API serves, not just its REST controllers.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export function getHubUrl(hubPath: string): string {
-    return `${getApiOrigin()}${hubPath}`;
+    return `${API_BASE_URL}${hubPath}`;
 }
 
 // Absolute URL for a file under the backend's static /reactions mount (WebApi/Assets/Reactions) -
 // must be absolute, not a bare path, since these render directly in the browser (picker preview,
 // message reactions) and the frontend's own origin differs from the API's.
 export function getReactionImageUrl(filename: string): string {
-    return `${getApiOrigin()}/reactions/${filename}`;
+    return `${API_BASE_URL}/reactions/${filename}`;
 }
 
 // The `type` value AuthController/ApiControllerBase uses for a login failure caused by an
