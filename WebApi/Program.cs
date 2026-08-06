@@ -12,8 +12,8 @@ using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Application.Options;
 using Predictathon.Domain.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Predictathon.Infrastructure.Persistence;
-using Predictathon.WebApi.BackgroundServices;
 using Predictathon.WebApi.Extensions;
 using Predictathon.WebApi.HealthChecks;
 using Predictathon.WebApi.Hubs;
@@ -21,6 +21,7 @@ using Predictathon.WebApi.Options;
 using Predictathon.WebApi.Realtime;
 using Serilog;
 using System.Text;
+using System.Threading.RateLimiting;
 
 const string FrontendCorsPolicy = "Frontend";
 
@@ -37,9 +38,20 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services));
+    builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+    {
+        loggerConfiguration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services);
+
+        // Console output is discarded under IIS/Plesk in-process hosting, so only wire it up
+        // locally rather than fighting Microsoft.Extensions.Configuration's array-merging rules
+        // to drop it via an appsettings.Production.json override.
+        if (context.HostingEnvironment.IsDevelopment())
+        {
+            loggerConfiguration.WriteTo.Console();
+        }
+    });
 
     // Configure DbContext
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -153,10 +165,27 @@ try
     // Add all [ScopedService] services from the Application assembly
     builder.Services.AddApplication();
 
-    // Runs the daily prediction-reminder and league-history scheduled tasks in-process, replacing the
-    // old UptimeRobot-pinged TasksController endpoints.
+    // Bound for TasksController's shared-secret check - see that controller for why the daily
+    // prediction-reminder/league-history tasks are triggered externally rather than by an
+    // in-process timer.
     builder.Services.Configure<ScheduledTasksOptions>(builder.Configuration.GetSection(ScheduledTasksOptions.SectionName));
-    builder.Services.AddHostedService<ScheduledTasksHostedService>();
+
+    // Throttles the unauthenticated auth endpoints (login, register, forgot-password, reset-password)
+    // per client IP, since nothing else in the app records or limits repeated failed attempts.
+    const string AuthRateLimitPolicy = "auth";
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+        options.AddPolicy(AuthRateLimitPolicy, httpContext => RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    });
 
     // PayPal and football-data.org settings, bound in the Application layer's own Options types (rather
     // than alongside the WebApi/Options above) since Application-layer services consume them directly
@@ -183,6 +212,8 @@ try
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<ApplicationDbContext>(name: "database", tags: ["db"]);
 
+    builder.Services.AddHsts(options => options.MaxAge = TimeSpan.FromDays(30));
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -190,10 +221,19 @@ try
     {
         app.MapOpenApi();
     }
+    else
+    {
+        // Not enabled in Development - HSTS is a client-cached, sticky instruction (the browser
+        // enforces it for MaxAge regardless of what the server does afterwards), which is more
+        // friction than value against a dev-only cert on localhost.
+        app.UseHsts();
+    }
 
     app.UseHttpsRedirection();
 
     app.UseCors(FrontendCorsPolicy);
+
+    app.UseRateLimiter();
 
     // Serve uploaded avatars directly from disk. Images don't need CORS headers (only canvas pixel
     // reads would), so this works cross-origin from the frontend's own host as-is.

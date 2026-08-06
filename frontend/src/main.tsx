@@ -14,18 +14,21 @@ import { CompetitionProvider } from './providers/CompetitionProvider.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
 import { predictTheme } from './theme.ts'
 import { ColorModeProvider } from './components/ui/color-mode.tsx'
+import { ErrorBoundary } from './components/ui/error-boundary.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ChakraProvider value={predictTheme}>
       <ColorModeProvider>
-        <UserProvider>
-          <CompetitionProvider>
-            <BrowserRouter>
-              <SiteRoutes />
-            </BrowserRouter>
-          </CompetitionProvider>
-        </UserProvider>
+        <ErrorBoundary>
+          <UserProvider>
+            <CompetitionProvider>
+              <BrowserRouter>
+                <SiteRoutes />
+              </BrowserRouter>
+            </CompetitionProvider>
+          </UserProvider>
+        </ErrorBoundary>
       </ColorModeProvider>
     </ChakraProvider>
   </StrictMode>

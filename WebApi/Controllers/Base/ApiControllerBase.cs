@@ -5,8 +5,14 @@ using System.Security.Claims;
 
 namespace Predictathon.WebApi.Controllers.Base
 {
+    // No "api/" literal prefix here - when this is hosted behind IIS as a sub-application (e.g.
+    // mounted at "/api"), ASP.NET Core Module already strips that segment into Request.PathBase
+    // before routing sees it, so a hardcoded "api/" here would only ever match a doubled-up
+    // "/api/api/..." URL. The "/api" segment that browsers actually call is therefore purely a
+    // deployment concern (an IIS virtual application boundary in production, a distinct
+    // origin/port in local dev), not something these route templates need to encode themselves.
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public abstract class ApiControllerBase : ControllerBase
     {
         /// <summary>
