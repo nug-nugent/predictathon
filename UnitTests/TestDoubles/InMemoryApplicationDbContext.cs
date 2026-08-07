@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Interfaces.Persistence;
+using Predictathon.Domain.Identity;
 using System.Linq.Expressions;
 using Entities = Predictathon.Domain.Entities;
 
@@ -40,10 +41,24 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Entities.UserCompetition> UserCompetition => Set<Entities.UserCompetition>();
     public DbSet<Entities.UserCompetitionLeagueHistory> UserCompetitionLeagueHistory => Set<Entities.UserCompetitionLeagueHistory>();
 
+    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    // Navigations kept out of the blanket-strip below because specific service tests query through
+    // them - PaymentCreditService.GetAllAsync (ForCompetition) and MessageboardService.GetMessagesAsync
+    // (.Include(m => m.MessageReaction)).
+    private static readonly HashSet<(Type EntityType, string PropertyName)> PreservedNavigations =
+    [
+        (typeof(Entities.PaymentCredit), nameof(Entities.PaymentCredit.ForCompetition)),
+        (typeof(Entities.Message), nameof(Entities.Message.MessageReaction)),
+    ];
+
     /// <summary>
     /// Strips out navigation properties (references and collections onto other Domain entities) so
     /// EF's InMemory provider doesn't need the full web of relationships configured - only the
-    /// scalar/FK columns the validators and services under test actually query on.
+    /// scalar/FK columns the validators and services under test actually query on, plus anything
+    /// listed in <see cref="PreservedNavigations"/>.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,12 +75,22 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
                 var isReferenceNavigation = propertyType.Namespace == "Predictathon.Domain.Entities"
                     && propertyType != clrType;
 
-                if (isCollectionNavigation || isReferenceNavigation)
+                if ((isCollectionNavigation || isReferenceNavigation) && !PreservedNavigations.Contains((clrType, property.Name)))
                 {
                     modelBuilder.Entity(clrType).Ignore(property.Name);
                 }
             }
         }
+
+        modelBuilder.Entity<Entities.PaymentCredit>()
+            .HasOne(p => p.ForCompetition)
+            .WithMany()
+            .HasForeignKey(p => p.ForCompetitionID);
+
+        modelBuilder.Entity<Entities.Message>()
+            .HasMany(m => m.MessageReaction)
+            .WithOne()
+            .HasForeignKey(r => r.MessageID);
     }
 
     public IQueryable<T> Query<T>() where T : class => Set<T>();
