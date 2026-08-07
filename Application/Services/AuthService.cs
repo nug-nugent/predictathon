@@ -115,7 +115,25 @@ public class AuthService : IAuthService
         // Deliberately generic message either way - don't reveal whether the username exists.
         if (user is null || !await _userManager.CheckPasswordAsync(user, model.Password))
         {
+            if (user is not null)
+            {
+                // UserManager.CheckPasswordAsync alone doesn't drive Identity's lockout machinery -
+                // only SignInManager does that automatically, and this JWT-based flow doesn't use
+                // SignInManager. Record the failure explicitly, mirroring what SignInManager does
+                // internally, so repeated wrong passwords still lock the account out.
+                await _userManager.AccessFailedAsync(user);
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    return Result.Fail<AuthTokenResult>(new PropertyValidationError(string.Empty, "Too many failed login attempts. Please try again later."));
+                }
+            }
+
             return Result.Fail<AuthTokenResult>(new PropertyValidationError(string.Empty, "Invalid username or password."));
+        }
+
+        if (user.AccessFailedCount > 0)
+        {
+            await _userManager.ResetAccessFailedCountAsync(user);
         }
 
         return Result.Ok(await IssueTokensAsync(user, model.RememberMe, cancellationToken));
