@@ -97,4 +97,13 @@ Both are safe to call more than once a day (idempotent). Point either an UptimeR
 
 ### Frontend
 
-`npm run build` produces static files for `frontend/dist/`, which need an IIS URL-rewrite rule (`web.config` in the frontend's site root) to fall back to `index.html` for client-side routes — not yet set up. `VITE_API_BASE_URL` defaults to `/api` (relative) if unset at build time, which works as long as the API is reverse-proxied under the same domain as the frontend; set it explicitly via `.env.production` or a build-time environment variable if the API is on a different origin.
+`npm run build` produces static files for `frontend/dist/`, including `web.config` (copied automatically from `frontend/public/`), which carries the IIS URL-rewrite rule needed to fall back to `index.html` for client-side routes. `VITE_API_BASE_URL` defaults to `/api` (relative) if unset at build time, which works as long as the API is reverse-proxied under the same domain as the frontend; set it explicitly via `.env.production` or a build-time environment variable if the API is on a different origin.
+
+### Taking the site offline for an upgrade
+
+To do a live upgrade (e.g. over a weekend), drop `Deployment/app_offline.htm` into both:
+
+1. The API's IIS sub-application folder — the ASP.NET Core Module detects `app_offline.htm` automatically and serves it (with a 503) for every request, no config needed.
+2. The frontend's site root, alongside `index.html` — the frontend is static files with no ASP.NET Core Module involved, so `web.config`'s "App offline" rewrite rule replicates the same behaviour by checking for the file's presence.
+
+Delete (or rename) both copies to bring the site back up. If the upgrade doesn't go to plan, restoring the previous published output (API + frontend) and removing both `app_offline.htm` copies rolls back to the last known-good state — the database itself isn't touched by the app-offline mechanism, so a rollback of app code alone is safe as long as no schema changes need reverting too (see the SQL backup/restore note in your Plesk control panel before running the `Identity.Users` migration for the first time against production data).
