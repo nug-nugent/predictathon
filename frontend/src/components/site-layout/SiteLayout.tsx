@@ -1,4 +1,4 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner } from "@chakra-ui/react";
+import { Box, Container, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Text } from "@chakra-ui/react";
 import { Outlet, useLocation } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
@@ -66,6 +66,10 @@ export function SiteLayout() {
                         <Outlet />
                     </Box>
                 </Flex>
+
+                <Text textAlign="center" fontSize="xs" color="fg.muted" mt={6} mb={3}>
+                    Predictathon v{__APP_VERSION__} &middot; &copy; David Huggett 1998&ndash;{new Date().getFullYear()}
+                </Text>
             </Container>
         </Box>
     )
