@@ -85,6 +85,19 @@ None of these are safe to commit, so `appsettings.json` ships them blank. Set ea
 | `FootballDataApi__ApiKey` | For automated fixture-change detection. |
 | `Health__ApiKey`, `Health__DetailedApiKey` | Leaving these unset leaves `/health` and `/health/detailed` publicly readable. Set them before going live. |
 | `ScheduledTasks__ApiKey` | See below — leaving it unset leaves the scheduled-task endpoints open (low risk since they're idempotent, but worth setting). |
+| `Avatars__StoragePath`, `MessageImages__StoragePath`, `Serilog__WriteTo__0__Args__path` | Default to paths relative to the API's own deploy folder (`Uploads/Avatars`, `Uploads/MessageImages`, `Logs/predictathon-.log`) — fine for Docker/native, but wrong on IIS if you want uploads/logs to survive a republish (which wipes and replaces the deploy folder). See note below. |
+
+Uploaded files and logs shouldn't live inside the deploy folder itself, since a republish overwrites it wholesale. `Path.GetFullPath` (used to resolve `Avatars:StoragePath`/`MessageImages:StoragePath`, and how Serilog's file sink resolves its own `path`) resolves relative paths — `..` segments included — against the app's current working directory, which under IIS in-process hosting is the app's own physical folder. So pointing these at a sibling folder outside the deploy directory is just a relative path with enough `..`s to climb out, e.g. for an app at `C:\...\Predictathon\API` with data kept at `C:\...\Data\Predictathon`:
+
+```
+Avatars__StoragePath=..\..\Data\Predictathon\Uploads\Avatars
+MessageImages__StoragePath=..\..\Data\Predictathon\Uploads\MessageImages
+Serilog__WriteTo__0__Args__path=..\..\Data\Predictathon\Logs\predictathon-.log
+```
+
+This is deliberately relative rather than an absolute path: if the whole IIS tree ever moves to a different drive, the offset between the app and data folders is unaffected. Note IIS virtual directories pointed at the same physical location are *not* involved in any of this — the app serves uploads itself via its own static-files middleware ([Program.cs](WebApi/Program.cs), `/uploads/avatars` and `/uploads/message-images`) and writes logs itself via Serilog, both by direct filesystem path; IIS never sees those requests or gets consulted for the physical path. There's no `Server.MapPath` equivalent in ASP.NET Core to look one up dynamically — Kestrel is host-agnostic and never queries IIS's virtual-directory config.
+
+On Plesk, set environment variables via its ASP.NET Core panel. On a raw IIS install (e.g. a local rehearsal), `dotnet publish` regenerates the app's own `web.config` from scratch every time, so anything written into *that* file — including via IIS Manager, if pointed at the wrong scope — is lost on the next publish. Use **Application Pool–level** environment variables instead: IIS Manager → **Application Pools** → the app's pool → Advanced Settings → **Environment Variables** (IIS 10 with the 2022+ update; if that UI isn't present, `appcmd.exe set config -section:system.applicationHost/applicationPools "/[name='PoolName'].environmentVariables.[name='Avatars__StoragePath',value='..\..\Data\Predictathon\Uploads\Avatars']" /commit:apphost` does the same thing directly). These live in `applicationHost.config`'s `<applicationPools>` section — a different file entirely from the site's `web.config` — so there's no scoping ambiguity and no risk of a publish wiping them.
 
 ### Scheduled tasks
 
@@ -101,9 +114,11 @@ Both are safe to call more than once a day (idempotent). Point either an UptimeR
 
 ### Taking the site offline for an upgrade
 
-To do a live upgrade (e.g. over a weekend), drop `Deployment/app_offline.htm` into both:
+`Deployment/Publish-Local.ps1` does this automatically around a publish. To do it by hand for a longer upgrade (e.g. over a weekend), the two applications take different approaches:
 
-1. The API's IIS sub-application folder — the ASP.NET Core Module detects `app_offline.htm` automatically and serves it (with a 503) for every request, no config needed.
-2. The frontend's site root, alongside `index.html` — the frontend is static files with no ASP.NET Core Module involved, so `web.config`'s "App offline" rewrite rule replicates the same behaviour by checking for the file's presence.
+1. **API** — drop `Deployment/app_offline.htm` into the API's IIS sub-application folder. The ASP.NET Core Module detects it automatically and serves it (with a 503) for every request, no config needed. Delete the file to bring the API back up.
+2. **Frontend** — copy `Deployment/app_offline.htm` over the site root's `index.html`. Restore it by copying `frontend/dist/index.html` back (or just re-running a publish).
 
-Delete (or rename) both copies to bring the site back up. If the upgrade doesn't go to plan, restoring the previous published output (API + frontend) and removing both `app_offline.htm` copies rolls back to the last known-good state — the database itself isn't touched by the app-offline mechanism, so a rollback of app code alone is safe as long as no schema changes need reverting too (see the SQL backup/restore note in your Plesk control panel before running the `Identity.Users` migration for the first time against production data).
+The frontend deliberately does **not** use an `app_offline.htm`-presence rewrite rule, which is the obvious symmetrical approach and was how this originally worked. IIS caches the response for `/` and invalidates that cache when the file it actually served — `index.html` — changes; it has no idea a rewrite rule's condition depends on a *different* file. Toggling a separate `app_offline.htm` therefore left `/` serving a stale answer in both directions while every other URL was correct: sometimes the live app during an outage, and sometimes a cached rewrite to an `app_offline.htm` that the deploy had already deleted — which surfaces as a persistent `404` (`0x80070002`) on the site root after deploying. Overwriting `index.html` is deterministic because it is the file IIS is watching: measured, a change to it is reflected at `/` instantly, versus 5+ seconds (indefinitely in the field) for `app_offline.htm`.
+
+If the upgrade doesn't go to plan, restoring the previous published output (API + frontend) rolls back to the last known-good state — the database itself isn't touched by the app-offline mechanism, so a rollback of app code alone is safe as long as no schema changes need reverting too (see the SQL backup/restore note in your Plesk control panel before running the `Identity.Users` migration for the first time against production data).
