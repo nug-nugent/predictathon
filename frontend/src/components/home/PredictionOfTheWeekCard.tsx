@@ -36,8 +36,8 @@ export function PredictionOfTheWeekCard({ competitionId }: { competitionId: stri
     const entry = state.entry;
 
     return (
-        <Panel>
-            <Heading size="md" mb={2}>{entry ? state.label : "Prediction of the Week"}</Heading>
+        <Panel p={3}>
+            <Heading fontSize="17px" fontWeight="semibold" mb={2}>{entry ? state.label : "Prediction of the Week"}</Heading>
             {entry === null ? (
                 <Text color="fg.muted">No standout prediction yet this week.</Text>
             ) : (

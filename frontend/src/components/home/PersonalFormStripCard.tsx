@@ -42,8 +42,8 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
     const maxPoints = Math.max(1, ...form.map((w) => w.points));
 
     return (
-        <Panel>
-            <Heading size="md" mb={2}>Recent Form</Heading>
+        <Panel p={3}>
+            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Recent Form</Heading>
             <HStack align="flex-end" gap={3} justify="space-around">
                 {form.map((week) => (
                     <VStack key={week.week} gap={1}>
