@@ -243,7 +243,7 @@ public class AuthService : IAuthService
             await _emailService.SendAsync(
                 user.Email!,
                 "Welcome to Predictathon",
-                $"""<p>Dear {user.Forenames},</p><p>Thanks for signing up to Predictathon. Your username is <strong>{user.UserName}</strong>.</p><p>Visit <a href="{predictionsUrl}">{predictionsUrl}</a> to enter your first predictions, and use the 'Edit profile' menu to add a picture and set your email reminder preferences.</p><p>Good luck,<br />Predictathon.</p>""",
+                $"""<p>Dear {user.Forenames},</p><p>Thanks for signing up to Predictathon. Your username is <strong>{user.UserName}</strong>.</p><p>Visit <a href="{predictionsUrl}">{predictionsUrl}</a> to enter your first predictions, and use the 'Edit profile' menu to add a profile picture and set your email reminder preferences.</p><p>Good luck,<br />Predictathon.</p>""",
                 cancellationToken);
         }
         catch (Exception ex)
