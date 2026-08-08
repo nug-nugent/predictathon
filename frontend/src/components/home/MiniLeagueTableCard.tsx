@@ -30,9 +30,9 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
     const ownRow = user && !topRows.some((r) => r.userID === user.id) ? table.find((r) => r.userID === user.id) : undefined;
 
     return (
-        <Panel>
+        <Panel p={3}>
             <HStack justify="space-between" mb={2}>
-                <Heading size="md">League Table</Heading>
+                <Heading fontSize="17px" fontWeight="semibold">League Table</Heading>
                 <ChakraLink asChild fontSize="sm" variant="underline">
                     <RouterLink to="/league">Full table &rarr;</RouterLink>
                 </ChakraLink>

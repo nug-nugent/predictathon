@@ -50,8 +50,8 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
     const now = new Date();
 
     return (
-        <Panel>
-            <Heading size="md" mb={2}>Prediction Deadline</Heading>
+        <Panel p={3}>
+            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Prediction Deadline</Heading>
             {next === null ? (
                 <Text color="green.500">All matches predicted!</Text>
             ) : (

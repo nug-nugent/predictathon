@@ -4,16 +4,20 @@ import football from "../../../assets/football.png";
 import { CompetitionSelector } from "../competition-selector/CompetitionSelector";
 
 type HeaderBrandProps = {
-    /** Compact wordmark + competition subtitle (used once logged in), vs. a large standalone wordmark. */
+    /** Compact wordmark + competition subtitle (used once logged in), vs. a standalone wordmark. */
     variant: "loggedIn" | "loggedOut";
     linkToHome?: boolean;
     headingAs?: "h1" | "h2";
     /** Wordmark/subtitle colors depend on the background they sit on - default to the header's blue-block treatment. */
     wordmarkColor?: string;
     subtitleColor?: string;
-    /** Shrinks the "loggedOut" variant's wordmark - used where it's a small lockup rather than the page's main heading. */
-    compact?: boolean;
 };
+
+// One fixed scale for the wordmark lockup everywhere it appears (top bar, login brand rail, mobile
+// nav drawer) - previously "loggedIn" and "loggedOut" each had their own, larger scale, which made
+// the post-login site header read as a hero banner instead of a compact utility strip.
+const LOGO_SIZE = "32px";
+const WORDMARK_FONT_SIZE = "21px";
 
 export function HeaderBrand({
     variant,
@@ -21,24 +25,25 @@ export function HeaderBrand({
     headingAs,
     wordmarkColor = "brand.wordmarkFg",
     subtitleColor = "brand.subtitleFg",
-    compact = false,
 }: HeaderBrandProps) {
     // alt="": decorative - it always sits beside the "Predictathon" wordmark text.
-    const logo = <Image src={football} alt="" mr={2} boxSize={compact ? "40px" : { base: "36px", md: "44px" }} />;
+    const logo = <Image src={football} alt="" mr={2} boxSize={LOGO_SIZE} />;
+
+    const heading = (
+        <Heading
+            as={headingAs}
+            fontSize={WORDMARK_FONT_SIZE}
+            lineHeight="1"
+            letterSpacing="-0.01em"
+            color={wordmarkColor}
+            fontWeight="extrabold"
+            textTransform="uppercase"
+        >
+            Predictathon
+        </Heading>
+    );
 
     if (variant === "loggedOut") {
-        const heading = (
-            <Heading
-                as={headingAs}
-                {...(compact ? { fontSize: "20px", lineHeight: "1" } : { size: { base: "2xl", md: "3xl" } })}
-                color={wordmarkColor}
-                fontWeight="extrabold"
-                textTransform="uppercase"
-            >
-                Predictathon
-            </Heading>
-        );
-
         return linkToHome ? (
             <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
                 {logo}
@@ -51,19 +56,6 @@ export function HeaderBrand({
             </>
         );
     }
-
-    const heading = (
-        <Heading
-            as={headingAs}
-            size={{ base: "2xl", md: "3xl" }}
-            lineHeight="1"
-            color={wordmarkColor}
-            fontWeight="extrabold"
-            textTransform="uppercase"
-        >
-            Predictathon
-        </Heading>
-    );
 
     return (
         <>

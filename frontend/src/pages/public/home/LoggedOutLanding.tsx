@@ -78,7 +78,7 @@ function BrandRail({ stats }: { stats: PublicStats | null }) {
             gap={8}
         >
             <Box position="relative" zIndex={1}>
-                <HeaderBrand variant="loggedOut" linkToHome headingAs="h1" compact />
+                <HeaderBrand variant="loggedOut" linkToHome headingAs="h1" />
             </Box>
 
             <VStack align="stretch" gap={4} position="relative" zIndex={1} mt={{ base: 0, lg: "auto" }}>

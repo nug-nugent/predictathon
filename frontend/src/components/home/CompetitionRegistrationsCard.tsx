@@ -52,8 +52,8 @@ export function CompetitionRegistrationsCard() {
     }
 
     return (
-        <Panel>
-            <Heading size="md" mb={2}>Competitions</Heading>
+        <Panel p={3}>
+            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Competitions</Heading>
             <Table.Root size="sm" variant="line">
                 <Table.Body>
                     {registrations.map((r) => (

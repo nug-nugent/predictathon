@@ -5,8 +5,8 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { setDefaultCompetition } from "../../../services/competition-service";
 
 const captionProps = {
-    fontSize: { base: "xs", md: "xs" },
-    lineHeight: "1",
+    fontSize: "13px",
+    lineHeight: "1.3",
 } as const;
 
 export function CompetitionSelector() {
@@ -41,8 +41,18 @@ export function CompetitionSelector() {
         <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}
             positioning={{ placement: "bottom-start" }}>
             <Popover.Trigger asChild>
-                <Button {...captionProps} variant="plain" p="0" h="auto" fontWeight="normal" color="inherit">
-                    {current?.competitionName} <ChevronDown size={12} />
+                <Button
+                    {...captionProps}
+                    variant="plain"
+                    p="0"
+                    h="auto"
+                    gap="1"
+                    fontWeight="semibold"
+                    color="inherit"
+                    cursor="pointer"
+                    _hover={{ textDecoration: "underline" }}
+                >
+                    {current?.competitionName} <ChevronDown size={14} />
                 </Button>
             </Popover.Trigger>
             <Portal>
