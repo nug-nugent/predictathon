@@ -328,15 +328,26 @@ public class UserService : IUserService
         }
     }
 
+    // Compile-time-constant cell styles, built from the shared EmailStyle palette so the table
+    // matches the branded shell EmailService wraps it in.
+    private const string ReminderTableCellStyle = "padding:8px 12px;text-align:left;border-bottom:1px solid " + EmailStyle.FooterBorder + ";";
+    private const string ReminderTableHeaderCellStyle = ReminderTableCellStyle + "font-size:12px;text-transform:uppercase;letter-spacing:0.03em;color:" + EmailStyle.FooterInk + ";background-color:" + EmailStyle.FooterBg + ";";
+
     private static string BuildReminderEmailBody(IReadOnlyList<UserOverduePredictionsItem> overduePredictions, string predictionsUrl)
     {
-        var rows = string.Join(string.Empty, overduePredictions.Select(p =>
-            $"<tr><td>{p.CompetitionName}</td><td>{p.NextPredictionDue:dddd d MMMM 'at' h:mmtt}</td></tr>"));
+        var rows = string.Join(string.Empty, overduePredictions.Select((p, i) =>
+        {
+            var rowBg = i % 2 == 0 ? "#FFFFFF" : EmailStyle.FooterBg;
+            return $"""<tr style="background-color:{rowBg};"><td style="{ReminderTableCellStyle}">{p.CompetitionName}</td><td style="{ReminderTableCellStyle}">{p.NextPredictionDue:dddd d MMMM 'at' h:mmtt}</td></tr>""";
+        }));
 
         return $"""
             <p>Dear {overduePredictions[0].Username},</p>
             <p>You need to make a prediction in the following competition{(overduePredictions.Count > 1 ? "s" : "")}:</p>
-            <table><tr><th>Competition</th><th>Next prediction due</th></tr>{rows}</table>
+            <table style="width:100%;border-collapse:collapse;border:1px solid {EmailStyle.FooterBorder};border-radius:6px;overflow:hidden;">
+            <tr><th style="{ReminderTableHeaderCellStyle}">Competition</th><th style="{ReminderTableHeaderCellStyle}">Next prediction due</th></tr>
+            {rows}
+            </table>
             <p>Please visit <a href="{predictionsUrl}">{predictionsUrl}</a> and log in to register your predictions.</p>
             <p>Good luck,<br />Predictathon.</p>
             """;

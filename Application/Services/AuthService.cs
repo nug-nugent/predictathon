@@ -2,6 +2,7 @@ using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
@@ -25,6 +26,7 @@ public class AuthService : IAuthService
     private readonly IAvatarService _avatarService;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
     private readonly IValidator<RegisterModel>? _registerValidator;
     private readonly IValidator<LoginModel>? _loginValidator;
 
@@ -35,6 +37,7 @@ public class AuthService : IAuthService
         IAvatarService avatarService,
         IEmailService emailService,
         IConfiguration configuration,
+        ILogger<AuthService> logger,
         IValidator<RegisterModel>? registerValidator = null,
         IValidator<LoginModel>? loginValidator = null)
     {
@@ -44,6 +47,7 @@ public class AuthService : IAuthService
         _avatarService = avatarService;
         _emailService = emailService;
         _configuration = configuration;
+        _logger = logger;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
     }
@@ -76,7 +80,10 @@ public class AuthService : IAuthService
             return Result.Fail<AuthTokenResult>(errors);
         }
 
-        return Result.Ok(await IssueTokensAsync(user, model.RememberMe, cancellationToken));
+        var tokenResult = await IssueTokensAsync(user, model.RememberMe, cancellationToken);
+        await SendWelcomeEmailAsync(user, cancellationToken);
+
+        return Result.Ok(tokenResult);
     }
 
     /// <inheritdoc />
@@ -224,6 +231,27 @@ public class AuthService : IAuthService
         }
 
         return Result.Ok();
+    }
+
+    private async Task SendWelcomeEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? string.Empty).TrimEnd('/');
+        var predictionsUrl = $"{frontendBaseUrl}/predictions";
+
+        try
+        {
+            await _emailService.SendAsync(
+                user.Email!,
+                "Welcome to Predictathon",
+                $"""<p>Dear {user.Forenames},</p><p>Thanks for signing up to Predictathon. Your username is <strong>{user.UserName}</strong>.</p><p>Visit <a href="{predictionsUrl}">{predictionsUrl}</a> to enter your first predictions, and use the 'Edit profile' menu to add a profile picture and set your email reminder preferences.</p><p>Good luck,<br />Predictathon.</p>""",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Registration has already succeeded and tokens have already been issued by this point -
+            // don't fail the whole request just because the welcome email couldn't be sent.
+            _logger.LogError(ex, "Failed to send welcome email to {UserId}", user.Id);
+        }
     }
 
     private async Task SendPasswordResetEmailAsync(ApplicationUser user, CancellationToken cancellationToken)

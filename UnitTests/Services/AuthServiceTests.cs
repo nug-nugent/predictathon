@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
@@ -26,7 +27,8 @@ public class AuthServiceTests
             _refreshTokenService.Object,
             _avatarService.Object,
             _emailService.Object,
-            new ConfigurationBuilder().Build());
+            new ConfigurationBuilder().Build(),
+            NullLogger<AuthService>.Instance);
 
     private static ApplicationUser MakeUser(int accessFailedCount = 0) => new()
     {
@@ -185,6 +187,41 @@ public class AuthServiceTests
         createdUser.Should().NotBeNull();
         createdUser!.UserName.Should().Be(model.UserName);
         createdUser.Email.Should().Be(model.Email);
+    }
+
+    [Fact]
+    public async Task Register_CreateSucceeds_SendsWelcomeEmail()
+    {
+        var model = new RegisterModel { UserName = "someone", Email = "someone@example.com", Password = "pw", Forenames = "Dave" };
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), model.Password)).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([]);
+        _tokenService.Setup(t => t.GenerateToken(It.IsAny<ApplicationUser>(), It.IsAny<IList<string>>())).Returns(new AuthResultModel { Token = "jwt" });
+        _refreshTokenService.Setup(r => r.GenerateAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), default)).ReturnsAsync("refresh-token");
+
+        await MakeService().Register(model);
+
+        _emailService.Verify(e => e.SendAsync(
+            model.Email,
+            It.IsAny<string>(),
+            It.Is<string>(body => body.Contains(model.Forenames) && body.Contains(model.UserName)),
+            default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Register_WelcomeEmailSendFails_StillReturnsSuccess()
+    {
+        var model = new RegisterModel { UserName = "someone", Email = "someone@example.com", Password = "pw", Forenames = "Dave" };
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), model.Password)).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([]);
+        _tokenService.Setup(t => t.GenerateToken(It.IsAny<ApplicationUser>(), It.IsAny<IList<string>>())).Returns(new AuthResultModel { Token = "jwt" });
+        _refreshTokenService.Setup(r => r.GenerateAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), default)).ReturnsAsync("refresh-token");
+        _emailService.Setup(e => e.SendAsync(model.Email, It.IsAny<string>(), It.IsAny<string>(), default))
+            .ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
+
+        var result = await MakeService().Register(model);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Response.Token.Should().Be("jwt");
     }
 
     [Fact]
