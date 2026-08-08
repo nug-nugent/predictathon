@@ -25,4 +25,8 @@
     <Folder Include="Services\Persistence\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\EmailLogo.png" />
+  </ItemGroup>
+
 </Project>
