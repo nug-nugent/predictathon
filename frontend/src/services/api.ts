@@ -83,9 +83,15 @@ async function handleJsonResponse<TResponse>(response: Response): Promise<TRespo
     return response.json() as Promise<TResponse>;
 }
 
+// Guards against a burst of concurrent background calls (e.g. the home page's several parallel
+// card fetches) each independently triggering their own reload once one 503 has already done so.
+let reloadedForOutage = false;
+
 async function doFetch(path: string, init: RequestInit): Promise<Response> {
+    let response: Response;
+
     try {
-        return await fetch(`${API_BASE_URL}${path}`, {
+        response = await fetch(`${API_BASE_URL}${path}`, {
             // Sends/receives the HttpOnly refresh-token cookie. Requires the API's CORS policy to
             // use an explicit origin allow-list + AllowCredentials() - never AllowAnyOrigin().
             credentials: "include",
@@ -94,6 +100,18 @@ async function doFetch(path: string, init: RequestInit): Promise<Response> {
     } catch {
         throw new ApiError(0, ["Unable to reach the server. Please try again."]);
     }
+
+    // 503 only ever comes from the API being taken down for an upgrade (ANCM serving its
+    // app_offline.htm), never from application logic. Without this, a tab that was already open
+    // when the upgrade started just keeps running and renders a raw "request failed (503)" in
+    // whichever sections happened to refetch. Reloading hands off to the frontend's own offline
+    // page - during an upgrade index.html *is* that page (see README, "Taking the site offline").
+    if (response.status === 503 && !reloadedForOutage) {
+        reloadedForOutage = true;
+        window.location.reload();
+    }
+
+    return response;
 }
 
 export async function getJson<TResponse>(path: string): Promise<TResponse> {
