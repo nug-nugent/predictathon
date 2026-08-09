@@ -1,0 +1,170 @@
+name: Deploy to production
+
+# Manual only, by design: this is the first real deploy automation for a live site ~50
+# people use, and there's no undo button on an FTP upload. See project memory /
+# conversation history for the reasoning - this can move to an automatic trigger later
+# once there's confidence in the pipeline.
+on:
+  workflow_dispatch:
+
+# Prevent two manual runs from racing each other against the same FTP target.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "22"
+  # --- Remote layout (ftp://predictathon.co.uk/) ---
+  # Root has data/, logs/, wwwroot/ as siblings. wwwroot is the frontend's site root.
+  FRONTEND_REMOTE_PATH: "wwwroot"
+  # Confirmed with Hosting Heroes: Plesk supports IIS sub-applications, self-service, via
+  # Domains -> predictathon.co.uk -> Virtual Directories -> create /api, configured as an
+  # Application (not a plain subfolder). TODO(david): double-check this physical path once
+  # that Virtual Directory is actually created in Plesk, in case it lands somewhere other
+  # than a plain nested wwwroot/api.
+  API_REMOTE_PATH: "wwwroot/api"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Fast, no DB needed. IntegrationTests deliberately excluded - they need a real SQL
+      # Server (PREDICTATHON_TEST_CONNECTION) and there's no disposable CI database wired
+      # up yet; running them against production would be inappropriate anyway.
+      - name: Run backend unit tests
+        run: dotnet test UnitTests --configuration Release
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Publish API
+        run: dotnet publish WebApi/Predictathon.WebApi.csproj -c Release -o publish/api
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-publish
+          path: publish/api
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-offline-page
+          path: Deployment/app_offline.htm
+          retention-days: 7
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Optional extra safety net: create a "production" environment in this repo's Settings
+    # -> Environments with a required reviewer, and this job will pause for manual approval
+    # even after workflow_dispatch is clicked. Harmless no-op if that environment doesn't exist.
+    environment: production
+    env:
+      FTP_HOST: predictathon.co.uk
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: api-publish
+          path: publish/api
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-offline-page
+          path: offline-page
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      # Mirrors Deployment/Publish-Local.ps1's sequence exactly, just swapping local
+      # Copy-Item/robocopy for FTPS. See that script + README.md's "Production deployment"
+      # section for the reasoning behind each step.
+      - name: Take site offline
+        run: |
+          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
+            put offline-page/app_offline.htm -o $API_REMOTE_PATH/app_offline.htm; \
+            put offline-page/app_offline.htm -o $FRONTEND_REMOTE_PATH/index.html; \
+            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+
+      # ANCM needs a moment to unload the running app and release its file locks on the
+      # published DLLs before they can be overwritten - same reason Publish-Local.ps1 sleeps
+      # here, just a longer pause since this is over the network rather than a local copy.
+      - name: Wait for ANCM to release file locks
+        run: sleep 10
+
+      # Upload only - deliberately NOT a delete-extra-files mirror. This preserves
+      # app_offline.htm (not part of the publish output) exactly like a local
+      # `dotnet publish -o` into an existing folder would, and avoids any risk of an
+      # overly broad delete reaching into a sibling folder we don't fully control the
+      # layout of yet (see API_REMOTE_PATH TODO above). Trade-off: stale files from old
+      # deploys aren't cleaned up automatically - acceptable for now, revisit once the
+      # real remote layout is confirmed.
+      - name: Upload API
+        run: |
+          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
+            mirror -R --verbose --parallel=4 publish/api $API_REMOTE_PATH; \
+            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+
+      # Bring the API back online before the frontend, so there's no window where a live
+      # SPA is talking to an API still serving 503s.
+      - name: Bring API online
+        run: |
+          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
+            rm -f $API_REMOTE_PATH/app_offline.htm; \
+            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+
+      - name: Upload frontend
+        run: |
+          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
+            mirror -R --verbose --parallel=4 frontend/dist $FRONTEND_REMOTE_PATH; \
+            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+
+      # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the mirror
+      # above should already have restored the real index.html, but this one file is the
+      # difference between the site being up and stuck on the offline page, so don't rely
+      # on mirror's same-file heuristics for it.
+      - name: Restore real index.html
+        run: |
+          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
+            put frontend/dist/index.html -o $FRONTEND_REMOTE_PATH/index.html; \
+            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+
+# Not covered here, deliberately: database schema changes (dacpac/sqlpackage). Per David's
+# call, that stays a separate manual step for now given the first release includes the
+# dbo.User -> Identity.Users migration against real production data - see project memory
+# ("Schema deploy" decision) before automating it into this workflow.
