@@ -127,7 +127,6 @@ jobs:
           PAYPAL_CLIENT_ID: ${{ secrets.PROD_PAYPAL_CLIENT_ID }}
           PAYPAL_CLIENT_SECRET: ${{ secrets.PROD_PAYPAL_CLIENT_SECRET }}
           FOOTBALLDATA_API_KEY: ${{ secrets.PROD_FOOTBALLDATA_API_KEY }}
-          HEALTH_API_KEY: ${{ secrets.PROD_HEALTH_API_KEY }}
           HEALTH_DETAILED_API_KEY: ${{ secrets.PROD_HEALTH_DETAILED_API_KEY }}
           SCHEDULED_TASKS_API_KEY: ${{ secrets.PROD_SCHEDULED_TASKS_API_KEY }}
         run: |
@@ -170,9 +169,9 @@ jobs:
           Add-EnvVar "PayPal__ClientId" $env:PAYPAL_CLIENT_ID
           Add-EnvVar "PayPal__ClientSecret" $env:PAYPAL_CLIENT_SECRET
           Add-EnvVar "FootballDataApi__ApiKey" $env:FOOTBALLDATA_API_KEY
-          # Leaving these unset makes /health, /health/detailed, and the scheduled-task trigger
-          # endpoints unauthenticated - low risk (idempotent, no sensitive data) but worth setting.
-          Add-EnvVar "Health__ApiKey" $env:HEALTH_API_KEY
+          # Health__ApiKey is deliberately never set here - David's call, keeps the plain /health
+          # check publicly reachable (e.g. for basic uptime pings with no secret needed), while
+          # Health__DetailedApiKey still gates whatever /health/detailed exposes beyond that.
           Add-EnvVar "Health__DetailedApiKey" $env:HEALTH_DETAILED_API_KEY
           Add-EnvVar "ScheduledTasks__ApiKey" $env:SCHEDULED_TASKS_API_KEY
           # TEMPORARY: Serilog's file sink can't write to the external data/logs folder (suspected
