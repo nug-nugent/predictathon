@@ -18,11 +18,9 @@ env:
   # --- Remote layout (ftp://predictathon.co.uk/) ---
   # Root has data/, logs/, wwwroot/ as siblings. wwwroot is the frontend's site root.
   FRONTEND_REMOTE_PATH: "wwwroot"
-  # Confirmed with Hosting Heroes: Plesk supports IIS sub-applications, self-service, via
-  # Domains -> predictathon.co.uk -> Virtual Directories -> create /api, configured as an
-  # Application (not a plain subfolder). TODO(david): double-check this physical path once
-  # that Virtual Directory is actually created in Plesk, in case it lands somewhere other
-  # than a plain nested wwwroot/api.
+  # Confirmed with Hosting Heroes and proven by the real 2026-08-09 go-live deploy: Plesk
+  # supports IIS sub-applications, self-service, via Domains -> predictathon.co.uk ->
+  # Virtual Directories -> create /api, configured as an Application (not a plain subfolder).
   API_REMOTE_PATH: "wwwroot/api"
 
 jobs:
@@ -108,6 +106,76 @@ jobs:
           name: app-offline-page
           path: offline-page
 
+      # Plesk has no per-app/pool environment-variable UI on this host (checked directly during
+      # the 2026-08-09 go-live) - secrets are injected straight into the API's own web.config
+      # instead, into the <environmentVariables> child of the <aspNetCore> element that
+      # dotnet publish auto-generates. IIS blocks direct HTTP access to web.config by default,
+      # so this isn't the security downgrade it might sound like. Without this step, the
+      # freshly-published web.config this workflow uploads would be missing every secret the
+      # app needs to start - see project memory for the outage that caused, the first time this
+      # was done by hand.
+      - name: Inject production secrets into web.config
+        shell: pwsh
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.PROD_JWT_SIGNING_KEY }}
+          CONNECTION_STRING: ${{ secrets.PROD_CONNECTION_STRING }}
+          SMTP_HOST: ${{ secrets.PROD_SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.PROD_SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.PROD_SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.PROD_SMTP_PASSWORD }}
+          SMTP_FROM_ADDRESS: ${{ secrets.PROD_SMTP_FROM_ADDRESS }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PROD_PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PROD_PAYPAL_CLIENT_SECRET }}
+          FOOTBALLDATA_API_KEY: ${{ secrets.PROD_FOOTBALLDATA_API_KEY }}
+        run: |
+          $webConfigPath = "publish/api/web.config"
+          [xml]$xml = Get-Content $webConfigPath
+
+          $aspNetCoreNode = $xml.SelectSingleNode("/configuration/system.webServer/aspNetCore")
+          if (-not $aspNetCoreNode) {
+            throw "Could not find <aspNetCore> in $webConfigPath - dotnet publish output looks unexpected, aborting rather than uploading a broken config."
+          }
+
+          $envVarsNode = $aspNetCoreNode.SelectSingleNode("environmentVariables")
+          if (-not $envVarsNode) {
+            $envVarsNode = $xml.CreateElement("environmentVariables")
+            [void]$aspNetCoreNode.AppendChild($envVarsNode)
+          }
+
+          function Add-EnvVar([string]$Name, [string]$Value) {
+            if ([string]::IsNullOrEmpty($Value)) {
+              Write-Warning "No value provided for $Name - web.config will be missing it, same failure mode as forgetting to hand-edit it."
+              return
+            }
+            $node = $xml.CreateElement("environmentVariable")
+            $node.SetAttribute("name", $Name)
+            $node.SetAttribute("value", $Value)
+            [void]$envVarsNode.AppendChild($node)
+          }
+
+          Add-EnvVar "ASPNETCORE_ENVIRONMENT" "Production"
+          Add-EnvVar "Jwt__SigningKey" $env:JWT_SIGNING_KEY
+          Add-EnvVar "ConnectionStrings__DefaultConnection" $env:CONNECTION_STRING
+          Add-EnvVar "Smtp__Host" $env:SMTP_HOST
+          Add-EnvVar "Smtp__Port" $env:SMTP_PORT
+          Add-EnvVar "Smtp__Username" $env:SMTP_USERNAME
+          Add-EnvVar "Smtp__Password" $env:SMTP_PASSWORD
+          Add-EnvVar "Smtp__FromAddress" $env:SMTP_FROM_ADDRESS
+          # This host's mail server doesn't support TLS on the configured port - see project
+          # memory for the SmtpException that pinned this down.
+          Add-EnvVar "Smtp__EnableSsl" "false"
+          Add-EnvVar "PayPal__ClientId" $env:PAYPAL_CLIENT_ID
+          Add-EnvVar "PayPal__ClientSecret" $env:PAYPAL_CLIENT_SECRET
+          Add-EnvVar "FootballDataApi__ApiKey" $env:FOOTBALLDATA_API_KEY
+          # TEMPORARY: Serilog's file sink can't write to the external data/logs folder (suspected
+          # app-pool-identity permissions issue on this host, never fully diagnosed - see project
+          # memory). Pointing it in-tree instead means logs work but don't survive a republish.
+          # Remove this override once the external folder's permissions are sorted.
+          Add-EnvVar "Serilog__WriteTo__0__Args__path" ".\logs\predictathon-.log"
+
+          $xml.Save($webConfigPath)
+          Write-Host "Injected environment variables into $webConfigPath"
+
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
@@ -168,3 +236,15 @@ jobs:
 # call, that stays a separate manual step for now given the first release includes the
 # dbo.User -> Identity.Users migration against real production data - see project memory
 # ("Schema deploy" decision) before automating it into this workflow.
+#
+# TODO: evaluate Web Deploy as a replacement for the FTPS/lftp approach above. Plesk has it
+# available on this host (Domains -> predictathon.co.uk -> Web Scripting -> "Web Deploy
+# publishing" checkbox, which then exposes a "Web Deploy Publish settings" .publishsettings
+# download) - found during the 2026-08-09 go-live but deliberately not adopted mid-cutover.
+# Worth it if it pans out: native web.config "parameterization" could replace the whole
+# secrets-injection step above with Web Deploy's own built-in mechanism, and
+# EnableMSDeployAppOffline could replace the hand-rolled offline/online lftp dance entirely.
+# Needs a windows-latest runner (msdeploy tooling), the .publishsettings contents as new
+# secrets, and - the one genuinely unresolved question - confirmation that Plesk's Web Deploy
+# scope reaches the nested /api sub-application, or whether it needs two separate syncs (site
+# root + sub-app). Test this for real against the live host before switching, not blind.
