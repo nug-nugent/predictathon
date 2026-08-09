@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Badge, Button, Dialog, HStack, Heading, Image, Link, List, Portal, Text, VStack } from "@chakra-ui/react";
+import { Badge, Button, Dialog, HStack, Heading, Image, Link, List, Portal, Separator, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { Info } from "lucide-react";
 import { competitionImageUrl } from "../../utils/competitionImageUrl";
@@ -50,15 +50,19 @@ export function CompetitionSpotlightCard({ competition }: { competition: Competi
                 open={scoringOpen}
                 onClose={() => setScoringOpen(false)}
                 allowTwoPointers={competition.allowTwoPointers}
+                entranceFee={competition.entranceFee}
             />
         </Panel>
     );
 }
 
-function ScoringExplainerDialog({ open, onClose, allowTwoPointers }: {
+function ScoringExplainerDialog({
+    open, onClose, allowTwoPointers, entranceFee,
+}: {
     open: boolean;
     onClose: () => void;
     allowTwoPointers: boolean;
+    entranceFee: number;
 }) {
     return (
         <Dialog.Root open={open} onOpenChange={(e) => { if (!e.open) onClose(); }}>
@@ -88,6 +92,20 @@ function ScoringExplainerDialog({ open, onClose, allowTwoPointers }: {
                                     Ties at the end of the competition are broken by goal difference, then by the number of
                                     3-pointers scored, {allowTwoPointers && "then 2-pointers, "}and finally 1-pointers.
                                 </Text>
+
+                                {entranceFee > 0 && (
+                                    <>
+                                        <Separator />
+                                        <VStack align="stretch" gap={1}>
+                                            <Heading size="xs">Where does my money go?</Heading>
+                                            <Text fontSize="sm" color="fg.muted">
+                                                If there&apos;s an entry fee, there&apos;s a prize fund. All of that fee, with the
+                                                exception of any PayPal fees incurred, goes into the prize fund. Cash prizes are
+                                                shared among the best predictors at the end of the competition.
+                                            </Text>
+                                        </VStack>
+                                    </>
+                                )}
                             </VStack>
                         </Dialog.Body>
                         <Dialog.Footer>
