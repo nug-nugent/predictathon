@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Publish profile for scripting/publishing against the real production database. Deliberately
+has no TargetConnectionString/TargetServerName/TargetDatabaseName - those stay command-line-only
+(via /TargetConnectionString:) so credentials never end up in a file that gets committed.
+
+Usage:
+  sqlpackage /Action:Script /SourceFile:"Database\bin\Release\Predictathon.Database.dacpac" /TargetConnectionString:"..." /OutputPath:"Deployment\migration-script.sql" /Profile:"Database\Predictathon.Production.publish.xml"
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <ProfileVersionNumber>1</ProfileVersionNumber>
+    <BlockOnPossibleDataLoss>True</BlockOnPossibleDataLoss>
+    <DropObjectsNotInSource>True</DropObjectsNotInSource>
+    <!-- Users/RoleMembership/DatabaseRoles/Permissions are SQL Server's own database
+         principals and role grants - not modelled here, provisioned by the host outside this
+         project, and not safe for a schema diff to touch (could drop the very login the
+         script is connecting as). Schemas is here for the same reason: Plesk auto-creates a
+         schema matching the login's name (predicta_dbuser) as its default schema when it
+         provisions the database user - also host infrastructure, not part of this project's
+         own dbo/Identity schema model. -->
+    <ExcludeObjectTypes>Users;RoleMembership;DatabaseRoles;Permissions;Schemas</ExcludeObjectTypes>
+  </PropertyGroup>
+</Project>

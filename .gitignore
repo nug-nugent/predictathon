@@ -181,6 +181,9 @@ publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml
+# Exception: this one deliberately carries no connection string/credentials (those stay
+# command-line-only via /TargetConnectionString:), so it's safe and intended to be checked in.
+!Database/Predictathon.publish.xml
 *.azurePubxml
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
