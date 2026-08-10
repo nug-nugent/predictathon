@@ -1,13 +1,13 @@
 name: Deploy to production
 
-# Manual only, by design: this is the first real deploy automation for a live site ~50
-# people use, and there's no undo button on an FTP upload. See project memory /
-# conversation history for the reasoning - this can move to an automatic trigger later
-# once there's confidence in the pipeline.
+# Manual only, by design: this is deploy automation for a live site ~50 people use, and
+# there's no undo button on a production sync. See project memory / conversation history for
+# the reasoning - this can move to an automatic trigger later once there's confidence in the
+# pipeline.
 on:
   workflow_dispatch:
 
-# Prevent two manual runs from racing each other against the same FTP target.
+# Prevent two manual runs from racing each other against the same target.
 concurrency:
   group: production-deploy
   cancel-in-progress: false
@@ -15,13 +15,6 @@ concurrency:
 env:
   DOTNET_VERSION: "10.0.x"
   NODE_VERSION: "22"
-  # --- Remote layout (ftp://predictathon.co.uk/) ---
-  # Root has data/, logs/, wwwroot/ as siblings. wwwroot is the frontend's site root.
-  FRONTEND_REMOTE_PATH: "wwwroot"
-  # Confirmed with Hosting Heroes and proven by the real 2026-08-09 go-live deploy: Plesk
-  # supports IIS sub-applications, self-service, via Domains -> predictathon.co.uk ->
-  # Virtual Directories -> create /api, configured as an Application (not a plain subfolder).
-  API_REMOTE_PATH: "wwwroot/api"
 
 jobs:
   build-and-test:
@@ -80,16 +73,27 @@ jobs:
 
   deploy:
     needs: build-and-test
-    runs-on: ubuntu-latest
+    # msdeploy.exe is Windows-only client tooling - unlike the earlier FTPS approach, this job
+    # can't run on ubuntu-latest. GitHub's windows-latest images are expected to include Web
+    # Deploy already (part of the standard VS Build Tools toolset) - the "Locate msdeploy.exe"
+    # step below fails loudly rather than assuming, in case that expectation is wrong.
+    runs-on: windows-latest
     timeout-minutes: 20
     # Optional extra safety net: create a "production" environment in this repo's Settings
     # -> Environments with a required reviewer, and this job will pause for manual approval
     # even after workflow_dispatch is clicked. Harmless no-op if that environment doesn't exist.
     environment: production
     env:
-      FTP_HOST: predictathon.co.uk
-      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      # From the "Web Deploy Publish settings" .publishsettings file Plesk generates once
+      # "Web Deploy publishing" is ticked under Domains -> predictathon.co.uk -> Web Scripting.
+      # WEBDEPLOY_SERVICE_URL = the <publishProfile>'s publishUrl attribute.
+      # WEBDEPLOY_SITE = its msdeploySite attribute - this is the site name; the API's IIS app
+      # path is "$WEBDEPLOY_SITE/api" (confirmed working 2026-08-10 - see project memory), the
+      # frontend's is $WEBDEPLOY_SITE on its own.
+      MSDEPLOY_SERVICE_URL: ${{ secrets.WEBDEPLOY_SERVICE_URL }}
+      MSDEPLOY_SITE: ${{ secrets.WEBDEPLOY_SITE }}
+      MSDEPLOY_USERNAME: ${{ secrets.WEBDEPLOY_USERNAME }}
+      MSDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -110,10 +114,15 @@ jobs:
       # the 2026-08-09 go-live) - secrets are injected straight into the API's own web.config
       # instead, into the <environmentVariables> child of the <aspNetCore> element that
       # dotnet publish auto-generates. IIS blocks direct HTTP access to web.config by default,
-      # so this isn't the security downgrade it might sound like. Without this step, the
-      # freshly-published web.config this workflow uploads would be missing every secret the
-      # app needs to start - see project memory for the outage that caused, the first time this
-      # was done by hand.
+      # so this isn't the security downgrade it might sound like.
+      #
+      # This step is unchanged from the FTPS version of this workflow, still needed even with
+      # Web Deploy: MSDeploy's own "parameterization" mechanism could in principle replace it
+      # (substituting values into web.config as part of the sync itself, without ever baking
+      # secrets into the published output at all), but that needs a purpose-built parameters.xml
+      # matching this project's auto-generated <environmentVariables> structure, which has not
+      # been attempted or verified - a real design task for another day, not bolted on blind
+      # here. Editing the file directly first, like this, is the same proven approach either way.
       - name: Inject production secrets into web.config
         shell: pwsh
         env:
@@ -183,75 +192,98 @@ jobs:
           $xml.Save($webConfigPath)
           Write-Host "Injected environment variables into $webConfigPath"
 
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      # Mirrors Deployment/Publish-Local.ps1's sequence exactly, just swapping local
-      # Copy-Item/robocopy for FTPS. See that script + README.md's "Production deployment"
-      # section for the reasoning behind each step.
-      - name: Take site offline
+      # windows-latest is expected to already have this (see the runs-on comment above) - fail
+      # clearly here rather than let a later step die on a cryptic "command not found".
+      - name: Locate msdeploy.exe
+        shell: pwsh
         run: |
-          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
-            put offline-page/app_offline.htm -o $API_REMOTE_PATH/app_offline.htm; \
-            put offline-page/app_offline.htm -o $FRONTEND_REMOTE_PATH/index.html; \
-            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+          $candidates = @(
+            "$env:ProgramFiles\IIS\Microsoft Web Deploy V3\msdeploy.exe",
+            "${env:ProgramFiles(x86)}\IIS\Microsoft Web Deploy V3\msdeploy.exe"
+          )
+          $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $found) {
+            $onPath = Get-Command msdeploy.exe -ErrorAction SilentlyContinue
+            if ($onPath) { $found = $onPath.Source }
+          }
+          if (-not $found) {
+            throw "msdeploy.exe not found on this runner. Expected it as part of windows-latest's standard toolset - that assumption may be wrong. Install the Web Deploy client tooling as an earlier step if so."
+          }
+          Write-Host "Using msdeploy.exe at $found"
+          "MSDEPLOY_EXE=$found" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      # ANCM needs a moment to unload the running app and release its file locks on the
-      # published DLLs before they can be overwritten - same reason Publish-Local.ps1 sleeps
-      # here, just a longer pause since this is over the network rather than a local copy.
-      - name: Wait for ANCM to release file locks
-        run: sleep 10
+      # Everything below uses msdeploy.exe directly (not the -p:DeployOnBuild=true MSBuild
+      # integration used for the one-off manual test on 2026-08-10) so that the web.config
+      # already edited above is what actually gets synced, and so the same mechanism works
+      # uniformly for the frontend too (a plain static folder, not an MSBuild project - it has
+      # no equivalent "-p:DeployOnBuild" to hook into). The underlying sync operation msdeploy.exe
+      # performs here should be the same one that MSBuild wrapper was calling internally, but
+      # this exact invocation form (raw CLI, both halves) has NOT itself been tested end to end -
+      # only the API's sub-application addressing was proven, via the MSBuild-integrated form.
+      # Worth a careful first real run, not blind trust on the first try.
 
-      # Upload only - deliberately NOT a delete-extra-files mirror. This preserves
-      # app_offline.htm (not part of the publish output) exactly like a local
-      # `dotnet publish -o` into an existing folder would, and avoids any risk of an
-      # overly broad delete reaching into a sibling folder we don't fully control the
-      # layout of yet (see API_REMOTE_PATH TODO above). Trade-off: stale files from old
-      # deploys aren't cleaned up automatically - acceptable for now, revisit once the
-      # real remote layout is confirmed.
-      - name: Upload API
+      # ANCM natively detects app_offline.htm and serves it with a 503 - the -enableRule:AppOffline
+      # deployment rule makes msdeploy place it before syncing and remove it after, IIS/ANCM-aware
+      # about file locks the whole way through. If this works as documented, it replaces what used
+      # to be four separate FTPS steps (offline, wait for locks, upload, online) with this one.
+      - name: Sync API
+        shell: pwsh
         run: |
-          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
-            mirror -R --verbose --parallel=4 publish/api $API_REMOTE_PATH; \
-            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="publish\api" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/api",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted `
+            -enableRule:AppOffline
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
 
-      # Bring the API back online before the frontend, so there's no window where a live
-      # SPA is talking to an API still serving 503s.
-      - name: Bring API online
+      # The frontend has no equivalent native offline mechanism (see README.md / project memory -
+      # IIS caches "/" keyed to index.html, not a separate app_offline.htm), so this still needs
+      # the same manual index.html-overwrite trick as the FTPS version, just via a single-file
+      # msdeploy sync instead of an FTP put.
+      - name: Take frontend offline
+        shell: pwsh
         run: |
-          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
-            rm -f $API_REMOTE_PATH/app_offline.htm; \
-            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="offline-page\app_offline.htm" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync failed with exit code $LASTEXITCODE" }
 
-      - name: Upload frontend
+      # msdeploy's contentPath sync deletes destination files not present in the source by
+      # default (unlike lftp's default, which is why the FTPS version never needed this flag).
+      # wwwroot/api is nested under the frontend's own site root and is NOT part of frontend/dist
+      # - without -enableRule:DoNotDeleteRule, this step would delete the entire API on every
+      # deploy. Do not remove this flag.
+      - name: Sync frontend
+        shell: pwsh
         run: |
-          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
-            mirror -R --verbose --parallel=4 frontend/dist $FRONTEND_REMOTE_PATH; \
-            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="frontend\dist" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted `
+            -enableRule:DoNotDeleteRule
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the frontend failed with exit code $LASTEXITCODE" }
 
-      # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the mirror
-      # above should already have restored the real index.html, but this one file is the
-      # difference between the site being up and stuck on the offline page, so don't rely
-      # on mirror's same-file heuristics for it.
+      # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the sync above
+      # should already have restored the real index.html, but this one file is the difference
+      # between the site being up and stuck on the offline page, so don't rely on msdeploy's
+      # own change-detection heuristics for it.
       - name: Restore real index.html
+        shell: pwsh
         run: |
-          lftp -e "set ssl:verify-certificate no; set ftp:ssl-force true; set ftp:ssl-protect-data true; \
-            put frontend/dist/index.html -o $FRONTEND_REMOTE_PATH/index.html; \
-            bye" -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_HOST"
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="frontend\dist\index.html" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy final index.html restore failed with exit code $LASTEXITCODE" }
 
 # Not covered here, deliberately: database schema changes (dacpac/sqlpackage). Per David's
 # call, that stays a separate manual step for now given the first release includes the
 # dbo.User -> Identity.Users migration against real production data - see project memory
 # ("Schema deploy" decision) before automating it into this workflow.
 #
-# TODO: evaluate Web Deploy as a replacement for the FTPS/lftp approach above. Plesk has it
-# available on this host (Domains -> predictathon.co.uk -> Web Scripting -> "Web Deploy
-# publishing" checkbox, which then exposes a "Web Deploy Publish settings" .publishsettings
-# download) - found during the 2026-08-09 go-live but deliberately not adopted mid-cutover.
-# Worth it if it pans out: native web.config "parameterization" could replace the whole
-# secrets-injection step above with Web Deploy's own built-in mechanism, and
-# EnableMSDeployAppOffline could replace the hand-rolled offline/online lftp dance entirely.
-# Needs a windows-latest runner (msdeploy tooling), the .publishsettings contents as new
-# secrets, and - the one genuinely unresolved question - confirmation that Plesk's Web Deploy
-# scope reaches the nested /api sub-application, or whether it needs two separate syncs (site
-# root + sub-app). Test this for real against the live host before switching, not blind.
+# New GitHub Environment secrets needed on "production" before this can run (replacing
+# FTP_USERNAME/FTP_PASSWORD from the earlier FTPS version, which this workflow no longer uses):
+# WEBDEPLOY_SERVICE_URL, WEBDEPLOY_SITE, WEBDEPLOY_USERNAME, WEBDEPLOY_PASSWORD - all four come
+# directly from the .publishsettings file's <publishProfile> attributes (publishUrl, msdeploySite,
+# userName, userPWD respectively).
