@@ -1,0 +1,289 @@
+name: Deploy to production
+
+# Manual only, by design: this is deploy automation for a live site ~50 people use, and
+# there's no undo button on a production sync. See project memory / conversation history for
+# the reasoning - this can move to an automatic trigger later once there's confidence in the
+# pipeline.
+on:
+  workflow_dispatch:
+
+# Prevent two manual runs from racing each other against the same target.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "22"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Fast, no DB needed. IntegrationTests deliberately excluded - they need a real SQL
+      # Server (PREDICTATHON_TEST_CONNECTION) and there's no disposable CI database wired
+      # up yet; running them against production would be inappropriate anyway.
+      - name: Run backend unit tests
+        run: dotnet test UnitTests --configuration Release
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Publish API
+        run: dotnet publish WebApi/Predictathon.WebApi.csproj -c Release -o publish/api
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-publish
+          path: publish/api
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-offline-page
+          path: Deployment/app_offline.htm
+          retention-days: 7
+
+  deploy:
+    needs: build-and-test
+    # msdeploy.exe is Windows-only client tooling - unlike the earlier FTPS approach, this job
+    # can't run on ubuntu-latest. GitHub's windows-latest images are expected to include Web
+    # Deploy already (part of the standard VS Build Tools toolset) - the "Locate msdeploy.exe"
+    # step below fails loudly rather than assuming, in case that expectation is wrong.
+    runs-on: windows-latest
+    timeout-minutes: 20
+    # Optional extra safety net: create a "production" environment in this repo's Settings
+    # -> Environments with a required reviewer, and this job will pause for manual approval
+    # even after workflow_dispatch is clicked. Harmless no-op if that environment doesn't exist.
+    environment: production
+    env:
+      # From the "Web Deploy Publish settings" .publishsettings file Plesk generates once
+      # "Web Deploy publishing" is ticked under Domains -> predictathon.co.uk -> Web Scripting.
+      # WEBDEPLOY_SERVICE_URL = the <publishProfile>'s publishUrl attribute.
+      # WEBDEPLOY_SITE = its msdeploySite attribute - this is the site name; the API's IIS app
+      # path is "$WEBDEPLOY_SITE/api" (confirmed working 2026-08-10 - see project memory), the
+      # frontend's is $WEBDEPLOY_SITE on its own.
+      MSDEPLOY_SERVICE_URL: ${{ secrets.WEBDEPLOY_SERVICE_URL }}
+      MSDEPLOY_SITE: ${{ secrets.WEBDEPLOY_SITE }}
+      MSDEPLOY_USERNAME: ${{ secrets.WEBDEPLOY_USERNAME }}
+      MSDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: api-publish
+          path: publish/api
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-offline-page
+          path: offline-page
+
+      # Plesk has no per-app/pool environment-variable UI on this host (checked directly during
+      # the 2026-08-09 go-live) - secrets are injected straight into the API's own web.config
+      # instead, into the <environmentVariables> child of the <aspNetCore> element that
+      # dotnet publish auto-generates. IIS blocks direct HTTP access to web.config by default,
+      # so this isn't the security downgrade it might sound like.
+      #
+      # This step is unchanged from the FTPS version of this workflow, still needed even with
+      # Web Deploy: MSDeploy's own "parameterization" mechanism could in principle replace it
+      # (substituting values into web.config as part of the sync itself, without ever baking
+      # secrets into the published output at all), but that needs a purpose-built parameters.xml
+      # matching this project's auto-generated <environmentVariables> structure, which has not
+      # been attempted or verified - a real design task for another day, not bolted on blind
+      # here. Editing the file directly first, like this, is the same proven approach either way.
+      - name: Inject production secrets into web.config
+        shell: pwsh
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+          FOOTBALLDATA_API_KEY: ${{ secrets.FOOTBALLDATA_API_KEY }}
+          HEALTH_DETAILED_API_KEY: ${{ secrets.HEALTH_DETAILED_API_KEY }}
+          SCHEDULED_TASKS_API_KEY: ${{ secrets.SCHEDULED_TASKS_API_KEY }}
+        run: |
+          $webConfigPath = "publish/api/web.config"
+          [xml]$xml = Get-Content $webConfigPath
+
+          $aspNetCoreNode = $xml.SelectSingleNode("/configuration/system.webServer/aspNetCore")
+          if (-not $aspNetCoreNode) {
+            throw "Could not find <aspNetCore> in $webConfigPath - dotnet publish output looks unexpected, aborting rather than uploading a broken config."
+          }
+
+          $envVarsNode = $aspNetCoreNode.SelectSingleNode("environmentVariables")
+          if (-not $envVarsNode) {
+            $envVarsNode = $xml.CreateElement("environmentVariables")
+            [void]$aspNetCoreNode.AppendChild($envVarsNode)
+          }
+
+          function Add-EnvVar([string]$Name, [string]$Value) {
+            if ([string]::IsNullOrEmpty($Value)) {
+              Write-Warning "No value provided for $Name - web.config will be missing it, same failure mode as forgetting to hand-edit it."
+              return
+            }
+            $node = $xml.CreateElement("environmentVariable")
+            $node.SetAttribute("name", $Name)
+            $node.SetAttribute("value", $Value)
+            [void]$envVarsNode.AppendChild($node)
+          }
+
+          Add-EnvVar "ASPNETCORE_ENVIRONMENT" "Production"
+          Add-EnvVar "Jwt__SigningKey" $env:JWT_SIGNING_KEY
+          Add-EnvVar "ConnectionStrings__DefaultConnection" $env:CONNECTION_STRING
+          Add-EnvVar "Smtp__Host" $env:SMTP_HOST
+          Add-EnvVar "Smtp__Port" $env:SMTP_PORT
+          Add-EnvVar "Smtp__Username" $env:SMTP_USERNAME
+          Add-EnvVar "Smtp__Password" $env:SMTP_PASSWORD
+          Add-EnvVar "Smtp__FromAddress" $env:SMTP_FROM_ADDRESS
+          # This host's mail server doesn't support TLS on the configured port - see project
+          # memory for the SmtpException that pinned this down.
+          Add-EnvVar "Smtp__EnableSsl" "false"
+          Add-EnvVar "PayPal__ClientId" $env:PAYPAL_CLIENT_ID
+          Add-EnvVar "PayPal__ClientSecret" $env:PAYPAL_CLIENT_SECRET
+          Add-EnvVar "FootballDataApi__ApiKey" $env:FOOTBALLDATA_API_KEY
+          # Health__ApiKey is deliberately never set here - David's call, keeps the plain /health
+          # check publicly reachable (e.g. for basic uptime pings with no secret needed), while
+          # Health__DetailedApiKey still gates whatever /health/detailed exposes beyond that.
+          Add-EnvVar "Health__DetailedApiKey" $env:HEALTH_DETAILED_API_KEY
+          Add-EnvVar "ScheduledTasks__ApiKey" $env:SCHEDULED_TASKS_API_KEY
+          # TEMPORARY: Serilog's file sink can't write to the external data/logs folder (suspected
+          # app-pool-identity permissions issue on this host, never fully diagnosed - see project
+          # memory). Pointing it in-tree instead means logs work but don't survive a republish.
+          # Remove this override once the external folder's permissions are sorted.
+          Add-EnvVar "Serilog__WriteTo__0__Args__path" ".\logs\predictathon-.log"
+
+          $xml.Save($webConfigPath)
+          Write-Host "Injected environment variables into $webConfigPath"
+
+      # windows-latest is expected to already have this (see the runs-on comment above) - fail
+      # clearly here rather than let a later step die on a cryptic "command not found".
+      - name: Locate msdeploy.exe
+        shell: pwsh
+        run: |
+          $candidates = @(
+            "$env:ProgramFiles\IIS\Microsoft Web Deploy V3\msdeploy.exe",
+            "${env:ProgramFiles(x86)}\IIS\Microsoft Web Deploy V3\msdeploy.exe"
+          )
+          $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $found) {
+            $onPath = Get-Command msdeploy.exe -ErrorAction SilentlyContinue
+            if ($onPath) { $found = $onPath.Source }
+          }
+          if (-not $found) {
+            throw "msdeploy.exe not found on this runner. Expected it as part of windows-latest's standard toolset - that assumption may be wrong. Install the Web Deploy client tooling as an earlier step if so."
+          }
+          Write-Host "Using msdeploy.exe at $found"
+          "MSDEPLOY_EXE=$found" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # Everything below uses msdeploy.exe directly (not the -p:DeployOnBuild=true MSBuild
+      # integration used for the one-off manual test on 2026-08-10) so that the web.config
+      # already edited above is what actually gets synced, and so the same mechanism works
+      # uniformly for the frontend too (a plain static folder, not an MSBuild project - it has
+      # no equivalent "-p:DeployOnBuild" to hook into). The underlying sync operation msdeploy.exe
+      # performs here should be the same one that MSBuild wrapper was calling internally, but
+      # this exact invocation form (raw CLI, both halves) has NOT itself been tested end to end -
+      # only the API's sub-application addressing was proven, via the MSBuild-integrated form.
+      # Worth a careful first real run, not blind trust on the first try.
+
+      # ANCM natively detects app_offline.htm and serves it with a 503 - the -enableRule:AppOffline
+      # deployment rule makes msdeploy place it before syncing and remove it after, IIS/ANCM-aware
+      # about file locks the whole way through. If this works as documented, it replaces what used
+      # to be four separate FTPS steps (offline, wait for locks, upload, online) with this one.
+      - name: Sync API
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="publish\api" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/api",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted `
+            -enableRule:AppOffline
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
+
+      # The frontend has no equivalent native offline mechanism (see README.md / project memory -
+      # IIS caches "/" keyed to index.html, not a separate app_offline.htm), so this still needs
+      # the same manual index.html-overwrite trick as the FTPS version, just via a single-file
+      # msdeploy sync instead of an FTP put.
+      - name: Take frontend offline
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="offline-page\app_offline.htm" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync failed with exit code $LASTEXITCODE" }
+
+      # msdeploy's contentPath sync deletes destination files not present in the source by
+      # default (unlike lftp's default, which is why the FTPS version never needed this flag).
+      # wwwroot/api is nested under the frontend's own site root and is NOT part of frontend/dist
+      # - without -enableRule:DoNotDeleteRule, this step would delete the entire API on every
+      # deploy. Do not remove this flag.
+      - name: Sync frontend
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="frontend\dist" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted `
+            -enableRule:DoNotDeleteRule
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the frontend failed with exit code $LASTEXITCODE" }
+
+      # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the sync above
+      # should already have restored the real index.html, but this one file is the difference
+      # between the site being up and stuck on the offline page, so don't rely on msdeploy's
+      # own change-detection heuristics for it.
+      - name: Restore real index.html
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="frontend\dist\index.html" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy final index.html restore failed with exit code $LASTEXITCODE" }
+
+# Not covered here, deliberately: database schema changes (dacpac/sqlpackage). Per David's
+# call, that stays a separate manual step for now given the first release includes the
+# dbo.User -> Identity.Users migration against real production data - see project memory
+# ("Schema deploy" decision) before automating it into this workflow.
+#
+# New GitHub Environment secrets needed on "production" before this can run (replacing
+# FTP_USERNAME/FTP_PASSWORD from the earlier FTPS version, which this workflow no longer uses):
+# WEBDEPLOY_SERVICE_URL, WEBDEPLOY_SITE, WEBDEPLOY_USERNAME, WEBDEPLOY_PASSWORD - all four come
+# directly from the .publishsettings file's <publishProfile> attributes (publishUrl, msdeploySite,
+# userName, userPWD respectively).

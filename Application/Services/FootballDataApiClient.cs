@@ -34,7 +34,12 @@ public class FootballDataApiClient : IExternalMatchDataService
         client.DefaultRequestHeaders.Add("X-Auth-Token", _options.Value.ApiKey);
 
         var response = await client.GetAsync($"{BaseUrl}/competitions/{competitionCode}/matches?season={season}", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"football-data.org request failed ({(int)response.StatusCode} {response.StatusCode}): {errorBody}");
+        }
 
         var payload = await response.Content.ReadFromJsonAsync<MatchesResponse>(cancellationToken: cancellationToken);
 

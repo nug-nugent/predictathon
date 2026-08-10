@@ -1,6 +1,7 @@
 import {
     getJsonAuthenticated, postJsonAuthenticated, postFormAuthenticated, deleteJsonAuthenticated,
 } from "./api";
+import { type PagedResult } from "./users-admin-service";
 
 // Matches Application/Models/MessageThreadSummaryModel.cs.
 export type MessageThreadSummary = {
@@ -45,8 +46,9 @@ export type Message = {
     reactions: MessageReaction[];
 };
 
-export async function getThreads(): Promise<MessageThreadSummary[]> {
-    return getJsonAuthenticated<MessageThreadSummary[]>("/Messageboard/Threads");
+export async function getThreads(page: number, pageSize: number): Promise<PagedResult<MessageThreadSummary>> {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    return getJsonAuthenticated<PagedResult<MessageThreadSummary>>(`/Messageboard/Threads?${params.toString()}`);
 }
 
 export async function getThread(threadId: string): Promise<MessageThread> {

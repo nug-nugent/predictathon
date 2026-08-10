@@ -12,6 +12,9 @@ import { Panel } from "../ui/panel";
 import { ClickableRow } from "../ui/clickable-row";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
+import { TablePagination } from "../ui/table-pagination";
+
+const PAGE_SIZE = 5;
 
 export function CompetitionRegistrationsCard() {
     const { setCurrentCompetitionId } = useCompetition();
@@ -20,6 +23,7 @@ export function CompetitionRegistrationsCard() {
     // A failure switching to a competition, distinct from the list failing to load.
     const [switchError, setSwitchError] = useState<ApiError | null>(null);
     const [switching, setSwitching] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
 
     const selectCompetition = async (registration: UserCompetitionRegistration) => {
         if (!registration.registered) {
@@ -51,12 +55,14 @@ export function CompetitionRegistrationsCard() {
         return null;
     }
 
+    const pageRegistrations = registrations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
     return (
         <Panel p={3}>
             <Heading fontSize="17px" fontWeight="semibold" mb={2}>Competitions</Heading>
             <Table.Root size="sm" variant="line">
                 <Table.Body>
-                    {registrations.map((r) => (
+                    {pageRegistrations.map((r) => (
                         <ClickableRow
                             key={r.competitionID}
                             opacity={switching === r.competitionID ? 0.6 : 1}
@@ -88,6 +94,7 @@ export function CompetitionRegistrationsCard() {
                     ))}
                 </Table.Body>
             </Table.Root>
+            <TablePagination count={registrations.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
         </Panel>
     );
 }

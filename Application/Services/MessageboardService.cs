@@ -38,23 +38,44 @@ public class MessageboardService : IMessageboardService
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
         if (viewerResult.IsFailed)
         {
-            return Result.Fail<List<MessageThreadSummaryModel>>(viewerResult.Errors);
+            return Result.Fail<PagedResult<MessageThreadSummaryModel>>(viewerResult.Errors);
         }
 
         var parameters = new List<SqlParameter>
         {
             new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
             new SqlParameter("@IncludeHiddenFromPublic", SqlDbType.Bit) { Value = viewerResult.Value.CanViewHiddenMessageThreads },
+            new SqlParameter("@Page", SqlDbType.Int) { Value = page },
+            new SqlParameter("@PageSize", SqlDbType.Int) { Value = pageSize },
         };
 
-        var threads = await _dbContext.CallStoredProcedureAsync<MessageThreadSummaryModel>("MessageThreadListGet", parameters, cancellationToken);
+        var rows = await _dbContext.CallStoredProcedureAsync<MessageThreadListRow>("MessageThreadListGet", parameters, cancellationToken);
 
-        return Result.Ok(threads);
+        return Result.Ok(new PagedResult<MessageThreadSummaryModel>
+        {
+            Items = rows.Cast<MessageThreadSummaryModel>().ToList(),
+            // TotalCount is a COUNT(*) OVER() column on every row (computed before OFFSET/FETCH is
+            // applied), so it's the same value on each - 0 rows means nothing matched at all.
+            TotalCount = rows.Count > 0 ? rows[0].TotalCount : 0,
+            Page = page,
+            PageSize = pageSize,
+        });
+    }
+
+    /// <summary>
+    /// A row from MessageThreadListGet - MessageThreadSummaryModel plus the TotalCount column the
+    /// stored procedure returns alongside each row for paging. Kept out of the public
+    /// MessageThreadSummaryModel/IMessageboardService surface since it's a raw-mapping detail, not
+    /// something callers should see.
+    /// </summary>
+    private sealed class MessageThreadListRow : MessageThreadSummaryModel
+    {
+        public int TotalCount { get; set; }
     }
 
     /// <inheritdoc />

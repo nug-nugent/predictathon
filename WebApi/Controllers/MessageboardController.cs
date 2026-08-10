@@ -23,12 +23,15 @@ public class MessageboardController : ApiControllerBase
     }
 
     /// <summary>
-    /// Lists message threads, newest-activity first.
+    /// Lists a server-paged slice of message threads, newest-activity first.
     /// </summary>
+    /// <param name="page">1-based page number.</param>
+    /// <param name="pageSize">Number of threads per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("Threads")]
-    public async Task<ActionResult<List<MessageThreadSummaryModel>?>> GetThreads(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<MessageThreadSummaryModel>?>> GetThreads([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await _messageboardService.GetThreadsAsync(CurrentUserId, cancellationToken);
+        var result = await _messageboardService.GetThreadsAsync(CurrentUserId, page < 1 ? 1 : page, pageSize < 1 ? 15 : pageSize, cancellationToken);
         return FromResult(result);
     }
 
