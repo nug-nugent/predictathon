@@ -1,15 +1,17 @@
 <!--
-Template only - not deployed automatically by any build step.
+Used two ways:
 
-To take the site down for an upgrade, copy this file, named exactly "app_offline.htm", into:
-  1. The API's IIS sub-application folder (content root of the published WebApi output). The
-     ASP.NET Core Module (ANCM) detects it automatically, shuts the app down, and serves this
-     file's contents (with a 503) for every request - no IIS/web.config changes needed.
-  2. The frontend's site root (alongside index.html). The frontend is static files with no
-     ANCM in play, so frontend/public/web.config carries a URL Rewrite rule that checks for this
-     file and serves it if present, mirroring ANCM's behaviour there.
-
-To bring the site back up, delete (or rename) both copies.
+1. Automatically, by .github/workflows/deploy.yml and Deployment/Publish-Local.ps1 - both pull
+   this file in and copy it to the two locations below as part of a deploy, so an upgrade takes
+   the site offline (and back online) without any manual step.
+2. Manually, for a longer/planned upgrade: copy this file, named exactly "app_offline.htm", into:
+     a. The API's IIS sub-application folder (content root of the published WebApi output). The
+        ASP.NET Core Module (ANCM) detects it automatically, shuts the app down, and serves this
+        file's contents (with a 503) for every request - no IIS/web.config changes needed.
+     b. The frontend's site root, as index.html specifically (not alongside it - see README.md's
+        "Taking the site offline for an upgrade" section for why a separate app_offline.htm
+        doesn't work reliably for the frontend the way it does for the API).
+   To bring the site back up by hand, restore the real published output for both.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +49,7 @@ To bring the site back up, delete (or rename) both copies.
 <body>
 <main>
   <h1>Predictathon is being upgraded</h1>
-  <p>Predictathon is being upgraded, and will likely be offline for a day or more. Thanks for your patience - normal service will resume soon.</p>
+  <p>Predictathon is being upgraded and should be back again shortly. Thanks for your patience!</p>
 </main>
 </body>
 </html>
