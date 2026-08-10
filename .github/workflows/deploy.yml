@@ -126,18 +126,18 @@ jobs:
       - name: Inject production secrets into web.config
         shell: pwsh
         env:
-          JWT_SIGNING_KEY: ${{ secrets.PROD_JWT_SIGNING_KEY }}
-          CONNECTION_STRING: ${{ secrets.PROD_CONNECTION_STRING }}
-          SMTP_HOST: ${{ secrets.PROD_SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.PROD_SMTP_PORT }}
-          SMTP_USERNAME: ${{ secrets.PROD_SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.PROD_SMTP_PASSWORD }}
-          SMTP_FROM_ADDRESS: ${{ secrets.PROD_SMTP_FROM_ADDRESS }}
-          PAYPAL_CLIENT_ID: ${{ secrets.PROD_PAYPAL_CLIENT_ID }}
-          PAYPAL_CLIENT_SECRET: ${{ secrets.PROD_PAYPAL_CLIENT_SECRET }}
-          FOOTBALLDATA_API_KEY: ${{ secrets.PROD_FOOTBALLDATA_API_KEY }}
-          HEALTH_DETAILED_API_KEY: ${{ secrets.PROD_HEALTH_DETAILED_API_KEY }}
-          SCHEDULED_TASKS_API_KEY: ${{ secrets.PROD_SCHEDULED_TASKS_API_KEY }}
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+          FOOTBALLDATA_API_KEY: ${{ secrets.FOOTBALLDATA_API_KEY }}
+          HEALTH_DETAILED_API_KEY: ${{ secrets.HEALTH_DETAILED_API_KEY }}
+          SCHEDULED_TASKS_API_KEY: ${{ secrets.SCHEDULED_TASKS_API_KEY }}
         run: |
           $webConfigPath = "publish/api/web.config"
           [xml]$xml = Get-Content $webConfigPath
