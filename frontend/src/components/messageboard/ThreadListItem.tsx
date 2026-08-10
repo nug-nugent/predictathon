@@ -2,7 +2,7 @@ import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import type { MessageThreadSummary } from "../../services/messageboard-service";
 
-export function ThreadListItem({ thread }: { thread: MessageThreadSummary }) {
+export function ThreadListItem({ thread, striped = false }: { thread: MessageThreadSummary; striped?: boolean }) {
     return (
         <RouterLink to={`/board/${thread.messageThreadID}`}>
             <HStack
@@ -13,6 +13,9 @@ export function ThreadListItem({ thread }: { thread: MessageThreadSummary }) {
                 px={2}
                 borderTopWidth="1px"
                 _first={{ borderTopWidth: 0 }}
+                // bg.subtle for the stripe, bg.muted (a step stronger) for hover - so hovering a
+                // striped row still reads as a distinct highlight rather than disappearing into it.
+                bg={striped ? "bg.subtle" : undefined}
                 _hover={{ bg: "bg.muted" }}
                 rounded="md"
             >

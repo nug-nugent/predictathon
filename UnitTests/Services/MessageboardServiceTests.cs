@@ -51,7 +51,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer(canViewMessageboard: false);
 
-        var result = await MakeService().GetThreadsAsync(user.Id);
+        var result = await MakeService().GetThreadsAsync(user.Id, page: 1, pageSize: 30);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ForbiddenError);
@@ -60,7 +60,7 @@ public class MessageboardServiceTests
     [Fact]
     public async Task GetThreadsAsync_UnknownUser_ReturnsForbidden()
     {
-        var result = await MakeService().GetThreadsAsync(Guid.NewGuid());
+        var result = await MakeService().GetThreadsAsync(Guid.NewGuid(), page: 1, pageSize: 30);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ForbiddenError);
@@ -71,7 +71,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer();
 
-        var result = await MakeService().GetThreadsAsync(user.Id);
+        var result = await MakeService().GetThreadsAsync(user.Id, page: 1, pageSize: 30);
 
         result.IsSuccess.Should().BeTrue();
     }

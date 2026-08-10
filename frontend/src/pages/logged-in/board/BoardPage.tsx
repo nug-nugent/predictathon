@@ -7,21 +7,27 @@ import { ThreadListItem } from "../../../components/messageboard/ThreadListItem"
 import { NewThreadDialog } from "../../../components/messageboard/NewThreadDialog";
 import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { TablePagination } from "../../../components/ui/table-pagination";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
+
+const PAGE_SIZE = 15;
 
 export function BoardPage() {
     const navigate = useNavigate();
     const [dialogOpen, setDialogOpen] = useState(false);
-    const { data: threads, error, reload } = useAsyncData(getThreads, []);
+    const [page, setPage] = useState(1);
+    const { data, error, reload } = useAsyncData(() => getThreads(page, PAGE_SIZE), [page]);
 
     if (error) {
         return <ErrorState error={error} onRetry={reload} />;
     }
 
-    if (threads === null) {
+    if (data === null) {
         return <LoadingSpinner />;
     }
+
+    const threads = data.items;
 
     return (
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
@@ -35,9 +41,12 @@ export function BoardPage() {
                 <Text textAlign="center" color="fg.muted">No threads yet - start the conversation!</Text>
             ) : (
                 <Panel>
-                    {threads.map((thread) => <ThreadListItem key={thread.messageThreadID} thread={thread} />)}
+                    {threads.map((thread, index) => (
+                        <ThreadListItem key={thread.messageThreadID} thread={thread} striped={index % 2 === 1} />
+                    ))}
                 </Panel>
             )}
+            <TablePagination count={data.totalCount} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
             <NewThreadDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}

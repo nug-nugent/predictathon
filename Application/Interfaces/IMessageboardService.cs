@@ -6,11 +6,11 @@ namespace Predictathon.Application.Interfaces;
 public interface IMessageboardService
 {
     /// <summary>
-    /// Lists message threads, newest-activity first. Threads marked HiddenFromPublic are excluded
-    /// unless the caller has Identity.Users.CanViewHiddenMessageThreads. Fails with a ForbiddenError if
-    /// the caller can't view the messageboard at all.
+    /// Lists a server-paged slice of message threads, newest-activity first. Threads marked
+    /// HiddenFromPublic are excluded unless the caller has Identity.Users.CanViewHiddenMessageThreads.
+    /// Fails with a ForbiddenError if the caller can't view the messageboard at all.
     /// </summary>
-    Task<Result<List<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<Result<PagedResult<MessageThreadSummaryModel>>> GetThreadsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a single thread's detail (not its messages). Fails with NotFoundError if it doesn't

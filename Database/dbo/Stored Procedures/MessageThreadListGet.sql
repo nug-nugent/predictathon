@@ -1,6 +1,8 @@
 /* ==========================================================================================
 	Description
-		Returns all message threads
+		Returns a server-paged slice of message threads, newest-activity first, plus the total
+		matching row count (via COUNT(*) OVER(), computed before OFFSET/FETCH is applied - so it
+		reflects every matching thread, not just the page returned).
 
 	History
 		24/12/2011 : DH - Created
@@ -9,10 +11,14 @@
 		17/07/2026 : DH - Replaced the session-scoped @MessageThreadsReadThisSession table-valued
 		                   parameter and the @UserLastViewedMessageboard fallback with a join against
 		                   the new persisted dbo.MessageThreadRead table, keyed by @UserID.
+		10/08/2026 : DH - Added server-side paging (@Page/@PageSize) and a TotalCount column - the
+		                   thread list had grown too long to return unpaged.
 ========================================================================================== */
 CREATE PROCEDURE [dbo].[MessageThreadListGet]
 	@UserID UNIQUEIDENTIFIER
 	, @IncludeHiddenFromPublic BIT = 0
+	, @Page INT = 1
+	, @PageSize INT = 15
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -21,6 +27,8 @@ BEGIN
 	-- Minimise the effect of parameter sniffing:
 	DECLARE @pUserID UNIQUEIDENTIFIER = @UserID;
 	DECLARE @pIncludeHiddenFromPublic BIT = @IncludeHiddenFromPublic;
+	DECLARE @pPage INT = @Page;
+	DECLARE @pPageSize INT = @PageSize;
 
 	;WITH MessageCounts AS (
 		-- aggregate per thread: total messages and last message datetime
@@ -67,6 +75,7 @@ BEGIN
 			WHEN rt.LastReadDateTime < COALESCE(mc.LastMessageDate, mt.StartedDateTime) THEN CAST(1 AS BIT)
 			ELSE CAST(0 AS BIT)
 		END
+		, TotalCount = COUNT(*) OVER()
 	FROM
 		[dbo].[MessageThread] AS mt
 		LEFT JOIN MessageCounts mc ON mt.MessageThreadID = mc.MessageThreadID
@@ -76,5 +85,7 @@ BEGIN
 	WHERE
 		(@pIncludeHiddenFromPublic = CAST(1 AS BIT) OR mt.HiddenFromPublic = 0)
 	ORDER BY
-		LastMessageDateTime DESC;
+		LastMessageDateTime DESC
+	OFFSET (@pPage - 1) * @pPageSize ROWS
+	FETCH NEXT @pPageSize ROWS ONLY;
 END;

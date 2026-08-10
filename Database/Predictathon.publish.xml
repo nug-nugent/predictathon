@@ -16,10 +16,11 @@ Usage:
     <!-- Users/RoleMembership/DatabaseRoles/Permissions are SQL Server's own database
          principals and role grants - not modelled here, provisioned by the host outside this
          project, and not safe for a schema diff to touch (could drop the very login the
-         script is connecting as). Schemas is here for the same reason: Plesk auto-creates a
-         schema matching the login's name (predicta_dbuser) as its default schema when it
-         provisions the database user - also host infrastructure, not part of this project's
-         own dbo/Identity schema model. -->
-    <ExcludeObjectTypes>Users;RoleMembership;DatabaseRoles;Permissions;Schemas</ExcludeObjectTypes>
+         script is connecting as). The predicta_dbuser default schema Plesk auto-created
+         alongside the login was a similar case, but has since been dropped from production
+         directly rather than excluded here - a schema has no environment-specific content, so
+         it's safe (and correct) to let the diff manage it normally rather than blind it to
+         schema changes generally. -->
+    <ExcludeObjectTypes>Users;RoleMembership;DatabaseRoles;Permissions</ExcludeObjectTypes>
   </PropertyGroup>
 </Project>
