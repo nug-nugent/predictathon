@@ -26,7 +26,7 @@ BEGIN
 											, [User].UserName --Username
 										)
 		, PreviousLeaguePosition = CASE WHEN @DateForComparison IS NULL THEN NULL ELSE (
-									SELECT TOP 1
+									SELECT TOP (1)
 										LeaguePosition
 									FROM
 										[dbo].[UserCompetitionLeagueHistory] AS ulh

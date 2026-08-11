@@ -12,7 +12,7 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	SELECT TOP 50
+	SELECT TOP (50)
 		p.UserID
 		, [User].UserName AS Username
 		, MatchAveragePrediction.MatchID

@@ -9,7 +9,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	--	Highest percentage of 'correct' predictions (win/lose/draw only)
-	 SELECT TOP 10
+	 SELECT TOP (10)
  		PredictionCount.Username
 		, PredictionCount.UserID
 		, CorrectPredictionPercentage = (CAST(PredictionCount.CorrectPredictions AS DECIMAL(9, 2)) / CAST(PredictionCount.TotalPredictions AS DECIMAL(9, 2))) * 100

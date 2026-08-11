@@ -248,16 +248,25 @@ jobs:
       # rule only keeps a given sync's own target offline for the duration of that one command,
       # which reopened the API to live traffic before the DB migration had even run.
 
+      # Every -dest: argument below is built as its own PowerShell string variable first, then
+      # passed to msdeploy.exe as a single bare token - NOT written inline as adjacent quoted/
+      # unquoted fragments at the call site. The inline form (multiple "..." segments joined by
+      # literal commas, right next to `-dest:contentPath=` with no separating whitespace) is a
+      # known PowerShell-calling-a-native-exe trap: PowerShell's own re-quoting of that composite
+      # token for the child process's command line does not reliably match what msdeploy (a
+      # native CommandLineToArgvW-based tool) expects, and it broke on the very first real run
+      # of this workflow with "Unrecognized argument ... All arguments must begin with '-'." -
+      # msdeploy received a single mangled argument starting with a stray quote instead of '-'.
+      # Building the full value as one pre-computed string and passing that bare variable avoids
+      # the ambiguity, since PowerShell only has one token to marshal, not several to reconcile.
       # Frontend has no ASP.NET Core Module to detect app_offline.htm natively (it's static
       # files) - overwriting index.html directly is the reliable mechanism (see README.md /
       # project memory for why the obvious rewrite-rule approach isn't).
       - name: Take frontend offline
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="offline-page\app_offline.htm" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted
+          $destArg = '-dest:contentPath="{0}/index.html",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:sync -source:contentPath="offline-page\app_offline.htm" $destArg -allowUntrusted
           if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (frontend) failed with exit code $LASTEXITCODE" }
 
       # Placed manually (not via -enableRule:AppOffline) so it stays in place across the API
@@ -266,10 +275,8 @@ jobs:
       - name: Take API offline
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="offline-page\app_offline.htm" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/api/app_offline.htm",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted
+          $destArg = '-dest:contentPath="{0}/api/app_offline.htm",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:sync -source:contentPath="offline-page\app_offline.htm" $destArg -allowUntrusted
           if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (API) failed with exit code $LASTEXITCODE" }
           # In-process hosting: ANCM needs a moment to unload the app and release its file locks
           # on the published DLLs before the sync below can overwrite them (same rationale as
@@ -284,11 +291,8 @@ jobs:
       - name: Sync API
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="publish\api" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/api",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted `
-            -skip:objectName=filePath,absolutePath="app_offline\.htm"
+          $destArg = '-dest:contentPath="{0}/api",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:sync -source:contentPath="publish\api" $destArg -allowUntrusted -skip:objectName=filePath,absolutePath="app_offline\.htm"
           if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
 
       # Schema deploy, now automated (previously a deliberate manual step - see project memory).
@@ -340,9 +344,8 @@ jobs:
       - name: Bring API online
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:delete `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/api/app_offline.htm",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted
+          $destArg = '-dest:contentPath="{0}/api/app_offline.htm",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:delete $destArg -allowUntrusted
           if ($LASTEXITCODE -ne 0) { throw "msdeploy delete of API app_offline.htm failed with exit code $LASTEXITCODE" }
 
       # msdeploy's contentPath sync deletes destination files not present in the source by
@@ -353,11 +356,8 @@ jobs:
       - name: Sync frontend
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="frontend\dist" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted `
-            -enableRule:DoNotDeleteRule
+          $destArg = '-dest:contentPath="{0}",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:sync -source:contentPath="frontend\dist" $destArg -allowUntrusted -enableRule:DoNotDeleteRule
           if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the frontend failed with exit code $LASTEXITCODE" }
 
       # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the sync above
@@ -368,10 +368,8 @@ jobs:
       - name: Restore real index.html
         shell: pwsh
         run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="frontend\dist\index.html" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted
+          $destArg = '-dest:contentPath="{0}/index.html",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
+          & $env:MSDEPLOY_EXE -verb:sync -source:contentPath="frontend\dist\index.html" $destArg -allowUntrusted
           if ($LASTEXITCODE -ne 0) { throw "msdeploy final index.html restore failed with exit code $LASTEXITCODE" }
 
 # Required GitHub Environment secrets on "production":

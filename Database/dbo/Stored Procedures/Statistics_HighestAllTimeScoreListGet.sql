@@ -10,7 +10,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	-- Total all-time points
-	SELECT TOP 10
+	SELECT TOP (10)
 		[User].UserName AS Username
 		, [User].Id AS UserID
 		, TotalScore = SUM(p.Score)
