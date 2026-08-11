@@ -49,6 +49,19 @@ public class PayPalServiceTests
     }
 
     [Fact]
+    public async Task CreateOrderAsync_RequestsNoShipping()
+    {
+        var (handler, service) = MakeService();
+        handler.Enqueue(HttpStatusCode.OK, TokenResponseJson);
+        handler.Enqueue(HttpStatusCode.Created, """{"id":"ORDER123"}""");
+
+        await service.CreateOrderAsync(12.50m);
+
+        var body = await handler.Requests[1].Content!.ReadAsStringAsync();
+        body.Should().Contain("\"shipping_preference\":\"NO_SHIPPING\"");
+    }
+
+    [Fact]
     public async Task CaptureOrderAsync_FetchesTokenThenCapturesOrder()
     {
         var (handler, service) = MakeService();
