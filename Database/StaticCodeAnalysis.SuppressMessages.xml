@@ -4,22 +4,25 @@
      deliberately doesn't follow our SqlServer.Rules conventions, so its warnings are suppressed
      wholesale rather than rewritten. -->
 <StaticCodeAnalysis version="2" xmlns="urn:Microsoft.Data.Tools.Schema.StaticCodeAnalysis">
-  <SuppressedFile FilePath="dbo\Stored Procedures\sp_generate_merge.sql">
-    <SuppressedRule Category="Smells" RuleId="SML033" />
-    <SuppressedRule Category="Smells" RuleId="SML034" />
-    <SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0007" />
-    <SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0014" />
-    <SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0015" />
-    <SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0016" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0009" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0013" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0024" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0039" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0058" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0063" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0066" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0067" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRD0068" />
-    <SuppressedRule Category="SqlServer.Rules" RuleId="SRP0002" />
-  </SuppressedFile>
+	<SuppressedFile FilePath="dbo\Stored Procedures\sp_generate_merge.sql">
+		<SuppressedRule Category="Smells" RuleId="SML033" />
+		<SuppressedRule Category="Smells" RuleId="SML034" />
+		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0007" />
+		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0014" />
+		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0015" />
+		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0016" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SML006" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SML010" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0009" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0013" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0024" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0039" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0047" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0058" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0063" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0066" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0067" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0068" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0002" />
+	</SuppressedFile>
 </StaticCodeAnalysis>
