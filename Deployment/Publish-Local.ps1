@@ -1,7 +1,17 @@
 <#
 .SYNOPSIS
     Publishes the API and frontend to a local IIS deployment, for rehearsing the Plesk
-    production deployment process (see README.md's "Production deployment" section).
+    production deployment process against the Systest environment (see README.md's
+    "Production deployment" / "Local Systest rehearsal" sections).
+
+.DESCRIPTION
+    Builds the frontend in Vite's "systest" mode (frontend/.env.systest), not the default
+    "production" mode - otherwise it bakes predictathon.co.uk into the bundle instead of the
+    local Systest domain. ASPNETCORE_ENVIRONMENT and the API's secrets (connection string, JWT
+    signing key) are deliberately NOT handled here - they must be set once as IIS Application
+    Pool-level environment variables (see README.md's "Local Systest rehearsal" section),
+    because dotnet publish regenerates web.config from scratch on every run and would silently
+    wipe anything written there instead.
 
 .PARAMETER TargetRoot
     Root folder containing the IIS site's "API" and "frontend" sub-folders.
@@ -87,10 +97,10 @@ try {
     Write-Host "Publishing API to $apiTarget..." -ForegroundColor Cyan
     Invoke-Native { dotnet publish $apiProject -c Release -o $apiTarget } "dotnet publish"
 
-    Write-Host "Building frontend..." -ForegroundColor Cyan
+    Write-Host "Building frontend (systest mode)..." -ForegroundColor Cyan
     Push-Location $frontendSrc
     try {
-        Invoke-Native { npm run build } "npm run build"
+        Invoke-Native { npm run build:systest } "npm run build:systest"
     }
     finally {
         Pop-Location
