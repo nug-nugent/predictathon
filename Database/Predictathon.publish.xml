@@ -5,7 +5,7 @@ has no TargetConnectionString/TargetServerName/TargetDatabaseName - those stay c
 (via /TargetConnectionString:) so credentials never end up in a file that gets committed.
 
 Usage:
-  sqlpackage /Action:Publish /SourceFile:"Database\bin\Release\Predictathon.Database.dacpac" /TargetConnectionString:"..." /Profile:"Database\Predictathon.publish.xml" /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
+  sqlpackage /Action:Publish /SourceFile:"Database\bin\Release\net10.0\Predictathon.Database.dacpac" /TargetConnectionString:"..." /Profile:"Database\Predictathon.publish.xml" /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
 
   Also used by .github/workflows/deploy.yml, which runs this automatically as part of the
   production deploy (see README.md's "Database schema" section).
