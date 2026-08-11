@@ -13,12 +13,28 @@
     because dotnet publish regenerates web.config from scratch on every run and would silently
     wipe anything written there instead.
 
+    Also publishes the database schema (sqlpackage, same Database/Predictathon.publish.xml
+    profile the production deploy workflow uses) against the local Systest database, while both
+    apps are offline - mirrors deploy.yml's ordering so this rehearsal actually exercises the
+    same offline-window guarantee, not just the app code.
+
 .PARAMETER TargetRoot
     Root folder containing the IIS site's "API" and "frontend" sub-folders.
+
+.PARAMETER DatabaseConnectionString
+    Connection string for the local Systest database. Defaults to the "Predictathon.Systest"
+    database on (local) - a separate database from the "Predictathon" one native dev/Docker use,
+    so rehearsing a schema change here can't collide with your everyday dev data.
+
+.PARAMETER SkipDatabaseDeploy
+    Skip the sqlpackage step - useful when iterating on app code only and the schema hasn't
+    changed, to avoid the dacpac rebuild/publish round-trip on every run.
 #>
 [CmdletBinding()]
 param(
-    [string]$TargetRoot = "C:\Dev\IIS\Predictathon"
+    [string]$TargetRoot = "C:\Dev\IIS\Predictathon",
+    [string]$DatabaseConnectionString = "Server=(local);Database=Predictathon.Systest;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true",
+    [switch]$SkipDatabaseDeploy
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,10 +75,13 @@ function Invoke-Native {
     }
 }
 
-$repoRoot    = Split-Path -Parent $PSScriptRoot
-$apiProject  = Join-Path $repoRoot "WebApi\Predictathon.WebApi.csproj"
-$frontendSrc = Join-Path $repoRoot "frontend"
-$offlinePage = Join-Path $repoRoot "Deployment\app_offline.htm"
+$repoRoot        = Split-Path -Parent $PSScriptRoot
+$apiProject      = Join-Path $repoRoot "WebApi\Predictathon.WebApi.csproj"
+$frontendSrc     = Join-Path $repoRoot "frontend"
+$offlinePage     = Join-Path $repoRoot "Deployment\app_offline.htm"
+$databaseProject = Join-Path $repoRoot "Database\Predictathon.Database.csproj"
+$dacpacPath      = Join-Path $repoRoot "Database\bin\Release\Predictathon.Database.dacpac"
+$publishProfile  = Join-Path $repoRoot "Database\Predictathon.publish.xml"
 
 $apiTarget       = Join-Path $TargetRoot "API"
 $frontendTarget  = Join-Path $TargetRoot "frontend"
@@ -106,8 +125,28 @@ try {
         Pop-Location
     }
 
+    if ($SkipDatabaseDeploy) {
+        Write-Host "Skipping database deploy (-SkipDatabaseDeploy)." -ForegroundColor Yellow
+    }
+    else {
+        # Runs while both apps are still offline, same reasoning as deploy.yml: the API's new
+        # code shouldn't come back up against a schema it wasn't built against.
+        Write-Host "Building database dacpac..." -ForegroundColor Cyan
+        Invoke-Native { dotnet build $databaseProject -c Release } "dotnet build (database)"
+
+        Write-Host "Publishing database schema to Systest..." -ForegroundColor Cyan
+        Invoke-Native {
+            sqlpackage /Action:Publish `
+                /SourceFile:"$dacpacPath" `
+                /TargetConnectionString:"$DatabaseConnectionString" `
+                /Profile:"$publishProfile" `
+                /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
+        } "sqlpackage /Action:Publish"
+    }
+
     # Bring the API back up before the frontend, so there is no window where a live SPA is talking
-    # to an API that is still serving 503s.
+    # to an API that is still serving 503s - and, now, no window where it's talking to a schema
+    # that doesn't match what it was just built against either.
     Write-Host "Bringing API online..." -ForegroundColor Cyan
     Remove-Item $apiOfflineFile -ErrorAction SilentlyContinue
 
@@ -135,6 +174,6 @@ try {
 }
 catch {
     Write-Warning "Publish failed: $_"
-    Write-Warning "Site left offline. To bring it back up without a full re-publish: copy $frontendSrc\dist\index.html over $frontendIndex, and delete $apiOfflineFile."
+    Write-Warning "Site left offline. To bring it back up without a full re-publish: copy $frontendSrc\dist\index.html over $frontendIndex, and delete $apiOfflineFile - but only if the database publish step above (if it was reached) actually succeeded. If it failed or wasn't reached yet, bringing the new API online against the old schema is exactly what this offline window exists to prevent - fix the schema first, or restore the previous API output instead."
     throw
 }
