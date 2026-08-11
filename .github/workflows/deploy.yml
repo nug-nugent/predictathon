@@ -53,8 +53,10 @@ jobs:
         working-directory: frontend
         run: npm run build
 
-      # Produces Database/bin/Release/Predictathon.Database.dacpac - path confirmed by the
-      # manual sqlpackage runs during the 2026-08-09/10 cutover (see project memory), not a guess.
+      # MSBuild.Sdk.SqlProj nests dacpac output under a target-framework subfolder like a normal
+      # class library would (Database/bin/Release/net10.0/Predictathon.Database.dacpac) - unlike
+      # the classic SSDT .sqlproj SDK's flattened layout an earlier version of this comment
+      # assumed. Confirmed against a real local build, not a guess.
       - name: Build database dacpac
         run: dotnet build Database/Predictathon.Database.csproj -c Release
 
@@ -79,7 +81,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: database-dacpac
-          path: Database/bin/Release/Predictathon.Database.dacpac
+          path: Database/bin/Release/net10.0/Predictathon.Database.dacpac
           retention-days: 7
 
   deploy:
