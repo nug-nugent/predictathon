@@ -48,7 +48,10 @@ public class PayPalService : IPayPalService
             purchase_units = new[]
             {
                 new { amount = new { currency_code = CurrencyCode, value = amount.ToString("F2", CultureInfo.InvariantCulture) } }
-            }
+            },
+            // Entrance fees are a digital purchase - nothing is shipped, so suppress PayPal's
+            // address-collection UI rather than defaulting to GET_FROM_FILE.
+            experience_context = new { shipping_preference = "NO_SHIPPING" }
         };
 
         var response = await client.PostAsJsonAsync($"{BaseUrl}/v2/checkout/orders", payload, cancellationToken);
