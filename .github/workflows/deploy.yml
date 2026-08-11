@@ -264,14 +264,23 @@ jobs:
       # that backslash-escaping, which is what msdeploy's parser actually expects - confirmed
       # against the real msdeploy.exe binary, including with a deliberately adversarial password
       # containing both a comma and a literal quote, which still parsed correctly through cmd.
+      # Every -source:contentPath= below uses an ABSOLUTE path (via $env:GITHUB_WORKSPACE), not a
+      # relative one. msdeploy's contentPath provider, given a relative path with no computerName
+      # qualifying that side, treats the first path segment as an IIS SITE NAME to look up on the
+      # local machine rather than as a plain filesystem path - confirmed against the real
+      # msdeploy.exe locally, reproducing the real run's "ERROR_SITE_DOES_NOT_EXIST: Site
+      # 'offline-page' does not exist." exactly. An absolute (drive-letter-qualified) path is
+      # unambiguous and sidesteps that guessing entirely - confirmed for both single-file and
+      # directory sync sources.
       # Frontend has no ASP.NET Core Module to detect app_offline.htm natively (it's static
       # files) - overwriting index.html directly is the reliable mechanism (see README.md /
       # project memory for why the obvious rewrite-rule approach isn't).
       - name: Take frontend offline
         shell: pwsh
         run: |
+          $offlinePage = Join-Path $env:GITHUB_WORKSPACE "offline-page\app_offline.htm"
           $destArg = '-dest:contentPath="{0}/index.html",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
-          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"offline-page\app_offline.htm`" $destArg -allowUntrusted"
+          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"$offlinePage`" $destArg -allowUntrusted"
           cmd /c $cmd
           if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (frontend) failed with exit code $LASTEXITCODE" }
 
@@ -281,8 +290,9 @@ jobs:
       - name: Take API offline
         shell: pwsh
         run: |
+          $offlinePage = Join-Path $env:GITHUB_WORKSPACE "offline-page\app_offline.htm"
           $destArg = '-dest:contentPath="{0}/api/app_offline.htm",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
-          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"offline-page\app_offline.htm`" $destArg -allowUntrusted"
+          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"$offlinePage`" $destArg -allowUntrusted"
           cmd /c $cmd
           if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (API) failed with exit code $LASTEXITCODE" }
           # In-process hosting: ANCM needs a moment to unload the app and release its file locks
@@ -298,8 +308,9 @@ jobs:
       - name: Sync API
         shell: pwsh
         run: |
+          $apiSource = Join-Path $env:GITHUB_WORKSPACE "publish\api"
           $destArg = '-dest:contentPath="{0}/api",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
-          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"publish\api`" $destArg -allowUntrusted -skip:objectName=filePath,absolutePath=`"app_offline\.htm`""
+          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"$apiSource`" $destArg -allowUntrusted -skip:objectName=filePath,absolutePath=`"app_offline\.htm`""
           cmd /c $cmd
           if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
 
@@ -365,8 +376,9 @@ jobs:
       - name: Sync frontend
         shell: pwsh
         run: |
+          $frontendSource = Join-Path $env:GITHUB_WORKSPACE "frontend\dist"
           $destArg = '-dest:contentPath="{0}",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
-          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"frontend\dist`" $destArg -allowUntrusted -enableRule:DoNotDeleteRule"
+          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"$frontendSource`" $destArg -allowUntrusted -enableRule:DoNotDeleteRule"
           cmd /c $cmd
           if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the frontend failed with exit code $LASTEXITCODE" }
 
@@ -378,8 +390,9 @@ jobs:
       - name: Restore real index.html
         shell: pwsh
         run: |
+          $indexSource = Join-Path $env:GITHUB_WORKSPACE "frontend\dist\index.html"
           $destArg = '-dest:contentPath="{0}/index.html",computerName="{1}",userName="{2}",password="{3}",authtype="Basic"' -f $env:MSDEPLOY_SITE, $env:MSDEPLOY_SERVICE_URL, $env:MSDEPLOY_USERNAME, $env:MSDEPLOY_PASSWORD
-          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"frontend\dist\index.html`" $destArg -allowUntrusted"
+          $cmd = "`"$env:MSDEPLOY_EXE`" -verb:sync -source:contentPath=`"$indexSource`" $destArg -allowUntrusted"
           cmd /c $cmd
           if ($LASTEXITCODE -ne 0) { throw "msdeploy final index.html restore failed with exit code $LASTEXITCODE" }
 
