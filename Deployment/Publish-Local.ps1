@@ -80,7 +80,7 @@ $apiProject      = Join-Path $repoRoot "WebApi\Predictathon.WebApi.csproj"
 $frontendSrc     = Join-Path $repoRoot "frontend"
 $offlinePage     = Join-Path $repoRoot "Deployment\app_offline.htm"
 $databaseProject = Join-Path $repoRoot "Database\Predictathon.Database.csproj"
-$dacpacPath      = Join-Path $repoRoot "Database\bin\Release\Predictathon.Database.dacpac"
+$dacpacPath      = Join-Path $repoRoot "Database\bin\Release\net10.0\Predictathon.Database.dacpac"
 $publishProfile  = Join-Path $repoRoot "Database\Predictathon.publish.xml"
 
 $apiTarget       = Join-Path $TargetRoot "API"
