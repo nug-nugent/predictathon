@@ -12,4 +12,6 @@
 
 GO
 CREATE INDEX [IX_MessageReaction_MessageID] ON [dbo].[MessageReaction] ([MessageID] ASC, [CreationDate] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_MessageReaction_UserID] ON [dbo].[MessageReaction] ([UserID] ASC);
 

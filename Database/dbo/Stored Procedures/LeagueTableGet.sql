@@ -32,9 +32,9 @@ BEGIN
 										[dbo].[UserCompetitionLeagueHistory] AS ulh
 									WHERE
 										ulh.UserCompetitionID = uc.UserCompetitionID
-										AND ulh.Date < @DateForComparison
+										AND ulh.[Date] < @DateForComparison
 									ORDER BY
-										ulh.Date DESC) END
+										ulh.[Date] DESC) END
 		, Score = ISNULL(SUM(p.Score), CAST(0 AS INT))
 		, AverageGoalDifference = CAST(ISNULL(AVG(CAST(p.GoalDifference AS DECIMAL(9,2))), CAST(0 AS DECIMAL(9,2))) AS DECIMAL(9,2))
 		, ThreePointers = SUM(CASE WHEN p.Score = 3 THEN 1 ELSE 0 END)

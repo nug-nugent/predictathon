@@ -6,6 +6,30 @@
 		<!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
 		<!-- ...and https://learn.microsoft.com/en-gb/dotnet/api/microsoft.sqlserver.dac.model.tsqlmodeloptions?view=sql-dacfx-162 -->
 		<RecoveryMode>Simple</RecoveryMode>
+		<!-- Rules disabled project-wide (not just for one file) because they flag deliberate design
+		     choices rather than defects: SRD0003 - every table uses a GUID surrogate PK by design;
+		     SRD0001 - surrogate-key-only tables (claims/log/junction tables) are expected to lack a
+		     natural key; SRD0010 - identity seed >= 1000 is a house-style preference with no value on
+		     this small, already-live database; SRN0007 - naming-standard nitpicks (half of it fires on
+		     ASP.NET Identity's own scaffolded names, the rest wants live FK constraints renamed for no
+		     functional benefit); SRD0047 - "same-named column, different type" is inherent noise for a
+		     schema with generic column names like Id/Name/CreatedAtUtc; SRD0032/SRP0024/SRP0009/SR0006 -
+		     sargability/correlated-subquery/table-scan performance heuristics that aren't worth chasing
+		     on a ~50-user hobby app; SRD0028 - the rule's AST walk can't tell a real unqualified table
+		     column from an ORDER BY reference to a SELECT-list alias (e.g. "ORDER BY LeaguePosition"
+		     referencing "LeaguePosition = ROW_NUMBER() OVER (...)"), and every instance in this codebase
+		     is the latter - there's no table to prefix an alias with, so "fixing" it means repeating the
+		     whole expression in the ORDER BY instead of the alias, which is worse; SRD0043 - compares
+		     ISNULL/COALESCE argument types via two different code paths (schema-resolved for a plain
+		     column, AST-literal-derived for a CAST/literal), so it flags "int" vs "int" as a mismatch
+		     purely from string-formatting differences between those paths - checked every instance,
+		     all are genuinely same-typed; SR0007/SR0014 - Microsoft's built-in nullable-predicate and
+		     narrowing-cast heuristics fire on every nullable comparison/cast regardless of intent;
+		     checked every instance here and the NULL-propagation/truncation is the desired behaviour
+		     (e.g. CAST(x AS DATE) to compare date-only) not an accident; SML006 - same "explicit cast
+		     on a column" shape as the SRP0009 sargability warnings above, same reasoning. Use
+		     StaticCodeAnalysis.SuppressMessages.xml instead for suppressions scoped to a single file. -->
+		<CodeAnalysisRules>-SqlServer.Rules.SRD0003;-SqlServer.Rules.SRD0001;-SqlServer.Rules.SRD0010;-SqlServer.Rules.SRN0007;-SqlServer.Rules.SRD0047;-SqlServer.Rules.SRD0032;-SqlServer.Rules.SRP0024;-SqlServer.Rules.SRP0009;-Microsoft.Rules.Data.SR0006;-SqlServer.Rules.SRD0028;-SqlServer.Rules.SRD0043;-Microsoft.Rules.Data.SR0007;-Microsoft.Rules.Data.SR0014;-Smells.SML006</CodeAnalysisRules>
 
 	</PropertyGroup>
 

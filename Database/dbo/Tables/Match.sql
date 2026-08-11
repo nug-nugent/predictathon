@@ -26,4 +26,23 @@ GO
 -- because most matches (older seasons, cup fixtures) have no external source and NULL shouldn't
 -- collide under a unique constraint.
 CREATE UNIQUE INDEX [IX_Match_ExternalMatchID] ON [dbo].[Match] ([ExternalMatchID] ASC) WHERE ([ExternalMatchID] IS NOT NULL);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Match_CompetitionID] ON [dbo].[Match]
+(
+	[CompetitionID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Match_HomeTeamID] ON [dbo].[Match]
+(
+	[HomeTeamID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Match_AwayTeamID] ON [dbo].[Match]
+(
+	[AwayTeamID] ASC
+);
+GO
 

@@ -12,6 +12,7 @@
     CONSTRAINT [PK_Prediction] PRIMARY KEY CLUSTERED ([PredictionID] ASC),
     CONSTRAINT [FK_Prediction_Match] FOREIGN KEY ([MatchID]) REFERENCES [dbo].[Match] ([MatchID]),
     CONSTRAINT [FK_Prediction_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id]),
+    CONSTRAINT [FK_Prediction_PredictionHistory] FOREIGN KEY ([PredictionHistoryID]) REFERENCES [dbo].[PredictionHistory] ([PredictionHistoryID]),
     CONSTRAINT [UK_Prediction_MatchID_UserID] UNIQUE NONCLUSTERED ([MatchID] ASC, [UserID] ASC)
 );
 
@@ -25,4 +26,9 @@ CREATE NONCLUSTERED INDEX [IX_Prediction_UserID_Included]
 GO
 CREATE NONCLUSTERED INDEX [IX_Prediction_MatchID_Included]
     ON [dbo].[Prediction]([MatchID] ASC, [UserID] ASC, [HomeTeamGoals] ASC, [AwayTeamGoals] ASC, [Score] ASC, [GoalDifference] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Prediction_PredictionHistoryID]
+    ON [dbo].[Prediction]([PredictionHistoryID] ASC);
 

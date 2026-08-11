@@ -8,3 +8,10 @@ CREATE TABLE [dbo].[Announcement] (
     CONSTRAINT [PK_Announcement] PRIMARY KEY CLUSTERED ([AnnouncementID] ASC),
     CONSTRAINT [FK_Announcement_CreatedByUser] FOREIGN KEY ([CreatedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Announcement_CreatedByUserID] ON [dbo].[Announcement]
+(
+	[CreatedByUserID] ASC
+);
+GO

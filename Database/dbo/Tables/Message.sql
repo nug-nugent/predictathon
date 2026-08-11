@@ -16,4 +16,7 @@
 GO
 CREATE NONCLUSTERED INDEX [IX_Message_MessageThreadID]
     ON [dbo].[Message]([MessageThreadID] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_Message_PostedByUserID]
+    ON [dbo].[Message]([PostedByUserID] ASC);
 

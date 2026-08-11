@@ -14,4 +14,6 @@ GO
 -- and insert two rows for the same (UserID, MessageThreadID), which then fans out the thread list
 -- query's join into duplicate rows. The service catches the resulting duplicate-key violation.
 CREATE UNIQUE INDEX [IX_MessageThreadRead_UserID_MessageThreadID] ON [dbo].[MessageThreadRead] ([UserID] ASC, [MessageThreadID] ASC);
+GO
+CREATE NONCLUSTERED INDEX [IX_MessageThreadRead_MessageThreadID] ON [dbo].[MessageThreadRead] ([MessageThreadID] ASC);
 

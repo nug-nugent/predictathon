@@ -19,11 +19,14 @@ BEGIN
 												[dbo].[UserCompetitionLeagueHistory]
 												INNER JOIN [dbo].[UserCompetition] ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID
 											WHERE
-												UserCompetition.CompetitionID = @CompetitionID), DATEADD(DAY, -7, GETDATE()))
+												UserCompetition.CompetitionID = @CompetitionID), DATEADD(DAY, -7, GETDATE()));
 
 	--if there've been any matches since that date, get some data in there...
 	IF EXISTS(SELECT MatchID FROM [dbo].[Match] WHERE Match.CompetitionID = @CompetitionID AND Match.MatchPlayed = 1 AND Match.MatchDateTime >= @MaxLeagueHistoryDate)
 	BEGIN
+		BEGIN TRY
+			BEGIN TRANSACTION;
+
 		DELETE
 			[dbo].[UserCompetitionLeagueHistory]
 		FROM
@@ -31,7 +34,7 @@ BEGIN
 			INNER JOIN [dbo].[UserCompetition] ON UserCompetitionLeagueHistory.UserCompetitionID = UserCompetition.UserCompetitionID
 		WHERE
 			[Date] = @Date
-			AND UserCompetition.CompetitionID = @CompetitionID
+			AND UserCompetition.CompetitionID = @CompetitionID;
 
 		INSERT
 			UserCompetitionLeagueHistory
@@ -86,7 +89,18 @@ BEGIN
 			) LeagueTable ON UserCompetition.UserID = LeagueTable.UserID
 		WHERE
 			UserCompetition.CompetitionID = @CompetitionID
-		ORDER BY 
+		ORDER BY
 			LeaguePosition;
+
+			COMMIT TRANSACTION;
+		END TRY
+		BEGIN CATCH
+			IF @@TRANCOUNT > 0
+			BEGIN
+				ROLLBACK TRANSACTION;
+			END;
+
+			THROW;
+		END CATCH;
 	END;
 END;
