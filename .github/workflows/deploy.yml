@@ -20,13 +20,13 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -60,25 +60,25 @@ jobs:
       - name: Build database dacpac
         run: dotnet build Database/Predictathon.Database.csproj -c Release
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-publish
           path: publish/api
           retention-days: 7
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: frontend/dist
           retention-days: 7
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: app-offline-page
           path: Deployment/app_offline.htm
           retention-days: 7
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: database-dacpac
           path: Database/bin/Release/net10.0/Predictathon.Database.dacpac
@@ -110,31 +110,31 @@ jobs:
     steps:
       # Needed for Database/Predictathon.publish.xml (the sqlpackage profile) further down -
       # nothing else in this job previously needed the repo checked out.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # For the "dotnet tool install microsoft.sqlpackage" step below. windows-latest ships a
       # preinstalled SDK, but pinning the same version as the rest of the pipeline avoids relying
       # on whatever happens to be preinstalled.
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: api-publish
           path: publish/api
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: frontend-dist
           path: frontend/dist
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: app-offline-page
           path: offline-page
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: database-dacpac
           path: database-dacpac
@@ -341,7 +341,7 @@ jobs:
             /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
           if ($LASTEXITCODE -ne 0) { throw "sqlpackage /Action:Script failed with exit code $LASTEXITCODE" }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: migration-script
           path: migration-script.sql
