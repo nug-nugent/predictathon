@@ -53,6 +53,11 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      # Produces Database/bin/Release/Predictathon.Database.dacpac - path confirmed by the
+      # manual sqlpackage runs during the 2026-08-09/10 cutover (see project memory), not a guess.
+      - name: Build database dacpac
+        run: dotnet build Database/Predictathon.Database.csproj -c Release
+
       - uses: actions/upload-artifact@v4
         with:
           name: api-publish
@@ -69,6 +74,12 @@ jobs:
         with:
           name: app-offline-page
           path: Deployment/app_offline.htm
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-dacpac
+          path: Database/bin/Release/Predictathon.Database.dacpac
           retention-days: 7
 
   deploy:
@@ -95,6 +106,17 @@ jobs:
       MSDEPLOY_USERNAME: ${{ secrets.WEBDEPLOY_USERNAME }}
       MSDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
     steps:
+      # Needed for Database/Predictathon.publish.xml (the sqlpackage profile) further down -
+      # nothing else in this job previously needed the repo checked out.
+      - uses: actions/checkout@v4
+
+      # For the "dotnet tool install microsoft.sqlpackage" step below. windows-latest ships a
+      # preinstalled SDK, but pinning the same version as the rest of the pipeline avoids relying
+      # on whatever happens to be preinstalled.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
       - uses: actions/download-artifact@v4
         with:
           name: api-publish
@@ -109,6 +131,11 @@ jobs:
         with:
           name: app-offline-page
           path: offline-page
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: database-dacpac
+          path: database-dacpac
 
       # Plesk has no per-app/pool environment-variable UI on this host (checked directly during
       # the 2026-08-09 go-live) - secrets are injected straight into the API's own web.config
@@ -212,34 +239,16 @@ jobs:
           Write-Host "Using msdeploy.exe at $found"
           "MSDEPLOY_EXE=$found" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      # Everything below uses msdeploy.exe directly (not the -p:DeployOnBuild=true MSBuild
-      # integration used for the one-off manual test on 2026-08-10) so that the web.config
-      # already edited above is what actually gets synced, and so the same mechanism works
-      # uniformly for the frontend too (a plain static folder, not an MSBuild project - it has
-      # no equivalent "-p:DeployOnBuild" to hook into). The underlying sync operation msdeploy.exe
-      # performs here should be the same one that MSBuild wrapper was calling internally, but
-      # this exact invocation form (raw CLI, both halves) has NOT itself been tested end to end -
-      # only the API's sub-application addressing was proven, via the MSBuild-integrated form.
-      # Worth a careful first real run, not blind trust on the first try.
+      # --- Everything from here down is the live-site window: both apps go offline before any
+      # content or schema change touches them, and neither comes back until its own work (and,
+      # for the API, the DB migration too) is fully done. See project memory / conversation
+      # history for why this replaced the old "-enableRule:AppOffline per sync" approach: that
+      # rule only keeps a given sync's own target offline for the duration of that one command,
+      # which reopened the API to live traffic before the DB migration had even run.
 
-      # ANCM natively detects app_offline.htm and serves it with a 503 - the -enableRule:AppOffline
-      # deployment rule makes msdeploy place it before syncing and remove it after, IIS/ANCM-aware
-      # about file locks the whole way through. If this works as documented, it replaces what used
-      # to be four separate FTPS steps (offline, wait for locks, upload, online) with this one.
-      - name: Sync API
-        shell: pwsh
-        run: |
-          & $env:MSDEPLOY_EXE -verb:sync `
-            -source:contentPath="publish\api" `
-            -dest:contentPath="$($env:MSDEPLOY_SITE)/api",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
-            -allowUntrusted `
-            -enableRule:AppOffline
-          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
-
-      # The frontend has no equivalent native offline mechanism (see README.md / project memory -
-      # IIS caches "/" keyed to index.html, not a separate app_offline.htm), so this still needs
-      # the same manual index.html-overwrite trick as the FTPS version, just via a single-file
-      # msdeploy sync instead of an FTP put.
+      # Frontend has no ASP.NET Core Module to detect app_offline.htm natively (it's static
+      # files) - overwriting index.html directly is the reliable mechanism (see README.md /
+      # project memory for why the obvious rewrite-rule approach isn't).
       - name: Take frontend offline
         shell: pwsh
         run: |
@@ -247,7 +256,92 @@ jobs:
             -source:contentPath="offline-page\app_offline.htm" `
             -dest:contentPath="$($env:MSDEPLOY_SITE)/index.html",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
             -allowUntrusted
-          if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync failed with exit code $LASTEXITCODE" }
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (frontend) failed with exit code $LASTEXITCODE" }
+
+      # Placed manually (not via -enableRule:AppOffline) so it stays in place across the API
+      # content sync AND the DB migration below, instead of msdeploy auto-removing it the moment
+      # the API's own sync step finishes. ANCM detects the file natively - no config needed.
+      - name: Take API offline
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="offline-page\app_offline.htm" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/api/app_offline.htm",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy offline-page sync (API) failed with exit code $LASTEXITCODE" }
+          # In-process hosting: ANCM needs a moment to unload the app and release its file locks
+          # on the published DLLs before the sync below can overwrite them (same rationale as
+          # Publish-Local.ps1's identical sleep).
+          Start-Sleep -Seconds 3
+
+      # -skip prevents this sync's default "delete anything at the destination that isn't in the
+      # source" behaviour from deleting the app_offline.htm placed just above (it's deliberately
+      # not part of the published API output). Do not remove -skip or add -enableRule:AppOffline
+      # back here - either would let the API answer live requests before the DB migration below
+      # has run against the (still old) schema.
+      - name: Sync API
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:sync `
+            -source:contentPath="publish\api" `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/api",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted `
+            -skip:objectName=filePath,absolutePath="app_offline\.htm"
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy sync of the API failed with exit code $LASTEXITCODE" }
+
+      # Schema deploy, now automated (previously a deliberate manual step - see project memory).
+      # Runs while both apps are offline, so nothing is ever live against a mismatched schema.
+      # CONNECTION_STRING is the same production connection string the app itself uses - if that
+      # SQL login lacks DDL rights this step fails cleanly here, before either app comes back
+      # online, rather than corrupting anything silently.
+      - name: Install SqlPackage
+        shell: pwsh
+        run: |
+          dotnet tool install -g microsoft.sqlpackage
+          # windows-latest images add this to PATH already in practice, but that's an assumption
+          # about the runner image, not a guarantee - make it explicit so this step can't leave
+          # "sqlpackage" unresolved for the steps below.
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - name: Script database migration (audit trail)
+        shell: pwsh
+        env:
+          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+        run: |
+          sqlpackage /Action:Script `
+            /SourceFile:"database-dacpac\Predictathon.Database.dacpac" `
+            /TargetConnectionString:"$env:CONNECTION_STRING" `
+            /OutputPath:"migration-script.sql" `
+            /Profile:"Database\Predictathon.publish.xml" `
+            /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
+          if ($LASTEXITCODE -ne 0) { throw "sqlpackage /Action:Script failed with exit code $LASTEXITCODE" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-script
+          path: migration-script.sql
+          retention-days: 90
+
+      - name: Publish database migration
+        shell: pwsh
+        env:
+          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+        run: |
+          sqlpackage /Action:Publish `
+            /SourceFile:"database-dacpac\Predictathon.Database.dacpac" `
+            /TargetConnectionString:"$env:CONNECTION_STRING" `
+            /Profile:"Database\Predictathon.publish.xml" `
+            /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"
+          if ($LASTEXITCODE -ne 0) { throw "sqlpackage /Action:Publish failed with exit code $LASTEXITCODE - schema not fully applied, site deliberately left offline. Check migration-script.sql (uploaded above) to see what was attempted." }
+
+      # Only now that the schema matches what the new API code expects does the API come back.
+      - name: Bring API online
+        shell: pwsh
+        run: |
+          & $env:MSDEPLOY_EXE -verb:delete `
+            -dest:contentPath="$($env:MSDEPLOY_SITE)/api/app_offline.htm",computerName="$($env:MSDEPLOY_SERVICE_URL)",userName="$($env:MSDEPLOY_USERNAME)",password="$($env:MSDEPLOY_PASSWORD)",authtype="Basic" `
+            -allowUntrusted
+          if ($LASTEXITCODE -ne 0) { throw "msdeploy delete of API app_offline.htm failed with exit code $LASTEXITCODE" }
 
       # msdeploy's contentPath sync deletes destination files not present in the source by
       # default (unlike lftp's default, which is why the FTPS version never needed this flag).
@@ -267,7 +361,8 @@ jobs:
       # Belt-and-braces final copy, matching Publish-Local.ps1's own paranoia: the sync above
       # should already have restored the real index.html, but this one file is the difference
       # between the site being up and stuck on the offline page, so don't rely on msdeploy's
-      # own change-detection heuristics for it.
+      # own change-detection heuristics for it. This is the last step - the site is back online
+      # once it completes.
       - name: Restore real index.html
         shell: pwsh
         run: |
@@ -277,13 +372,15 @@ jobs:
             -allowUntrusted
           if ($LASTEXITCODE -ne 0) { throw "msdeploy final index.html restore failed with exit code $LASTEXITCODE" }
 
-# Not covered here, deliberately: database schema changes (dacpac/sqlpackage). Per David's
-# call, that stays a separate manual step for now given the first release includes the
-# dbo.User -> Identity.Users migration against real production data - see project memory
-# ("Schema deploy" decision) before automating it into this workflow.
+# Required GitHub Environment secrets on "production":
+# WEBDEPLOY_SERVICE_URL, WEBDEPLOY_SITE, WEBDEPLOY_USERNAME, WEBDEPLOY_PASSWORD (from the
+# .publishsettings file's <publishProfile> attributes: publishUrl, msdeploySite, userName,
+# userPWD respectively), plus JWT_SIGNING_KEY, CONNECTION_STRING, SMTP_*, PAYPAL_*,
+# FOOTBALLDATA_API_KEY, HEALTH_DETAILED_API_KEY, SCHEDULED_TASKS_API_KEY.
 #
-# New GitHub Environment secrets needed on "production" before this can run (replacing
-# FTP_USERNAME/FTP_PASSWORD from the earlier FTPS version, which this workflow no longer uses):
-# WEBDEPLOY_SERVICE_URL, WEBDEPLOY_SITE, WEBDEPLOY_USERNAME, WEBDEPLOY_PASSWORD - all four come
-# directly from the .publishsettings file's <publishProfile> attributes (publishUrl, msdeploySite,
-# userName, userPWD respectively).
+# Database schema deploy is now part of this workflow (sqlpackage, using the checked-in
+# Database/Predictathon.publish.xml profile - BlockOnPossibleDataLoss=True and
+# DropObjectsNotInSource=True, already vetted against real production data on 2026-08-10).
+# It reuses the CONNECTION_STRING secret as the sqlpackage target - that SQL login needs DDL
+# rights (CREATE/ALTER/DROP), not just the DML the app itself needs at runtime; confirm that
+# before the first real trigger.

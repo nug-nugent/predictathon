@@ -61,7 +61,7 @@ see that file's header comment for the exact `sp_generate_merge` command.
 
 ## Production deployment (Plesk/IIS shared hosting)
 
-The production host is Plesk on Windows/IIS shared hosting. Nothing here is automated yet (no CI/CD) — both the API and frontend are published and copied up manually.
+The production host is Plesk on Windows/IIS shared hosting. `.github/workflows/deploy.yml` (`workflow_dispatch`-only) automates the API, frontend, and database schema deploy via Web Deploy/`msdeploy.exe` and `sqlpackage`. What follows describes the one-time Plesk setup and the manual fallback if you ever need to do it by hand.
 
 ### One-time Plesk setup
 
@@ -112,9 +112,15 @@ Both are safe to call more than once a day (idempotent). Point either an UptimeR
 
 `npm run build` produces static files for `frontend/dist/`, including `web.config` (copied automatically from `frontend/public/`), which carries the IIS URL-rewrite rule needed to fall back to `index.html` for client-side routes. `VITE_API_BASE_URL` defaults to `/api` (relative) if unset at build time, which works as long as the API is reverse-proxied under the same domain as the frontend; set it explicitly via `.env.production` or a build-time environment variable if the API is on a different origin.
 
+### Database schema
+
+`deploy.yml` runs `sqlpackage /Action:Publish` against the production connection string, using the checked-in `Database/Predictathon.publish.xml` profile (`BlockOnPossibleDataLoss=True`, `DropObjectsNotInSource=True`), with both the API and frontend already offline (see below) so nothing is ever live against a mismatched schema. It also runs `/Action:Script` first purely to upload the generated T-SQL as a build artifact — an audit trail of what actually ran, not a manual-approval gate. The SQL login behind `CONNECTION_STRING` needs DDL rights (`CREATE`/`ALTER`/`DROP`), not just the DML the app needs at runtime.
+
+To run it by hand instead: `sqlpackage /Action:Publish /SourceFile:"Database\bin\Release\Predictathon.Database.dacpac" /TargetConnectionString:"..." /Profile:"Database\Predictathon.publish.xml" /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"` (the `/p:` flag is needed in addition to the profile — passing `ExcludeObjectTypes` via `/Profile:` alone was unreliable in practice).
+
 ### Taking the site offline for an upgrade
 
-`Deployment/Publish-Local.ps1` does this automatically around a publish. To do it by hand for a longer upgrade (e.g. over a weekend), the two applications take different approaches:
+`Deployment/Publish-Local.ps1` and `deploy.yml` both do this automatically around a publish (the workflow also keeps both apps offline across the database migration above, not just the content sync). To do it by hand for a longer upgrade (e.g. over a weekend), the two applications take different approaches:
 
 1. **API** — drop `Deployment/app_offline.htm` into the API's IIS sub-application folder. The ASP.NET Core Module detects it automatically and serves it (with a 503) for every request, no config needed. Delete the file to bring the API back up.
 2. **Frontend** — copy `Deployment/app_offline.htm` over the site root's `index.html`. Restore it by copying `frontend/dist/index.html` back (or just re-running a publish).
