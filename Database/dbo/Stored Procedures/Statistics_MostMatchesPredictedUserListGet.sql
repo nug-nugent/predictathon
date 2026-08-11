@@ -9,7 +9,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	-- Users to have predicted the most matches altogether
-	SELECT TOP 10
+	SELECT TOP (10)
 		[User].UserName AS Username
 		, [User].Id AS UserID
 		, TotalPredictions = COUNT(1)

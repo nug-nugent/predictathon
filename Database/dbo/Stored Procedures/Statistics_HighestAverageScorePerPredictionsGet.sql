@@ -9,7 +9,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	--	Highest average score per prediction
-	 SELECT TOP 10
+	 SELECT TOP (10)
 		[User].UserName AS Username
 		, [User].Id AS UserID
 		, AverageScore = CAST(SUM(p.Score) AS DECIMAL(9, 2)) / COUNT(1.00)
