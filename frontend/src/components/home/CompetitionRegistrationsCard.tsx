@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Heading, Image, Table, Text, VStack } from "@chakra-ui/react";
+import { Heading, HStack, Image, Table, Text, VStack } from "@chakra-ui/react";
+import { Trophy } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useCompetition } from "../../hooks/useCompetition";
 import {
@@ -9,6 +10,7 @@ import { competitionImageUrl } from "../../utils/competitionImageUrl";
 import { formatDateOnly } from "../../utils/formatDateOnly";
 import { ApiError } from "../../services/api";
 import { Panel } from "../ui/panel";
+import { IconChip } from "../ui/icon-chip";
 import { ClickableRow } from "../ui/clickable-row";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
@@ -58,8 +60,11 @@ export function CompetitionRegistrationsCard() {
     const pageRegistrations = registrations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <Panel p={3}>
-            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Competitions</Heading>
+        <Panel p={3} accent hoverLift>
+            <HStack gap={2} mb={2}>
+                <IconChip icon={Trophy} color="brand.accent" />
+                <Heading fontSize="17px" fontWeight="bold">Competitions</Heading>
+            </HStack>
             <Table.Root size="sm" variant="line">
                 <Table.Body>
                     {pageRegistrations.map((r) => (

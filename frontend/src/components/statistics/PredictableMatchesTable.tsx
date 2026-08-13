@@ -12,7 +12,7 @@ export function PredictableMatchesTable({ title, matches }: { title: string; mat
     const pageMatches = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <Panel overflowX="auto">
+        <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
                 <Heading size="sm" mb={2}>{title}</Heading>
                 <Table.Root size="sm" variant="line">

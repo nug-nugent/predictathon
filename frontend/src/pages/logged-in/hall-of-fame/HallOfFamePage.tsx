@@ -52,7 +52,7 @@ export function HallOfFamePage() {
             {items.length === 0 ? (
                 <Text textAlign="center" color="fg.muted">No competitions have concluded yet.</Text>
             ) : (
-                <Panel>
+                <Panel accent>
                     {items.map((item) => <HallOfFameEntry key={item.hallOfFameID} item={item} />)}
                 </Panel>
             )}

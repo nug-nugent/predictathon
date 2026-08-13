@@ -30,7 +30,7 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
     };
 
     return (
-        <Panel>
+        <Panel accent hoverLift>
             <HStack justify="space-between" mb={3}>
                 <Heading size="md">{profile.username}</Heading>
                 {canEdit && (

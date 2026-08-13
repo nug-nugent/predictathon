@@ -12,7 +12,7 @@ export function ProfilePredictionsTable({ predictions }: { predictions: MatchPre
     const pagePredictions = predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <Panel overflowX="auto">
+        <Panel overflowX="auto" accent hoverLift>
             <Heading size="md" mb={2}>Predictions</Heading>
             {predictions.length === 0 ? (
                 <Text color="fg.muted">No predictions found</Text>

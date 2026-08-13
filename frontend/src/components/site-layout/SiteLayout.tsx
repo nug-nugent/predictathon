@@ -1,4 +1,4 @@
-import { Box, Container, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Text } from "@chakra-ui/react";
+import { Box, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Text } from "@chakra-ui/react";
 import { Outlet, useLocation } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
@@ -36,9 +36,12 @@ export function SiteLayout() {
                     <Drawer.Backdrop />
                     <Drawer.Positioner>
                         <Drawer.Content bg="surface.sidebar">
-                            <Drawer.Header borderBottomWidth="1px" borderBottomColor="border.hairline">
+                            <Drawer.Header
+                                bg={{ _light: "linear-gradient(135deg, #1E4FD1 0%, #1948C4 100%)", _dark: "{colors.bg}" }}
+                                borderBottomWidth="0"
+                            >
                                 <HStack alignItems={"center"}>
-                                    <HeaderBrand variant="loggedIn" headingAs="h1" wordmarkColor="fg" subtitleColor="fg.muted" />
+                                    <HeaderBrand variant="loggedIn" headingAs="h1" />
                                 </HStack>
                             </Drawer.Header>
                             <Drawer.Body mt={0} ml={6}>
@@ -52,16 +55,16 @@ export function SiteLayout() {
                 </Portal>
             </Drawer.Root>
 
-            <Container maxW="6xl">
+            <Box px={{ base: 4, md: 8, xl: 14 }}>
                 <Flex>
                     {user && (
-                        <Box w="180px" display={{ base: "none", lg: "block" }} my={3} mr={3} p={2} alignSelf="flex-start"
+                        <Box w="224px" display={{ base: "none", lg: "block" }} my={3} mr={3} p={2} alignSelf="flex-start"
                             bg="surface.sidebar" borderWidth="1px" borderColor="border.hairline" borderRadius="card">
                             <SideNavigation />
                         </Box>
                     )}
 
-                    <Box mt={3} flexGrow={1}>
+                    <Box mt={3} flexGrow={1} minW={0}>
                         {/* page content */}
                         <Outlet />
                     </Box>
@@ -70,7 +73,7 @@ export function SiteLayout() {
                 <Text textAlign="center" fontSize="xs" color="fg.muted" mt={6} mb={3}>
                     Predictathon v{__APP_VERSION__} &middot; &copy; David Huggett 1998&ndash;{new Date().getFullYear()}
                 </Text>
-            </Container>
+            </Box>
         </Box>
     )
 }

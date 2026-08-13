@@ -1,4 +1,4 @@
-import { Box, Flex, IconButton, Spacer, Container } from "@chakra-ui/react";
+import { Box, Flex, IconButton, Spacer } from "@chakra-ui/react";
 import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { UserMenu } from "./user-menu/UserMenu";
@@ -9,7 +9,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
 
     return (
         <Box bg="brand.headerBg" borderBottomWidth="1px" borderBottomColor="brand.headerBorder">
-            <Container maxW="6xl">
+            <Box px={{ base: 4, md: 8, xl: 14 }}>
                 <Flex alignItems="center" h={{ base: "52px", md: "60px" }}>
                     {user && (
                         <Box
@@ -32,7 +32,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                     <Spacer />
                     {user && <UserMenu />}
                 </Flex>
-            </Container>
+            </Box>
         </Box>
     )
 }

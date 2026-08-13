@@ -1,7 +1,9 @@
 import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Activity } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { getUserRecentForm } from "../../services/league-service";
 import { Panel } from "../ui/panel";
+import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
@@ -32,8 +34,11 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
 
     if (form.length === 0) {
         return (
-            <Panel>
-                <Heading size="md" mb={2}>Recent Form</Heading>
+            <Panel accent hoverLift>
+                <HStack gap={2} mb={2}>
+                    <IconChip icon={Activity} color="action.fg" />
+                    <Heading fontSize="17px" fontWeight="bold">Recent Form</Heading>
+                </HStack>
                 <Text color="fg.muted">No completed match weeks yet.</Text>
             </Panel>
         );
@@ -42,8 +47,11 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
     const maxPoints = Math.max(1, ...form.map((w) => w.points));
 
     return (
-        <Panel p={3}>
-            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Recent Form</Heading>
+        <Panel p={3} accent hoverLift>
+            <HStack gap={2} mb={2}>
+                <IconChip icon={Activity} color="action.fg" />
+                <Heading fontSize="17px" fontWeight="bold">Recent Form</Heading>
+            </HStack>
             <HStack align="flex-end" gap={3} justify="space-around">
                 {form.map((week) => (
                     <VStack key={week.week} gap={1}>
