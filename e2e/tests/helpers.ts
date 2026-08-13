@@ -6,7 +6,7 @@ export const DEMO_ADMIN = { username: "DemoAdmin", password: "DemoAdmin!2026" };
 
 export async function login(page: Page, username: string, password: string): Promise<void> {
     await page.goto("/");
-    await page.getByLabel("Email / Username").fill(username);
+    await page.getByLabel("Email or username").fill(username);
     // The visibility-toggle button is also labelled "Password", so getByLabel matches both -
     // scope to the actual textbox.
     await page.getByRole("textbox", { name: "Password" }).fill(password);

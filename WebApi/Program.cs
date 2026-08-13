@@ -13,7 +13,6 @@ using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Application.Options;
 using Predictathon.Domain.Identity;
-using Microsoft.AspNetCore.RateLimiting;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.Extensions;
 using Predictathon.WebApi.HealthChecks;
@@ -181,6 +180,8 @@ try
     // Throttles the unauthenticated auth endpoints (login, register, forgot-password, reset-password)
     // per client IP, since nothing else in the app records or limits repeated failed attempts.
     const string AuthRateLimitPolicy = "auth";
+    builder.Services.Configure<AuthRateLimitOptions>(builder.Configuration.GetSection(AuthRateLimitOptions.SectionName));
+    var authRateLimitOptions = builder.Configuration.GetSection(AuthRateLimitOptions.SectionName).Get<AuthRateLimitOptions>() ?? new AuthRateLimitOptions();
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -189,8 +190,8 @@ try
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = authRateLimitOptions.PermitLimit,
+                Window = TimeSpan.FromSeconds(authRateLimitOptions.WindowSeconds),
                 QueueLimit = 0
             }));
     });
