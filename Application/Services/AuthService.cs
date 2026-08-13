@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Constants;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
@@ -263,7 +264,12 @@ public class AuthService : IAuthService
         await _emailService.SendAsync(
             user.Email!,
             "Reset your Predictathon password",
-            $"""<p>Click the link below to reset your Predictathon password:</p><p><a href="{resetUrl}">{resetUrl}</a></p><p>If you didn't request this, you can safely ignore this email.</p>""",
+            $"""
+            <p>Click the button below to reset your Predictathon password:</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;"><tr><td style="border-radius:6px;background-color:{EmailStyle.HeaderBlue};"><a href="{resetUrl}" style="display:inline-block;padding:12px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:6px;">Reset password</a></td></tr></table>
+            <p>If you didn't request this, you can safely ignore this email.</p>
+            <p style="margin-top:24px;padding-top:16px;border-top:1px solid {EmailStyle.FooterBorder};font-size:13px;color:{EmailStyle.FooterInk};">Having trouble with the button? Copy and paste this link into your browser:<br /><a href="{resetUrl}" style="color:{EmailStyle.HeaderBlue};word-break:break-all;">{resetUrl}</a></p>
+            """,
             cancellationToken);
     }
 
