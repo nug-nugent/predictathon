@@ -74,6 +74,13 @@ try
             // format/uniqueness checks entirely - needed so SetEmailAsync/CreateAsync actually
             // enforce them (profile editing relies on this to reject duplicate emails).
             options.User.RequireUniqueEmail = true;
+
+            // RegisterModelValidator already allows any non-email-shaped username, and usernames
+            // with spaces exist (carried over from the legacy app). Identity's UserValidator runs
+            // on every UpdateAsync - including UserManager.ResetPasswordAsync - so without this,
+            // resetting the password for a space-containing username fails validation even though
+            // the password itself is untouched.
+            options.User.AllowedUserNameCharacters += " ";
         })
         .AddRoles<IdentityRole<Guid>>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
