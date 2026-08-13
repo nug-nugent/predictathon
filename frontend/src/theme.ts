@@ -80,7 +80,7 @@ export const predictTheme = createSystem(defaultConfig, {
           card: { value: { _light: "#E4E6EB", _dark: "transparent" } },
         },
         card: {
-          accentStripe: { value: { _light: "#2E9B4A", _dark: "transparent" } },
+          accentStripe: { value: { _light: "#2E9B4A", _dark: "{colors.brand.accent}" } },
         },
         input: {
           bg: { value: { _light: "#FFFFFF", _dark: "#35363C" } },
