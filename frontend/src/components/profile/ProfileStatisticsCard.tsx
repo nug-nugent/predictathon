@@ -17,7 +17,7 @@ export function ProfileStatisticsCard({ competitionId, userId }: { competitionId
     }
 
     return (
-        <Panel>
+        <Panel accent hoverLift>
             <Heading size="md" mb={2}>Statistics</Heading>
             <Table.Root size="sm" variant="line">
                 <Table.Body>

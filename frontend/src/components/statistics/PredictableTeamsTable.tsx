@@ -9,7 +9,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
     const navigate = useNavigate();
 
     return (
-        <Panel overflowX="auto">
+        <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
                 <Heading size="sm" mb={2}>Average Prediction Score By Team</Heading>
                 <Table.Root size="sm" variant="line">

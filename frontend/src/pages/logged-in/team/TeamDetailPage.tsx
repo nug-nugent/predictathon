@@ -42,7 +42,7 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
 
     return (
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8} alignItems="start">
-            <Panel overflowX="auto">
+            <Panel overflowX="auto" accent hoverLift>
                 <HStack mb={2}>
                     {crest && <Image src={crest} boxSize="32px" alt="" />}
                     <Heading size="md">{team.teamName}</Heading>

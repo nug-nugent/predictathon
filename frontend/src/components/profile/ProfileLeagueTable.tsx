@@ -4,7 +4,7 @@ import { Panel } from "../ui/panel";
 
 export function ProfileLeagueTable({ username, table }: { username: string; table: CompetitionUserLeagueTableItem[] }) {
     return (
-        <Panel overflowX="auto">
+        <Panel overflowX="auto" accent hoverLift>
             <Heading size="md" mb={2}>If {username}'s predictions had all come true...</Heading>
             {table.length === 0 ? (
                 <Text color="fg.muted">No league data found</Text>

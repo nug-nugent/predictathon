@@ -35,7 +35,7 @@ export function ProfileLeagueHistoryChart({ history, worstPosition }: {
 
     if (history.length === 0) {
         return (
-            <Panel>
+            <Panel accent hoverLift>
                 <Heading size="md" mb={2}>League Position by Date</Heading>
                 <Text color="fg.muted">No history yet</Text>
             </Panel>
@@ -90,7 +90,7 @@ export function ProfileLeagueHistoryChart({ history, worstPosition }: {
     const hovered = hoverIndex !== null ? points[hoverIndex] : null;
 
     return (
-        <Panel>
+        <Panel accent hoverLift>
             <Heading size="md" mb={2}>League Position by Date</Heading>
             <Box position="relative">
                 <svg

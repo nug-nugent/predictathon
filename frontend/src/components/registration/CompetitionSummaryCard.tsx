@@ -16,7 +16,7 @@ export function CompetitionSummaryCard({ competition }: { competition: Competiti
     const imageUrl = competitionImageUrl(competition.imageFilename);
 
     return (
-        <Panel>
+        <Panel accent hoverLift>
             <HStack align="start" gap={3}>
                 {imageUrl && <Image src={imageUrl} maxH="48px" maxW="48px" alt="" />}
                 <VStack align="stretch" gap={1} flex={1}>
