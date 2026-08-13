@@ -1,4 +1,4 @@
-import { Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Heading, HStack, Link, Text, VStack } from "@chakra-ui/react";
 import { Timer } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getCompetitionWeeks, computeDefaultWeek, getMatchesForWeek } from "../../services/prediction-service";
@@ -70,9 +70,9 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
                     {next.remaining > 1 && (
                         <Text fontSize="sm" color="fg.muted">+{next.remaining - 1} more to predict this week</Text>
                     )}
-                    <Button asChild size="xs" variant="ghost" alignSelf="flex-start" mt={1}>
-                        <RouterLink to="/predictions">Predict now</RouterLink>
-                    </Button>
+                    <Link asChild colorPalette="action" fontSize="14px" fontWeight="bold" alignSelf="flex-start" mt={1}>
+                        <RouterLink to="/predictions">Predict now &rarr;</RouterLink>
+                    </Link>
                 </VStack>
             )}
         </Panel>
