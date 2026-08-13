@@ -2,10 +2,12 @@
 64 matches for "Sample Cup" - full 32-team World Cup format (8 groups of 4, round-robin group
 stage, then Round of 16, Quarter-finals, Semi-finals, 3rd Place Play-off, Final). Scores are
 deterministically generated (not random), and the schedule is roughly halfway through: the group
-stage and Round of 16 are complete (MatchPlayed = 1, dated up to 2026-07-18), the Quarter-finals
-have concrete teams but are unplayed (dated from 2026-07-21), and the Semis/3rd-place/Final use
-HomeTeamTBC/AwayTeamTBC placeholders (e.g. 'Winner QF1') since those teams aren't decided yet -
-same convention already used by Scripts/WorldCup2026FixtureImport.sql for unresolved fixtures.
+stage and Round of 16 are complete (MatchPlayed = 1), the Quarter-finals have concrete teams but
+are unplayed, and the Semis/3rd-place/Final use HomeTeamTBC/AwayTeamTBC placeholders (e.g. 'Winner
+QF1') since those teams aren't decided yet - same convention already used by
+Scripts/WorldCup2026FixtureImport.sql for unresolved fixtures. Dates are shifted relative to
+GETDATE() at seed time (see @DateShiftDays below) rather than fixed, so this stays true no matter
+when the Docker dev stack is spun up.
 
 Column order: MatchID, CompetitionID, MatchDateTime, HomeTeamID, AwayTeamID, MatchPlayed,
 HomeTeamGoals, AwayTeamGoals, NeutralGround, HomeTeamTBC, AwayTeamTBC, Description, Knockout.
@@ -13,8 +15,36 @@ HomeTeamGoals, AwayTeamGoals, NeutralGround, HomeTeamTBC, AwayTeamTBC, Descripti
 
 SET NOCOUNT ON
 
+-- Match dates below are the day this script was first written (Quarter Final 1 on 2026-07-21), not
+-- literal target dates - hardcoding them would mean the "roughly halfway through" story (group
+-- stage/R16 played, Quarter-finals onward still to predict) silently drifts into the past the
+-- longer this seed script goes unrun, eventually leaving no match open for prediction at all. Shift
+-- every date by the same number of days so everything keeps its original spacing relative to
+-- Quarter Final 1's new date.
+--
+-- Quarter Final 1 itself is pinned to an exact "now + 30 minutes" timestamp rather than a whole-day
+-- shift, and deliberately not to its original 15:00 kick-off time: the Predictions page defaults to
+-- showing the Friday-to-Thursday week bucket containing today (computeDefaultWeek in
+-- prediction-service.ts), falling back to the most recent PAST week with matches if today's own
+-- bucket has none - so Quarter Final 1 needs to still be open (kick-off ahead of "now") THIS week,
+-- not just "sometime in the future", and a day-level shift preserving 15:00 could already have
+-- passed by the time this script happens to run. "Now" is computed as UK local time rather than
+-- GETDATE() - the app has no timezone handling of its own (everything's just naive local wall-clock
+-- times, fine for a single-region hobby app), and the Docker db container's OS clock runs UTC
+-- regardless of the host's timezone, so GETDATE() alone would be off by an hour during British
+-- Summer Time and put Quarter Final 1 in the past.
+DECLARE @UkNow DATETIME = CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'GMT Standard Time' AS DATETIME);
+DECLARE @QF1TargetDateTime DATETIME = DATEADD(MINUTE, 30, @UkNow);
+DECLARE @DateShiftDays INT = DATEDIFF(DAY, '2026-07-21', @QF1TargetDateTime);
+
 MERGE INTO [dbo].[Match] AS [Target]
-USING (VALUES
+USING (
+    SELECT [MatchID],[CompetitionID],
+        CASE WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000057' THEN @QF1TargetDateTime
+             ELSE DATEADD(DAY, @DateShiftDays, [MatchDateTime]) END AS [MatchDateTime],
+        [HomeTeamID],[AwayTeamID],[MatchPlayed],[HomeTeamGoals],[AwayTeamGoals],[NeutralGround],
+        [HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout]
+    FROM (VALUES
  ('FA000000-0000-0000-0000-000000000001','CA000000-0000-0000-0000-000000000001','2026-07-03 15:00:00','335DF488-AB0A-4845-A1F1-90E11DC61B39','A11C05D2-68BE-4BE8-B236-FEEFF79EA173',1,0,0,1,NULL,NULL,'Group A',0)
 ,('FA000000-0000-0000-0000-000000000002','CA000000-0000-0000-0000-000000000001','2026-07-03 15:00:00','335DF488-AB0A-4845-A1F1-90E11DC61B39','072265B7-4B46-4DB4-A6BA-E26968CB3528',1,0,0,1,NULL,NULL,'Group A',0)
 ,('FA000000-0000-0000-0000-000000000003','CA000000-0000-0000-0000-000000000001','2026-07-03 15:00:00','335DF488-AB0A-4845-A1F1-90E11DC61B39','1888BEC3-88D5-46D3-8F22-BA16598F92E0',1,0,0,1,NULL,NULL,'Group A',0)
@@ -79,6 +109,8 @@ USING (VALUES
 ,('FA000000-0000-0000-0000-000000000062','CA000000-0000-0000-0000-000000000001','2026-07-27 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF3','Winner QF4','Semi Final 2',1)
 ,('FA000000-0000-0000-0000-000000000063','CA000000-0000-0000-0000-000000000001','2026-07-30 15:00:00',NULL,NULL,0,NULL,NULL,1,'Loser SF1','Loser SF2','3rd Place Play-off',1)
 ,('FA000000-0000-0000-0000-000000000064','CA000000-0000-0000-0000-000000000001','2026-07-31 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner SF1','Winner SF2','Final',1)
+    ) AS [Raw] ([MatchID],[CompetitionID],[MatchDateTime],[HomeTeamID],[AwayTeamID],[MatchPlayed],
+        [HomeTeamGoals],[AwayTeamGoals],[NeutralGround],[HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout])
 ) AS [Source] ([MatchID],[CompetitionID],[MatchDateTime],[HomeTeamID],[AwayTeamID],[MatchPlayed],
     [HomeTeamGoals],[AwayTeamGoals],[NeutralGround],[HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout])
 ON ([Target].[MatchID] = [Source].[MatchID])

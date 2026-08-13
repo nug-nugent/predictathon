@@ -14,7 +14,7 @@ test("a seeded user can log in and reach their dashboard", async ({ page }) => {
     // The user's account chip (avatar + username) in the header is the reliable "logged in"
     // signal - PageHeading elements like "Home" are hidden at desktop widths by design.
     await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
-    await expect(page.getByLabel("Email / Username")).not.toBeVisible();
+    await expect(page.getByLabel("Email or username")).not.toBeVisible();
 });
 
 test("an invalid password shows an error instead of logging in", async ({ page }) => {
