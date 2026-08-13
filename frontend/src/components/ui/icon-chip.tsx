@@ -14,13 +14,14 @@ export function IconChip({ icon: Icon, color, ...props }: IconChipProps) {
             boxSize="30px"
             borderRadius="8px"
             bg={`${color}/14`}
+            color={color}
             display="flex"
             alignItems="center"
             justifyContent="center"
             flexShrink={0}
             {...props}
         >
-            <Icon size={16} color={color} />
+            <Icon size={16} color="currentColor" />
         </Box>
     );
 }
