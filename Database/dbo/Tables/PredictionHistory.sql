@@ -4,7 +4,8 @@
     [HomeTeamGoals]       INT              NULL,
     [AwayTeamGoals]       INT              NULL,
     [PredictionDateTime]  DATETIME         CONSTRAINT [DF_PredictionHistory_PredictionDateTime] DEFAULT (getdate()) NOT NULL,
-    CONSTRAINT [PK_PredictionHistory] PRIMARY KEY CLUSTERED ([PredictionHistoryID] ASC)
+    CONSTRAINT [PK_PredictionHistory] PRIMARY KEY CLUSTERED ([PredictionHistoryID] ASC),
+    CONSTRAINT [FK_PredictionHistory_Prediction] FOREIGN KEY ([PredictionID]) REFERENCES [dbo].[Prediction] ([PredictionID])
 );
 
 

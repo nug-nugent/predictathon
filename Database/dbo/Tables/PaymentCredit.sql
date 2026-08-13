@@ -12,4 +12,23 @@
     CONSTRAINT [FK_PaymentCredit_IssuedByUser] FOREIGN KEY ([IssuedByUserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [FK_PaymentCredit_UsedByUser] FOREIGN KEY ([UsedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_PaymentCredit_ForCompetitionID] ON [dbo].[PaymentCredit]
+(
+	[ForCompetitionID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_PaymentCredit_IssuedByUserID] ON [dbo].[PaymentCredit]
+(
+	[IssuedByUserID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_PaymentCredit_UsedByUserID] ON [dbo].[PaymentCredit]
+(
+	[UsedByUserID] ASC
+);
+GO
 

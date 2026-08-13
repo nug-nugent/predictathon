@@ -16,4 +16,29 @@
     CONSTRAINT [FK_HallOfFame_User1] FOREIGN KEY ([SecondPlaceUserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [FK_HallOfFame_User2] FOREIGN KEY ([ThirdPlaceUserID]) REFERENCES [Identity].[Users] ([Id])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_HallOfFame_CompetitionID] ON [dbo].[HallOfFame]
+(
+	[CompetitionID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_HallOfFame_WinnerUserID] ON [dbo].[HallOfFame]
+(
+	[WinnerUserID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_HallOfFame_SecondPlaceUserID] ON [dbo].[HallOfFame]
+(
+	[SecondPlaceUserID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_HallOfFame_ThirdPlaceUserID] ON [dbo].[HallOfFame]
+(
+	[ThirdPlaceUserID] ASC
+);
+GO
 

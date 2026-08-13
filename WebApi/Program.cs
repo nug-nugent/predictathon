@@ -1,6 +1,7 @@
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -200,6 +201,25 @@ try
     var messageImagesSection = builder.Configuration.GetSection(MessageImagesOptions.SectionName);
     builder.Services.Configure<MessageImagesOptions>(messageImagesSection);
     var messageImagesOptions = messageImagesSection.Get<MessageImagesOptions>() ?? new MessageImagesOptions();
+
+    // The host is shared IIS hosting with no user profile or HKLM registry available, so the
+    // default Data Protection key repository falls back to an ephemeral in-memory key ring -
+    // regenerated on every worker process recycle, which silently invalidates the refresh-token
+    // cookie, antiforgery tokens, and password-reset/2FA tokens on every recycle. Persist keys to
+    // disk instead, outside the msdeploy-synced content path (same convention as Avatars/
+    // MessageImages/Serilog above) so they survive both recycles and redeploys. The site isn't
+    // load-balanced, so a single file-system key ring is sufficient - no XML encryptor is
+    // configured, so keys are stored unencrypted at rest, but the host has no Windows DPAPI
+    // available anyway (no user profile/registry) and this only protects auth cookie payloads and
+    // short-lived tokens, not passwords.
+    var dataProtectionSection = builder.Configuration.GetSection(DataProtectionKeysOptions.SectionName);
+    builder.Services.Configure<DataProtectionKeysOptions>(dataProtectionSection);
+    var dataProtectionOptions = dataProtectionSection.Get<DataProtectionKeysOptions>() ?? new DataProtectionKeysOptions();
+    var dataProtectionKeysPath = Path.GetFullPath(dataProtectionOptions.KeysPath);
+    Directory.CreateDirectory(dataProtectionKeysPath);
+    builder.Services.AddDataProtection()
+        .SetApplicationName("Predictathon")
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
     // "/health" (bare true/false, for an external uptime monitor to keyword-match on) and
     // "/health/detailed" (per-check breakdown, for diagnosing which dependency is down) both run the

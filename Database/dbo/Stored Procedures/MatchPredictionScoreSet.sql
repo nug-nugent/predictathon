@@ -13,6 +13,9 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
+	BEGIN TRY
+		BEGIN TRANSACTION;
+
 	-- Ensure that no predictions were made later than the current match date/time - if they were, attempt to make them valid by
 	-- reverting to the user's last valid prediction.
 	UPDATE
@@ -78,4 +81,15 @@ BEGIN
 	WHERE
 		Match.MatchID = @MatchID
 		AND Prediction.Invalid = 0;
+
+		COMMIT TRANSACTION;
+	END TRY
+	BEGIN CATCH
+		IF @@TRANCOUNT > 0
+		BEGIN
+			ROLLBACK TRANSACTION;
+		END;
+
+		THROW;
+	END CATCH;
 END;

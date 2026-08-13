@@ -22,4 +22,22 @@
     CONSTRAINT [FK_Transaction_User] FOREIGN KEY ([UserID]) REFERENCES [Identity].[Users] ([Id]),
     CONSTRAINT [FK_Transaction_UserCompetition1] FOREIGN KEY ([UserCompetitionID]) REFERENCES [dbo].[UserCompetition] ([UserCompetitionID])
 );
+GO
 
+CREATE NONCLUSTERED INDEX [IX_Transaction_CompetitionID] ON [dbo].[Transaction]
+(
+	[CompetitionID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Transaction_UserID] ON [dbo].[Transaction]
+(
+	[UserID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Transaction_UserCompetitionID] ON [dbo].[Transaction]
+(
+	[UserCompetitionID] ASC
+);
+GO

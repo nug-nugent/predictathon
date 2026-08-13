@@ -6,6 +6,14 @@
     [Score]                          INT              NOT NULL,
     [AverageGoalDifference]          DECIMAL (9, 2)   NOT NULL,
     [TotalGoalDifference]            INT              NOT NULL,
-    CONSTRAINT [PK_UserCompetitionLeagueHistory] PRIMARY KEY CLUSTERED ([UserCompetitionLeagueHistoryID] ASC)
+    CONSTRAINT [PK_UserCompetitionLeagueHistory] PRIMARY KEY CLUSTERED ([UserCompetitionLeagueHistoryID] ASC),
+    CONSTRAINT [FK_UserCompetitionLeagueHistory_UserCompetition] FOREIGN KEY ([UserCompetitionID]) REFERENCES [dbo].[UserCompetition] ([UserCompetitionID])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_UserCompetitionLeagueHistory_UserCompetitionID] ON [dbo].[UserCompetitionLeagueHistory]
+(
+	[UserCompetitionID] ASC
+);
+GO
 

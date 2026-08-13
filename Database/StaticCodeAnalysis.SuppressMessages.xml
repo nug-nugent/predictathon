@@ -11,8 +11,8 @@
 		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0014" />
 		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0015" />
 		<SuppressedRule Category="Microsoft.Rules.Data" RuleId="SR0016" />
-		<SuppressedRule Category="SqlServer.Rules" RuleId="SML006" />
-		<SuppressedRule Category="SqlServer.Rules" RuleId="SML010" />
+		<SuppressedRule Category="Smells" RuleId="SML006" />
+		<SuppressedRule Category="Smells" RuleId="SML010" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0009" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0013" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0024" />
@@ -24,5 +24,44 @@
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0067" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0068" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0002" />
+	</SuppressedFile>
+	<!-- SRD0063 (IF containing a query) fires throughout this proc's "has anything changed since
+	     last run" gating logic - that's the intended shape of the proc, not something worth
+	     restructuring. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\UserCompetitionLeagueHistorySet.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0063" />
+	</SuppressedFile>
+	<!-- SRD0020 (join with no backing FK): UserCompetition and Match are only related via their
+	     shared parent Competition, not directly - there's no FK to add between them, the rule just
+	     can't model a join mediated through a third table. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\MatchPredictionListGet.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0020" />
+	</SuppressedFile>
+	<!-- SRP0021 (parameter modified before use): @HidePastUnpredictedMatches is deliberately
+	     normalised from NULL to 0 before the WHERE clause - without it, a NULL default would
+	     three-valued-logic its way into hiding rows it shouldn't. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\UserMatchPredictionListGet.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0021" />
+	</SuppressedFile>
+	<!-- Import_Match is a staging table for the fixture-import job, deliberately unkeyed so the
+	     import can TRUNCATE/bulk-load it freely. -->
+	<SuppressedFile FilePath="dbo\Tables\Import_Match.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0002" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0020" />
+	</SuppressedFile>
+	<!-- MessageReaction's PK is deliberately NONCLUSTERED (pre-existing design), so it has no
+	     clustered index by definition. -->
+	<SuppressedFile FilePath="dbo\Tables\MessageReaction.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0020" />
+	</SuppressedFile>
+	<!-- READ UNCOMMITTED is a deliberate perf trade-off for this read-heavy report query, accepting
+	     dirty reads over lock contention. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\AverageScoreByTeamListGet.sql">
+		<SuppressedRule Category="Smells" RuleId="SML010" />
+	</SuppressedFile>
+	<!-- READ UNCOMMITTED is a deliberate perf trade-off for this read-heavy, paged report query,
+	     accepting dirty reads over lock contention. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\MessageThreadListGet.sql">
+		<SuppressedRule Category="Smells" RuleId="SML010" />
 	</SuppressedFile>
 </StaticCodeAnalysis>

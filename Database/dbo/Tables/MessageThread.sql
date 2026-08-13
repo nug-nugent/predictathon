@@ -7,4 +7,11 @@
     CONSTRAINT [PK_MessageThread] PRIMARY KEY CLUSTERED ([MessageThreadID] ASC),
     CONSTRAINT [FK_MessageThread_User] FOREIGN KEY ([StartedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_MessageThread_StartedByUserID] ON [dbo].[MessageThread]
+(
+	[StartedByUserID] ASC
+);
+GO
 
