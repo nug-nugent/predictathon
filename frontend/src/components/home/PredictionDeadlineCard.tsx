@@ -1,7 +1,9 @@
-import { Button, Heading, Text, VStack } from "@chakra-ui/react";
+import { Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Timer } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getCompetitionWeeks, computeDefaultWeek, getMatchesForWeek } from "../../services/prediction-service";
 import { Panel } from "../ui/panel";
+import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 import { formatCountdown, countdownColor } from "../../utils/countdown";
@@ -50,8 +52,11 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
     const now = new Date();
 
     return (
-        <Panel p={3}>
-            <Heading fontSize="17px" fontWeight="semibold" mb={2}>Prediction Deadline</Heading>
+        <Panel p={3} accent hoverLift>
+            <HStack gap={2} mb={2}>
+                <IconChip icon={Timer} color="status.urgent" />
+                <Heading fontSize="17px" fontWeight="semibold">Prediction Deadline</Heading>
+            </HStack>
             {next === null ? (
                 <Text color="green.500">All matches predicted!</Text>
             ) : (

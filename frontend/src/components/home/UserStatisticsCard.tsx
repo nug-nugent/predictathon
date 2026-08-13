@@ -59,7 +59,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
     }
 
     return (
-        <Panel p={3}>
+        <Panel p={3} accent hoverLift>
             <HStack justify="space-between" mb={2}>
                 <HStack gap={3}>
                     <Avatar.Root size="md">

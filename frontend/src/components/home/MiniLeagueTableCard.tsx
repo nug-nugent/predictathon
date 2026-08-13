@@ -1,9 +1,11 @@
 import { Heading, HStack, Link as ChakraLink, Table } from "@chakra-ui/react";
+import { TableProperties } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getLeagueTable } from "../../services/league-service";
 import { useUser } from "../../hooks/useUser";
 import { toDateOnly } from "../../utils/toDateOnly";
 import { Panel } from "../ui/panel";
+import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 import { LeaguePositionChangeIcon } from "../league/LeaguePositionChangeIcon";
@@ -30,9 +32,12 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
     const ownRow = user && !topRows.some((r) => r.userID === user.id) ? table.find((r) => r.userID === user.id) : undefined;
 
     return (
-        <Panel p={3}>
+        <Panel p={3} accent hoverLift>
             <HStack justify="space-between" mb={2}>
-                <Heading fontSize="17px" fontWeight="semibold">League Table</Heading>
+                <HStack gap={2}>
+                    <IconChip icon={TableProperties} color="action.fg" />
+                    <Heading fontSize="17px" fontWeight="semibold">League Table</Heading>
+                </HStack>
                 <ChakraLink asChild fontSize="sm" variant="underline">
                     <RouterLink to="/league">Full table &rarr;</RouterLink>
                 </ChakraLink>

@@ -1,9 +1,11 @@
-import { Heading, Text, VStack } from "@chakra-ui/react";
+import { Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Star } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getCompetitionWeeks, computeDefaultWeek } from "../../services/prediction-service";
 import { getBestPredictions, type BestPrediction } from "../../services/statistics-service";
 import { weekEnd } from "../../utils/matchWeek";
 import { Panel } from "../ui/panel";
+import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
@@ -36,8 +38,11 @@ export function PredictionOfTheWeekCard({ competitionId }: { competitionId: stri
     const entry = state.entry;
 
     return (
-        <Panel p={3}>
-            <Heading fontSize="17px" fontWeight="semibold" mb={2}>{entry ? state.label : "Prediction of the Week"}</Heading>
+        <Panel p={3} accent hoverLift>
+            <HStack gap={2} mb={2}>
+                <IconChip icon={Star} color="points.3" />
+                <Heading fontSize="17px" fontWeight="semibold">{entry ? state.label : "Prediction of the Week"}</Heading>
+            </HStack>
             {entry === null ? (
                 <Text color="fg.muted">No standout prediction yet this week.</Text>
             ) : (
