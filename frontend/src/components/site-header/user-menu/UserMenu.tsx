@@ -29,13 +29,18 @@ export function UserMenu() {
         <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}
             positioning={{ placement: "bottom-end", offset: { crossAxis: -10, mainAxis: 2 } }}>
             <Popover.Trigger asChild>
-                <Button size={{ base: "xs", md: "md" }} bg="surface.avatarChip" color="fg" rounded="full" pr="8px" pl="0" maxWidth={{ base: "200px", md: "unset" }}>
+                <Button
+                    variant="plain" size={{ base: "xs", md: "md" }} gap="8px"
+                    bg="rgba(255, 255, 255, 0.14)" _hover={{ bg: "rgba(255, 255, 255, 0.22)" }}
+                    color="brand.wordmarkFg" rounded="full" py="4px" pl="4px" pr="12px"
+                    maxWidth={{ base: "200px", md: "unset" }}
+                >
                     <Avatar.Root size={{ base: "xs", md: "md" }} bg="surface.avatarCircle" color="surface.avatarCircleFg">
                         <Avatar.Image src={user.avatarUrl} />
                         <Avatar.Fallback name={user.name} />
                     </Avatar.Root>
-                    <Text fontSize={{ base: "sm", md: "md" }} truncate>{user.name}</Text>
-                    <ChevronDown />
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" truncate>{user.name}</Text>
+                    <ChevronDown size={16} strokeWidth={3} />
                 </Button>
             </Popover.Trigger>
             <Portal>

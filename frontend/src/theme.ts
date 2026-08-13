@@ -71,7 +71,6 @@ export const predictTheme = createSystem(defaultConfig, {
         surface: {
           sidebar: { value: { _light: "#FFFFFF", _dark: "{colors.bg}" } },
           card: { value: { _light: "#FFFFFF", _dark: "#2A2B30" } },
-          avatarChip: { value: { _light: "#F0F1F3", _dark: "#2A2B30" } },
           avatarCircle: { value: { _light: "#1E4FD1", _dark: "#0DE4EE" } },
           avatarCircleFg: { value: { _light: "#FFFFFF", _dark: "#1C1D21" } },
         },
