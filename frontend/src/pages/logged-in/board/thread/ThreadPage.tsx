@@ -119,7 +119,7 @@ export function ThreadPage() {
         <VStack align="stretch" gap={2} maxW="container.md" mx="auto">
             <Heading size="lg">{thread.threadSubject}</Heading>
 
-            <Panel>
+            <Panel accent>
                 {hasMore && (
                     <Center mb={2}>
                         <Button size="xs" variant="ghost" loading={loadingOlder} onClick={() => { void loadOlder(); }}>

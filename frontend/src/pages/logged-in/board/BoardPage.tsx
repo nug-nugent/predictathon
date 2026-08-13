@@ -40,7 +40,7 @@ export function BoardPage() {
             {threads.length === 0 ? (
                 <Text textAlign="center" color="fg.muted">No threads yet - start the conversation!</Text>
             ) : (
-                <Panel>
+                <Panel accent>
                     {threads.map((thread, index) => (
                         <ThreadListItem key={thread.messageThreadID} thread={thread} striped={index % 2 === 1} />
                     ))}

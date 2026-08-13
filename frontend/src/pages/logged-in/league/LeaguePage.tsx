@@ -91,7 +91,7 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
           )}
         </HStack>
       )}
-      <Panel overflowX="auto">
+      <Panel overflowX="auto" accent>
         <Table.Root size="sm" variant="line" striped showColumnBorder stickyHeader>
           <Table.ColumnGroup>
             <Table.Column htmlWidth="20px" />
