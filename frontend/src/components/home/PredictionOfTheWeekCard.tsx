@@ -41,7 +41,7 @@ export function PredictionOfTheWeekCard({ competitionId }: { competitionId: stri
         <Panel p={3} accent hoverLift>
             <HStack gap={2} mb={2}>
                 <IconChip icon={Star} color="points.3" />
-                <Heading fontSize="17px" fontWeight="semibold">{entry ? state.label : "Prediction of the Week"}</Heading>
+                <Heading fontSize="17px" fontWeight="bold">{entry ? state.label : "Prediction of the Week"}</Heading>
             </HStack>
             {entry === null ? (
                 <Text color="fg.muted">No standout prediction yet this week.</Text>

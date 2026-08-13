@@ -63,7 +63,7 @@ export function CompetitionRegistrationsCard() {
         <Panel p={3} accent hoverLift>
             <HStack gap={2} mb={2}>
                 <IconChip icon={Trophy} color="brand.accent" />
-                <Heading fontSize="17px" fontWeight="semibold">Competitions</Heading>
+                <Heading fontSize="17px" fontWeight="bold">Competitions</Heading>
             </HStack>
             <Table.Root size="sm" variant="line">
                 <Table.Body>

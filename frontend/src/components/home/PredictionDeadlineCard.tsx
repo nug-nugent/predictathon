@@ -55,7 +55,7 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
         <Panel p={3} accent hoverLift>
             <HStack gap={2} mb={2}>
                 <IconChip icon={Timer} color="status.urgent" />
-                <Heading fontSize="17px" fontWeight="semibold">Prediction Deadline</Heading>
+                <Heading fontSize="17px" fontWeight="bold">Prediction Deadline</Heading>
             </HStack>
             {next === null ? (
                 <Text color="green.500">All matches predicted!</Text>

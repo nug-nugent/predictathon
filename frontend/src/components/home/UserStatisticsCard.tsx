@@ -66,7 +66,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                         <Avatar.Image src={user.avatarUrl} />
                         <Avatar.Fallback name={user.name} />
                     </Avatar.Root>
-                    <Heading fontSize="17px" fontWeight="semibold">{user.name}</Heading>
+                    <Heading fontSize="17px" fontWeight="bold">{user.name}</Heading>
                 </HStack>
                 <Button asChild size="xs" variant="ghost">
                     <RouterLink to="/profile/edit">Edit User</RouterLink>

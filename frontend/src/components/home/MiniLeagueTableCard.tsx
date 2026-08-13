@@ -36,7 +36,7 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
             <HStack justify="space-between" mb={2}>
                 <HStack gap={2}>
                     <IconChip icon={TableProperties} color="action.fg" />
-                    <Heading fontSize="17px" fontWeight="semibold">League Table</Heading>
+                    <Heading fontSize="17px" fontWeight="bold">League Table</Heading>
                 </HStack>
                 <ChakraLink asChild fontSize="sm" variant="underline">
                     <RouterLink to="/league">Full table &rarr;</RouterLink>

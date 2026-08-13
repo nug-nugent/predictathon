@@ -37,7 +37,7 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
             <Panel accent hoverLift>
                 <HStack gap={2} mb={2}>
                     <IconChip icon={Activity} color="action.fg" />
-                    <Heading size="md">Recent Form</Heading>
+                    <Heading fontSize="17px" fontWeight="bold">Recent Form</Heading>
                 </HStack>
                 <Text color="fg.muted">No completed match weeks yet.</Text>
             </Panel>
@@ -50,7 +50,7 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
         <Panel p={3} accent hoverLift>
             <HStack gap={2} mb={2}>
                 <IconChip icon={Activity} color="action.fg" />
-                <Heading fontSize="17px" fontWeight="semibold">Recent Form</Heading>
+                <Heading fontSize="17px" fontWeight="bold">Recent Form</Heading>
             </HStack>
             <HStack align="flex-end" gap={3} justify="space-around">
                 {form.map((week) => (
