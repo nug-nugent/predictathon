@@ -42,7 +42,8 @@ USING (
     SELECT [MatchID],[CompetitionID],
         CASE WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000057' THEN @QF1TargetDateTime
              ELSE DATEADD(DAY, @DateShiftDays, [MatchDateTime]) END AS [MatchDateTime],
-        [HomeTeamID],[AwayTeamID],[MatchPlayed],[HomeTeamGoals],[AwayTeamGoals],[NeutralGround],
+        [HomeTeam].[TeamID] AS [HomeTeamID],[AwayTeam].[TeamID] AS [AwayTeamID],
+        [MatchPlayed],[HomeTeamGoals],[AwayTeamGoals],[NeutralGround],
         [HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout]
     FROM (VALUES
  ('FA000000-0000-0000-0000-000000000001','CA000000-0000-0000-0000-000000000001','2026-07-03 15:00:00','335DF488-AB0A-4845-A1F1-90E11DC61B39','A11C05D2-68BE-4BE8-B236-FEEFF79EA173',1,0,0,1,NULL,NULL,'Group A',0)
@@ -109,8 +110,12 @@ USING (
 ,('FA000000-0000-0000-0000-000000000062','CA000000-0000-0000-0000-000000000001','2026-07-27 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF3','Winner QF4','Semi Final 2',1)
 ,('FA000000-0000-0000-0000-000000000063','CA000000-0000-0000-0000-000000000001','2026-07-30 15:00:00',NULL,NULL,0,NULL,NULL,1,'Loser SF1','Loser SF2','3rd Place Play-off',1)
 ,('FA000000-0000-0000-0000-000000000064','CA000000-0000-0000-0000-000000000001','2026-07-31 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner SF1','Winner SF2','Final',1)
-    ) AS [Raw] ([MatchID],[CompetitionID],[MatchDateTime],[HomeTeamID],[AwayTeamID],[MatchPlayed],
+    ) AS [Raw] ([MatchID],[CompetitionID],[MatchDateTime],[LegacyHomeTeamID],[LegacyAwayTeamID],[MatchPlayed],
         [HomeTeamGoals],[AwayTeamGoals],[NeutralGround],[HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout])
+    LEFT JOIN #SampleCupTeamMap AS [HomeMap] ON [HomeMap].[LegacyTeamID] = [Raw].[LegacyHomeTeamID]
+    LEFT JOIN #SampleCupTeamMap AS [AwayMap] ON [AwayMap].[LegacyTeamID] = [Raw].[LegacyAwayTeamID]
+    LEFT JOIN [dbo].[Team] AS [HomeTeam] ON [HomeTeam].[TeamName] = [HomeMap].[TeamName]
+    LEFT JOIN [dbo].[Team] AS [AwayTeam] ON [AwayTeam].[TeamName] = [AwayMap].[TeamName]
 ) AS [Source] ([MatchID],[CompetitionID],[MatchDateTime],[HomeTeamID],[AwayTeamID],[MatchPlayed],
     [HomeTeamGoals],[AwayTeamGoals],[NeutralGround],[HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout])
 ON ([Target].[MatchID] = [Source].[MatchID])
