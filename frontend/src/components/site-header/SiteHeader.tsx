@@ -13,7 +13,7 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                 <Flex alignItems="center" h={{ base: "52px", md: "60px" }}>
                     {user && (
                         <Box
-                            ml="-10px" mr={2}
+                            ml="-10px" mr={0}
                             display={{ base: "block", lg: "none" }}
                         >
                             <IconButton
