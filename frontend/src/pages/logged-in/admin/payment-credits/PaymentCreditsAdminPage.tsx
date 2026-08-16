@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import {
-    Badge, Button, Center, Dialog, Field, HStack, IconButton, Input,
+    Badge, Box, Button, Center, Clipboard, Dialog, Field, HStack, IconButton, Input,
     NativeSelect, Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
 import { Trash2 } from "lucide-react";
@@ -16,6 +16,24 @@ import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 
 const PAGE_SIZE = 20;
+
+function CopyPaymentCodeButton({ code }: { code: string }) {
+    return (
+        <Clipboard.Root value={code}>
+            <Clipboard.Trigger asChild>
+                <IconButton aria-label="Copy payment code" size="xs" variant="ghost">
+                    <Clipboard.Indicator />
+                </IconButton>
+            </Clipboard.Trigger>
+        </Clipboard.Root>
+    );
+}
+
+function StatusBadge({ used }: { used: boolean }) {
+    return used
+        ? <Badge colorPalette="gray" size="sm">Used</Badge>
+        : <Badge colorPalette="green" size="sm">Unused</Badge>;
+}
 
 export function PaymentCreditsAdminPage() {
     const [adding, setAdding] = useState(false);
@@ -48,41 +66,52 @@ export function PaymentCreditsAdminPage() {
             </HStack>
 
             <Panel overflowX="auto">
-                <Table.Root size="sm" variant="line" striped showColumnBorder>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeader>Competition</Table.ColumnHeader>
-                            <Table.ColumnHeader>Expected username</Table.ColumnHeader>
-                            <Table.ColumnHeader>Payment code</Table.ColumnHeader>
-                            <Table.ColumnHeader>Issued</Table.ColumnHeader>
-                            <Table.ColumnHeader>Status</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Delete</Table.ColumnHeader>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {pageCredits.map((c) => (
-                            <Table.Row key={c.paymentCreditID}>
-                                <Table.Cell>{c.competitionName}</Table.Cell>
-                                <Table.Cell>{c.expectedUsername}</Table.Cell>
-                                <Table.Cell fontFamily="mono">{c.uniquePaymentCode}</Table.Cell>
-                                <Table.Cell>{new Date(c.issueDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
-                                <Table.Cell>
-                                    {c.creditUsed
-                                        ? <Badge colorPalette="gray" size="sm">Used</Badge>
-                                        : <Badge colorPalette="green" size="sm">Unused</Badge>}
-                                </Table.Cell>
-                                <Table.Cell textAlign="center">
-                                    <IconButton
-                                        aria-label="Delete credit" size="xs" variant="ghost" colorPalette="red"
-                                        onClick={() => setDeleting(c)}
-                                    >
-                                        <Trash2 size={16} />
-                                    </IconButton>
-                                </Table.Cell>
+                <VStack align="stretch" gap={2} display={{ base: "flex", md: "none" }}>
+                    {pageCredits.map((c) => (
+                        <PaymentCreditCard key={c.paymentCreditID} credit={c} onDelete={() => setDeleting(c)} />
+                    ))}
+                </VStack>
+
+                <Box display={{ base: "none", md: "block" }}>
+                    <Table.Root size="sm" variant="line" striped showColumnBorder>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Competition</Table.ColumnHeader>
+                                <Table.ColumnHeader>Expected username</Table.ColumnHeader>
+                                <Table.ColumnHeader>Payment code</Table.ColumnHeader>
+                                <Table.ColumnHeader>Issued</Table.ColumnHeader>
+                                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Delete</Table.ColumnHeader>
                             </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
+                        </Table.Header>
+                        <Table.Body>
+                            {pageCredits.map((c) => (
+                                <Table.Row key={c.paymentCreditID}>
+                                    <Table.Cell>{c.competitionName}</Table.Cell>
+                                    <Table.Cell>{c.expectedUsername}</Table.Cell>
+                                    <Table.Cell>
+                                        <HStack gap={1}>
+                                            <Text fontFamily="mono">{c.uniquePaymentCode}</Text>
+                                            <CopyPaymentCodeButton code={c.uniquePaymentCode} />
+                                        </HStack>
+                                    </Table.Cell>
+                                    <Table.Cell>{new Date(c.issueDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
+                                    <Table.Cell>
+                                        <StatusBadge used={c.creditUsed} />
+                                    </Table.Cell>
+                                    <Table.Cell textAlign="center">
+                                        <IconButton
+                                            aria-label="Delete credit" size="xs" variant="ghost" colorPalette="red"
+                                            onClick={() => setDeleting(c)}
+                                        >
+                                            <Trash2 size={16} />
+                                        </IconButton>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                </Box>
 
                 {credits.length === 0 && (
                     <Center mt={4}>
@@ -109,6 +138,36 @@ export function PaymentCreditsAdminPage() {
                 />
             )}
         </VStack>
+    );
+}
+
+function PaymentCreditCard({ credit, onDelete }: {
+    credit: PaymentCreditAdmin;
+    onDelete: () => void;
+}) {
+    return (
+        <Box borderWidth="1px" borderColor="border.card" borderRadius="md" px={3} py={2}>
+            <HStack justify="space-between" align="center" gap={2}>
+                <HStack gap={2} flex={1} minW={0}>
+                    <Text fontWeight="medium" truncate>{credit.expectedUsername}</Text>
+                    <StatusBadge used={credit.creditUsed} />
+                </HStack>
+                <IconButton
+                    aria-label="Delete credit" size="xs" variant="ghost" colorPalette="red"
+                    onClick={onDelete}
+                >
+                    <Trash2 size={16} />
+                </IconButton>
+            </HStack>
+            <Text fontSize="sm" color="fg.muted" truncate>{credit.competitionName}</Text>
+            <HStack gap={1}>
+                <Text fontFamily="mono" fontSize="sm" truncate>{credit.uniquePaymentCode}</Text>
+                <CopyPaymentCodeButton code={credit.uniquePaymentCode} />
+            </HStack>
+            <Text fontSize="xs" color="fg.muted">
+                {new Date(credit.issueDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+            </Text>
+        </Box>
     );
 }
 
