@@ -44,6 +44,8 @@ public class AnnouncementService : CrudService<int, CreateAnnouncementModel, Ann
         {
             Content = model.Content.Trim(),
             ShowOnLoginPage = model.ShowOnLoginPage,
+            ShowOnHomepage = model.ShowOnHomepage,
+            Severity = model.Severity,
             ExpiryDateTimeUtc = model.ExpiryDateTimeUtc,
             CreatedAtUtc = DateTime.UtcNow,
             CreatedByUserID = createdByUserId,
@@ -68,6 +70,8 @@ public class AnnouncementService : CrudService<int, CreateAnnouncementModel, Ann
                 AnnouncementID = a.AnnouncementID,
                 Content = a.Content,
                 ShowOnLoginPage = a.ShowOnLoginPage,
+                ShowOnHomepage = a.ShowOnHomepage,
+                Severity = a.Severity,
                 CreatedAtUtc = a.CreatedAtUtc,
             })
             .ToListAsync(cancellationToken);
@@ -88,6 +92,8 @@ public class AnnouncementService : CrudService<int, CreateAnnouncementModel, Ann
         AnnouncementID = announcement.AnnouncementID,
         Content = announcement.Content,
         ShowOnLoginPage = announcement.ShowOnLoginPage,
+        ShowOnHomepage = announcement.ShowOnHomepage,
+        Severity = announcement.Severity,
         ExpiryDateTimeUtc = announcement.ExpiryDateTimeUtc,
         CreatedAtUtc = announcement.CreatedAtUtc,
         CreatedByUserID = announcement.CreatedByUserID,
