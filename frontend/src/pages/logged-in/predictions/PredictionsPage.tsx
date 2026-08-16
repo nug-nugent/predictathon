@@ -1,5 +1,6 @@
 import { Center, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { getCompetitionWeeks, getMatchesForWeek, computeDefaultWeek, type MatchPrediction } from "../../../services/prediction-service";
 import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
@@ -10,6 +11,8 @@ import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 
 export function PredictionsPage() {
   const { currentCompetitionId, isLoading } = useCompetition();
+  const [searchParams] = useSearchParams();
+  const requestedWeek = searchParams.get("week");
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -25,14 +28,14 @@ export function PredictionsPage() {
 
   // Keyed by competitionId so switching competitions remounts this fresh instead of needing to
   // reset state - same pattern as LeaguePage.
-  return <PredictionsWeekLoader key={currentCompetitionId} competitionId={currentCompetitionId} />;
+  return <PredictionsWeekLoader key={currentCompetitionId} competitionId={currentCompetitionId} requestedWeek={requestedWeek} />;
 }
 
 function toApiErrorOrGeneric(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError(0, ["Something went wrong."]);
 }
 
-function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
+function PredictionsWeekLoader({ competitionId, requestedWeek }: { competitionId: string; requestedWeek: string | null }) {
   const [weeks, setWeeks] = useState<string[] | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchPrediction[] | null>(null);
@@ -52,7 +55,9 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
         if (cancelled) return;
         setWeeks(fetchedWeeks);
 
-        const defaultWeek = computeDefaultWeek(fetchedWeeks);
+        // Honour a ?week= link (e.g. from the Home page's "Next prediction due" link) if it names
+        // a real week, otherwise fall back to the usual current-week default.
+        const defaultWeek = requestedWeek && fetchedWeeks.includes(requestedWeek) ? requestedWeek : computeDefaultWeek(fetchedWeeks);
         setSelectedWeek(defaultWeek);
 
         if (!defaultWeek) {
@@ -69,7 +74,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       });
 
     return () => { cancelled = true; };
-  }, [competitionId, retryCount]);
+  }, [competitionId, retryCount, requestedWeek]);
 
   const changeWeek = (dateFrom: string) => {
     setSelectedWeek(dateFrom);
