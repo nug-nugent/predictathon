@@ -28,10 +28,11 @@ public class FixtureChangeProposalServiceTests
         ExternalMatchID = externalMatchId,
     };
 
-    private static ExternalFixture MakeFixture(int externalMatchId, DateTime kickoffUtc) => new()
+    private static ExternalFixture MakeFixture(int externalMatchId, DateTime kickoffUtc, bool isKickoffConfirmed = true) => new()
     {
         ExternalMatchID = externalMatchId,
         KickoffUtc = kickoffUtc,
+        IsKickoffConfirmed = isKickoffConfirmed,
         HomeTeamExternalCode = "57",
         AwayTeamExternalCode = "61",
         HomeTeamName = "Arsenal FC",
@@ -109,6 +110,59 @@ public class FixtureChangeProposalServiceTests
         await service.DetectChangesAsync();
 
         dbContext.FixtureChangeProposal.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DetectChangesAsync_KickoffNotYetConfirmed_DoesNotCreateProposal()
+    {
+        // football-data.org (and providers generally) report a placeholder kickoff time for
+        // fixtures whose broadcaster slot isn't confirmed yet - that placeholder must never be
+        // treated as a genuine change, however different it looks from the stored default.
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var competition = MakeCompetition();
+        var storedKickoffUtc = new DateTime(2026, 8, 15, 14, 0, 0, DateTimeKind.Utc);
+        var match = MakeMatch(competition.CompetitionID, externalMatchId: 100, UkClock.ToUkLocal(storedKickoffUtc));
+        dbContext.Competition.Add(competition);
+        dbContext.Match.Add(match);
+        await dbContext.SaveChangesAsync();
+
+        var placeholderKickoffUtc = new DateTime(2026, 8, 15, 0, 0, 0, DateTimeKind.Utc);
+        externalMatchDataService.Fixtures = [MakeFixture(100, placeholderKickoffUtc, isKickoffConfirmed: false)];
+
+        await service.DetectChangesAsync();
+
+        dbContext.FixtureChangeProposal.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DetectChangesAsync_FixtureBecameUnconfirmed_DismissesExistingPendingProposal()
+    {
+        // Cleans up proposals already raised from provider placeholder times (e.g. before this
+        // check existed) on the next sync, rather than needing a one-off manual fix-up.
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var competition = MakeCompetition();
+        var storedKickoffUtc = new DateTime(2026, 8, 15, 14, 0, 0, DateTimeKind.Utc);
+        var match = MakeMatch(competition.CompetitionID, externalMatchId: 100, UkClock.ToUkLocal(storedKickoffUtc));
+        dbContext.Competition.Add(competition);
+        dbContext.Match.Add(match);
+        dbContext.FixtureChangeProposal.Add(new DomainEntities.FixtureChangeProposal
+        {
+            MatchID = match.MatchID,
+            PreviousMatchDateTime = match.MatchDateTime,
+            ProposedMatchDateTime = UkClock.ToUkLocal(new DateTime(2026, 8, 15, 0, 0, 0, DateTimeKind.Utc)),
+            Status = FixtureChangeProposalStatuses.Pending,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var placeholderKickoffUtc = new DateTime(2026, 8, 15, 0, 0, 0, DateTimeKind.Utc);
+        externalMatchDataService.Fixtures = [MakeFixture(100, placeholderKickoffUtc, isKickoffConfirmed: false)];
+
+        await service.DetectChangesAsync();
+
+        var proposal = dbContext.FixtureChangeProposal.Should().ContainSingle().Subject;
+        proposal.Status.Should().Be(FixtureChangeProposalStatuses.Dismissed);
+        proposal.ResolvedAtUtc.Should().NotBeNull();
+        match.MatchDateTime.Should().Be(UkClock.ToUkLocal(storedKickoffUtc));
     }
 
     [Fact]
