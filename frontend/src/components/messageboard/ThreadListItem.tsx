@@ -1,14 +1,15 @@
-import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, HStack, Stack, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import type { MessageThreadSummary } from "../../services/messageboard-service";
 
 export function ThreadListItem({ thread, striped = false }: { thread: MessageThreadSummary; striped?: boolean }) {
     return (
         <RouterLink to={`/board/${thread.messageThreadID}`}>
-            <HStack
+            <Stack
+                direction={{ base: "column", md: "row" }}
                 justify="space-between"
-                align="start"
-                gap={4}
+                align={{ base: "stretch", md: "start" }}
+                gap={{ base: 1, md: 4 }}
                 py={3}
                 px={2}
                 borderTopWidth="1px"
@@ -29,11 +30,11 @@ export function ThreadListItem({ thread, striped = false }: { thread: MessageThr
                         Started by {thread.startedByUsername} &middot; {thread.messageCount} {thread.messageCount === 1 ? "post" : "posts"}
                     </Text>
                 </VStack>
-                <VStack align="end" gap={0} flexShrink={0}>
+                <VStack align={{ base: "start", md: "end" }} gap={0} flexShrink={0}>
                     <Text fontSize="sm" color="fg.muted">{new Date(thread.lastMessageDateTime).toLocaleString()}</Text>
                     <Text fontSize="sm" color="fg.muted">by {thread.lastMessageByUsername}</Text>
                 </VStack>
-            </HStack>
+            </Stack>
         </RouterLink>
     );
 }

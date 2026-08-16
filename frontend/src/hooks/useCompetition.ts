@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { UserCompetitionRegistration } from "../services/competition-service";
 
-type CompetitionContextType = {
+export type CompetitionContextType = {
     competitions: UserCompetitionRegistration[];
     currentCompetitionId: string | null;
     setCurrentCompetitionId: (competitionId: string) => void;
