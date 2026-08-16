@@ -13,6 +13,10 @@ public partial class Announcement
 
     public bool ShowOnLoginPage { get; set; }
 
+    public bool ShowOnHomepage { get; set; }
+
+    public string Severity { get; set; } = null!;
+
     public DateTime? ExpiryDateTimeUtc { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }

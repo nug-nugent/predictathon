@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
-    Button, Center, Checkbox, Dialog, Field, HStack, Input,
+    Button, Center, Checkbox, Dialog, Field, HStack, Input, NativeSelect,
     Portal, Table, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import {
     getAllAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement,
     type AnnouncementAdmin, type CreateAnnouncementAdmin,
 } from "../../../../services/announcement-admin-service";
+import type { AnnouncementSeverity } from "../../../../services/announcement-service";
 import { ApiError } from "../../../../services/api";
 import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
@@ -20,6 +21,8 @@ const PAGE_SIZE = 20;
 const emptyAnnouncement: CreateAnnouncementAdmin = {
     content: "",
     showOnLoginPage: false,
+    showOnHomepage: true,
+    severity: "Info",
     expiryDateTimeUtc: null,
 };
 
@@ -66,6 +69,8 @@ export function AnnouncementsAdminPage() {
                         <Table.Row>
                             <Table.ColumnHeader>Content</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Shown on login page</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center">Shown on homepage</Table.ColumnHeader>
+                            <Table.ColumnHeader>Severity</Table.ColumnHeader>
                             <Table.ColumnHeader>Expires</Table.ColumnHeader>
                             <Table.ColumnHeader>Created</Table.ColumnHeader>
                         </Table.Row>
@@ -75,6 +80,10 @@ export function AnnouncementsAdminPage() {
                             <ClickableRow key={a.announcementID} onActivate={() => setEditing(a)}>
                                 <Table.Cell maxW="400px" truncate>{a.content}</Table.Cell>
                                 <Table.Cell textAlign="center">{a.showOnLoginPage ? "Yes" : ""}</Table.Cell>
+                                <Table.Cell textAlign="center">{a.showOnHomepage ? "Yes" : ""}</Table.Cell>
+                                <Table.Cell color={a.severity === "Warning" ? "status.urgent" : undefined} fontWeight={a.severity === "Warning" ? "medium" : undefined}>
+                                    {a.severity === "Warning" ? "Warning" : ""}
+                                </Table.Cell>
                                 <Table.Cell>
                                     {a.expiryDateTimeUtc
                                         ? new Date(a.expiryDateTimeUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
@@ -120,6 +129,11 @@ function AnnouncementEditDialog({ announcement, onClose, onSaved }: {
     const save = async () => {
         if (!form.content.trim()) {
             setError("Please enter the announcement content.");
+            return;
+        }
+
+        if (!form.showOnLoginPage && !form.showOnHomepage) {
+            setError("Select at least one of \"Show on login page\" or \"Show on homepage\".");
             return;
         }
 
@@ -179,6 +193,20 @@ function AnnouncementEditDialog({ announcement, onClose, onSaved }: {
                                     />
                                 </Field.Root>
 
+                                <Field.Root maxW="200px">
+                                    <Field.Label>Severity</Field.Label>
+                                    <NativeSelect.Root size="sm">
+                                        <NativeSelect.Field
+                                            value={form.severity}
+                                            onChange={(e) => setForm({ ...form, severity: e.target.value as AnnouncementSeverity })}
+                                        >
+                                            <option value="Info">Info</option>
+                                            <option value="Warning">Warning</option>
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
+
                                 <Field.Root>
                                     <Field.Label>Expires</Field.Label>
                                     <Input
@@ -189,12 +217,21 @@ function AnnouncementEditDialog({ announcement, onClose, onSaved }: {
                                 </Field.Root>
 
                                 <Checkbox.Root
+                                    checked={form.showOnHomepage}
+                                    onCheckedChange={(e) => setForm({ ...form, showOnHomepage: !!e.checked })}
+                                >
+                                    <Checkbox.HiddenInput />
+                                    <Checkbox.Control />
+                                    <Checkbox.Label>Show on homepage</Checkbox.Label>
+                                </Checkbox.Root>
+
+                                <Checkbox.Root
                                     checked={form.showOnLoginPage}
                                     onCheckedChange={(e) => setForm({ ...form, showOnLoginPage: !!e.checked })}
                                 >
                                     <Checkbox.HiddenInput />
                                     <Checkbox.Control />
-                                    <Checkbox.Label>Also show on login page</Checkbox.Label>
+                                    <Checkbox.Label>Show on login page</Checkbox.Label>
                                 </Checkbox.Root>
 
                                 {error && <Text fontSize="sm" color="fg.error">{error}</Text>}

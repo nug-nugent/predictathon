@@ -1,9 +1,12 @@
 import { getJsonAuthenticated, postJsonAuthenticated, putJsonAuthenticated, deleteAuthenticated } from "./api";
+import type { AnnouncementSeverity } from "./announcement-service";
 
 // Matches Application/Models/CreateAnnouncementModel.cs.
 export type CreateAnnouncementAdmin = {
     content: string;
     showOnLoginPage: boolean;
+    showOnHomepage: boolean;
+    severity: AnnouncementSeverity;
     expiryDateTimeUtc: string | null;
 };
 

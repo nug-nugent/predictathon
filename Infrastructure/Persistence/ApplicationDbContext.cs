@@ -56,6 +56,10 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
         modelBuilder.Entity<Announcement>(entity =>
         {
             entity.Property(e => e.Content).HasMaxLength(2000);
+            entity.Property(e => e.Severity)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("Info", "DF_Announcement_Severity");
             entity.Property(e => e.ExpiryDateTimeUtc).HasColumnType("datetime");
             entity.Property(e => e.CreatedAtUtc)
                 .HasDefaultValueSql("sysutcdatetime()", "DF_Announcement_CreatedAtUtc")
