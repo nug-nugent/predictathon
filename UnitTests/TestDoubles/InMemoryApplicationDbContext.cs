@@ -46,12 +46,13 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     // Navigations kept out of the blanket-strip below because specific service tests query through
-    // them - PaymentCreditService.GetAllAsync (ForCompetition) and MessageboardService.GetMessagesAsync
-    // (.Include(m => m.MessageReaction)).
+    // them - PaymentCreditService.GetAllAsync (ForCompetition), MessageboardService.GetMessagesAsync
+    // (.Include(m => m.MessageReaction)) and MatchService.GetForAdminAsync (.HomeTeam.TeamName).
     private static readonly HashSet<(Type EntityType, string PropertyName)> PreservedNavigations =
     [
         (typeof(Entities.PaymentCredit), nameof(Entities.PaymentCredit.ForCompetition)),
         (typeof(Entities.Message), nameof(Entities.Message.MessageReaction)),
+        (typeof(Entities.Match), nameof(Entities.Match.HomeTeam)),
     ];
 
     /// <summary>
