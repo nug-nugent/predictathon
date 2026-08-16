@@ -2,22 +2,32 @@ import { Box, List, Text } from "@chakra-ui/react";
 import { CalendarPlus, ChartColumn, Dices, Home, Info, ListChecks, Medal, Megaphone, MessagesSquare, TableProperties, Ticket, TriangleAlert, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
 import { useUser } from "../../hooks/useUser";
+import { useCompetition } from "../../hooks/useCompetition";
 import { Role } from "../../constants/roles";
 
 export function SideNavigation({ onClick }: { onClick?: () => void }) {
     const { user } = useUser();
     const roles = user?.roles ?? [];
+    const { competitions, isLoading: competitionsLoading } = useCompetition();
+    // Admins are exempt from the "register for a competition first" gate (see ProtectedRoute),
+    // so their links stay visible even with zero registrations. While loading, assume they'll
+    // have competitions to avoid a flash of a near-empty menu.
+    const showCompetitionLinks = roles.length > 0 || competitionsLoading || competitions.length > 0;
 
     return (
         <Box>
             <List.Root variant="plain" fontSize={{ base: "lg", lg: "md" }} fontWeight="bold" onClick={onClick}>
                 <NavItem to="/" icon={<Home size={20} />} label="Home" />
-                <NavItem to="/predictions" icon={<Dices size={20} />} label="Predictions" />
-                <NavItem to="/league" icon={<TableProperties size={20} />} label="League Table" />
-                <NavItem to="/board" icon={<MessagesSquare size={20} />} label="Messageboard" />
-                <NavItem to="/stats" icon={<ChartColumn size={20} />} label="Statistics" />
-                <NavItem to="/hof" icon={<Medal size={20} />} label="Hall of Fame" />
-                <NavItem to="/rules" icon={<Info size={20} />} label="Rules" />
+                {showCompetitionLinks && (
+                    <>
+                        <NavItem to="/predictions" icon={<Dices size={20} />} label="Predictions" />
+                        <NavItem to="/league" icon={<TableProperties size={20} />} label="League Table" />
+                        <NavItem to="/board" icon={<MessagesSquare size={20} />} label="Messageboard" />
+                        <NavItem to="/stats" icon={<ChartColumn size={20} />} label="Statistics" />
+                        <NavItem to="/hof" icon={<Medal size={20} />} label="Hall of Fame" />
+                        <NavItem to="/rules" icon={<Info size={20} />} label="Rules" />
+                    </>
+                )}
 
                 {roles.length > 0 && (
                     <>

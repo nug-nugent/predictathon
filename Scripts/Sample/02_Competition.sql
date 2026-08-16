@@ -2,6 +2,12 @@
 "Sample Cup" - a hand-crafted competition, not sourced from real data. Deliberately free
 (EntranceFee = 0) and PayPal-disabled so registration always works with zero external
 dependencies, regardless of the real World Cup competition's live registration/payment state.
+
+Also seeds "Founders Trophy" - a second, paid (EntranceFee > 0, PayPal-disabled) competition with
+no teams/matches of its own. It exists purely so e2e tests can reach the "account created but
+never completed a paid registration" state (see e2e/tests/no-competitions.spec.ts) without any
+external payment dependency: the registration flow's "redeem code" step is left unsubmitted
+rather than paid. ShowInHallOfFame = 0 keeps it out of that page's listing.
 */
 
 SET NOCOUNT ON
@@ -27,6 +33,21 @@ USING (VALUES (
     0.00,                                       -- EntranceFee
     0,                                          -- PayPalPaymentAvailable
     'A sample tournament seeded for local Docker development. 32 teams, 8 groups - the group stage and Round of 16 are already played, the Quarter-finals onward are still to be predicted.',
+    NULL,                                       -- ImageFilename
+    1                                           -- DefaultToNeutralGround
+), (
+    'CA000000-0000-0000-0000-000000000002',
+    'Founders Trophy',
+    0,                                          -- PrependNameWithThe
+    DATEADD(DAY, @DateShiftDays, CAST('2026-09-01' AS DATE)),
+    DATEADD(DAY, @DateShiftDays, CAST('2026-12-01' AS DATE)), -- StartDate, EndDate
+    0,                                          -- DuplicateFixturesAllowed
+    1,                                          -- OpenForRegistration
+    1,                                          -- RegistrationAvailableOnLoginPage
+    0,                                          -- ShowInHallOfFame
+    5.00,                                       -- EntranceFee
+    0,                                          -- PayPalPaymentAvailable
+    'A paid sample competition seeded for local Docker development, used to exercise the entry-fee registration path with no external payment dependency.',
     NULL,                                       -- ImageFilename
     1                                           -- DefaultToNeutralGround
 )) AS [Source] (
