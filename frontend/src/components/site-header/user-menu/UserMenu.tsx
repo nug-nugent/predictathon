@@ -39,7 +39,14 @@ export function UserMenu() {
                         <Avatar.Image src={user.avatarUrl} />
                         <Avatar.Fallback name={user.name} />
                     </Avatar.Root>
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" truncate>{user.name}</Text>
+                    <Text
+                        display={{ base: "none", sm: "block" }}
+                        fontSize={{ base: "sm", md: "md" }}
+                        fontWeight="semibold"
+                        truncate
+                    >
+                        {user.name}
+                    </Text>
                     <ChevronDown size={16} strokeWidth={3} />
                 </Button>
             </Popover.Trigger>

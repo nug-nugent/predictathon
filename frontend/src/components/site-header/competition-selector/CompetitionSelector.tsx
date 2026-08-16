@@ -5,7 +5,7 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { setDefaultCompetition } from "../../../services/competition-service";
 
 const captionProps = {
-    fontSize: "13px",
+    fontSize: { base: "10px", sm: "13px" },
     lineHeight: "1.3",
 } as const;
 
@@ -18,13 +18,13 @@ export function CompetitionSelector() {
     }
 
     if (competitions.length === 0) {
-        return <Text {...captionProps}>No competitions</Text>;
+        return <Text {...captionProps} truncate>No competitions</Text>;
     }
 
     const current = competitions.find((c) => c.competitionID === currentCompetitionId);
 
     if (competitions.length === 1) {
-        return <Text {...captionProps}>{current?.competitionName}</Text>;
+        return <Text {...captionProps} truncate>{current?.competitionName}</Text>;
     }
 
     // Switches immediately (sessionStorage, via setCurrentCompetitionId) so the UI never waits on
@@ -47,12 +47,15 @@ export function CompetitionSelector() {
                     p="0"
                     h="auto"
                     gap="1"
+                    minW="0"
+                    maxW="100%"
                     fontWeight="semibold"
                     color="inherit"
                     cursor="pointer"
                     _hover={{ textDecoration: "underline" }}
                 >
-                    {current?.competitionName} <ChevronDown size={14} />
+                    <Text as="span" truncate minW="0">{current?.competitionName}</Text>
+                    <ChevronDown size={14} style={{ flexShrink: 0 }} />
                 </Button>
             </Popover.Trigger>
             <Portal>
