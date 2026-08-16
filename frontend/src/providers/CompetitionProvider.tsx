@@ -1,9 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUser } from "../hooks/useUser";
 import { getMyRegisteredCompetitions, type UserCompetitionRegistration } from "../services/competition-service";
-import { CompetitionContext } from "../hooks/useCompetition";
+import { CompetitionContext, type CompetitionContextType } from "../hooks/useCompetition";
 
 const STORAGE_KEY = "currentCompetitionId";
+
+// mockValue bypasses the real fetch entirely and renders children under a static context value -
+// only ever set in Storybook (see .storybook/preview.tsx), so stories don't depend on a live
+// backend. Left undefined (the real app), behaviour is unchanged.
+export const CompetitionProvider = ({ mockValue, children }: { mockValue?: CompetitionContextType; children: React.ReactNode }) => {
+    if (mockValue !== undefined) {
+        return (
+            <CompetitionContext.Provider value={mockValue}>
+                {children}
+            </CompetitionContext.Provider>
+        );
+    }
+
+    return <LiveCompetitionProvider>{children}</LiveCompetitionProvider>;
+};
 
 // Always renders `children` under a single, stable CompetitionContext.Provider - the fetching
 // logic below switches on `user`, but the element type/position never changes across a
@@ -12,7 +27,7 @@ const STORAGE_KEY = "currentCompetitionId";
 // unmount and remount every page underneath it, silently discarding local component state (e.g.
 // RegisterPage's in-progress step) at exactly the moment a page like Register logs a user in
 // without navigating away.
-export const CompetitionProvider = ({ children }: { children: React.ReactNode }) => {
+const LiveCompetitionProvider = ({ children }: { children: React.ReactNode }) => {
     const { user, isLoading: userLoading } = useUser();
 
     const [competitions, setCompetitions] = useState<UserCompetitionRegistration[]>([]);
