@@ -12,6 +12,14 @@ public class ExternalFixture
     /// <summary>The fixture's current scheduled kickoff time, in UTC.</summary>
     public DateTime KickoffUtc { get; set; }
 
+    /// <summary>
+    /// Whether <see cref="KickoffUtc"/> is a real, broadcaster-confirmed kickoff time. Some providers
+    /// report a placeholder time (e.g. midnight UTC) for fixtures whose exact slot hasn't been
+    /// confirmed yet - defaults to <c>true</c> so providers that don't report this distinction at all
+    /// are treated as always-confirmed.
+    /// </summary>
+    public bool IsKickoffConfirmed { get; set; } = true;
+
     /// <summary>The provider's identifier for the home team.</summary>
     public string HomeTeamExternalCode { get; set; } = "";
 

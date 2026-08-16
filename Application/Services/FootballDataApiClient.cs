@@ -48,6 +48,7 @@ public class FootballDataApiClient : IExternalMatchDataService
             {
                 ExternalMatchID = m.Id,
                 KickoffUtc = m.UtcDate,
+                IsKickoffConfirmed = m.Status != ScheduledStatus,
                 HomeTeamExternalCode = m.HomeTeam.Id.ToString(),
                 AwayTeamExternalCode = m.AwayTeam.Id.ToString(),
                 HomeTeamName = m.HomeTeam.Name,
@@ -55,6 +56,11 @@ public class FootballDataApiClient : IExternalMatchDataService
             })
             .ToList();
     }
+
+    // football-data.org reports "SCHEDULED" for fixtures whose broadcaster slot isn't confirmed yet -
+    // utcDate is a midnight-UTC placeholder in that case, not a real kickoff time. Every other status
+    // (TIMED, IN_PLAY, FINISHED, POSTPONED, etc.) carries a real timestamp.
+    private const string ScheduledStatus = "SCHEDULED";
 
     private class MatchesResponse
     {
@@ -69,6 +75,9 @@ public class FootballDataApiClient : IExternalMatchDataService
 
         [JsonPropertyName("utcDate")]
         public DateTime UtcDate { get; set; }
+
+        [JsonPropertyName("status")]
+        public string Status { get; set; } = "";
 
         [JsonPropertyName("homeTeam")]
         public TeamDto HomeTeam { get; set; } = new();

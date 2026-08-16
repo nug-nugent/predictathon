@@ -79,6 +79,22 @@ public class FixtureChangeProposalService : IFixtureChangeProposalService
     /// </summary>
     private async Task ReconcileMatchAsync(Match match, ExternalFixture fixture, FixtureChangeProposal? pendingProposal, CancellationToken cancellationToken)
     {
+        if (!fixture.IsKickoffConfirmed)
+        {
+            // The provider hasn't confirmed a real kickoff time for this fixture yet, so
+            // fixture.KickoffUtc is just a placeholder - not a genuine change to compare against.
+            // Auto-dismiss any proposal already raised from it (e.g. before this check existed, or
+            // from a since-reverted broadcaster confirmation) rather than leaving stale noise behind.
+            if (pendingProposal is not null)
+            {
+                pendingProposal.Status = FixtureChangeProposalStatuses.Dismissed;
+                pendingProposal.ResolvedAtUtc = DateTime.UtcNow;
+                _dbContext.Update(pendingProposal);
+            }
+
+            return;
+        }
+
         var externalKickoff = UkClock.ToUkLocal(fixture.KickoffUtc);
         var matchesStoredKickoff = externalKickoff == match.MatchDateTime;
 
