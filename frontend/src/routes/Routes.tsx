@@ -54,8 +54,9 @@ export function SiteRoutes() {
                     <Route path="password-reset" element={<ForgotPasswordPage />} />
                     <Route path="password-reset/confirm" element={<ResetPasswordPage />} />
 
-                    {/* Protected routes for logged in users */}
-                    <Route element={<ProtectedRoute />}>
+                    {/* Protected routes for logged in users - requires being registered for a
+                        competition, since these all assume one exists (see ProtectedRoute). */}
+                    <Route element={<ProtectedRoute requireCompetition />}>
                         <Route path="predictions" element={<PredictionsPage />} />
                         <Route path="league" element={<LeaguePage />} />
 
@@ -70,7 +71,11 @@ export function SiteRoutes() {
                         <Route path="profile/edit" element={<ProfileEditPage />} />
                         <Route path="profile/:id/edit" element={<ProfileEditPage />} />
                         <Route path="profile/:id" element={<ProfilePage />} />
+                    </Route>
 
+                    {/* Registering for a specific competition is how a zero-competition user
+                        escapes the sign-up prompt, so it only requires being logged in. */}
+                    <Route element={<ProtectedRoute />}>
                         <Route path="competition/:id/register" element={<CompetitionRegistrationPage />} />
                     </Route>
 

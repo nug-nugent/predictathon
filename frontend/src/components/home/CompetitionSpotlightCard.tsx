@@ -9,8 +9,14 @@ import type { CompetitionRegistrationSummary } from "../../services/competition-
 
 // The pre-login landing page's spotlight card - richer than CompetitionSummaryCard (used by the
 // register flow itself), with its own badge, crest, "how scoring works" explainer and embedded
-// register button.
-export function CompetitionSpotlightCard({ competition }: { competition: CompetitionRegistrationSummary }) {
+// register button. Also reused by the logged-in "no competitions yet" prompt (see Home.tsx),
+// which passes registerHref to point at the authenticated join flow instead of guest sign-up.
+export function CompetitionSpotlightCard({
+    competition, registerHref,
+}: {
+    competition: CompetitionRegistrationSummary;
+    registerHref?: string;
+}) {
     const imageUrl = competitionImageUrl(competition.imageFilename);
     const [scoringOpen, setScoringOpen] = useState(false);
 
@@ -41,7 +47,7 @@ export function CompetitionSpotlightCard({ competition }: { competition: Competi
             </Link>
 
             <Button asChild colorPalette="action" h="44px" fontSize="15px" width="calc(100% - 40px)" mx={5} mt={3} mb={4}>
-                <RouterLink to={`/register?competitionId=${competition.competitionID}`}>
+                <RouterLink to={registerHref ?? `/register?competitionId=${competition.competitionID}`}>
                     Register for {competition.competitionName}
                 </RouterLink>
             </Button>
