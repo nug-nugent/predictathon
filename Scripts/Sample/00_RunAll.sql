@@ -15,6 +15,7 @@ which always completes before this script runs.
 SET QUOTED_IDENTIFIER ON;
 GO
 
+:r 01_SampleCupSetup.sql
 :r 02_Competition.sql
 :r 03_TeamCompetition.sql
 :r 04_Match.sql
