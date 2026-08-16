@@ -1,5 +1,5 @@
 import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
-import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { ApiError } from "../../../services/api";
 import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
 import { computeMatchStatus, type SaveState } from "../matchStatus";
@@ -86,6 +86,24 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         event.preventDefault();
     };
 
+    // Left/Right step through every score input in DOM order (home, away, home, away, ...), so at
+    // a row boundary they carry on into the next/previous match. Up/Down step by 2 to land on the
+    // same side (home or away) one row up/down, since every row contributes exactly one pair.
+    const onInputArrowNav = (event: KeyboardEvent<HTMLInputElement>) => {
+        const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -2, ArrowDown: 2 }[event.key];
+        if (step === undefined) return;
+
+        const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[data-role="score-input"]'));
+        const currentIndex = inputs.indexOf(event.currentTarget);
+        if (currentIndex === -1) return;
+
+        const target = inputs[currentIndex + step];
+        if (!target) return;
+
+        event.preventDefault();
+        target.focus();
+    };
+
     const onHomeChange = (event: ChangeEvent<HTMLInputElement>) => {
         const value = parseDigit(event.target.value);
         if (value === null) return;
@@ -122,12 +140,14 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                         </HStack>
 
                         <HStack gap={1}>
-                            <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center"
-                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onHomeChange}
+                            <Input ref={homeInputRef} value={displayHome} autoComplete="off" textAlign="center" inputMode="numeric" pattern="[0-9]*"
+                                data-role="score-input" size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp}
+                                onChange={onHomeChange} onKeyDown={onInputArrowNav}
                                 bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                             <Text>-</Text>
-                            <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center"
-                                size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onAwayChange}
+                            <Input ref={awayInputRef} value={displayAway} autoComplete="off" textAlign="center" inputMode="numeric" pattern="[0-9]*"
+                                data-role="score-input" size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp}
+                                onChange={onAwayChange} onKeyDown={onInputArrowNav}
                                 bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }} />
                         </HStack>
 
