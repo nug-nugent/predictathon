@@ -83,6 +83,7 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
         var matches = await _appDbContext.Match
             .Where(m => m.CompetitionID == competitionId && (includePlayed || !m.MatchPlayed))
             .OrderBy(m => m.MatchDateTime)
+            .ThenBy(m => m.HomeTeam != null ? m.HomeTeam.TeamName : m.HomeTeamTBC)
             .ToListAsync(cancellationToken);
 
         return matches.Adapt<List<MatchModel>>();
