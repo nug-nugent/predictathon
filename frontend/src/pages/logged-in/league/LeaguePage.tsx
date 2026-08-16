@@ -1,4 +1,5 @@
-import { Center, HStack, Link as ChakraLink, Table, Text } from "@chakra-ui/react"
+import { Center, HStack, IconButton, Link as ChakraLink, Popover, Portal, Table, Text } from "@chakra-ui/react"
+import { CircleHelp } from "lucide-react";
 import { getLeagueTable } from "../../../services/league-service";
 import { getCompetitionWeeks, computeDefaultWeek } from "../../../services/prediction-service";
 import { useCompetition } from "../../../hooks/useCompetition";
@@ -116,7 +117,33 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>0</Table.ColumnHeader>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>L</Table.ColumnHeader>
               <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POINTS</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>AGD</Table.ColumnHeader>
+              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>
+                <HStack justify="center" gap={0.5}>
+                  <Text>AGD</Text>
+                  <Popover.Root positioning={{ placement: "bottom" }}>
+                    <Popover.Trigger asChild>
+                      <IconButton aria-label="What is AGD?" size="2xs" variant="ghost" p={0} minW="auto" h="auto">
+                        <CircleHelp size={12} />
+                      </IconButton>
+                    </Popover.Trigger>
+                    <Portal>
+                      <Popover.Positioner>
+                        <Popover.Content maxW="280px">
+                          <Popover.Arrow />
+                          <Popover.Body>
+                            <Text fontSize="sm" fontWeight="normal" textAlign="left">
+                              Average goal difference. The <Text as="span" fontStyle="italic">total</Text> goal difference is what separates users on equal points, followed by number of 3 pointers. See the{" "}
+                              <ChakraLink asChild variant="underline">
+                                <Link to="/rules">rules page</Link>
+                              </ChakraLink>.
+                            </Text>
+                          </Popover.Body>
+                        </Popover.Content>
+                      </Popover.Positioner>
+                    </Portal>
+                  </Popover.Root>
+                </HStack>
+              </Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
           <Table.Body>
