@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Predictathon is a football score-prediction competition site for a private group (~50 friends/family). Users predict match scores each week and earn 3/2/1/0 points based on accuracy. It's a hobby project, solely maintained by David Huggett, recently rebuilt from a legacy ASP.NET Web Forms app onto a .NET 10 Web API + React 19/Chakra UI v3 frontend (the legacy `UI/Web` project has been fully deleted).
 
+## Workflow
+
+- Do not open a pull request until explicitly asked to, in that session. Committing changes (even on a feature branch) does not imply permission to open a PR — wait to be asked.
+
 ## Coding rules (from `copilot-instructions.md`, keep both in sync)
 
 - Always wrap single-line `if`/`else if`/`else` bodies and loop bodies (`for`, `foreach`, `while`, `do/while`) in curly braces, even for a single statement.
