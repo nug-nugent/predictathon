@@ -1,8 +1,11 @@
 <Project>
   <!-- Single source of truth for the application version, shared by every project in the
-       solution (drives AssemblyVersion/FileVersion/InformationalVersion automatically). Bump
-       alongside frontend/package.json's "version" when cutting a release - the two aren't wired
-       together mechanically since they're separate build systems, so keep them in sync by hand. -->
+       solution (drives AssemblyVersion/FileVersion/InformationalVersion automatically).
+       Patch-bumped automatically on every production deploy (see the "Bump version and tag"
+       step in .github/workflows/deploy.yml), kept in sync with frontend/package.json's
+       "version" there - the two aren't wired together mechanically since they're separate
+       build systems, so if you ever hand-edit one for a deliberate minor/major bump, edit the
+       other to match in the same PR. -->
   <PropertyGroup>
     <Version>2.0.0</Version>
   </PropertyGroup>
