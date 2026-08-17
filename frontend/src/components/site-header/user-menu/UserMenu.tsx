@@ -61,9 +61,7 @@ export function UserMenu() {
                             </Button>
                             <Button
                                 size="sm" p="6" justifyContent="flex-start" variant="ghost" colorPalette="action"
-                                // Stop the Stack's onClick from also closing the popover, so the user can
-                                // see the effect of the toggle immediately without it dismissing.
-                                onClick={(e) => { e.stopPropagation(); toggleColorMode(); }}
+                                onClick={toggleColorMode}
                             >
                                 {colorMode === "dark" ? <Sun /> : <Moon />} {colorMode === "dark" ? "Light Mode" : "Dark Mode"}
                             </Button>

@@ -5,7 +5,7 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { setDefaultCompetition } from "../../../services/competition-service";
 
 const captionProps = {
-    fontSize: { base: "10px", sm: "13px" },
+    fontSize: "13px",
     lineHeight: "1.3",
 } as const;
 

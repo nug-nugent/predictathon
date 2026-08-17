@@ -3,6 +3,7 @@ import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { UserMenu } from "./user-menu/UserMenu";
 import { HeaderBrand } from "./header-brand/HeaderBrand";
+import { CompetitionNameRow } from "./competition-selector/CompetitionNameRow";
 
 export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => void }) {
     const { user } = useUser();
@@ -32,6 +33,18 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                     <Spacer />
                     {user && <UserMenu />}
                 </Flex>
+
+                {/* Below "sm" HeaderBrand hides its own inline competition name (no room alongside
+                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own,
+                    left-aligned under the hamburger. mt pulls it up against the row above: the Flex
+                    is a fixed 52px tall for the hamburger/avatar touch targets, which leaves the
+                    wordmark's own text sitting well clear of the row's bottom edge. Measured against
+                    the ball's own bottom edge (the tallest thing in that row), not the wordmark text. */}
+                {user && (
+                    <Box display={{ base: "block", sm: "none" }} pb={2} mt="-8px">
+                        <CompetitionNameRow />
+                    </Box>
+                )}
             </Box>
         </Box>
     )
