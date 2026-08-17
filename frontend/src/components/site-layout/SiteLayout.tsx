@@ -1,9 +1,10 @@
-import { Box, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Text } from "@chakra-ui/react";
+import { Box, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { Outlet, useLocation } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
 import { SiteHeader } from "../site-header/SiteHeader";
 import { HeaderBrand } from "../site-header/header-brand/HeaderBrand";
+import { CompetitionNameRow } from "../site-header/competition-selector/CompetitionNameRow";
 import { useState } from "react";
 
 export function SiteLayout() {
@@ -40,9 +41,14 @@ export function SiteLayout() {
                                 bg={{ _light: "linear-gradient(135deg, #1E4FD1 0%, #1948C4 100%)", _dark: "{colors.bg}" }}
                                 borderBottomWidth="0"
                             >
-                                <HStack alignItems={"center"}>
-                                    <HeaderBrand variant="loggedIn" headingAs="h1" />
-                                </HStack>
+                                <Stack gap={2}>
+                                    <HStack alignItems={"center"}>
+                                        <HeaderBrand variant="loggedIn" headingAs="h1" />
+                                    </HStack>
+                                    {/* The drawer only ever opens below "lg", where HeaderBrand hides its
+                                        own inline competition name - show it here on its own row instead. */}
+                                    <CompetitionNameRow />
+                                </Stack>
                             </Drawer.Header>
                             <Drawer.Body mt={0} ml={6}>
                                 <SideNavigation onClick={() => setSideNavOpen(false)} />

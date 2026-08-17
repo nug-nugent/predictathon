@@ -3,6 +3,7 @@ import { Menu } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
 import { UserMenu } from "./user-menu/UserMenu";
 import { HeaderBrand } from "./header-brand/HeaderBrand";
+import { CompetitionNameRow } from "./competition-selector/CompetitionNameRow";
 
 export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => void }) {
     const { user } = useUser();
@@ -32,6 +33,15 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                     <Spacer />
                     {user && <UserMenu />}
                 </Flex>
+
+                {/* Below "sm" HeaderBrand hides its own inline competition name (no room alongside
+                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own
+                    spanning the full header width. */}
+                {user && (
+                    <Box display={{ base: "block", sm: "none" }} pb={2}>
+                        <CompetitionNameRow />
+                    </Box>
+                )}
             </Box>
         </Box>
     )
