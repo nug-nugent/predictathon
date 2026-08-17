@@ -1,29 +1,48 @@
 import { NavLink } from "react-router";
-import { Button, List } from "@chakra-ui/react";
+import { Box, HStack, List } from "@chakra-ui/react";
 
 export function NavItem({ to, icon, label, onClick }: { to: string; icon: React.ReactNode; label: string; onClick?: () => void }) {
     return (
         <List.Item>
-            <NavLink to={to} onClick={onClick}>
+            <NavLink to={to} onClick={onClick} style={{ textDecoration: "none" }}>
                 {({ isActive }) => (
                     // as="span": the NavLink anchor is the interactive element; rendering a real
                     // <button> inside it is invalid HTML and double-stops keyboard tabbing. The
-                    // span just carries the button styling.
-                    <Button
+                    // span just carries the row styling.
+                    <HStack
                         as="span"
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        py={{ base: 8, lg: 6 }}
+                        gap={3}
+                        py={{ base: 3, lg: 2 }}
+                        pl="13px"
+                        pr={4}
                         width={{ base: "220px", lg: "160px" }}
-                        fontFamily="body"
-                        bg={isActive ? "nav.activeBg" : "transparent"}
-                        color={isActive ? "nav.activeFg" : "nav.fg"}
-                        fontWeight={isActive ? "bold" : "medium"}
-                        _hover={{ bg: isActive ? "nav.activeBg" : "bg.muted" }}
+                        borderLeftWidth="3px"
+                        borderLeftColor={isActive ? "brand.accent" : "transparent"}
+                        bg={isActive ? "nav.activeTint" : "transparent"}
+                        _hover={{ bg: isActive ? "nav.activeTint" : "bg.muted" }}
                     >
-                        {icon}
-                        {label}
-                    </Button>
+                        <Box
+                            boxSize="26px"
+                            flexShrink={0}
+                            borderRadius="7px"
+                            bg={isActive ? "brand.accent" : "transparent"}
+                            color={isActive ? "nav.activeFg" : "nav.fg"}
+                            opacity={isActive ? 1 : 0.7}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                        >
+                            {icon}
+                        </Box>
+                        <Box
+                            fontFamily="body"
+                            fontSize={{ base: "lg", lg: "md" }}
+                            fontWeight={isActive ? "bold" : "medium"}
+                            color={isActive ? "brand.accent" : "nav.fg"}
+                        >
+                            {label}
+                        </Box>
+                    </HStack>
                 )}
             </NavLink>
         </List.Item>

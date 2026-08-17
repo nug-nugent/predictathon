@@ -1,4 +1,4 @@
-import { Box, Drawer, Flex, HStack, Portal, CloseButton, Center, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Box, Drawer, Flex, HStack, Portal, CloseButton, Center, Spacer, Spinner, Stack, Text } from "@chakra-ui/react";
 import { Outlet, useLocation } from "react-router";
 import { useUser } from "../../hooks/useUser";
 import { SideNavigation } from "../side-navigation/SideNavigation";
@@ -44,6 +44,18 @@ export function SiteLayout() {
                                 <Stack gap={2}>
                                     <HStack alignItems={"center"}>
                                         <HeaderBrand variant="loggedIn" headingAs="h1" />
+                                        <Spacer />
+                                        {/* Overriding the default absolute corner placement so it sits inline
+                                            with the ball/wordmark row - and it needs an explicit light color
+                                            here, since the drawer default (near-black) is unreadable against
+                                            this header's blue/dark gradient. */}
+                                        <Drawer.CloseTrigger asChild>
+                                            <CloseButton
+                                                position="static"
+                                                color="brand.wordmarkFg"
+                                                _hover={{ bg: "rgba(255, 255, 255, 0.14)" }}
+                                            />
+                                        </Drawer.CloseTrigger>
                                     </HStack>
                                     {/* The drawer only ever opens below "lg", where HeaderBrand hides its
                                         own inline competition name - show it here on its own row instead. */}
@@ -53,9 +65,6 @@ export function SiteLayout() {
                             <Drawer.Body mt={0} ml={6}>
                                 <SideNavigation onClick={() => setSideNavOpen(false)} />
                             </Drawer.Body>
-                            <Drawer.CloseTrigger asChild>
-                                <CloseButton size="lg" />
-                            </Drawer.CloseTrigger>
                         </Drawer.Content>
                     </Drawer.Positioner>
                 </Portal>

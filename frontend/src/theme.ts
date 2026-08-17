@@ -61,8 +61,13 @@ export const predictTheme = createSystem(defaultConfig, {
         },
         nav: {
           fg: { value: { _light: "#6B7280", _dark: "#9A9CA3" } },
+          // Solid accent fill - kept for the shared "action" colorPalette (theme.ts below), not just
+          // nav items, so don't repurpose its meaning even though NavItem itself now uses activeTint.
           activeBg: { value: { _light: "{colors.brand.accent}", _dark: "{colors.brand.accent}" } },
           activeFg: { value: { _light: "#FFFFFF", _dark: "#0B2A2C" } },
+          // Pale accent wash behind the active nav item (left-border + icon-chip treatment) - a tint
+          // of brand.accent judged by eye against each mode's background, not a mechanical mix.
+          activeTint: { value: { _light: "#E6F4E7", _dark: "#26474D" } },
           sectionLabel: { value: { _light: "#8A8F99", _dark: "#5A5D66" } },
         },
         content: {

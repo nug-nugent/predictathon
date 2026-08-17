@@ -35,10 +35,11 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                 </Flex>
 
                 {/* Below "sm" HeaderBrand hides its own inline competition name (no room alongside
-                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own
-                    spanning the full header width. */}
+                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own.
+                    pl matches where the ball sits: the hamburger box is 40px wide (IconButton "md")
+                    offset -10px, so it ends, and the ball starts, 30px in from this row's own edge. */}
                 {user && (
-                    <Box display={{ base: "block", sm: "none" }} pb={2}>
+                    <Box display={{ base: "block", sm: "none" }} pb={2} pl="30px">
                         <CompetitionNameRow />
                     </Box>
                 )}
