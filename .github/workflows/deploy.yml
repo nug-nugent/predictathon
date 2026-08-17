@@ -21,6 +21,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Needed so the "Bump version and tag" step below can push straight back to the
+          # protected main branch. The default GITHUB_TOKEN's github-actions[bot] identity
+          # cannot be granted a branch-protection bypass - that's a deliberate GitHub
+          # restriction, not a config gap here. RELEASE_PUSH_TOKEN must be a fine-grained PAT
+          # (repo-scoped, Contents: read and write) belonging to an account that IS on main's
+          # bypass list (Settings -> Rules -> ruleset for main -> Bypass list). Stored as a
+          # plain repository secret, not a "production" environment secret - this job has no
+          # environment: set, so it can't see those.
+          token: ${{ secrets.RELEASE_PUSH_TOKEN }}
+
+      # Bumps the shared app version (Directory.Build.props + frontend/package.json) and tags
+      # the resulting commit, so the version surfaced on /ping and in the page footer (see
+      # PingController.cs and SiteLayout.tsx - added in #17 specifically to confirm a manual
+      # Plesk deploy landed) actually changes on every deploy instead of sitting stale. Runs
+      # first, in this job's own checkout, so the bumped version is what's actually baked into
+      # the published API/frontend artifacts below - not a change made after the fact.
+      #
+      # Always bumps the PATCH digit. For a minor/major bump instead, hand-edit both files'
+      # version in a normal PR before triggering this workflow - this step then patch-bumps
+      # from whatever it finds there (e.g. a hand-edited 2.1.0 becomes 2.1.1 here, not a fresh
+      # 2.1.0 tag).
+      - name: Bump version and tag
+        shell: pwsh
+        run: |
+          $propsPath = "Directory.Build.props"
+          $pkgPath = "frontend/package.json"
+
+          $propsContent = Get-Content $propsPath -Raw
+          if ($propsContent -notmatch '<Version>(\d+)\.(\d+)\.(\d+)</Version>') {
+            throw "Could not find a <Version>X.Y.Z</Version> in $propsPath to bump."
+          }
+          $newVersion = "{0}.{1}.{2}" -f $Matches[1], $Matches[2], ([int]$Matches[3] + 1)
+          $propsContent = $propsContent -replace '<Version>\d+\.\d+\.\d+</Version>', "<Version>$newVersion</Version>"
+          Set-Content -Path $propsPath -Value $propsContent -NoNewline
+
+          $pkgContent = Get-Content $pkgPath -Raw
+          if ($pkgContent -notmatch '"version":\s*"\d+\.\d+\.\d+"') {
+            throw "Could not find a `"version`": `"X.Y.Z`" in $pkgPath to bump."
+          }
+          $pkgContent = $pkgContent -replace '"version":\s*"\d+\.\d+\.\d+"', "`"version`": `"$newVersion`""
+          Set-Content -Path $pkgPath -Value $pkgContent -NoNewline
+
+          Write-Host "Bumped version to $newVersion"
+
+          # Attributed to the github-actions bot identity for a clear git log entry - this is
+          # just commit metadata and is unrelated to the push authorisation below, which comes
+          # from RELEASE_PUSH_TOKEN (see the checkout step's comment for why that distinction
+          # matters).
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add $propsPath $pkgPath
+          git commit -m "Bump version to v$newVersion"
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed with exit code $LASTEXITCODE" }
+
+          git tag "v$newVersion"
+          if ($LASTEXITCODE -ne 0) { throw "git tag failed with exit code $LASTEXITCODE" }
+
+          git push origin HEAD:${{ github.ref_name }}
+          if ($LASTEXITCODE -ne 0) { throw "git push of the version-bump commit failed with exit code $LASTEXITCODE - check that RELEASE_PUSH_TOKEN is set and its account is on main's branch-protection bypass list." }
+
+          git push origin "v$newVersion"
+          if ($LASTEXITCODE -ne 0) { throw "git push of tag v$newVersion failed with exit code $LASTEXITCODE" }
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -401,6 +465,14 @@ jobs:
 # .publishsettings file's <publishProfile> attributes: publishUrl, msdeploySite, userName,
 # userPWD respectively), plus JWT_SIGNING_KEY, CONNECTION_STRING, SMTP_*, PAYPAL_*,
 # FOOTBALLDATA_API_KEY, HEALTH_DETAILED_API_KEY, SCHEDULED_TASKS_API_KEY.
+#
+# Required plain repository secret (NOT scoped to the "production" environment - the
+# build-and-test job that uses it has no environment: set): RELEASE_PUSH_TOKEN, a fine-grained
+# PAT (repo-scoped, Contents: read and write) belonging to a GitHub account added to main's
+# branch-protection/ruleset bypass list. Used by the "Bump version and tag" step to push a
+# version-bump commit and tag straight to main - see that step's comment for the full
+# rationale. Until both the secret and the bypass-list entry exist, that step will fail loudly
+# rather than silently skip the bump.
 #
 # Database schema deploy is now part of this workflow (sqlpackage, using the checked-in
 # Database/Predictathon.publish.xml profile - BlockOnPossibleDataLoss=True and
