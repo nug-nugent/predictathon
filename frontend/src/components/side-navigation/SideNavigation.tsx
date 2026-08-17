@@ -31,7 +31,7 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
 
                 {roles.length > 0 && (
                     <>
-                        <Text mt={4} pt={4} mb={1} px={3} borderTopWidth="1px" borderTopColor="border.hairline"
+                        <Text mt={4} pt={4} mb={1} px="16px" borderTopWidth="1px" borderTopColor="border.hairline"
                             fontSize="11px" fontWeight="bold" textTransform="uppercase"
                             letterSpacing="wide" color="nav.sectionLabel">Admin</Text>
                         {roles.includes(Role.CompetitionAdministrator) && (

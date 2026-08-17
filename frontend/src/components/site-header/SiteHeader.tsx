@@ -35,11 +35,13 @@ export function SiteHeader({ onMenuButtonClick }: { onMenuButtonClick: () => voi
                 </Flex>
 
                 {/* Below "sm" HeaderBrand hides its own inline competition name (no room alongside
-                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own.
-                    pl matches where the ball sits: the hamburger box is 40px wide (IconButton "md")
-                    offset -10px, so it ends, and the ball starts, 30px in from this row's own edge. */}
+                    the hamburger/wordmark/user menu) - show it here instead, on a row of its own,
+                    left-aligned under the hamburger. mt pulls it up against the row above: the Flex
+                    is a fixed 52px tall for the hamburger/avatar touch targets, which leaves the
+                    wordmark's own text sitting well clear of the row's bottom edge. Measured against
+                    the ball's own bottom edge (the tallest thing in that row), not the wordmark text. */}
                 {user && (
-                    <Box display={{ base: "block", sm: "none" }} pb={2} pl="30px">
+                    <Box display={{ base: "block", sm: "none" }} pb={2} mt="-8px">
                         <CompetitionNameRow />
                     </Box>
                 )}

@@ -4,7 +4,10 @@ import { Box, HStack, List } from "@chakra-ui/react";
 export function NavItem({ to, icon, label, onClick }: { to: string; icon: React.ReactNode; label: string; onClick?: () => void }) {
     return (
         <List.Item>
-            <NavLink to={to} onClick={onClick} style={{ textDecoration: "none" }}>
+            {/* List.Item renders as a flex container, so the anchor needs flexGrow (not just
+                display:block) to actually fill it - a block child of a flex parent still just
+                shrinks to its content's width without one. */}
+            <NavLink to={to} onClick={onClick} style={{ textDecoration: "none", display: "block", flexGrow: 1 }}>
                 {({ isActive }) => (
                     // as="span": the NavLink anchor is the interactive element; rendering a real
                     // <button> inside it is invalid HTML and double-stops keyboard tabbing. The
@@ -15,7 +18,7 @@ export function NavItem({ to, icon, label, onClick }: { to: string; icon: React.
                         py={{ base: 3, lg: 2 }}
                         pl="13px"
                         pr={4}
-                        width={{ base: "220px", lg: "160px" }}
+                        width="100%"
                         borderLeftWidth="3px"
                         borderLeftColor={isActive ? "brand.accent" : "transparent"}
                         bg={isActive ? "nav.activeTint" : "transparent"}

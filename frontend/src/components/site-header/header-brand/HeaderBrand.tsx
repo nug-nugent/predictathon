@@ -11,6 +11,10 @@ type HeaderBrandProps = {
     /** Wordmark/subtitle colors depend on the background they sit on - default to the header's blue-block treatment. */
     wordmarkColor?: string;
     subtitleColor?: string;
+    /** Set false when the caller already shows its own CompetitionNameRow unconditionally (e.g. the
+     * mobile nav drawer) - otherwise this one's own "sm"-and-up copy would double up with it between
+     * the "sm" and "lg" breakpoints, where the drawer's hamburger trigger is still visible. */
+    showCompetition?: boolean;
 };
 
 // One fixed scale for the wordmark lockup everywhere it appears (top bar, login brand rail, mobile
@@ -25,6 +29,7 @@ export function HeaderBrand({
     headingAs,
     wordmarkColor = "brand.wordmarkFg",
     subtitleColor = "brand.subtitleFg",
+    showCompetition = true,
 }: HeaderBrandProps) {
     // alt="": decorative - it always sits beside the "Predictathon" wordmark text.
     const logo = <Image src={football} alt="" mr={2} boxSize={LOGO_SIZE} />;
@@ -74,9 +79,11 @@ export function HeaderBrand({
                 {/* Below "sm" there isn't room for the ball, wordmark, hamburger and user menu to all
                     share a row with the competition name too - callers show a CompetitionNameRow of
                     its own, full-width, beneath the whole header row instead. */}
-                <Box display={{ base: "none", sm: "block" }}>
-                    <CompetitionNameRow color={subtitleColor} />
-                </Box>
+                {showCompetition && (
+                    <Box display={{ base: "none", sm: "block" }}>
+                        <CompetitionNameRow color={subtitleColor} />
+                    </Box>
+                )}
             </Stack>
         </>
     );
