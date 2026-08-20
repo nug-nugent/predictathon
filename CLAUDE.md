@@ -17,6 +17,10 @@ Predictathon is a football score-prediction competition site for a private group
 - Use British English spelling.
 - Applies to all C# source in this repo.
 
+## UI text conventions
+
+- All user-facing labels (tab labels, button text, column headers, page headings, etc.) use sentence case — only the first word (and proper nouns) capitalised, e.g. "Current competition", not "Current Competition".
+
 ## Common commands
 
 Keep the test projects in sync with the code: when a change touches business logic, a stored procedure/set-based SQL aggregate, or a user-facing flow, update the relevant suite (`UnitTests`, `IntegrationTests`, or `e2e`) in the same change rather than leaving it to a follow-up.

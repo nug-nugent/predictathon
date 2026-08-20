@@ -26,6 +26,16 @@ public class StatisticsController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get the all-time league table - one row per user across every competition they've ever
+    /// been registered for, ranked the same way as a single competition's league table.
+    /// </summary>
+    [HttpGet("AllTimeLeagueTable")]
+    public async Task<ActionResult<IReadOnlyList<LeagueTableItem>>> GetAllTimeLeagueTable(CancellationToken cancellationToken)
+    {
+        return Ok(await _statisticsService.GetAllTimeLeagueTableAsync(cancellationToken));
+    }
+
+    /// <summary>
     /// Get every statistics widget scoped to a specific competition, personalised to the current user.
     /// </summary>
     [HttpGet("CurrentCompetition/{competitionId:guid}")]
