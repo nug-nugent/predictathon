@@ -43,7 +43,6 @@ function Dashboard() {
     return (
         <>
             <AnnouncementFeed audience="all" />
-            <PageHeading mb={4}>Home</PageHeading>
             <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
                 <VStack align="stretch" gap={3}>
                     <UserStatisticsCard competitionId={currentCompetitionId} />

@@ -16,7 +16,7 @@ import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 import { TablePagination } from "../ui/table-pagination";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 3;
 
 export function CompetitionRegistrationsCard() {
     const { setCurrentCompetitionId } = useCompetition();

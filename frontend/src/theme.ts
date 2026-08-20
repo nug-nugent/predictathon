@@ -59,6 +59,14 @@ export const predictTheme = createSystem(defaultConfig, {
           subtitleFg: { value: { _light: "#CCCCCC", _dark: "#0DE4EE" } },
           accent: { value: { _light: "#2E9B4A", _dark: "#0DE4EE" } },
         },
+        pagination: {
+          // Selected page-number fill. Light: header blue (brand.headerBg's #1E4FD1, kept
+          // literal since alpha modifiers can't reference a token) with a touch of transparency
+          // - a flat oklch fill read as muddy against a white card. Dark: same accent fill the
+          // rest of the app uses for "selected" (nav.activeBg/activeFg), left untouched.
+          selectedBg: { value: { _light: "rgba(30, 79, 209, 0.85)", _dark: "{colors.nav.activeBg}" } },
+          selectedFg: { value: { _light: "#FFFFFF", _dark: "{colors.nav.activeFg}" } },
+        },
         nav: {
           fg: { value: { _light: "#6B7280", _dark: "#9A9CA3" } },
           // Solid accent fill - kept for the shared "action" colorPalette (theme.ts below), not just

@@ -21,7 +21,13 @@ export function TablePagination({ count, pageSize, page, onPageChange }: {
                 </Pagination.PrevTrigger>
                 <Pagination.Items
                     render={(p) => (
-                        <IconButton aria-label={`Page ${p.value}`} variant={{ base: "ghost", _selected: "outline" }} onClick={() => onPageChange(p.value)}>
+                        <IconButton
+                            aria-label={`Page ${p.value}`}
+                            colorPalette="action"
+                            variant={{ base: "ghost", _selected: "solid" }}
+                            _selected={{ bg: "pagination.selectedBg", color: "pagination.selectedFg" }}
+                            onClick={() => onPageChange(p.value)}
+                        >
                             {p.value}
                         </IconButton>
                     )}
