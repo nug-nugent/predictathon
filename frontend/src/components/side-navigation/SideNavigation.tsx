@@ -1,5 +1,5 @@
 import { Box, List, Text } from "@chakra-ui/react";
-import { CalendarPlus, ChartColumn, Dices, Home, Info, ListChecks, Medal, Megaphone, MessagesSquare, TableProperties, Ticket, TriangleAlert, Trophy, Users, Wrench } from "lucide-react";
+import { CalendarPlus, ChartColumn, Dices, Home, Info, ListChecks, Medal, Megaphone, MessagesSquare, ScrollText, TableProperties, Ticket, TriangleAlert, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
 import { useUser } from "../../hooks/useUser";
 import { useCompetition } from "../../hooks/useCompetition";
@@ -22,6 +22,7 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
                     <>
                         <NavItem to="/predictions" icon={<Dices size={20} />} label="Predictions" />
                         <NavItem to="/league" icon={<TableProperties size={20} />} label="League Table" />
+                        <NavItem to="/results" icon={<ScrollText size={20} />} label="Results" />
                         <NavItem to="/board" icon={<MessagesSquare size={20} />} label="Messageboard" />
                         <NavItem to="/stats" icon={<ChartColumn size={20} />} label="Statistics" />
                         <NavItem to="/hof" icon={<Medal size={20} />} label="Hall of Fame" />

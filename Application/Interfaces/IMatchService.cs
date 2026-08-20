@@ -60,4 +60,25 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         int homeTeamGoals,
         int awayTeamGoals,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets every played match for a competition, most recent first, each joined with the given
+    /// user's own prediction and the average prediction score across all users - for the public
+    /// Results page.
+    /// </summary>
+    Task<IReadOnlyList<MatchListItem>> GetResultsAsync(
+        Guid competitionId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a single played match's result, the given user's own prediction and the average
+    /// prediction score across all users, for the Match Detail page. Returns null if the match
+    /// doesn't exist in the competition or hasn't been played yet.
+    /// </summary>
+    Task<MatchListItem?> GetMatchDetailAsync(
+        Guid competitionId,
+        Guid matchId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

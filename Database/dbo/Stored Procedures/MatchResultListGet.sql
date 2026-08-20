@@ -9,6 +9,7 @@ CREATE PROCEDURE [dbo].[MatchResultListGet]
 	, @DateFrom DATETIME = NULL
 	, @DateTo DATETIME = NULL
 	, @TeamID UNIQUEIDENTIFIER = NULL
+	, @MatchID UNIQUEIDENTIFIER = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -16,10 +17,14 @@ BEGIN
 	SELECT
 		m.MatchID
 		, m.MatchDateTime
+		, m.HomeTeamID
 		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+		, HomeTeamImage = HomeTeam.ImageName
+		, m.AwayTeamID
 		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+		, AwayTeamImage = AwayTeam.ImageName
 		, HomeTeamGoals = m.HomeTeamGoals
 		, AwayTeamGoals = m.AwayTeamGoals
 		, PredictionHomeTeamGoals = YourPrediction.HomeTeamGoals
@@ -39,16 +44,21 @@ BEGIN
 		AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
 		AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
 		AND (@TeamID IS NULL OR m.HomeTeamID = @TeamID OR m.AwayTeamID = @TeamID)
+		AND (@MatchID IS NULL OR m.MatchID = @MatchID)
 		AND m.MatchPlayed = 1
 	GROUP BY
 		m.MatchID
 		, m.MatchDateTime
+		, m.HomeTeamID
 		, HomeTeam.TeamName
 		, m.HomeTeamTBC
 		, HomeTeam.ShortName
+		, HomeTeam.ImageName
+		, m.AwayTeamID
 		, AwayTeam.TeamName
 		, m.AwayTeamTBC
 		, AwayTeam.ShortName
+		, AwayTeam.ImageName
 		, m.HomeTeamGoals
 		, m.AwayTeamGoals
 		, YourPrediction.Score

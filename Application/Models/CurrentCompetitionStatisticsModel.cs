@@ -19,21 +19,30 @@ public class PredictableTeamListItem
 
 /// <summary>
 /// One row from MatchResultListGet - a played match with the current user's own prediction plus
-/// the average prediction score across all users, used to rank matches as most/least predictable.
+/// the average prediction score across all users. Used for the Results and Match Detail pages, a
+/// team's result history, and to rank matches as most/least predictable on the Statistics page.
 /// </summary>
-public class PredictableMatchListItem
+public class MatchListItem
 {
     public Guid MatchID { get; set; }
 
     public DateTime MatchDateTime { get; set; }
 
+    public Guid? HomeTeamID { get; set; }
+
     public string? HomeTeam { get; set; }
 
     public string HomeTeamShortName { get; set; } = "";
 
+    public string? HomeTeamImage { get; set; }
+
+    public Guid? AwayTeamID { get; set; }
+
     public string? AwayTeam { get; set; }
 
     public string AwayTeamShortName { get; set; } = "";
+
+    public string? AwayTeamImage { get; set; }
 
     public int? HomeTeamGoals { get; set; }
 
@@ -100,9 +109,9 @@ public class CurrentCompetitionStatisticsModel
 {
     public IReadOnlyList<PredictableTeamListItem> PredictableTeams { get; set; } = [];
 
-    public IReadOnlyList<PredictableMatchListItem> MostPredictableMatches { get; set; } = [];
+    public IReadOnlyList<MatchListItem> MostPredictableMatches { get; set; } = [];
 
-    public IReadOnlyList<PredictableMatchListItem> LeastPredictableMatches { get; set; } = [];
+    public IReadOnlyList<MatchListItem> LeastPredictableMatches { get; set; } = [];
 
     public IReadOnlyList<BestPredictionListItem> BestPredictions { get; set; } = [];
 }

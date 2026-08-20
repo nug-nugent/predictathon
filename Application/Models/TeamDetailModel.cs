@@ -36,5 +36,5 @@ public class TeamDetailModel
     public decimal? AverageGoalsAgainstTotal { get; set; }
 
     /// <summary>The team's played matches in this competition, most recent first.</summary>
-    public IReadOnlyList<PredictableMatchListItem> Results { get; set; } = [];
+    public IReadOnlyList<MatchListItem> Results { get; set; } = [];
 }

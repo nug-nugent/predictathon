@@ -15,6 +15,8 @@ const ResetPasswordPage = lazy(() => import("../pages/public/password-reset/Rese
 
 const PredictionsPage = lazy(() => import("../pages/logged-in/predictions/PredictionsPage").then((m) => ({ default: m.PredictionsPage })));
 const LeaguePage = lazy(() => import("../pages/logged-in/league/LeaguePage").then((m) => ({ default: m.LeaguePage })));
+const ResultsPage = lazy(() => import("../pages/logged-in/results/ResultsPage").then((m) => ({ default: m.ResultsPage })));
+const MatchDetailPage = lazy(() => import("../pages/logged-in/match/MatchDetailPage").then((m) => ({ default: m.MatchDetailPage })));
 const BoardPage = lazy(() => import("../pages/logged-in/board/BoardPage").then((m) => ({ default: m.BoardPage })));
 const ThreadPage = lazy(() => import("../pages/logged-in/board/thread/ThreadPage").then((m) => ({ default: m.ThreadPage })));
 const StatisticsPage = lazy(() => import("../pages/logged-in/statistics/StatisticsPage").then((m) => ({ default: m.StatisticsPage })));
@@ -59,6 +61,8 @@ export function SiteRoutes() {
                     <Route element={<ProtectedRoute requireCompetition />}>
                         <Route path="predictions" element={<PredictionsPage />} />
                         <Route path="league" element={<LeaguePage />} />
+                        <Route path="results" element={<ResultsPage />} />
+                        <Route path="match/:matchId" element={<MatchDetailPage />} />
 
                         <Route path="board" element={<BoardPage />} />
                         <Route path="board/:id" element={<ThreadPage />} />

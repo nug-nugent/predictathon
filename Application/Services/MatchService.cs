@@ -130,8 +130,70 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
 
         _appDbContext.Update(match);
         await _appDbContext.SaveChangesAsync(cancellationToken);
+        await RecalculatePredictionScoresAsync(matchId, cancellationToken);
 
         return Result.Ok(match.Adapt<MatchModel>());
+    }
+
+    /// <summary>
+    /// Recalculates every prediction's Score and GoalDifference for a match, mirroring the legacy
+    /// WebForms app's MatchManager.Save, which called this after every match save so a corrected
+    /// score (or a result entered late) always keeps predictions in sync.
+    /// </summary>
+    public override async Task<Result<MatchModel>> Update(Guid id, MatchModel model, CancellationToken cancellationToken = default)
+    {
+        var result = await base.Update(id, model, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            await RecalculatePredictionScoresAsync(id, cancellationToken);
+        }
+
+        return result;
+    }
+
+    private async Task RecalculatePredictionScoresAsync(Guid matchId, CancellationToken cancellationToken)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@MatchID", SqlDbType.UniqueIdentifier) { Value = matchId },
+        };
+
+        await _dbContext.CallStoredProcedureAsync("MatchPredictionScoreSet", parameters, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<MatchListItem>> GetResultsAsync(
+        Guid competitionId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+        };
+
+        return await _dbContext.CallStoredProcedureAsync<MatchListItem>("MatchResultListGet", parameters, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<MatchListItem?> GetMatchDetailAsync(
+        Guid competitionId,
+        Guid matchId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+            new SqlParameter("@MatchID", SqlDbType.UniqueIdentifier) { Value = matchId },
+        };
+
+        var results = await _dbContext.CallStoredProcedureAsync<MatchListItem>("MatchResultListGet", parameters, cancellationToken);
+
+        return results.SingleOrDefault();
     }
 
     /// <summary>

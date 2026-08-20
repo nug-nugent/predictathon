@@ -51,7 +51,7 @@ public class StatisticsService : IStatisticsService
             [new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId }],
             cancellationToken);
 
-        var matchResults = await _dbContext.CallStoredProcedureAsync<PredictableMatchListItem>(
+        var matchResults = await _dbContext.CallStoredProcedureAsync<MatchListItem>(
             "MatchResultListGet",
             [
                 new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
