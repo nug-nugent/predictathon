@@ -84,6 +84,9 @@ export const predictTheme = createSystem(defaultConfig, {
         surface: {
           sidebar: { value: { _light: "#FFFFFF", _dark: "{colors.bg}" } },
           card: { value: { _light: "#FFFFFF", _dark: "#2A2B30" } },
+          // Pale wash marking the one row a table is "about" (e.g. the current team in the Team
+          // Detail page's league table) - the same accent tint the active nav item uses.
+          highlightRow: { value: { _light: "{colors.nav.activeTint}", _dark: "{colors.nav.activeTint}" } },
           avatarCircle: { value: { _light: "#1E4FD1", _dark: "#0DE4EE" } },
           avatarCircleFg: { value: { _light: "#FFFFFF", _dark: "#1C1D21" } },
         },

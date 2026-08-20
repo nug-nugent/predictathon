@@ -39,6 +39,41 @@ export async function removeTeamFromCompetition(teamCompetitionId: string): Prom
     return deleteAuthenticated(`/Team/${teamCompetitionId}`);
 }
 
+// Matches Application/Models/TeamDetailModel.cs (TeamFixtureItem).
+export type TeamFixture = {
+    matchID: string;
+    matchDateTime: string;
+    homeTeamID: string | null;
+    homeTeam: string | null;
+    homeTeamShortName: string;
+    homeTeamImage: string | null;
+    awayTeamID: string | null;
+    awayTeam: string | null;
+    awayTeamShortName: string;
+    awayTeamImage: string | null;
+    neutralGround: boolean;
+    description: string | null;
+    knockout: boolean;
+};
+
+// Matches Application/Models/TeamDetailModel.cs (TeamStandingItem) - a row of the competition's
+// actual football league table, not the users' prediction league (see league-service.ts).
+export type TeamStanding = {
+    position: number;
+    teamID: string;
+    teamName: string;
+    shortName: string;
+    imageName: string | null;
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDifference: number;
+    points: number;
+};
+
 // Matches Application/Models/TeamDetailModel.cs.
 export type TeamDetail = {
     teamID: string;
@@ -54,9 +89,13 @@ export type TeamDetail = {
     averageGoalsForTotal: number | null;
     averageGoalsAgainstTotal: number | null;
     results: MatchListItem[];
+    fixtures: TeamFixture[];
+    /// Null for competitions containing knockout matches, where a single table is meaningless.
+    leagueTable: TeamStanding[] | null;
 };
 
-/// A team's played-match stats and results within a competition, for the Team Detail page.
+/// A team's played-match stats, results, upcoming fixtures and (for competitions without knockout
+/// matches) the competition's league table, for the Team Detail page.
 export async function getTeamDetail(competitionId: string, teamId: string): Promise<TeamDetail> {
     return getJsonAuthenticated<TeamDetail>(`/Team/${competitionId}/${teamId}/Detail`);
 }
