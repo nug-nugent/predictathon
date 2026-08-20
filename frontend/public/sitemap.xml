@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- One entry, because "/" is the only publicly reachable page - every other route is behind
+     auth and canonicalises back to this one. No <lastmod>: a hand-maintained date here would
+     go stale and mislead crawlers, which is worse than omitting it. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://predictathon.co.uk/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

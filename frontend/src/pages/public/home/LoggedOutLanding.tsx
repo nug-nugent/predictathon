@@ -78,11 +78,14 @@ function BrandRail({ stats }: { stats: PublicStats | null }) {
             gap={8}
         >
             <Box position="relative" zIndex={1}>
-                <HeaderBrand variant="loggedOut" linkToHome headingAs="h1" />
+                {/* headingAs="p": the wordmark looks like a heading but isn't the page's one -
+                    the <h1> is the proposition below, which is what actually describes the site
+                    to a search engine. "Predictathon" is a brand term we rank for regardless. */}
+                <HeaderBrand variant="loggedOut" linkToHome headingAs="p" />
             </Box>
 
             <VStack align="stretch" gap={4} position="relative" zIndex={1} mt={{ base: 0, lg: "auto" }}>
-                <Heading size={{ base: "lg", md: "xl" }} lineHeight="1.25">
+                <Heading as="h1" size={{ base: "lg", md: "xl" }} lineHeight="1.25">
                     Predict the scores.<br />Beat your mates.
                 </Heading>
                 <Text fontSize="15px" color="whiteAlpha.900" lineHeight="1.6">

@@ -5,10 +5,23 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { Role } from "../constants/roles";
 import { SiteLayout } from "../components/site-layout/SiteLayout";
 
-// Every page is code-split via lazy() so the initial bundle only ships the app shell; each
+// Deliberately NOT lazy(), unlike every route below it. "/" is where all logged-out traffic
+// lands, so code-splitting it buys nothing on the one page load that matters most, while adding
+// a fully serial hop to the critical path: download main bundle -> parse -> render -> only then
+// discover and fetch the home chunk -> paint.
+//
+// It's a trade, not a free win. Measured gzipped, a logged-out visit went from 143.8 kB + a
+// serial 7.3 kB chunk (two requests) to a single 154.9 kB request: ~3.7 kB more over the wire
+// for one fewer round trip on the critical path. Worth it at any realistic mobile RTT, but the
+// margin is modest - if the main bundle grows a lot, re-measure rather than assuming.
+//
+// Home.tsx still lazy-loads the signed-in dashboard, so this pulls in the landing page only, not
+// the whole logged-in card set.
+import { HomePage } from "../pages/public/home/Home";
+
+// Every other page is code-split via lazy() so the initial bundle only ships the app shell; each
 // route's chunk is fetched on first navigation to it. Named exports need the .then() wrapper
 // since React.lazy only accepts a module with a `default` export.
-const HomePage = lazy(() => import("../pages/public/home/Home").then((m) => ({ default: m.HomePage })));
 const RegisterPage = lazy(() => import("../pages/public/registration/RegisterPage").then((m) => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import("../pages/public/password-reset/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import("../pages/public/password-reset/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
