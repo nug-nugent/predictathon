@@ -1,4 +1,5 @@
 import { getJsonAuthenticated } from "./api";
+import type { LeagueTableItem } from "./league-service";
 
 // Matches Application/Models/AllTimeStatisticsModel.cs.
 export type CompetitionWinner = { userID: string; username: string; wins: number; secondPlaces: number; thirdPlaces: number };
@@ -71,6 +72,12 @@ export type CurrentCompetitionStatistics = {
 /// Every all-time (not competition-scoped) statistics widget.
 export async function getAllTimeStatistics(): Promise<AllTimeStatistics> {
     return getJsonAuthenticated<AllTimeStatistics>("/Statistics/AllTime");
+}
+
+/// The all-time league table - one row per user across every competition they've ever been
+/// registered for, ranked the same way as a single competition's league table.
+export async function getAllTimeLeagueTable(): Promise<LeagueTableItem[]> {
+    return getJsonAuthenticated<LeagueTableItem[]>("/Statistics/AllTimeLeagueTable");
 }
 
 /// Every statistics widget scoped to a specific competition, personalised to the current user.

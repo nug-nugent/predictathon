@@ -10,6 +10,12 @@ public interface IStatisticsService
     Task<AllTimeStatisticsModel> GetAllTimeStatisticsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the all-time league table - one row per user across every competition they've ever
+    /// been registered for, ranked the same way as a single competition's league table.
+    /// </summary>
+    Task<IReadOnlyList<LeagueTableItem>> GetAllTimeLeagueTableAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets every current-competition-scoped statistics widget, personalised to the given user
     /// (predictable-matches results include that user's own prediction alongside the average).
     /// </summary>

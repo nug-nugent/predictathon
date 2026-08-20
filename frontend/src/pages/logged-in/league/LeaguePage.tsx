@@ -1,5 +1,4 @@
-import { Center, HStack, IconButton, Link as ChakraLink, Popover, Portal, Table, Text } from "@chakra-ui/react"
-import { CircleHelp } from "lucide-react";
+import { Center, HStack, Link as ChakraLink, Text } from "@chakra-ui/react"
 import { getLeagueTable } from "../../../services/league-service";
 import { getCompetitionWeeks, computeDefaultWeek } from "../../../services/prediction-service";
 import { useCompetition } from "../../../hooks/useCompetition";
@@ -7,11 +6,10 @@ import { Link } from "react-router";
 import { useSearchParams } from "react-router";
 import { weekEnd } from "../../../utils/matchWeek";
 import { toDateOnly } from "../../../utils/toDateOnly";
-import { Panel } from "../../../components/ui/panel";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
-import { LeaguePositionChangeIcon } from "../../../components/league/LeaguePositionChangeIcon";
+import { LeagueTableView } from "../../../components/league/LeagueTableView";
 
 // Optional ?date= filter, linked from the Home page's UserStatisticsCard rows.
 type DateFilter = "ThisWeek" | "LastWeek";
@@ -92,80 +90,7 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
           )}
         </HStack>
       )}
-      <Panel overflowX="auto" accent>
-        <Table.Root size="sm" variant="line" striped showColumnBorder stickyHeader>
-          <Table.ColumnGroup>
-            <Table.Column htmlWidth="20px" />
-            <Table.Column htmlWidth="20px" />
-            <Table.Column htmlWidth="50%" />
-            <Table.Column />
-            <Table.Column />
-            <Table.Column />
-            <Table.Column />
-            <Table.Column />
-            <Table.Column />
-            <Table.Column />
-          </Table.ColumnGroup>
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POS</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}></Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>NAME</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>3</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>2</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>1</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>0</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>L</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POINTS</Table.ColumnHeader>
-              <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>
-                <HStack justify="center" gap={0.5}>
-                  <Text>AGD</Text>
-                  <Popover.Root positioning={{ placement: "bottom" }}>
-                    <Popover.Trigger asChild>
-                      <IconButton aria-label="What is AGD?" size="2xs" variant="ghost" p={0} minW="auto" h="auto">
-                        <CircleHelp size={12} />
-                      </IconButton>
-                    </Popover.Trigger>
-                    <Portal>
-                      <Popover.Positioner>
-                        <Popover.Content maxW="280px">
-                          <Popover.Arrow />
-                          <Popover.Body>
-                            <Text fontSize="sm" fontWeight="normal" textAlign="left">
-                              Average goal difference. The <Text as="span" fontStyle="italic">total</Text> goal difference is what separates users on equal points, followed by number of 3 pointers. See the{" "}
-                              <ChakraLink asChild variant="underline">
-                                <Link to="/rules">rules page</Link>
-                              </ChakraLink>.
-                            </Text>
-                          </Popover.Body>
-                        </Popover.Content>
-                      </Popover.Positioner>
-                    </Portal>
-                  </Popover.Root>
-                </HStack>
-              </Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {items.map((item) => (
-              <Table.Row key={item.userID}>
-                <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
-                  <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
-                </Table.Cell>
-                <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPointers}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPredictions}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.score}</Table.Cell>
-                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
-      </Panel>
+      <LeagueTableView items={items} />
     </>
   );
 }

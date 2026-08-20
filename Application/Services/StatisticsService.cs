@@ -38,6 +38,12 @@ public class StatisticsService : IStatisticsService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<LeagueTableItem>> GetAllTimeLeagueTableAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("Statistics_AllTimeLeagueTableGet", cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<CurrentCompetitionStatisticsModel> GetCurrentCompetitionStatisticsAsync(Guid competitionId, Guid userId, CancellationToken cancellationToken = default)
     {
         var predictableTeams = await _dbContext.CallStoredProcedureAsync<PredictableTeamListItem>(
