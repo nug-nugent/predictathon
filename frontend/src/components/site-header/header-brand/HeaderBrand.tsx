@@ -7,7 +7,10 @@ type HeaderBrandProps = {
     /** Compact wordmark + competition subtitle (used once logged in), vs. a standalone wordmark. */
     variant: "loggedIn" | "loggedOut";
     linkToHome?: boolean;
-    headingAs?: "h1" | "h2";
+    /** "p" renders the wordmark with heading styling but no heading semantics - used on the
+     *  logged-out landing page, where the page's real <h1> is the proposition beneath the
+     *  wordmark rather than the brand name itself. */
+    headingAs?: "h1" | "h2" | "p";
     /** Wordmark/subtitle colors depend on the background they sit on - default to the header's blue-block treatment. */
     wordmarkColor?: string;
     subtitleColor?: string;

@@ -1,0 +1,16 @@
+# Every URL on this site is served the same SPA shell as the home page (see web.config's SPA
+# fallback), carrying a canonical that points back at "/" - which is the only page a crawler can
+# actually reach, since everything else is behind auth.
+#
+# Those app routes are deliberately NOT disallowed here. A Disallow would stop crawlers fetching
+# them at all, which means they'd never read the canonical tag that consolidates them onto "/" -
+# and a disallowed URL can still end up indexed on the strength of inbound links alone. Letting
+# them be crawled is what makes the canonical work. There's no crawl-budget concern at this size.
+#
+# Admin paths are deliberately not listed either: robots.txt is public, so naming them here would
+# advertise them rather than hide them.
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://predictathon.co.uk/sitemap.xml
