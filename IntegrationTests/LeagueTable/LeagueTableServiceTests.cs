@@ -137,6 +137,12 @@ public class LeagueTableServiceTests
         var runnerUpRegistration = new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = runnerUp.Id, CompetitionID = competition.CompetitionID };
         dbContext.UserCompetition.AddRange(leaderRegistration, runnerUpRegistration);
 
+        // UserCompetitionLeagueHistory.UserCompetitionID is a plain FK column with no modelled EF
+        // navigation back to UserCompetition, so EF's change tracker has no dependency graph edge
+        // telling it to insert UserCompetition rows first - saving here guarantees that ordering
+        // instead of relying on SaveChangesAsync to infer it later.
+        await dbContext.SaveChangesAsync();
+
         var home = new Team { TeamID = Guid.NewGuid(), TeamName = $"Home {Guid.NewGuid():N}", ShortName = "HOM" };
         var away = new Team { TeamID = Guid.NewGuid(), TeamName = $"Away {Guid.NewGuid():N}", ShortName = "AWY" };
         dbContext.Team.AddRange(home, away);
@@ -238,7 +244,12 @@ public class LeagueTableServiceTests
             .Select(uc => uc.UserCompetitionID)
             .ToListAsync();
 
+        // UserCompetitionLeagueHistory has no modelled EF navigation to UserCompetition (see the
+        // matching comment in the arrange step above), so it has to be deleted - and saved - before
+        // UserCompetition, or EF's unaware-of-the-FK ordering can send the DELETEs the wrong way round.
         dbContext.UserCompetitionLeagueHistory.RemoveRange(dbContext.UserCompetitionLeagueHistory.Where(h => userCompetitionIds.Contains(h.UserCompetitionID)));
+        await dbContext.SaveChangesAsync();
+
         dbContext.Prediction.RemoveRange(dbContext.Prediction.Where(p => matchIds.Contains(p.MatchID)));
         dbContext.UserCompetition.RemoveRange(dbContext.UserCompetition.Where(uc => uc.CompetitionID == competitionId));
         dbContext.Match.RemoveRange(dbContext.Match.Where(m => matchIds.Contains(m.MatchID)));

@@ -126,7 +126,7 @@ public class TeamService : ITeamService
         var goalsAgainst = homeGoalsAgainst + awayGoalsAgainst + neutralGoalsAgainst;
         var totalMatches = playedMatches.Count;
 
-        var results = await _dbContext.CallStoredProcedureAsync<PredictableMatchListItem>(
+        var results = await _dbContext.CallStoredProcedureAsync<MatchListItem>(
             "MatchResultListGet",
             [
                 new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },

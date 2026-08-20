@@ -25,13 +25,17 @@ export type PredictableTeam = {
     averageScore: number;
 };
 
-export type PredictableMatch = {
+export type MatchListItem = {
     matchID: string;
     matchDateTime: string;
+    homeTeamID: string | null;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamImage: string | null;
+    awayTeamID: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamImage: string | null;
     homeTeamGoals: number | null;
     awayTeamGoals: number | null;
     predictionHomeTeamGoals: number | null;
@@ -64,8 +68,8 @@ export type BestPrediction = {
 
 export type CurrentCompetitionStatistics = {
     predictableTeams: PredictableTeam[];
-    mostPredictableMatches: PredictableMatch[];
-    leastPredictableMatches: PredictableMatch[];
+    mostPredictableMatches: MatchListItem[];
+    leastPredictableMatches: MatchListItem[];
     bestPredictions: BestPrediction[];
 };
 

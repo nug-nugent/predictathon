@@ -1,5 +1,5 @@
 import { deleteAuthenticated, getJsonAuthenticated, postJsonAuthenticated } from "./api";
-import type { PredictableMatch } from "./statistics-service";
+import type { MatchListItem } from "./statistics-service";
 
 // Matches Application/Models/TeamModel.cs.
 export type Team = {
@@ -53,7 +53,7 @@ export type TeamDetail = {
     averageGoalsAgainstAway: number | null;
     averageGoalsForTotal: number | null;
     averageGoalsAgainstTotal: number | null;
-    results: PredictableMatch[];
+    results: MatchListItem[];
 };
 
 /// A team's played-match stats and results within a competition, for the Team Detail page.

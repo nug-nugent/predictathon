@@ -49,6 +49,28 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get every played match for a competition, most recent first, for the public Results page.
+    /// </summary>
+    [HttpGet("{competitionId:guid}/Results")]
+    public async Task<ActionResult<IReadOnlyList<MatchListItem>>> GetResults(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var results = await _matchService.GetResultsAsync(competitionId, CurrentUserId, cancellationToken);
+
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// Get a single played match's result and prediction stats, for the Match Detail page.
+    /// </summary>
+    [HttpGet("{competitionId:guid}/{matchId:guid}/Detail")]
+    public async Task<ActionResult<MatchListItem?>> GetDetail(Guid competitionId, Guid matchId, CancellationToken cancellationToken)
+    {
+        var detail = await _matchService.GetMatchDetailAsync(competitionId, matchId, CurrentUserId, cancellationToken);
+
+        return OkOrNotFound(detail);
+    }
+
+    /// <summary>
     /// Get every match for a competition for admin management.
     /// </summary>
     /// <param name="competitionId"></param>

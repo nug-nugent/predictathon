@@ -80,7 +80,21 @@ public class AllTimeLeagueTableTests
             HomeTeamGoals = 1,
             AwayTeamGoals = 1,
         };
-        dbContext.Match.AddRange(matchInCompetitionOne, matchInCompetitionTwo);
+        // A second played match in competitionTwo that neither user predicts - the "played match
+        // with no prediction" runnerUp's NoPredictions assertion below actually needs, since their
+        // only other match in that competition (matchInCompetitionTwo) they did predict.
+        var unpredictedMatchInCompetitionTwo = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competitionTwo.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-2),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 0,
+            AwayTeamGoals = 0,
+        };
+        dbContext.Match.AddRange(matchInCompetitionOne, matchInCompetitionTwo, unpredictedMatchInCompetitionTwo);
 
         // Leader: a 3-pointer in each competition (6 points total, spanning both). Runner-up: a
         // single 1-pointer in the second competition only, plus a played match with no prediction.
@@ -102,18 +116,23 @@ public class AllTimeLeagueTableTests
 
             leaderRow.Score.Should().Be(6);
             leaderRow.ThreePointers.Should().Be(2);
-            leaderRow.LeaguePosition.Should().Be(1);
 
             runnerUpRow.Score.Should().Be(1);
             runnerUpRow.OnePointers.Should().Be(1);
             runnerUpRow.NoPredictions.Should().Be(1);
-            runnerUpRow.LeaguePosition.Should().Be(2);
+
+            // Statistics_AllTimeLeagueTableGet ranks every user in the database, not just this
+            // test's own - so an absolute LeaguePosition (1st, 2nd, ...) isn't safe to assert
+            // against a shared dev database that also holds seed data and other tests' users.
+            // Leader's 6 points to runner-up's 1 does guarantee leader ranks strictly above them,
+            // wherever either lands in the overall table.
+            leaderRow.LeaguePosition.Should().BeLessThan(runnerUpRow.LeaguePosition, "leader outscored runner-up (6 vs 1) so should rank above them regardless of other users in the table");
         }
         finally
         {
             await CleanUpAsync(dbContext,
                 [competitionOne.CompetitionID, competitionTwo.CompetitionID],
-                [matchInCompetitionOne.MatchID, matchInCompetitionTwo.MatchID],
+                [matchInCompetitionOne.MatchID, matchInCompetitionTwo.MatchID, unpredictedMatchInCompetitionTwo.MatchID],
                 [leader.Id, runnerUp.Id],
                 [home.TeamID, away.TeamID]);
         }
