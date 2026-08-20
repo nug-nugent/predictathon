@@ -14,5 +14,5 @@ export function AllTimeLeagueTableTab() {
         return <LoadingSpinner />;
     }
 
-    return <LeagueTableView items={items} />;
+    return <LeagueTableView items={items} showAveragePointsPerPrediction />;
 }

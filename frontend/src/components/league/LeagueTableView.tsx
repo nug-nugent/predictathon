@@ -7,7 +7,9 @@ import type { LeagueTableItem } from "../../services/league-service";
 
 // Shared table markup for any ranked list of LeagueTableItem rows - a single competition's league
 // table (LeaguePage) or the all-time table aggregated across every competition (Statistics page).
-export function LeagueTableView({ items }: { items: LeagueTableItem[] }) {
+// showAveragePointsPerPrediction adds an AVG column (score / predictions made) - only meaningful for
+// the all-time table, where competitions of differing lengths make the raw points total hard to compare.
+export function LeagueTableView({ items, showAveragePointsPerPrediction = false }: { items: LeagueTableItem[]; showAveragePointsPerPrediction?: boolean }) {
     return (
         <Panel overflowX="auto" accent>
             <Table.Root size="sm" variant="line" striped showColumnBorder stickyHeader>
@@ -21,6 +23,7 @@ export function LeagueTableView({ items }: { items: LeagueTableItem[] }) {
                     <Table.Column />
                     <Table.Column />
                     <Table.Column />
+                    {showAveragePointsPerPrediction && <Table.Column />}
                     <Table.Column />
                 </Table.ColumnGroup>
                 <Table.Header>
@@ -34,6 +37,9 @@ export function LeagueTableView({ items }: { items: LeagueTableItem[] }) {
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>0</Table.ColumnHeader>
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>L</Table.ColumnHeader>
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POINTS</Table.ColumnHeader>
+                        {showAveragePointsPerPrediction && (
+                            <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>AVG</Table.ColumnHeader>
+                        )}
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>
                             <HStack justify="center" gap={0.5}>
                                 <Text>AGD</Text>
@@ -62,22 +68,30 @@ export function LeagueTableView({ items }: { items: LeagueTableItem[] }) {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {items.map((item) => (
-                        <Table.Row key={item.userID}>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
-                                <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
-                            </Table.Cell>
-                            <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPointers}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPredictions}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.score}</Table.Cell>
-                            <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
-                        </Table.Row>
-                    ))}
+                    {items.map((item) => {
+                        const predictionsMade = item.threePointers + item.twoPointers + item.onePointers + item.noPointers;
+                        const averagePointsPerPrediction = predictionsMade > 0 ? item.score / predictionsMade : 0;
+
+                        return (
+                            <Table.Row key={item.userID}>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
+                                    <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
+                                </Table.Cell>
+                                <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPredictions}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.score}</Table.Cell>
+                                {showAveragePointsPerPrediction && (
+                                    <Table.Cell fontSize={"0.9em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>{averagePointsPerPrediction.toFixed(3)}</Table.Cell>
+                                )}
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
+                            </Table.Row>
+                        );
+                    })}
                 </Table.Body>
             </Table.Root>
         </Panel>
