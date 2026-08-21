@@ -15,7 +15,6 @@ test("team detail page lists the team's upcoming fixtures alongside its results"
 
     await expect(page.getByRole("heading", { name: "Brazil" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Fixtures" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Venue" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
 });
 

@@ -95,7 +95,7 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
                     </Table.Root>
                 </Panel>
 
-                <TeamFixturesTable fixtures={team.fixtures} teamId={team.teamID} />
+                <TeamFixturesTable fixtures={team.fixtures} />
             </SimpleGrid>
 
             <PredictableMatchesTable title="Results" matches={team.results} />
