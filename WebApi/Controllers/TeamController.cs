@@ -53,7 +53,8 @@ public class TeamController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get a team's played-match stats and results within a competition, for the Team Detail page.
+    /// Get a team's played-match stats, results, upcoming fixtures and (for competitions without
+    /// knockout matches) the competition's league table, for the Team Detail page.
     /// </summary>
     [HttpGet("{competitionId:guid}/{teamId:guid}/Detail")]
     public async Task<ActionResult<TeamDetailModel?>> GetDetail(Guid competitionId, Guid teamId, CancellationToken cancellationToken)

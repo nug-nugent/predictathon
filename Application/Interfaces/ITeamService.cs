@@ -32,7 +32,8 @@ public interface ITeamService
     Task<Result> RemoveFromCompetitionAsync(Guid teamCompetitionId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a team's played-match stats and results within a competition, or null if no such team
+    /// Gets a team's played-match stats, results and upcoming fixtures within a competition - plus
+    /// the competition's own league table where it has no knockout matches - or null if no such team
     /// exists. <paramref name="userId"/> is used to populate each result's "your prediction" and
     /// "your score" columns.
     /// </summary>
