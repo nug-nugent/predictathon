@@ -3,6 +3,7 @@ import { CircleHelp } from "lucide-react";
 import { Link } from "react-router";
 import { Panel } from "../ui/panel";
 import { LeaguePositionChangeIcon } from "./LeaguePositionChangeIcon";
+import { useUser } from "../../hooks/useUser";
 import type { LeagueTableItem } from "../../services/league-service";
 
 // Shared table markup for any ranked list of LeagueTableItem rows - a single competition's league
@@ -10,9 +11,11 @@ import type { LeagueTableItem } from "../../services/league-service";
 // showAveragePointsPerPrediction adds an AVG column (score / predictions made) - only meaningful for
 // the all-time table, where competitions of differing lengths make the raw points total hard to compare.
 export function LeagueTableView({ items, showAveragePointsPerPrediction = false }: { items: LeagueTableItem[]; showAveragePointsPerPrediction?: boolean }) {
+    const { user } = useUser();
+
     return (
         <Panel overflowX="auto" accent>
-            <Table.Root size="sm" variant="line" striped showColumnBorder stickyHeader>
+            <Table.Root size="sm" variant="line" showColumnBorder stickyHeader>
                 <Table.ColumnGroup>
                     <Table.Column htmlWidth="20px" />
                     <Table.Column htmlWidth="20px" />
@@ -71,9 +74,10 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                     {items.map((item) => {
                         const predictionsMade = item.threePointers + item.twoPointers + item.onePointers + item.noPointers;
                         const averagePointsPerPrediction = predictionsMade > 0 ? item.score / predictionsMade : 0;
+                        const isCurrentUser = item.userID === user?.id;
 
                         return (
-                            <Table.Row key={item.userID}>
+                            <Table.Row key={item.userID} bg={isCurrentUser ? "surface.highlightRow" : undefined} fontWeight={isCurrentUser ? "bold" : "normal"}>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"right"}>{item.leaguePosition}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
                                     <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
