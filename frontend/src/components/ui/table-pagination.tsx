@@ -18,8 +18,8 @@ export function TablePagination({ count, pageSize, page, onPageChange }: {
     }
 
     return (
-        <Pagination.Root count={count} pageSize={pageSize} page={page} onPageChange={(e) => onPageChange(e.page)}>
-            <HStack justifyContent="center" gap={2} mt={2} hideFrom="md">
+        <Pagination.Root count={count} pageSize={pageSize} page={page} onPageChange={(e) => onPageChange(e.page)} width="full">
+            <HStack justifyContent="center" width="full" gap={2} mt={2} hideFrom="md">
                 <Pagination.PrevTrigger asChild>
                     <IconButton aria-label="Previous page" variant="ghost" size="sm"><ChevronLeft /></IconButton>
                 </Pagination.PrevTrigger>
@@ -28,7 +28,7 @@ export function TablePagination({ count, pageSize, page, onPageChange }: {
                     <IconButton aria-label="Next page" variant="ghost" size="sm"><ChevronRight /></IconButton>
                 </Pagination.NextTrigger>
             </HStack>
-            <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2} hideBelow="md">
+            <ButtonGroup variant="ghost" size="sm" justifyContent="center" width="full" mt={2} hideBelow="md">
                 <Pagination.PrevTrigger asChild>
                     <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
                 </Pagination.PrevTrigger>

@@ -44,10 +44,10 @@ export function TeamFixturesTable({ fixtures }: { fixtures: TeamFixture[] }) {
                                         </HStack>
 
                                         <VStack gap={0} flexShrink={0} minW="60px">
-                                            <Text fontSize="0.7em" color="fg.muted">
+                                            <Text fontSize="0.9em" fontWeight="bold">
                                                 {kickoff.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                                             </Text>
-                                            <Text fontSize="0.9em" fontWeight="bold">
+                                            <Text fontSize="0.7em" color="fg.muted">
                                                 {kickoff.toLocaleTimeString(undefined, { timeStyle: "short" })}
                                             </Text>
                                         </VStack>

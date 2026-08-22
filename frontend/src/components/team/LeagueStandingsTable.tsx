@@ -42,7 +42,7 @@ export function LeagueStandingsTable({ standings, highlightTeamId }: { standings
                                     <Table.Cell fontSize="0.9em" textAlign="center">{standing.position}</Table.Cell>
                                     <Table.Cell fontSize="0.9em">
                                         <HStack gap={2} minW="0">
-                                            {crest && <Image src={crest} boxSize="20px" alt="" flexShrink={0} />}
+                                            {crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
                                             <Link to={`/team/${standing.teamID}`}>
                                                 <Text as="span" hideFrom="md">{standing.shortName}</Text>
                                                 <Text as="span" hideBelow="md">{standing.teamName}</Text>

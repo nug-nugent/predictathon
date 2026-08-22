@@ -46,8 +46,8 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
         <Stack gap={8}>
             <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8} alignItems="start">
                 <Panel overflowX="auto" accent hoverLift>
-                    <HStack mb={2}>
-                        {crest && <Image src={crest} boxSize="32px" alt="" />}
+                    <HStack mb={2} gap={3}>
+                        {crest && <Image src={crest} boxSize="64px" objectFit="contain" alt="" />}
                         <Heading size="md">{team.teamName}</Heading>
                     </HStack>
                     <Text fontWeight="bold">Goals for: {team.goalsFor}</Text>

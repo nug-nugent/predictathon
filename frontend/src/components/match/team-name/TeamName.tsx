@@ -17,10 +17,10 @@ export function TeamName({ teamId, name, shortName, crest, crestPosition }: Team
 
     const label = (
         <>
-            {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" alt="" flexShrink={0} />}
+            {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
             <Text fontSize="0.9em" textAlign={textAlign} truncate minW="0" hideFrom="md">{shortName}</Text>
             <Text fontSize="0.9em" textAlign={textAlign} truncate minW="0" hideBelow="md">{name}</Text>
-            {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" alt="" flexShrink={0} />}
+            {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
         </>
     );
 
