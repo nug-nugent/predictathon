@@ -12,10 +12,12 @@ type ResultsListProps = {
     teams: Team[];
 };
 
-function teamDisplay(teamId: string | null, tbc: string | null, teams: Team[]): { name: string; crest: string | undefined } {
+function teamDisplay(teamId: string | null, tbc: string | null, teams: Team[]): { teamId: string | null; name: string; shortName: string; crest: string | undefined } {
     const team = teams.find((t) => t.teamID === teamId);
     return {
+        teamId,
         name: team?.teamName ?? tbc ?? "TBC",
+        shortName: team?.shortName ?? tbc ?? "TBC",
         crest: crestUrl(team?.imageName ?? null),
     };
 }
@@ -77,7 +79,8 @@ export function ResultsList({ matches, teams }: ResultsListProps) {
                                 <ResultRow
                                     key={match.matchID}
                                     matchId={match.matchID} matchDateTime={match.matchDateTime}
-                                    homeTeamName={home.name} awayTeamName={away.name}
+                                    homeTeamId={home.teamId} homeTeamName={home.name} homeTeamShortName={home.shortName}
+                                    awayTeamId={away.teamId} awayTeamName={away.name} awayTeamShortName={away.shortName}
                                     homeCrest={home.crest} awayCrest={away.crest}
                                     now={now} hasFocus={match.matchID === focusedMatchId}
                                     isFirstInGroup={index === 0} onFocus={setFocusedMatchId} onSaved={handleSaved}

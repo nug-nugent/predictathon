@@ -44,8 +44,8 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets unplayed matches for a competition whose kickoff has already passed, ordered by date -
-    /// the pool of matches a result could plausibly be entered for.
+    /// Gets unplayed matches for a competition whose kickoff has already passed, ordered by date
+    /// then home team name - the pool of matches a result could plausibly be entered for.
     /// </summary>
     Task<IReadOnlyList<MatchModel>> GetForProcessingAsync(
         Guid competitionId,
