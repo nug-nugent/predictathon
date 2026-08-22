@@ -131,7 +131,7 @@ function MatchDetailContent({ match, predictions }: {
 function TeamHeader({ teamId, name, crest }: { teamId: string | null; name: string | null; crest: string | undefined }) {
     const content = (
         <VStack gap={2} flex={1}>
-            {crest && <Image src={crest} boxSize="48px" alt="" />}
+            {crest && <Image src={crest} boxSize="48px" objectFit="contain" alt="" />}
             <Heading size="sm" textAlign="center">{name}</Heading>
         </VStack>
     );
