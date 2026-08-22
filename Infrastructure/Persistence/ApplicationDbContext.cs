@@ -196,6 +196,7 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.Property(e => e.MessageReactionID).ValueGeneratedNever();
             entity.Property(e => e.CreationDate).HasColumnType("datetime");
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            entity.Property(e => e.ReactionId).HasMaxLength(100);
             entity.Property(e => e.ReactionName).HasMaxLength(200);
 
             entity.HasOne(d => d.Message).WithMany(p => p.MessageReaction)

@@ -22,3 +22,6 @@ WHEN NOT MATCHED THEN
 -- Real Team data (forward slash, not backslash - the Docker db-migrate image builds this dacpac on
 -- Linux, where a backslash is treated as part of the filename)
 :r ReferenceData/01_Teams.sql
+
+-- One-off data migrations (idempotent, guarded - safe to leave in place once run)
+:r Migrations/01_BackfillMessageReactionIdentity.sql

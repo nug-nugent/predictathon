@@ -23,12 +23,22 @@ export type MessageThread = {
     hiddenFromPublic: boolean;
 };
 
-// Matches Application/Models/MessageReactionModel.cs.
+// Matches Application/Models/MessageReactionModel.cs. `reactionId` is the identity (reactions
+// group and toggle on it); `imageFile` is a bare filename under the API's /reactions mount, which
+// the client turns into a URL via getReactionImageUrl - no URL is ever stored server-side.
 export type MessageReaction = {
     userID: string;
     username: string;
+    reactionId: string;
     reactionName: string;
-    imageUrl: string;
+    imageFile: string;
+};
+
+// Matches Application/Models/CustomReactionModel.cs.
+export type CustomReaction = {
+    id: string;
+    name: string;
+    imageFile: string;
 };
 
 // Matches Application/Models/MessageModel.cs.
@@ -84,13 +94,19 @@ export async function postMessageWithImage(threadId: string, image: File, conten
     return postFormAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages/Image`, form);
 }
 
-export async function addReaction(messageId: string, reactionName: string, imageUrl: string): Promise<MessageReaction[]> {
-    return postJsonAuthenticated<MessageReaction[]>(`/Messageboard/Message/${messageId}/Reactions`, { reactionName, imageUrl });
+export async function addReaction(messageId: string, reactionId: string, reactionName: string): Promise<MessageReaction[]> {
+    return postJsonAuthenticated<MessageReaction[]>(`/Messageboard/Message/${messageId}/Reactions`, { reactionId, reactionName });
 }
 
-export async function removeReaction(messageId: string, reactionName: string): Promise<MessageReaction[]> {
-    const params = new URLSearchParams({ reactionName });
+export async function removeReaction(messageId: string, reactionId: string): Promise<MessageReaction[]> {
+    const params = new URLSearchParams({ reactionId });
     return deleteJsonAuthenticated<MessageReaction[]>(`/Messageboard/Message/${messageId}/Reactions?${params}`);
+}
+
+/// Predictathon's own custom reactions, as listed by the server's manifest. Standard Unicode
+/// emoji aren't included - the client already ships that dataset.
+export async function getReactionCatalogue(): Promise<CustomReaction[]> {
+    return getJsonAuthenticated<CustomReaction[]>("/Messageboard/Reactions/Catalogue");
 }
 
 export async function markThreadRead(threadId: string): Promise<void> {

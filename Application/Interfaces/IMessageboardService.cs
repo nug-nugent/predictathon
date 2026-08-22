@@ -47,12 +47,12 @@ public interface IMessageboardService
     /// Adds the caller's reaction to a message (a no-op if they've already reacted with that exact
     /// name). Returns the message's full updated reaction list.
     /// </summary>
-    Task<Result<List<MessageReactionModel>>> AddReactionAsync(Guid messageId, Guid userId, string reactionName, string imageUrl, CancellationToken cancellationToken = default);
+    Task<Result<List<MessageReactionModel>>> AddReactionAsync(Guid messageId, Guid userId, string reactionId, string reactionName, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes the caller's reaction from a message. Returns the message's full updated reaction list.
     /// </summary>
-    Task<Result<List<MessageReactionModel>>> RemoveReactionAsync(Guid messageId, Guid userId, string reactionName, CancellationToken cancellationToken = default);
+    Task<Result<List<MessageReactionModel>>> RemoveReactionAsync(Guid messageId, Guid userId, string reactionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Marks a thread as read by the caller as of now, so it no longer shows as unread in

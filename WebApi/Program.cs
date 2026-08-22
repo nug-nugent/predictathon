@@ -220,6 +220,13 @@ try
     // configured, so keys are stored unencrypted at rest, but the host has no Windows DPAPI
     // available anyway (no user profile/registry) and this only protects auth cookie payloads and
     // short-lived tokens, not passwords.
+    // Resolved once here and written back into configuration so the /reactions static mount below
+    // and ReactionCatalogue (which resolves reaction identities against the same folder) can never
+    // disagree about where the images live.
+    var reactionsAssetsPath = Path.GetFullPath(
+        builder.Configuration["Reactions:AssetsPath"] ?? Path.Combine(builder.Environment.ContentRootPath, "Assets", "Reactions"));
+    builder.Configuration["Reactions:AssetsPath"] = reactionsAssetsPath;
+
     var dataProtectionSection = builder.Configuration.GetSection(DataProtectionKeysOptions.SectionName);
     builder.Services.Configure<DataProtectionKeysOptions>(dataProtectionSection);
     var dataProtectionOptions = dataProtectionSection.Get<DataProtectionKeysOptions>() ?? new DataProtectionKeysOptions();
@@ -286,8 +293,16 @@ try
     // content root rather than a configurable storage path, since it ships with the app.
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Assets", "Reactions")),
-        RequestPath = "/reactions"
+        FileProvider = new PhysicalFileProvider(reactionsAssetsPath),
+        RequestPath = "/reactions",
+        // These files are content-addressed - a given codepoint's artwork is the same bytes
+        // forever, and a re-vendoring that changed one would change its name too - so they're
+        // immutable by construction and worth caching hard. Without this they're served with no
+        // caching directives at all, costing a conditional request per emoji per page load.
+        OnPrepareResponse = context =>
+        {
+            context.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+        }
     });
 
     app.UseAuthentication();
