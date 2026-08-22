@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router";
 import { Link as RouterLink } from "react-router";
 import { Center, Heading, HStack, Image, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
@@ -8,9 +9,11 @@ import { useAsyncData } from "../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { Panel } from "../../../components/ui/panel";
+import { TablePagination } from "../../../components/ui/table-pagination";
 import { crestUrl } from "../../../utils/crestUrl";
 
 const NO_PREDICTION_ID = "00000000-0000-0000-0000-000000000000";
+const PAGE_SIZE = 20;
 
 export function MatchDetailPage() {
     const { matchId } = useParams<{ matchId: string }>();
@@ -49,6 +52,16 @@ function MatchDetail({ competitionId, matchId }: { competitionId: string; matchI
     }
 
     const { match, predictions } = data;
+
+    return <MatchDetailContent match={match} predictions={predictions} />;
+}
+
+function MatchDetailContent({ match, predictions }: {
+    match: Awaited<ReturnType<typeof getMatchDetail>>;
+    predictions: MatchPredictionListItem[];
+}) {
+    const [page, setPage] = useState(1);
+    const pagePredictions = predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
         <>
@@ -105,9 +118,10 @@ function MatchDetail({ competitionId, matchId }: { competitionId: string; matchI
                                         <Text color="fg.muted">No predictions found</Text>
                                     </Table.Cell>
                                 </Table.Row>
-                            ) : predictions.map((p) => <PredictionRow key={p.userID} prediction={p} />)}
+                            ) : pagePredictions.map((p) => <PredictionRow key={p.userID} prediction={p} />)}
                         </Table.Body>
                     </Table.Root>
+                    <TablePagination count={predictions.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
                 </Panel>
             </SimpleGrid>
         </>

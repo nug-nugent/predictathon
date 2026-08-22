@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Button, HStack, Popover, Portal, Spinner, Stack, Table, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, HStack, Popover, Portal, Spinner, Stack, Table, Text, VStack } from "@chakra-ui/react";
 import { ChevronDown } from "lucide-react";
 import type { MatchStatusValue, SaveState } from "../matchStatus";
 import { getMatchPredictions, type MatchPredictionListItem } from "../../../services/prediction-service";
 import { PredictionsSummary } from "../predictions-summary/PredictionsSummary";
+import { TablePagination } from "../../ui/table-pagination";
+
+const PAGE_SIZE = 20;
 
 type MatchStatusProps = {
     matchId: string;
@@ -55,6 +58,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
     const [open, setOpen] = useState(false);
     const [predictions, setPredictions] = useState<MatchPredictionListItem[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
+    const [page, setPage] = useState(1);
 
     // Refetches on every open (not just the first): a match can move During -> Post while this
     // row stays mounted, and the cached list's scores would be stale. Already-loaded data stays
@@ -63,6 +67,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
         setOpen(isOpen);
 
         if (isOpen) {
+            setPage(1);
             getMatchPredictions(matchId)
                 .then((loaded) => {
                     setPredictions(loaded);
@@ -121,7 +126,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                                                 </Table.Row>
                                             </Table.Header>
                                             <Table.Body>
-                                                {predictions.map((p) => (
+                                                {predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((p) => (
                                                     <Table.Row key={p.userID}>
                                                         <Table.Cell fontSize="0.8em" fontWeight={p.userID === myUserId ? "bold" : "normal"}>{p.username}</Table.Cell>
                                                         <Table.Cell fontSize="0.8em" textAlign="center">
@@ -134,6 +139,9 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                                                 ))}
                                             </Table.Body>
                                         </Table.Root>
+                                        <Box pb={2}>
+                                            <TablePagination count={predictions.length} pageSize={PAGE_SIZE} page={page} onPageChange={setPage} />
+                                        </Box>
                                     </VStack>
                                 )}
                             </Popover.Content>

@@ -1,8 +1,12 @@
-import { ButtonGroup, IconButton, Pagination } from "@chakra-ui/react";
+import { ButtonGroup, HStack, IconButton, Pagination } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // The standard pager rendered under a paged table. Renders nothing when everything fits on one
 // page, so callers don't need their own count > pageSize guard.
+//
+// The full row of page-number buttons doesn't truncate down to a fixed width - with enough pages
+// it just keeps growing - so below `md` we swap it for Prev/Next plus a "page X of Y" label to
+// avoid the pager stretching wider than the screen.
 export function TablePagination({ count, pageSize, page, onPageChange }: {
     count: number;
     pageSize: number;
@@ -15,7 +19,16 @@ export function TablePagination({ count, pageSize, page, onPageChange }: {
 
     return (
         <Pagination.Root count={count} pageSize={pageSize} page={page} onPageChange={(e) => onPageChange(e.page)}>
-            <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2}>
+            <HStack justifyContent="center" gap={2} mt={2} hideFrom="md">
+                <Pagination.PrevTrigger asChild>
+                    <IconButton aria-label="Previous page" variant="ghost" size="sm"><ChevronLeft /></IconButton>
+                </Pagination.PrevTrigger>
+                <Pagination.PageText format="compact" />
+                <Pagination.NextTrigger asChild>
+                    <IconButton aria-label="Next page" variant="ghost" size="sm"><ChevronRight /></IconButton>
+                </Pagination.NextTrigger>
+            </HStack>
+            <ButtonGroup variant="ghost" size="sm" justifyContent="center" mt={2} hideBelow="md">
                 <Pagination.PrevTrigger asChild>
                     <IconButton aria-label="Previous page"><ChevronLeft /></IconButton>
                 </Pagination.PrevTrigger>
