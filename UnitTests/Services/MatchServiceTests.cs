@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MapsterMapper;
+using Predictathon.Application.Common;
 using Predictathon.Application.Models;
 using Predictathon.Application.Services;
 using Predictathon.UnitTests.TestDoubles;
@@ -35,6 +36,28 @@ public class MatchServiceTests
         await dbContext.SaveChangesAsync();
 
         var matches = await service.GetForAdminAsync(competitionId, includePlayed: true);
+
+        matches.Select(m => m.HomeTeamID).Should().Equal(chelsea.TeamID, arsenal.TeamID, chelsea.TeamID);
+    }
+
+    [Fact]
+    public async Task GetForProcessingAsync_OrdersByMatchDateTimeThenHomeTeamName()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+
+        var arsenal = new DomainEntities.Team { TeamID = Guid.NewGuid(), TeamName = "Arsenal", ShortName = "ARS" };
+        var chelsea = new DomainEntities.Team { TeamID = Guid.NewGuid(), TeamName = "Chelsea", ShortName = "CHE" };
+        dbContext.Team.AddRange(arsenal, chelsea);
+
+        var kickoff = UkClock.Now.AddHours(-3);
+        dbContext.Match.AddRange(
+            new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = kickoff, HomeTeamID = chelsea.TeamID },
+            new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = kickoff, HomeTeamID = arsenal.TeamID },
+            new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = kickoff.AddHours(-1), HomeTeamID = chelsea.TeamID });
+        await dbContext.SaveChangesAsync();
+
+        var matches = await service.GetForProcessingAsync(competitionId);
 
         matches.Select(m => m.HomeTeamID).Should().Equal(chelsea.TeamID, arsenal.TeamID, chelsea.TeamID);
     }

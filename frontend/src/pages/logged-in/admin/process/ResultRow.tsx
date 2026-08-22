@@ -1,15 +1,20 @@
-import { Flex, HStack, Image, Input, Text } from "@chakra-ui/react";
+import { Flex, HStack, Input, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type MouseEvent } from "react";
 import { ApiError } from "../../../../services/api";
 import { saveMatchResult } from "../../../../services/match-processing-service";
+import { TeamName } from "../../../../components/match/team-name/TeamName";
 import { parseDigit } from "../../../../utils/parseDigit";
 import { isResultEligible } from "./matchProcessingStatus";
 
 type ResultRowProps = {
     matchId: string;
     matchDateTime: string;
+    homeTeamId: string | null;
     homeTeamName: string;
+    homeTeamShortName: string;
+    awayTeamId: string | null;
     awayTeamName: string;
+    awayTeamShortName: string;
     homeCrest: string | undefined;
     awayCrest: string | undefined;
     now: Date;
@@ -23,7 +28,7 @@ type ResultRowProps = {
 type RowSaveState = "idle" | "saving" | "saved" | "error";
 
 export function ResultRow({
-    matchId, matchDateTime, homeTeamName, awayTeamName, homeCrest, awayCrest,
+    matchId, matchDateTime, homeTeamId, homeTeamName, homeTeamShortName, awayTeamId, awayTeamName, awayTeamShortName, homeCrest, awayCrest,
     now, hasFocus, isFirstInGroup, onFocus, onSaved,
 }: ResultRowProps) {
     const [homeInput, setHomeInput] = useState("");
@@ -95,22 +100,19 @@ export function ResultRow({
         void save(homeInput, value, true);
     };
 
-    const statusText = !eligible
-        ? "Not yet available"
-        : saveState === "saving"
-            ? "Saving..."
-            : saveState === "saved"
-                ? "Saved"
-                : saveState === "error"
-                    ? errorMessage
-                    : "";
+    const statusText = saveState === "saving"
+        ? "Saving..."
+        : saveState === "saved"
+            ? "Saved"
+            : saveState === "error"
+                ? errorMessage
+                : "";
 
     return (
         <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} py={2} px={{ base: 2, md: 4 }} gap={1}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
                 <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                    <Text fontSize="0.9em" textAlign="right" truncate>{homeTeamName}</Text>
-                    {homeCrest && <Image src={homeCrest} boxSize="20px" alt="" />}
+                    <TeamName teamId={homeTeamId} name={homeTeamName} shortName={homeTeamShortName} crest={homeCrest} crestPosition="after" />
                 </HStack>
 
                 <HStack gap={1}>
@@ -122,13 +124,14 @@ export function ResultRow({
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>
-                    {awayCrest && <Image src={awayCrest} boxSize="20px" alt="" />}
-                    <Text fontSize="0.9em" truncate>{awayTeamName}</Text>
+                    <TeamName teamId={awayTeamId} name={awayTeamName} shortName={awayTeamShortName} crest={awayCrest} crestPosition="before" />
                 </HStack>
 
-                <Text fontSize="xs" color={saveState === "error" ? "fg.error" : "fg.muted"} minW="90px" textAlign="right">
-                    {statusText}
-                </Text>
+                {statusText && (
+                    <Text fontSize="xs" color={saveState === "error" ? "fg.error" : "fg.muted"} textAlign="right">
+                        {statusText}
+                    </Text>
+                )}
             </Flex>
         </Flex>
     );
