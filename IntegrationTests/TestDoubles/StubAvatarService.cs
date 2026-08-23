@@ -16,6 +16,11 @@ public class StubAvatarService : IAvatarService
     /// </summary>
     public const string AvatarUrl = "https://example.test/uploads/avatars/stub_sm.jpg";
 
+    /// <summary>
+    /// The URL returned for the full-size version of an uploaded avatar.
+    /// </summary>
+    public const string LargeAvatarUrl = "https://example.test/uploads/avatars/stub.jpg";
+
     /// <inheritdoc />
     public Task<Result> UploadAvatarAsync(Guid userId, Stream imageStream, AvatarCropRect crop, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
@@ -25,5 +30,6 @@ public class StubAvatarService : IAvatarService
         => throw new NotSupportedException();
 
     /// <inheritdoc />
-    public string? GetAvatarUrl(Guid userId, bool imageUploaded) => imageUploaded ? AvatarUrl : null;
+    public string? GetAvatarUrl(Guid userId, bool imageUploaded, bool large = false)
+        => imageUploaded ? (large ? LargeAvatarUrl : AvatarUrl) : null;
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -270,6 +271,20 @@ try
 
     app.UseRateLimiter();
 
+    // Uploaded images sit at a fixed filename per user/message, so replacing one leaves every URL
+    // pointing at it unchanged - which is exactly what a browser cache keys on. The app stamps a
+    // version taken from the file itself onto the URLs it hands out (see AvatarService), making a
+    // stamped URL safe to cache hard: it changes the moment the picture does. Anything asked for
+    // without a stamp (an older link, a hand-typed path, or a message image - those URLs aren't
+    // stamped yet) is revalidated on every use instead, so a stale image can never get pinned in a
+    // cache for a year.
+    static void AddUploadCacheHeaders(StaticFileResponseContext context)
+    {
+        context.Context.Response.Headers.CacheControl = context.Context.Request.Query.ContainsKey("v")
+            ? "public, max-age=31536000, immutable"
+            : "no-cache";
+    }
+
     // Serve uploaded avatars directly from disk. Images don't need CORS headers (only canvas pixel
     // reads would), so this works cross-origin from the frontend's own host as-is.
     var avatarsStoragePath = Path.GetFullPath(avatarsOptions.StoragePath);
@@ -277,7 +292,8 @@ try
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(avatarsStoragePath),
-        RequestPath = "/uploads/avatars"
+        RequestPath = "/uploads/avatars",
+        OnPrepareResponse = AddUploadCacheHeaders
     });
 
     var messageImagesStoragePath = Path.GetFullPath(messageImagesOptions.StoragePath);
@@ -285,7 +301,8 @@ try
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(messageImagesStoragePath),
-        RequestPath = "/uploads/message-images"
+        RequestPath = "/uploads/message-images",
+        OnPrepareResponse = AddUploadCacheHeaders
     });
 
     // Serve the vendored reaction images (standard-emoji SVGs + Predictathon's own custom reactions).

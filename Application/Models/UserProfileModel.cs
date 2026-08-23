@@ -18,4 +18,10 @@ public class UserProfileModel
     public string? ProfileText { get; set; }
 
     public string? AvatarUrl { get; set; }
+
+    /// <summary>
+    /// The full-size version of the same picture, shown when the avatar is opened on the profile
+    /// page. Null whenever <see cref="AvatarUrl"/> is.
+    /// </summary>
+    public string? AvatarLargeUrl { get; set; }
 }

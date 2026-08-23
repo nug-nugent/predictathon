@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Dialog, HStack, Portal, Slider, Text, VStack } from "@chakra-ui/react";
 import Cropper, { type Area } from "react-easy-crop";
-import { uploadAvatar, removeAvatar } from "../../services/profile-service";
+import { uploadAvatar, removeAvatar, type UploadedAvatar } from "../../services/profile-service";
 import { ApiError } from "../../services/api";
 
 const ASPECT = 10 / 8;
@@ -10,7 +10,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
     open: boolean;
     onClose: () => void;
     hasAvatar: boolean;
-    onUploaded: (avatarUrl: string) => void;
+    onUploaded: (avatar: UploadedAvatar) => void;
     onRemoved: () => void;
 }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,8 +71,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
         setSaving(true);
         setError(null);
         try {
-            const result = await uploadAvatar(file, croppedAreaPixels);
-            onUploaded(result.avatarUrl);
+            onUploaded(await uploadAvatar(file, croppedAreaPixels));
             handleClose();
         } catch (err) {
             setError(err instanceof ApiError ? err.messages.join(" ") : "Something went wrong. Please try again.");
