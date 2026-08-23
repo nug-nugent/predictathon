@@ -297,14 +297,17 @@ public class MessageboardService : IMessageboardService
 
         // The catalogue is the allow-list: an identity we can't resolve to an image on disk is
         // rejected outright rather than stored and left to render as a broken image for everyone.
-        if (_reactionCatalogue.ResolveImageFile(reactionId) is null)
+        // Canonicalising first means the two spellings of the same emoji (see IReactionCatalogue)
+        // de-duplicate against each other instead of becoming two pills.
+        var canonicalId = _reactionCatalogue.Canonicalise(reactionId);
+        if (canonicalId is null)
         {
             return Result.Fail<List<MessageReactionModel>>(
                 new PropertyValidationError(nameof(reactionId), "That reaction isn't one this site can display."));
         }
 
         var alreadyReacted = await _dbContext.MessageReaction.AnyAsync(
-            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == reactionId, cancellationToken);
+            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == canonicalId, cancellationToken);
 
         if (!alreadyReacted)
         {
@@ -313,7 +316,7 @@ public class MessageboardService : IMessageboardService
                 MessageReactionID = Guid.NewGuid(),
                 MessageID = messageId,
                 UserID = userId,
-                ReactionId = reactionId,
+                ReactionId = canonicalId,
                 ReactionName = reactionName,
                 CreationDate = DateTime.UtcNow,
             }, cancellationToken);
@@ -342,8 +345,12 @@ public class MessageboardService : IMessageboardService
             return Result.Fail<List<MessageReactionModel>>(new NotFoundError("The message could not be found."));
         }
 
+        // Canonicalised for the same reason as the add path: a client holding the picker's
+        // spelling of an identity must still match the row stored under the canonical one.
+        var canonicalId = _reactionCatalogue.Canonicalise(reactionId) ?? reactionId;
+
         var reaction = await _dbContext.MessageReaction.FirstOrDefaultAsync(
-            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == reactionId, cancellationToken);
+            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == canonicalId, cancellationToken);
 
         if (reaction is not null)
         {

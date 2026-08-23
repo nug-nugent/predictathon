@@ -22,9 +22,11 @@ public class MessageboardServiceTests
 
     public MessageboardServiceTests()
     {
-        // Every identity resolves to an image unless a test says otherwise - the catalogue's own
-        // resolution rules are covered by ReactionCatalogueTests.
+        // Every identity resolves to an image and is already canonical unless a test says
+        // otherwise - the catalogue's own resolution and canonicalisation rules are covered by
+        // ReactionCatalogueTests.
         _reactionCatalogue.Setup(c => c.ResolveImageFile(It.IsAny<string>())).Returns("1f44d.svg");
+        _reactionCatalogue.Setup(c => c.Canonicalise(It.IsAny<string>())).Returns((string id) => id);
     }
 
     private MessageboardService MakeService()
@@ -292,6 +294,50 @@ public class MessageboardServiceTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task AddReactionAsync_SameEmojiUnderTwoSpellings_StoresOneReaction()
+    {
+        // Production carried both the legacy site's spelling of the red heart and the picker's,
+        // which showed as two pills that couldn't toggle each other. Both must reduce to one row.
+        _reactionCatalogue.Setup(c => c.Canonicalise("u:2764-fe0f")).Returns("u:2764");
+        _reactionCatalogue.Setup(c => c.Canonicalise("u:2764")).Returns("u:2764");
+
+        var user = AddViewer();
+        var thread = AddThread();
+        var message = new DomainEntities.Message { MessageID = Guid.NewGuid(), MessageThreadID = thread.MessageThreadID, PostedByUserID = user.Id, MessageDateTime = DateTime.UtcNow };
+        _dbContext.Message.Add(message);
+        await _dbContext.SaveChangesAsync();
+        var service = MakeService();
+        await service.AddReactionAsync(message.MessageID, user.Id, "u:2764", "Red Heart");
+
+        var result = await service.AddReactionAsync(message.MessageID, user.Id, "u:2764-fe0f", "Red Heart");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle(r => r.ReactionId == "u:2764");
+    }
+
+    [Fact]
+    public async Task RemoveReactionAsync_NonCanonicalSpelling_RemovesTheStoredReaction()
+    {
+        // A client holding the picker's spelling must still be able to remove a row stored under
+        // the canonical one, or reactions become impossible to un-react.
+        _reactionCatalogue.Setup(c => c.Canonicalise("u:2764-fe0f")).Returns("u:2764");
+        _reactionCatalogue.Setup(c => c.Canonicalise("u:2764")).Returns("u:2764");
+
+        var user = AddViewer();
+        var thread = AddThread();
+        var message = new DomainEntities.Message { MessageID = Guid.NewGuid(), MessageThreadID = thread.MessageThreadID, PostedByUserID = user.Id, MessageDateTime = DateTime.UtcNow };
+        _dbContext.Message.Add(message);
+        await _dbContext.SaveChangesAsync();
+        var service = MakeService();
+        await service.AddReactionAsync(message.MessageID, user.Id, "u:2764", "Red Heart");
+
+        var result = await service.RemoveReactionAsync(message.MessageID, user.Id, "u:2764-fe0f");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
