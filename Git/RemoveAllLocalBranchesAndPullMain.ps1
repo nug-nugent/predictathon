@@ -48,7 +48,11 @@
 
     As above, but also deletes branches holding unmerged work. There is no undo beyond the reflog.
 #>
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
+# ConfirmImpact is deliberately Medium, not High. High would prompt once per branch on the normal
+# run, and a script that asks four times to do the thing you just asked it to do is a script you
+# learn to run with -Confirm:$false - which then also silences the prompt on the one case that
+# warrants it. The safety here is that unmerged branches need an explicit -Force instead.
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
 param(
     [string]$MainBranch = "main",
     [switch]$Force,
