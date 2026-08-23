@@ -16,10 +16,23 @@ public class MessageboardController : ApiControllerBase
     private const int DefaultMessagePageSize = 30;
 
     private readonly IMessageboardService _messageboardService;
+    private readonly IReactionCatalogue _reactionCatalogue;
 
-    public MessageboardController(IMessageboardService messageboardService)
+    public MessageboardController(IMessageboardService messageboardService, IReactionCatalogue reactionCatalogue)
     {
         _messageboardService = messageboardService;
+        _reactionCatalogue = reactionCatalogue;
+    }
+
+    /// <summary>
+    /// Lists Predictathon's own custom reactions, so the client's emoji picker builds its custom
+    /// category from the server's manifest rather than a hardcoded copy of it. Standard Unicode
+    /// emoji aren't listed here - the client already ships that dataset.
+    /// </summary>
+    [HttpGet("Reactions/Catalogue")]
+    public ActionResult<List<CustomReactionModel>> GetReactionCatalogue()
+    {
+        return Ok(_reactionCatalogue.GetCustomReactions());
     }
 
     /// <summary>
@@ -121,18 +134,18 @@ public class MessageboardController : ApiControllerBase
     [HttpPost("Message/{messageId:guid}/Reactions")]
     public async Task<ActionResult<List<MessageReactionModel>?>> AddReaction(Guid messageId, AddReactionRequest request, CancellationToken cancellationToken)
     {
-        var result = await _messageboardService.AddReactionAsync(messageId, CurrentUserId, request.ReactionName, request.ImageUrl, cancellationToken);
+        var result = await _messageboardService.AddReactionAsync(messageId, CurrentUserId, request.ReactionId, request.ReactionName, cancellationToken);
         return FromResult(result);
     }
 
     /// <summary>
-    /// Removes the caller's reaction from a message. The reaction name is a query parameter
-    /// (rather than a route segment) since reaction names can contain spaces.
+    /// Removes the caller's reaction from a message. The reaction identity is a query parameter
+    /// rather than a route segment, since it's free-form text rather than a route-safe token.
     /// </summary>
     [HttpDelete("Message/{messageId:guid}/Reactions")]
-    public async Task<ActionResult<List<MessageReactionModel>?>> RemoveReaction(Guid messageId, [FromQuery] string reactionName, CancellationToken cancellationToken)
+    public async Task<ActionResult<List<MessageReactionModel>?>> RemoveReaction(Guid messageId, [FromQuery] string reactionId, CancellationToken cancellationToken)
     {
-        var result = await _messageboardService.RemoveReactionAsync(messageId, CurrentUserId, reactionName, cancellationToken);
+        var result = await _messageboardService.RemoveReactionAsync(messageId, CurrentUserId, reactionId, cancellationToken);
         return FromResult(result);
     }
 }

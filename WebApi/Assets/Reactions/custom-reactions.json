@@ -1,0 +1,14 @@
+[
+    { "id": "brewdog", "name": "brewdog", "imageFile": "brewdog.png" },
+    { "id": "guinness", "name": "guinness", "imageFile": "guinness.png" },
+    { "id": "ludo", "name": "ludo", "imageFile": "ludo.png" },
+    { "id": "red_card", "name": "red card", "imageFile": "red-card.png" },
+    { "id": "yellow_card", "name": "yellow card", "imageFile": "yellow-card.png" },
+    { "id": "pussy_time", "name": "pussy time", "imageFile": "pt.png" },
+    { "id": "beaker", "name": "beaker", "imageFile": "beaker.png" },
+    { "id": "facepalm", "name": "facepalm", "imageFile": "facepalm.png" },
+    { "id": "rick_roll", "name": "rick roll", "imageFile": "rick.png" },
+    { "id": "success_boy", "name": "success boy", "imageFile": "success.png" },
+    { "id": "vault_boy", "name": "vault boy", "imageFile": "vaultboy.jpg" },
+    { "id": "woo_hoo", "name": "woo hoo", "imageFile": "woo.png" }
+]

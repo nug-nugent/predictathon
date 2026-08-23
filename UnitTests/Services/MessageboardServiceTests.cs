@@ -17,10 +17,18 @@ public class MessageboardServiceTests
     private readonly Mock<IAvatarService> _avatarService = new();
     private readonly Mock<IMessageImageService> _messageImageService = new();
     private readonly Mock<IMessageboardNotifier> _notifier = new();
+    private readonly Mock<IReactionCatalogue> _reactionCatalogue = new();
     private readonly Mock<UserManager<ApplicationUser>> _userManager = MockUserManager.Create();
 
+    public MessageboardServiceTests()
+    {
+        // Every identity resolves to an image unless a test says otherwise - the catalogue's own
+        // resolution rules are covered by ReactionCatalogueTests.
+        _reactionCatalogue.Setup(c => c.ResolveImageFile(It.IsAny<string>())).Returns("1f44d.svg");
+    }
+
     private MessageboardService MakeService()
-        => new(_dbContext, _avatarService.Object, _messageImageService.Object, _notifier.Object, _userManager.Object);
+        => new(_dbContext, _avatarService.Object, _messageImageService.Object, _notifier.Object, _reactionCatalogue.Object, _userManager.Object);
 
     private ApplicationUser AddViewer(bool canViewMessageboard = true, int totalPosts = 0)
     {
@@ -247,7 +255,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer();
 
-        var result = await MakeService().AddReactionAsync(Guid.NewGuid(), user.Id, "thumbsup", "img.png");
+        var result = await MakeService().AddReactionAsync(Guid.NewGuid(), user.Id, "u:1f44d", "thumbs up");
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is NotFoundError);
@@ -262,10 +270,10 @@ public class MessageboardServiceTests
         _dbContext.Message.Add(message);
         await _dbContext.SaveChangesAsync();
 
-        var result = await MakeService().AddReactionAsync(message.MessageID, user.Id, "thumbsup", "img.png");
+        var result = await MakeService().AddReactionAsync(message.MessageID, user.Id, "u:1f44d", "thumbs up");
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().ContainSingle(r => r.ReactionName == "thumbsup" && r.UserID == user.Id);
+        result.Value.Should().ContainSingle(r => r.ReactionId == "u:1f44d" && r.UserID == user.Id);
         _notifier.Verify(n => n.NotifyReactionsChangedAsync(thread.MessageThreadID, message.MessageID, It.IsAny<IReadOnlyList<MessageReactionModel>>(), default), Times.Once);
     }
 
@@ -278,9 +286,9 @@ public class MessageboardServiceTests
         _dbContext.Message.Add(message);
         await _dbContext.SaveChangesAsync();
         var service = MakeService();
-        await service.AddReactionAsync(message.MessageID, user.Id, "thumbsup", "img.png");
+        await service.AddReactionAsync(message.MessageID, user.Id, "u:1f44d", "thumbs up");
 
-        var result = await service.AddReactionAsync(message.MessageID, user.Id, "thumbsup", "img.png");
+        var result = await service.AddReactionAsync(message.MessageID, user.Id, "u:1f44d", "thumbs up");
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle();
@@ -291,7 +299,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer();
 
-        var result = await MakeService().RemoveReactionAsync(Guid.NewGuid(), user.Id, "thumbsup");
+        var result = await MakeService().RemoveReactionAsync(Guid.NewGuid(), user.Id, "u:1f44d");
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is NotFoundError);
@@ -306,9 +314,9 @@ public class MessageboardServiceTests
         _dbContext.Message.Add(message);
         await _dbContext.SaveChangesAsync();
         var service = MakeService();
-        await service.AddReactionAsync(message.MessageID, user.Id, "thumbsup", "img.png");
+        await service.AddReactionAsync(message.MessageID, user.Id, "u:1f44d", "thumbs up");
 
-        var result = await service.RemoveReactionAsync(message.MessageID, user.Id, "thumbsup");
+        var result = await service.RemoveReactionAsync(message.MessageID, user.Id, "u:1f44d");
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();

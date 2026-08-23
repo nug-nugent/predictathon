@@ -14,9 +14,11 @@ public partial class MessageReaction
 
     public Guid UserID { get; set; }
 
+    public string ReactionId { get; set; } = null!;
+
     public string ReactionName { get; set; } = null!;
 
-    public string ImageUrl { get; set; } = null!;
+    public string? ImageUrl { get; set; }
 
     public DateTime CreationDate { get; set; }
 

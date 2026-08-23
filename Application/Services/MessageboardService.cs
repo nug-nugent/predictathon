@@ -21,6 +21,7 @@ public class MessageboardService : IMessageboardService
     private readonly IAvatarService _avatarService;
     private readonly IMessageImageService _messageImageService;
     private readonly IMessageboardNotifier _notifier;
+    private readonly IReactionCatalogue _reactionCatalogue;
     private readonly UserManager<ApplicationUser> _userManager;
 
     public MessageboardService(
@@ -28,12 +29,14 @@ public class MessageboardService : IMessageboardService
         IAvatarService avatarService,
         IMessageImageService messageImageService,
         IMessageboardNotifier notifier,
+        IReactionCatalogue reactionCatalogue,
         UserManager<ApplicationUser> userManager)
     {
         _dbContext = dbContext;
         _avatarService = avatarService;
         _messageImageService = messageImageService;
         _notifier = notifier;
+        _reactionCatalogue = reactionCatalogue;
         _userManager = userManager;
     }
 
@@ -278,7 +281,7 @@ public class MessageboardService : IMessageboardService
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<MessageReactionModel>>> AddReactionAsync(Guid messageId, Guid userId, string reactionName, string imageUrl, CancellationToken cancellationToken = default)
+    public async Task<Result<List<MessageReactionModel>>> AddReactionAsync(Guid messageId, Guid userId, string reactionId, string reactionName, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
         if (viewerResult.IsFailed)
@@ -292,8 +295,16 @@ public class MessageboardService : IMessageboardService
             return Result.Fail<List<MessageReactionModel>>(new NotFoundError("The message could not be found."));
         }
 
+        // The catalogue is the allow-list: an identity we can't resolve to an image on disk is
+        // rejected outright rather than stored and left to render as a broken image for everyone.
+        if (_reactionCatalogue.ResolveImageFile(reactionId) is null)
+        {
+            return Result.Fail<List<MessageReactionModel>>(
+                new PropertyValidationError(nameof(reactionId), "That reaction isn't one this site can display."));
+        }
+
         var alreadyReacted = await _dbContext.MessageReaction.AnyAsync(
-            r => r.MessageID == messageId && r.UserID == userId && r.ReactionName == reactionName, cancellationToken);
+            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == reactionId, cancellationToken);
 
         if (!alreadyReacted)
         {
@@ -302,8 +313,8 @@ public class MessageboardService : IMessageboardService
                 MessageReactionID = Guid.NewGuid(),
                 MessageID = messageId,
                 UserID = userId,
+                ReactionId = reactionId,
                 ReactionName = reactionName,
-                ImageUrl = imageUrl,
                 CreationDate = DateTime.UtcNow,
             }, cancellationToken);
 
@@ -317,7 +328,7 @@ public class MessageboardService : IMessageboardService
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<MessageReactionModel>>> RemoveReactionAsync(Guid messageId, Guid userId, string reactionName, CancellationToken cancellationToken = default)
+    public async Task<Result<List<MessageReactionModel>>> RemoveReactionAsync(Guid messageId, Guid userId, string reactionId, CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
         if (viewerResult.IsFailed)
@@ -332,7 +343,7 @@ public class MessageboardService : IMessageboardService
         }
 
         var reaction = await _dbContext.MessageReaction.FirstOrDefaultAsync(
-            r => r.MessageID == messageId && r.UserID == userId && r.ReactionName == reactionName, cancellationToken);
+            r => r.MessageID == messageId && r.UserID == userId && r.ReactionId == reactionId, cancellationToken);
 
         if (reaction is not null)
         {
@@ -416,8 +427,13 @@ public class MessageboardService : IMessageboardService
 
     private async Task<List<MessageReactionModel>> GetReactionsAsync(Guid messageId, CancellationToken cancellationToken)
     {
+        // Ordered explicitly: the client groups by identity and takes the first row's details, so
+        // an unordered read would make which row wins depend on whatever order SQL happened to
+        // return them in.
         var reactions = await _dbContext.MessageReaction
             .Where(r => r.MessageID == messageId)
+            .OrderBy(r => r.CreationDate)
+            .ThenBy(r => r.MessageReactionID)
             .ToListAsync(cancellationToken);
 
         var users = await GetUsersByIdAsync(reactions.Select(r => r.UserID), cancellationToken);
@@ -425,12 +441,13 @@ public class MessageboardService : IMessageboardService
         return reactions.Select(r => MapReaction(r, users)).ToList();
     }
 
-    private static MessageReactionModel MapReaction(MessageReaction reaction, Dictionary<Guid, ApplicationUser> users) => new()
+    private MessageReactionModel MapReaction(MessageReaction reaction, Dictionary<Guid, ApplicationUser> users) => new()
     {
         UserID = reaction.UserID,
         Username = users.TryGetValue(reaction.UserID, out var user) ? user.UserName ?? string.Empty : string.Empty,
+        ReactionId = reaction.ReactionId,
         ReactionName = reaction.ReactionName,
-        ImageUrl = reaction.ImageUrl,
+        ImageFile = _reactionCatalogue.ResolveImageFile(reaction.ReactionId) ?? string.Empty,
     };
 
     private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users)
@@ -449,7 +466,13 @@ public class MessageboardService : IMessageboardService
             YouTubeVideoID = message.YouTubeVideoID,
             ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
             PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
-            Reactions = message.MessageReaction.Select(r => MapReaction(r, users)).ToList(),
+            // Ordered to match GetReactionsAsync: the client groups by identity and keeps the
+            // first row's details, so both paths must agree on which row that is.
+            Reactions = message.MessageReaction
+                .OrderBy(r => r.CreationDate)
+                .ThenBy(r => r.MessageReactionID)
+                .Select(r => MapReaction(r, users))
+                .ToList(),
         };
     }
 
