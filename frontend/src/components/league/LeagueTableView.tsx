@@ -1,8 +1,9 @@
-import { Avatar, HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
+import { HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
 import { CircleHelp } from "lucide-react";
 import { Link } from "react-router";
 import { Panel } from "../ui/panel";
 import { LeaguePositionChangeIcon } from "./LeaguePositionChangeIcon";
+import { PlayerAvatar } from "./PlayerAvatar";
 import { useUser } from "../../hooks/useUser";
 import type { LeagueTableItem } from "../../services/league-service";
 
@@ -84,13 +85,7 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                                 </Table.Cell>
                                 <Table.Cell fontSize={"0.9em"}>
                                     <HStack gap={2}>
-                                        {/* Avatar.Fallback renders the user's initial when they haven't uploaded a picture.
-                                            The avatar is decorative - the username it sits beside already names the row -
-                                            so it's hidden from assistive tech rather than read out as a stray letter. */}
-                                        <Avatar.Root size="2xs" flexShrink={0} aria-hidden="true">
-                                            <Avatar.Image src={item.avatarUrl ?? undefined} />
-                                            <Avatar.Fallback name={item.username} />
-                                        </Avatar.Root>
+                                        <PlayerAvatar username={item.username} avatarUrl={item.avatarUrl} />
                                         <Link to={`/profile/${item.userID}`}>{item.username}</Link>
                                     </HStack>
                                 </Table.Cell>

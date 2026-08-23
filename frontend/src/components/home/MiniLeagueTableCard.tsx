@@ -1,7 +1,7 @@
 import { Heading, HStack, Link as ChakraLink, Table } from "@chakra-ui/react";
 import { TableProperties } from "lucide-react";
 import { Link as RouterLink } from "react-router";
-import { getLeagueTable } from "../../services/league-service";
+import { getLeagueTable, type LeagueTableItem } from "../../services/league-service";
 import { useUser } from "../../hooks/useUser";
 import { toDateOnly } from "../../utils/toDateOnly";
 import { Panel } from "../ui/panel";
@@ -9,6 +9,7 @@ import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 import { LeaguePositionChangeIcon } from "../league/LeaguePositionChangeIcon";
+import { PlayerAvatar } from "../league/PlayerAvatar";
 
 const TOP_ROWS = 5;
 
@@ -45,28 +46,36 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
             <Table.Root size="sm" variant="line">
                 <Table.Body>
                     {topRows.map((row) => (
-                        <Table.Row key={row.userID} fontWeight={row.userID === user?.id ? "bold" : undefined}>
-                            <Table.Cell textAlign="right" width="1">{row.leaguePosition}</Table.Cell>
-                            <Table.Cell width="1"><LeaguePositionChangeIcon current={row.leaguePosition} previous={row.previousLeaguePosition} /></Table.Cell>
-                            <Table.Cell><RouterLink to={`/profile/${row.userID}`}>{row.username}</RouterLink></Table.Cell>
-                            <Table.Cell textAlign="right">{row.score}</Table.Cell>
-                        </Table.Row>
+                        <MiniLeagueRow key={row.userID} row={row} isCurrentUser={row.userID === user?.id} />
                     ))}
                     {ownRow && (
                         <>
                             <Table.Row>
                                 <Table.Cell colSpan={4} borderBottomWidth="0" py={0}>&hellip;</Table.Cell>
                             </Table.Row>
-                            <Table.Row fontWeight="bold">
-                                <Table.Cell textAlign="right" width="1">{ownRow.leaguePosition}</Table.Cell>
-                                <Table.Cell width="1"><LeaguePositionChangeIcon current={ownRow.leaguePosition} previous={ownRow.previousLeaguePosition} /></Table.Cell>
-                                <Table.Cell><RouterLink to={`/profile/${ownRow.userID}`}>{ownRow.username}</RouterLink></Table.Cell>
-                                <Table.Cell textAlign="right">{ownRow.score}</Table.Cell>
-                            </Table.Row>
+                            <MiniLeagueRow row={ownRow} isCurrentUser />
                         </>
                     )}
                 </Table.Body>
             </Table.Root>
         </Panel>
+    );
+}
+
+// One row of the mini table. The top-five rows and the current user's own row (shown below the
+// ellipsis when they're outside the top five) are identical bar the emphasis, so they share this.
+function MiniLeagueRow({ row, isCurrentUser }: { row: LeagueTableItem; isCurrentUser: boolean }) {
+    return (
+        <Table.Row fontWeight={isCurrentUser ? "bold" : undefined}>
+            <Table.Cell textAlign="right" width="1">{row.leaguePosition}</Table.Cell>
+            <Table.Cell width="1"><LeaguePositionChangeIcon current={row.leaguePosition} previous={row.previousLeaguePosition} /></Table.Cell>
+            <Table.Cell>
+                <HStack gap={2}>
+                    <PlayerAvatar username={row.username} avatarUrl={row.avatarUrl} />
+                    <RouterLink to={`/profile/${row.userID}`}>{row.username}</RouterLink>
+                </HStack>
+            </Table.Cell>
+            <Table.Cell textAlign="right">{row.score}</Table.Cell>
+        </Table.Row>
     );
 }
