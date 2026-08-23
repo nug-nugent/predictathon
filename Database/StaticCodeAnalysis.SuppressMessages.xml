@@ -49,10 +49,16 @@
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0002" />
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0020" />
 	</SuppressedFile>
-	<!-- MessageReaction's PK is deliberately NONCLUSTERED (pre-existing design), so it has no
-	     clustered index by definition. -->
+	<!-- SRP0020: MessageReaction's PK is deliberately NONCLUSTERED (pre-existing design), so it
+	     has no clustered index by definition.
+	     SRD0052 (borderline duplicate index): IX_MessageReaction_MessageID_UserID_ReactionId and
+	     IX_MessageReaction_MessageID share a leading MessageID column, which is as far as the rule
+	     looks. They aren't interchangeable - the latter is (MessageID, CreationDate) and serves the
+	     ordered read path, while the former is UNIQUE and exists to enforce one reaction per user
+	     per identity, which is a constraint no other index provides. -->
 	<SuppressedFile FilePath="dbo\Tables\MessageReaction.sql">
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRP0020" />
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0052" />
 	</SuppressedFile>
 	<!-- READ UNCOMMITTED is a deliberate perf trade-off for this read-heavy report query, accepting
 	     dirty reads over lock contention. -->
