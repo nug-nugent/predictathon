@@ -62,6 +62,7 @@ public class UserService : IUserService
             FavouriteTeam = user.FavouriteTeam,
             ProfileText = user.ProfileText,
             AvatarUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded),
+            AvatarLargeUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded, large: true),
         };
     }
 

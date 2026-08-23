@@ -18,7 +18,15 @@ public interface IAvatarService
     Task RemoveAvatarAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// The public URL for a user's small avatar image, or null if they haven't uploaded one.
+    /// The public URL for a user's avatar image, or null if they haven't uploaded one (or the file
+    /// has gone missing). The URL carries a version stamp taken from the file itself, so replacing
+    /// an avatar changes its URL and browsers can't serve the previous picture from cache.
     /// </summary>
-    string? GetAvatarUrl(Guid userId, bool imageUploaded);
+    /// <param name="userId">The user whose avatar is wanted.</param>
+    /// <param name="imageUploaded">The user's Identity.Users.ImageUploaded flag.</param>
+    /// <param name="large">
+    /// True for the full-size image (shown when a picture is opened on the profile page), false for
+    /// the thumbnail used beside a name. Falls back to the thumbnail when no large file exists.
+    /// </param>
+    string? GetAvatarUrl(Guid userId, bool imageUploaded, bool large = false);
 }

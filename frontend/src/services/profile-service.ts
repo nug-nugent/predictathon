@@ -10,6 +10,7 @@ export type UserProfile = {
     favouriteTeam: string | null;
     profileText: string | null;
     avatarUrl: string | null;
+    avatarLargeUrl: string | null;
 };
 
 export async function getUserProfile(userId: string): Promise<UserProfile> {
@@ -44,10 +45,14 @@ export async function updateProfile(userId: string, model: UserProfileEdit): Pro
 
 export type AvatarCropRect = { x: number; y: number; width: number; height: number };
 
+// The thumbnail and full-size URLs of a freshly uploaded avatar. Both carry the server's version
+// stamp, so they replace the previous picture in the UI rather than being served from cache.
+export type UploadedAvatar = { avatarUrl: string; avatarLargeUrl: string };
+
 /// Uploads the current user's avatar - the original image plus the crop rectangle chosen in the
 /// client-side cropper (in the original image's pixel coordinates). The server derives both the
 /// large and thumbnail sizes from this itself, rather than trusting client-produced crops.
-export async function uploadAvatar(image: File, crop: AvatarCropRect): Promise<{ avatarUrl: string }> {
+export async function uploadAvatar(image: File, crop: AvatarCropRect): Promise<UploadedAvatar> {
     const form = new FormData();
     form.append("image", image);
     form.append("cropX", String(Math.round(crop.x)));
@@ -55,7 +60,7 @@ export async function uploadAvatar(image: File, crop: AvatarCropRect): Promise<{
     form.append("cropWidth", String(Math.round(crop.width)));
     form.append("cropHeight", String(Math.round(crop.height)));
 
-    return postFormAuthenticated<{ avatarUrl: string }>("/User/Avatar", form);
+    return postFormAuthenticated<UploadedAvatar>("/User/Avatar", form);
 }
 
 /// Removes the current user's avatar, reverting to the initials fallback.

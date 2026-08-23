@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,10 @@ public class AvatarService : IAvatarService
 
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
+
+    // Per-request memo of avatar file versions - see GetFileVersion. Cleared whenever this instance
+    // writes or deletes a file, so a URL handed back after an upload can't be a stale entry.
+    private readonly Dictionary<string, string?> _fileVersions = [];
 
     public AvatarService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
     {
@@ -82,6 +87,8 @@ public class AvatarService : IAvatarService
             }
         }
 
+        _fileVersions.Clear();
+
         await SetImageUploadedAsync(userId, true, cancellationToken);
 
         return Result.Ok();
@@ -92,12 +99,13 @@ public class AvatarService : IAvatarService
     {
         DeleteIfExists(GetFilePath(userId, small: false));
         DeleteIfExists(GetFilePath(userId, small: true));
+        _fileVersions.Clear();
 
         await SetImageUploadedAsync(userId, false, cancellationToken);
     }
 
     /// <inheritdoc />
-    public string? GetAvatarUrl(Guid userId, bool imageUploaded)
+    public string? GetAvatarUrl(Guid userId, bool imageUploaded, bool large = false)
     {
         if (!imageUploaded)
         {
@@ -110,7 +118,45 @@ public class AvatarService : IAvatarService
             return null;
         }
 
-        return $"{baseUrl}/uploads/avatars/{userId}_sm.jpg";
+        var version = GetFileVersion(userId, small: !large);
+        if (version is null)
+        {
+            // Avatars uploaded through the legacy app didn't always leave a large file behind, so
+            // fall back to the thumbnail rather than pointing at a file that isn't there. A missing
+            // thumbnail means there's nothing to show at all - the initials fallback handles it.
+            return large ? GetAvatarUrl(userId, imageUploaded, large: false) : null;
+        }
+
+        var fileName = large ? $"{userId}.jpg" : $"{userId}_sm.jpg";
+
+        // The filename is fixed per user, so a re-upload would otherwise keep being served from the
+        // browser's cache (and from any cache in between) under the URL it already holds. Stamping
+        // the file's own last-write time onto the URL changes it whenever the picture changes,
+        // which is what lets the images be cached hard in the first place - see Program.cs.
+        return $"{baseUrl}/uploads/avatars/{fileName}?v={version}";
+    }
+
+    /// <summary>
+    /// A short version token for one of a user's avatar files - its last-write time - or null if
+    /// the file doesn't exist. Memoised for the lifetime of this (scoped, so per-request) instance,
+    /// since a league table or message board page resolves URLs for many users at once and often
+    /// the same user repeatedly.
+    /// </summary>
+    /// <param name="userId">The user whose avatar file is being stamped.</param>
+    /// <param name="small">True for the thumbnail file, false for the large one.</param>
+    private string? GetFileVersion(Guid userId, bool small)
+    {
+        var path = GetFilePath(userId, small);
+        if (_fileVersions.TryGetValue(path, out var cached))
+        {
+            return cached;
+        }
+
+        var file = new FileInfo(path);
+        var version = file.Exists ? file.LastWriteTimeUtc.Ticks.ToString("x", CultureInfo.InvariantCulture) : null;
+        _fileVersions[path] = version;
+
+        return version;
     }
 
     private async Task SetImageUploadedAsync(Guid userId, bool imageUploaded, CancellationToken cancellationToken)

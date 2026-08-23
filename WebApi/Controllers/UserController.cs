@@ -106,7 +106,11 @@ public class UserController : ApiControllerBase
             return FromResult(result);
         }
 
-        return Ok(new { avatarUrl = _avatarService.GetAvatarUrl(CurrentUserId, imageUploaded: true) });
+        return Ok(new
+        {
+            avatarUrl = _avatarService.GetAvatarUrl(CurrentUserId, imageUploaded: true),
+            avatarLargeUrl = _avatarService.GetAvatarUrl(CurrentUserId, imageUploaded: true, large: true),
+        });
     }
 
     /// <summary>

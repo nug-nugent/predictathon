@@ -6,7 +6,7 @@ import {
 import { ArrowLeft, Camera } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
 import { Role } from "../../../constants/roles";
-import { getUserProfileForEdit, updateProfile, type UserProfileEdit } from "../../../services/profile-service";
+import { getUserProfileForEdit, updateProfile, type UploadedAvatar, type UserProfileEdit } from "../../../services/profile-service";
 import { ApiError } from "../../../services/api";
 import { Panel } from "../../../components/ui/panel";
 import { AvatarUploadDialog } from "../../../components/profile/AvatarUploadDialog";
@@ -57,11 +57,10 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
     const [error, setError] = useState<string | null>(null);
     const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
-    const handleAvatarUploaded = (newAvatarUrl: string) => {
-        // Cache-bust: the filename never changes, so the browser would otherwise keep showing the
-        // previous image from cache.
-        const busted = `${newAvatarUrl}?v=${Date.now()}`;
-        if (user) setUser({ ...user, avatarUrl: busted });
+    const handleAvatarUploaded = (avatar: UploadedAvatar) => {
+        // The URL carries the server's version stamp, so it points at the new picture rather than
+        // whatever the browser has cached under the (unchanged) filename.
+        if (user) setUser({ ...user, avatarUrl: avatar.avatarUrl });
     };
 
     const handleAvatarRemoved = () => {
