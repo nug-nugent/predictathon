@@ -1,4 +1,4 @@
-import { HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
+import { Avatar, HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
 import { CircleHelp } from "lucide-react";
 import { Link } from "react-router";
 import { Panel } from "../ui/panel";
@@ -82,7 +82,18 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
                                     <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
                                 </Table.Cell>
-                                <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
+                                <Table.Cell fontSize={"0.9em"}>
+                                    <HStack gap={2}>
+                                        {/* Avatar.Fallback renders the user's initial when they haven't uploaded a picture.
+                                            The avatar is decorative - the username it sits beside already names the row -
+                                            so it's hidden from assistive tech rather than read out as a stray letter. */}
+                                        <Avatar.Root size="2xs" flexShrink={0} aria-hidden="true">
+                                            <Avatar.Image src={item.avatarUrl ?? undefined} />
+                                            <Avatar.Fallback name={item.username} />
+                                        </Avatar.Root>
+                                        <Link to={`/profile/${item.userID}`}>{item.username}</Link>
+                                    </HStack>
+                                </Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>

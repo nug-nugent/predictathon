@@ -1,3 +1,5 @@
+﻿using System.Text.Json.Serialization;
+
 namespace Predictathon.Application.Models;
 
 /// <summary>
@@ -10,6 +12,20 @@ public class LeagueTableItem
     public string Username { get; set; } = string.Empty;
 
     public Guid UserID { get; set; }
+
+    /// <summary>
+    /// Whether the user has uploaded an avatar image. Only used to derive <see cref="AvatarUrl"/>,
+    /// so it isn't serialised to clients.
+    /// </summary>
+    [JsonIgnore]
+    public bool ImageUploaded { get; set; }
+
+    /// <summary>
+    /// The user's small avatar image URL, or null when they haven't uploaded one (clients fall back
+    /// to their initial). Populated by the service from <see cref="ImageUploaded"/>, not by the
+    /// stored procedure.
+    /// </summary>
+    public string? AvatarUrl { get; set; }
 
     public int LeaguePosition { get; set; }
 

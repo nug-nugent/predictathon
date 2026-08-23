@@ -1,9 +1,10 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Services;
 using Predictathon.Domain.Entities;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
+using Predictathon.IntegrationTests.TestDoubles;
 
 namespace Predictathon.IntegrationTests.LeagueTable;
 
@@ -86,7 +87,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext);
+            var service = new LeagueTableService(dbContext, new StubAvatarService());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -175,7 +176,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext);
+            var service = new LeagueTableService(dbContext, new StubAvatarService());
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID, dateForComparison: today);
@@ -220,7 +221,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext);
+            var service = new LeagueTableService(dbContext, new StubAvatarService());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -229,6 +230,47 @@ public class LeagueTableServiceTests
         finally
         {
             await CleanUpAsync(dbContext, competition.CompetitionID, [], [user.Id], []);
+        }
+    }
+
+    [Fact]
+    public async Task GetLeagueTableAsync_PopulatesAvatarUrl_OnlyForUsersWithAnUploadedImage()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var competition = new Competition
+        {
+            CompetitionID = Guid.NewGuid(),
+            CompetitionName = $"Integration Test {Guid.NewGuid():N}",
+            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30)),
+            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+        };
+        dbContext.Competition.Add(competition);
+
+        var withAvatar = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"with-avatar-{Guid.NewGuid():N}", ImageUploaded = true };
+        var withoutAvatar = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"without-avatar-{Guid.NewGuid():N}", ImageUploaded = false };
+        dbContext.Users.AddRange(withAvatar, withoutAvatar);
+
+        dbContext.UserCompetition.AddRange(
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = withAvatar.Id, CompetitionID = competition.CompetitionID },
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = withoutAvatar.Id, CompetitionID = competition.CompetitionID });
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            var service = new LeagueTableService(dbContext, new StubAvatarService());
+
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID);
+
+            // The procedure returns ImageUploaded per user; the service turns it into a URL, so
+            // clients can render an avatar beside a player without a lookup per row.
+            table.Single(r => r.UserID == withAvatar.Id).AvatarUrl.Should().Be(StubAvatarService.AvatarUrl);
+            table.Single(r => r.UserID == withoutAvatar.Id).AvatarUrl.Should().BeNull();
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, competition.CompetitionID, [], [withAvatar.Id, withoutAvatar.Id], []);
         }
     }
 

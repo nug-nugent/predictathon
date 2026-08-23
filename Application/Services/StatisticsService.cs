@@ -1,5 +1,6 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
@@ -16,10 +17,12 @@ public class StatisticsService : IStatisticsService
     private const int PredictableMatchesMaxResults = 50;
 
     private readonly IGenericDbContext _dbContext;
+    private readonly IAvatarService _avatarService;
 
-    public StatisticsService(IGenericDbContext dbContext)
+    public StatisticsService(IGenericDbContext dbContext, IAvatarService avatarService)
     {
         _dbContext = dbContext;
+        _avatarService = avatarService;
     }
 
     // A DbContext (and the ADO.NET connection it wraps) isn't safe for concurrent operations, so
@@ -40,7 +43,9 @@ public class StatisticsService : IStatisticsService
     /// <inheritdoc />
     public async Task<IReadOnlyList<LeagueTableItem>> GetAllTimeLeagueTableAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("Statistics_AllTimeLeagueTableGet", cancellationToken: cancellationToken);
+        var table = await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("Statistics_AllTimeLeagueTableGet", cancellationToken: cancellationToken);
+
+        return table.WithAvatarUrls(_avatarService);
     }
 
     /// <inheritdoc />
