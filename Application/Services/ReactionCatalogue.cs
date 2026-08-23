@@ -39,6 +39,24 @@ public partial class ReactionCatalogue : IReactionCatalogue
     public IReadOnlyList<CustomReactionModel> GetCustomReactions() => GetData().CustomReactions;
 
     /// <inheritdoc />
+    public string? Canonicalise(string reactionId)
+    {
+        var imageFile = ResolveImageFile(reactionId);
+        if (imageFile is null)
+        {
+            return null;
+        }
+
+        // A custom reaction's id is already the one spelling it has.
+        if (reactionId.StartsWith("c:", StringComparison.Ordinal))
+        {
+            return reactionId;
+        }
+
+        return $"u:{Path.GetFileNameWithoutExtension(imageFile)}";
+    }
+
+    /// <inheritdoc />
     public string? ResolveImageFile(string reactionId)
     {
         if (string.IsNullOrWhiteSpace(reactionId))

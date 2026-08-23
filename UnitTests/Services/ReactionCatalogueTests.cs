@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Predictathon.Application.Services;
@@ -130,4 +131,109 @@ public class ReactionCatalogueTests
     {
         MakeCatalogue().ResolveImageFile(reactionId).Should().BeNull();
     }
+
+    [Theory]
+    // The split that was live in production: the legacy site's spelling and the picker's spelling
+    // of the red heart both reduce to the one identity.
+    [InlineData("u:2764-fe0f", "u:2764")]
+    [InlineData("u:2764", "u:2764")]
+    // Padded/unpadded, and the keycaps.
+    [InlineData("u:00a9-fe0f", "u:a9")]
+    [InlineData("u:a9", "u:a9")]
+    [InlineData("u:0031-fe0f-20e3", "u:31-20e3")]
+    // ZWJ sequences that legitimately keep FE0F are already canonical.
+    [InlineData("u:2764-fe0f-200d-1f525", "u:2764-fe0f-200d-1f525")]
+    // ...and the one that drops it despite being a ZWJ sequence.
+    [InlineData("u:1f441-fe0f-200d-1f5e8-fe0f", "u:1f441-200d-1f5e8")]
+    // Custom reactions have only one spelling.
+    [InlineData("c:ludo", "c:ludo")]
+    public void Canonicalise_ReducesEverySpellingOfAnEmojiToOneIdentity(string reactionId, string expected)
+    {
+        MakeCatalogue().Canonicalise(reactionId).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("u:not-hex")]
+    [InlineData("c:not-a-real-reaction")]
+    [InlineData("u:../../appsettings.json")]
+    [InlineData("")]
+    public void Canonicalise_UnknownIdentity_ReturnsNull(string reactionId)
+    {
+        MakeCatalogue().Canonicalise(reactionId).Should().BeNull();
+    }
+
+    /// <summary>
+    /// Canonicalising must be a fixed point - feeding a canonical identity back in has to return
+    /// it unchanged, or the migration and the add path would keep rewriting rows forever.
+    /// </summary>
+    [Fact]
+    public void Canonicalise_IsIdempotentAcrossTheWholeDataset()
+    {
+        var catalogue = MakeCatalogue();
+        var identities = ReadDatasetIdentities();
+
+        var unstable = identities
+            .Select(u => catalogue.Canonicalise($"u:{u}"))
+            .OfType<string>()
+            .Where(canonical => catalogue.Canonicalise(canonical) != canonical)
+            .ToList();
+
+        unstable.Should().BeEmpty("canonicalising an already-canonical identity must be a no-op");
+    }
+
+    /// <summary>
+    /// The SQL migration can't compute canonical forms itself (the Twemoji filename rule has
+    /// exceptions), so it carries a generated mapping. This asserts that mapping still agrees with
+    /// ReactionCatalogue - if the assets are re-vendored and the two drift apart, production data
+    /// would be rewritten to identities the app no longer resolves.
+    /// </summary>
+    [Fact]
+    public void CanonicalisationMigration_MappingAgreesWithTheCatalogue()
+    {
+        var catalogue = MakeCatalogue();
+        var sql = File.ReadAllText(Path.Combine(
+            RepositoryRoot, "Database", "Post-Deployment", "Migrations", "02_CanonicaliseMessageReactionIdentity.sql"));
+
+        var pairs = Regex.Matches(sql, @"^\s*\('(?<from>[^']+)',\s*'(?<to>[^']+)'\)", RegexOptions.Multiline)
+            .Select(m => (From: m.Groups["from"].Value, To: m.Groups["to"].Value))
+            .ToList();
+
+        pairs.Should().NotBeEmpty("the migration should carry a generated mapping");
+
+        var disagreements = pairs
+            .Where(p => catalogue.Canonicalise(p.From) != p.To)
+            .Select(p => $"{p.From} -> {p.To} (catalogue says {catalogue.Canonicalise(p.From) ?? "null"})")
+            .ToList();
+
+        disagreements.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Every non-canonical spelling the picker can produce must be in the migration's mapping,
+    /// otherwise those rows stay split after the migration runs.
+    /// </summary>
+    [Fact]
+    public void CanonicalisationMigration_CoversEveryNonCanonicalSpellingThePickerCanProduce()
+    {
+        var catalogue = MakeCatalogue();
+        var sql = File.ReadAllText(Path.Combine(
+            RepositoryRoot, "Database", "Post-Deployment", "Migrations", "02_CanonicaliseMessageReactionIdentity.sql"));
+
+        var mapped = Regex.Matches(sql, @"^\s*\('(?<from>[^']+)',\s*'(?<to>[^']+)'\)", RegexOptions.Multiline)
+            .Select(m => m.Groups["from"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var missing = ReadDatasetIdentities()
+            .Select(u => $"u:{u}")
+            .Where(id => catalogue.Canonicalise(id) is string canonical && canonical != id)
+            .Where(id => !mapped.Contains(id))
+            .ToList();
+
+        missing.Should().BeEmpty("every spelling that needs rewriting must appear in the migration's mapping");
+    }
+
+    private static List<string> ReadDatasetIdentities()
+        => File.ReadAllLines(Path.Combine(RepositoryRoot, "UnitTests", "TestData", "emoji-mart-unified-15.txt"))
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
 }
