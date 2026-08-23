@@ -3,6 +3,7 @@ import { CircleHelp } from "lucide-react";
 import { Link } from "react-router";
 import { Panel } from "../ui/panel";
 import { LeaguePositionChangeIcon } from "./LeaguePositionChangeIcon";
+import { PlayerAvatar } from "./PlayerAvatar";
 import { useUser } from "../../hooks/useUser";
 import type { LeagueTableItem } from "../../services/league-service";
 
@@ -82,7 +83,12 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
                                     <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
                                 </Table.Cell>
-                                <Table.Cell fontSize={"0.9em"}><Link to={`/profile/${item.userID}`}>{item.username}</Link></Table.Cell>
+                                <Table.Cell fontSize={"0.9em"}>
+                                    <HStack gap={2}>
+                                        <PlayerAvatar username={item.username} avatarUrl={item.avatarUrl} />
+                                        <Link to={`/profile/${item.userID}`}>{item.username}</Link>
+                                    </HStack>
+                                </Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>

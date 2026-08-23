@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		David Huggett
 -- Create date: 20/08/2026
 -- Description:	Returns the all-time league table - one row per user across every competition
@@ -13,6 +13,7 @@ BEGIN
 	SELECT
 		[User].UserName AS Username
 		, [User].Id AS UserID
+		, [User].ImageUploaded
 		, LeaguePosition = ROW_NUMBER() OVER(ORDER BY
 											ISNULL(SUM(p.Score), 0) DESC --Total points
 											, ISNULL(SUM(p.GoalDifference), 0) DESC --GD
@@ -36,6 +37,7 @@ BEGIN
 	GROUP BY
 		[User].UserName
 		, [User].Id
+		, [User].ImageUploaded
 	ORDER BY
 		LeaguePosition;
 END;

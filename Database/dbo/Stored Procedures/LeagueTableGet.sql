@@ -17,6 +17,7 @@ BEGIN
 	SELECT
 		[User].UserName AS Username
 		, [User].Id AS UserID
+		, [User].ImageUploaded
 		, LeaguePosition = ROW_NUMBER() OVER(ORDER BY
 											ISNULL(SUM(p.Score), 0) DESC --Total points
 											, ISNULL(SUM(p.GoalDifference), 0) DESC --GD
@@ -65,6 +66,7 @@ BEGIN
 	GROUP BY
 		[User].UserName
 		, [User].Id
+		, [User].ImageUploaded
 		, uc.UserCompetitionID
 	ORDER BY
 		LeaguePosition;

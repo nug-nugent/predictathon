@@ -7,6 +7,8 @@ import { toDateOnly } from "../utils/toDateOnly";
 export type LeagueTableItem = {
     username: string;
     userID: string;
+    // Null when the user hasn't uploaded an avatar - callers fall back to their initial.
+    avatarUrl: string | null;
     leaguePosition: number;
     previousLeaguePosition: number | null;
     score: number;

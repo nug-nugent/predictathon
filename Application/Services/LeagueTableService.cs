@@ -1,5 +1,6 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
@@ -11,10 +12,12 @@ namespace Predictathon.Application.Services;
 public class LeagueTableService : ILeagueTableService
 {
     private readonly IGenericDbContext _dbContext;
+    private readonly IAvatarService _avatarService;
 
-    public LeagueTableService(IGenericDbContext dbContext)
+    public LeagueTableService(IGenericDbContext dbContext, IAvatarService avatarService)
     {
         _dbContext = dbContext;
+        _avatarService = avatarService;
     }
 
     /// <inheritdoc />
@@ -33,7 +36,9 @@ public class LeagueTableService : ILeagueTableService
             new SqlParameter("@DateForComparison", SqlDbType.Date) { Value = ToSqlValue(dateForComparison) },
         };
 
-        return await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("LeagueTableGet", parameters, cancellationToken);
+        var table = await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("LeagueTableGet", parameters, cancellationToken);
+
+        return table.WithAvatarUrls(_avatarService);
     }
 
     private static object ToSqlValue(DateOnly? date)

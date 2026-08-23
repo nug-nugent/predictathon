@@ -1,9 +1,10 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Services;
 using Predictathon.Domain.Entities;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
+using Predictathon.IntegrationTests.TestDoubles;
 
 namespace Predictathon.IntegrationTests.Statistics;
 
@@ -107,7 +108,7 @@ public class AllTimeLeagueTableTests
 
         try
         {
-            var service = new StatisticsService(dbContext);
+            var service = new StatisticsService(dbContext, new StubAvatarService());
 
             var table = await service.GetAllTimeLeagueTableAsync();
 
