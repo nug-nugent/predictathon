@@ -14,7 +14,17 @@ Usage:
   <PropertyGroup>
     <IncludeCompositeObjects>True</IncludeCompositeObjects>
     <ProfileVersionNumber>1</ProfileVersionNumber>
-    <BlockOnPossibleDataLoss>True</BlockOnPossibleDataLoss>
+    <!-- False so the diff can drop a column that still holds data - it can't otherwise, and a
+         pre-deployment workaround doesn't help: the deployment plan is generated before
+         pre-deployment scripts run, so the plan still contains the DROP and then fails on the
+         already-dropped column. Turned off when MessageReaction.ImageUrl was retired.
+
+         Note this pairs with DropObjectsNotInSource below: together they mean a table definition
+         accidentally deleted from this project is dropped, with its data, on the next deploy
+         rather than blocking. The deploy workflow's `sqlpackage /Action:Script` step (which runs
+         before /Action:Publish) is what's left to catch that - it writes the generated plan out,
+         so review it whenever a deploy touches a table you didn't intend to change. -->
+    <BlockOnPossibleDataLoss>False</BlockOnPossibleDataLoss>
     <DropObjectsNotInSource>True</DropObjectsNotInSource>
     <!-- Users/RoleMembership/DatabaseRoles/Permissions are SQL Server's own database
          principals and role grants - not modelled here, provisioned by the host outside this

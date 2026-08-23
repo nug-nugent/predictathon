@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Predictathon.Application.Services;
@@ -179,57 +178,6 @@ public class ReactionCatalogueTests
             .ToList();
 
         unstable.Should().BeEmpty("canonicalising an already-canonical identity must be a no-op");
-    }
-
-    /// <summary>
-    /// The SQL migration can't compute canonical forms itself (the Twemoji filename rule has
-    /// exceptions), so it carries a generated mapping. This asserts that mapping still agrees with
-    /// ReactionCatalogue - if the assets are re-vendored and the two drift apart, production data
-    /// would be rewritten to identities the app no longer resolves.
-    /// </summary>
-    [Fact]
-    public void CanonicalisationMigration_MappingAgreesWithTheCatalogue()
-    {
-        var catalogue = MakeCatalogue();
-        var sql = File.ReadAllText(Path.Combine(
-            RepositoryRoot, "Database", "Post-Deployment", "Migrations", "02_CanonicaliseMessageReactionIdentity.sql"));
-
-        var pairs = Regex.Matches(sql, @"^\s*\('(?<from>[^']+)',\s*'(?<to>[^']+)'\)", RegexOptions.Multiline)
-            .Select(m => (From: m.Groups["from"].Value, To: m.Groups["to"].Value))
-            .ToList();
-
-        pairs.Should().NotBeEmpty("the migration should carry a generated mapping");
-
-        var disagreements = pairs
-            .Where(p => catalogue.Canonicalise(p.From) != p.To)
-            .Select(p => $"{p.From} -> {p.To} (catalogue says {catalogue.Canonicalise(p.From) ?? "null"})")
-            .ToList();
-
-        disagreements.Should().BeEmpty();
-    }
-
-    /// <summary>
-    /// Every non-canonical spelling the picker can produce must be in the migration's mapping,
-    /// otherwise those rows stay split after the migration runs.
-    /// </summary>
-    [Fact]
-    public void CanonicalisationMigration_CoversEveryNonCanonicalSpellingThePickerCanProduce()
-    {
-        var catalogue = MakeCatalogue();
-        var sql = File.ReadAllText(Path.Combine(
-            RepositoryRoot, "Database", "Post-Deployment", "Migrations", "02_CanonicaliseMessageReactionIdentity.sql"));
-
-        var mapped = Regex.Matches(sql, @"^\s*\('(?<from>[^']+)',\s*'(?<to>[^']+)'\)", RegexOptions.Multiline)
-            .Select(m => m.Groups["from"].Value)
-            .ToHashSet(StringComparer.Ordinal);
-
-        var missing = ReadDatasetIdentities()
-            .Select(u => $"u:{u}")
-            .Where(id => catalogue.Canonicalise(id) is string canonical && canonical != id)
-            .Where(id => !mapped.Contains(id))
-            .ToList();
-
-        missing.Should().BeEmpty("every spelling that needs rewriting must appear in the migration's mapping");
     }
 
     private static List<string> ReadDatasetIdentities()

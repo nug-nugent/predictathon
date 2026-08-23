@@ -23,13 +23,7 @@ WHEN NOT MATCHED THEN
 -- Linux, where a backslash is treated as part of the filename)
 :r ReferenceData/01_Teams.sql
 
--- One-off data migrations (idempotent, guarded - safe to leave in place once run).
--- GO between each: :r inlines the scripts into one script, and DECLARE is batch-scoped (it isn't
--- contained by the IF/BEGIN blocks inside them), so without a batch separator two migrations
--- declaring a variable of the same name fail the whole deployment with "The variable name '@X'
--- has already been declared". Keep the GO when adding a migration here.
-GO
-:r Migrations/01_BackfillMessageReactionIdentity.sql
-GO
-:r Migrations/02_CanonicaliseMessageReactionIdentity.sql
-GO
+-- No data migrations are pending. When adding one, put a GO before and after its :r line: :r
+-- inlines scripts into a single batch and DECLARE is batch-scoped (it is not contained by an
+-- IF/BEGIN block inside the script), so two migrations declaring the same variable name fail the
+-- entire deployment with "The variable name '@X' has already been declared".

@@ -321,7 +321,17 @@ public class MessageboardService : IMessageboardService
                 CreationDate = DateTime.UtcNow,
             }, cancellationToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DuplicateKeyException)
+            {
+                // The check above is a read-then-write, so two concurrent clicks can both pass it.
+                // IX_MessageReaction_MessageID_UserID_ReactionId is what actually enforces one
+                // reaction per user per identity; losing this race just means the reaction the
+                // caller asked for already exists, which is the outcome they wanted anyway.
+            }
         }
 
         var reactions = await GetReactionsAsync(messageId, cancellationToken);
