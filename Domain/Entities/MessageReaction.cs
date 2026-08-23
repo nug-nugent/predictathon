@@ -18,8 +18,6 @@ public partial class MessageReaction
 
     public string ReactionName { get; set; } = null!;
 
-    public string? ImageUrl { get; set; }
-
     public DateTime CreationDate { get; set; }
 
     public virtual Message Message { get; set; } = null!;

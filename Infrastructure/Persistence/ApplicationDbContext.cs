@@ -193,9 +193,10 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
             entity.HasIndex(e => new { e.MessageID, e.CreationDate }, "IX_MessageReaction_MessageID");
 
+            entity.HasIndex(e => new { e.MessageID, e.UserID, e.ReactionId }, "IX_MessageReaction_MessageID_UserID_ReactionId").IsUnique();
+
             entity.Property(e => e.MessageReactionID).ValueGeneratedNever();
             entity.Property(e => e.CreationDate).HasColumnType("datetime");
-            entity.Property(e => e.ImageUrl).HasMaxLength(500);
             entity.Property(e => e.ReactionId).HasMaxLength(100);
             entity.Property(e => e.ReactionName).HasMaxLength(200);
 
