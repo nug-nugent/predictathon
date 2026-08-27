@@ -41,9 +41,10 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
   const [error, setError] = useState<ApiError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Read once, on arrival. The selected week gets stamped back into ?week= below, so reading it
-  // live here (and depending on it) would re-run the initial load against our own write.
-  const requestedWeek = useRef(searchParams.get("week")).current;
+  // Read once, on arrival - lazy initial state rather than a ref, because a ref's current value
+  // can't be read during render. The selected week gets stamped back into ?week= below, so reading
+  // it live here (and depending on it) would re-run the initial load against our own write.
+  const [requestedWeek] = useState(() => searchParams.get("week"));
 
   // Guards against a slower, older request's response landing after a newer one (e.g. clicking
   // through weeks quickly) - only the response matching the latest request is ever applied.

@@ -67,7 +67,14 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: W
                     <ChevronLeft size={16} />
                 </NavButton>
 
-                <NativeSelect.Root width="auto" size="sm">
+                {/* The outstanding-predictions marker makes this too wide to sit between the nav
+                    buttons on a phone - they'd wrap around it in pieces. Give it its own line
+                    there instead, with all four buttons flowing beneath it. */}
+                <NativeSelect.Root
+                    width={{ base: "100%", md: "auto" }}
+                    order={{ base: -1, md: 0 }}
+                    size="sm"
+                >
                     <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
                         {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.get(w))}</option>)}
                     </NativeSelect.Field>
