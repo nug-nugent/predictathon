@@ -1,7 +1,7 @@
 import { Heading, HStack, Link, Text, VStack } from "@chakra-ui/react";
 import { Timer } from "lucide-react";
 import { Link as RouterLink } from "react-router";
-import { getCompetitionWeeks, computeDefaultWeek, getMatchesForWeek } from "../../services/prediction-service";
+import { getCompetitionWeekSummaries, computePredictionsLandingWeek, getMatchesForWeek } from "../../services/prediction-service";
 import { Panel } from "../ui/panel";
 import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
@@ -34,31 +34,30 @@ function formatDeadline(deadline: Date): string {
 
 export function PredictionDeadlineCard({ competitionId }: { competitionId: string }) {
     const { data: state, error } = useAsyncData<State>(async () => {
-        const weeks = await getCompetitionWeeks(competitionId);
-        const currentWeek = computeDefaultWeek(weeks);
-        if (!currentWeek) return { next: null, upcoming: null };
-
+        const summaries = await getCompetitionWeekSummaries(competitionId);
         const now = new Date();
-        const matches = await getMatchesForWeek(competitionId, currentWeek);
+
+        // The server already knows which weeks hold predictions this user can still make, so go
+        // straight to the earliest of them - this used to walk the season a week at a time, which
+        // got slower with every round played.
+        const outstandingWeek = summaries.find((s) => s.openUnpredictedCount > 0);
+        if (!outstandingWeek) return { next: null, upcoming: null };
+
+        const matches = await getMatchesForWeek(competitionId, outstandingWeek.weekStart);
         const predictable = predictableMatches(matches, now);
 
-        if (predictable.length > 0) {
-            const soonest = predictable[0];
-            return { next: { homeTeamShortName: soonest.homeTeamShortName, awayTeamShortName: soonest.awayTeamShortName, deadline: soonest.deadline, remaining: predictable.length }, upcoming: null };
+        // The count comes from the server clock, which still counts a match as open through the two
+        // minutes before kick-off that the client has already closed. Nothing actionable to show.
+        if (predictable.length === 0) return { next: null, upcoming: null };
+
+        // Counting down only makes sense for the week /predictions itself opens on; anything
+        // further out is a heads-up that links to the week in question.
+        const soonest = predictable[0];
+        if (outstandingWeek.weekStart !== computePredictionsLandingWeek(summaries, now)) {
+            return { next: null, upcoming: { week: outstandingWeek.weekStart, deadline: soonest.deadline } };
         }
 
-        // This week's fully predicted (or missed) - look ahead week by week for whenever the next
-        // prediction opportunity actually closes, so the card still has something useful to say.
-        const futureWeeks = weeks.filter((w) => new Date(w) > new Date(currentWeek));
-        for (const week of futureWeeks) {
-            const weekMatches = await getMatchesForWeek(competitionId, week);
-            const weekPredictable = predictableMatches(weekMatches, now);
-            if (weekPredictable.length > 0) {
-                return { next: null, upcoming: { week, deadline: weekPredictable[0].deadline } };
-            }
-        }
-
-        return { next: null, upcoming: null };
+        return { next: { homeTeamShortName: soonest.homeTeamShortName, awayTeamShortName: soonest.awayTeamShortName, deadline: soonest.deadline, remaining: predictable.length }, upcoming: null };
     }, [competitionId]);
 
     if (error) {
@@ -80,7 +79,7 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
             </HStack>
             {next === null ? (
                 <VStack align="stretch" gap={1}>
-                    <Text color="green.500">All matches this week predicted.</Text>
+                    <Text color="green.500">All your predictions are in.</Text>
                     {upcoming && (
                         <Link asChild colorPalette="action" fontSize="14px" fontWeight="bold" alignSelf="flex-start" mt={1}>
                             <RouterLink to={`/predictions?week=${encodeURIComponent(upcoming.week)}`}>
@@ -98,7 +97,7 @@ export function PredictionDeadlineCard({ competitionId }: { competitionId: strin
                         </Text>
                     </Text>
                     {next.remaining > 1 && (
-                        <Text fontSize="sm" color="fg.muted">+{next.remaining - 1} more to predict this week</Text>
+                        <Text fontSize="sm" color="fg.muted">+{next.remaining - 1} more to predict</Text>
                     )}
                     <Link asChild colorPalette="action" fontSize="14px" fontWeight="bold" alignSelf="flex-start" mt={1}>
                         <RouterLink to="/predictions">Predict now &rarr;</RouterLink>

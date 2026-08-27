@@ -1,4 +1,5 @@
 import { getJsonAuthenticated, postJsonAuthenticated } from "./api";
+import { CUTOFF_MINUTES } from "../components/match/matchStatus";
 
 // Matches Application/Models/UserMatchPredictionListItem.cs.
 export type MatchPrediction = {
@@ -27,6 +28,22 @@ export type MatchPrediction = {
 /// The Friday-starting weeks a competition has matches in, earliest first.
 export async function getCompetitionWeeks(competitionId: string): Promise<string[]> {
     return getJsonAuthenticated<string[]>(`/Competition/${competitionId}/Weeks`);
+}
+
+// Matches Application/Models/CompetitionWeekSummary.cs.
+export type CompetitionWeekSummary = {
+    weekStart: string;
+    /** Kick-off of the week's latest match - openness is decided here, against CUTOFF_MINUTES. */
+    lastMatchDateTime: string;
+    /** Matches in the week the user hasn't predicted and can still predict. */
+    openUnpredictedCount: number;
+};
+
+/// The competition's weeks summarised for the current user - week boundaries plus what's still
+/// outstanding in each. Same weeks getCompetitionWeeks returns, with the extra per-user detail the
+/// Predictions page needs.
+export async function getCompetitionWeekSummaries(competitionId: string): Promise<CompetitionWeekSummary[]> {
+    return getJsonAuthenticated<CompetitionWeekSummary[]>(`/Competition/${competitionId}/WeekSummaries`);
 }
 
 export async function getMatchesForWeek(competitionId: string, dateFrom: string): Promise<MatchPrediction[]> {
@@ -66,10 +83,10 @@ function matchWeekStartDate(date: Date): Date {
     return bucketed;
 }
 
-/// Picks which week to show by default: the week containing today (if it has matches), the next
-/// upcoming week with matches (if today falls in a gap), the competition's first week (if it hasn't
-/// started yet), or its last week (if it's already finished). Ported from Predictions.aspx.vb's
-/// Page_Load week-selection logic. Returns "" if the competition has no weeks at all.
+/// Picks which week to show by default: the week containing today (if it has matches), the most
+/// recent week with matches before today (if today falls in a gap), the competition's first week (if
+/// it hasn't started yet), or its last week (if it's already finished). Ported from
+/// Predictions.aspx.vb's Page_Load week-selection logic. Returns "" if there are no weeks at all.
 export function computeDefaultWeek(weeks: string[]): string {
     if (weeks.length === 0) {
         return "";
@@ -86,4 +103,18 @@ export function computeDefaultWeek(weeks: string[]): string {
     }
 
     return weeks[weeks.indexOf(nextWeek) - 1];
+}
+
+/// Picks the week /predictions lands on: the earliest week that still contains a predictable match
+/// (its last kick-off is more than the save cutoff away), so you arrive somewhere you can still act
+/// - entering predictions, or taking a last look at ones already made before the deadline. Testing
+/// the week's last match is enough: if that one's still open, at least one match in the week is.
+/// Falls back to computeDefaultWeek once nothing is open at all (season over, or every deadline
+/// passed), which also covers the empty-competition case.
+export function computePredictionsLandingWeek(summaries: CompetitionWeekSummary[], now: Date): string {
+    const open = summaries.find(
+        (s) => new Date(s.lastMatchDateTime).getTime() - CUTOFF_MINUTES * 60000 > now.getTime()
+    );
+
+    return open?.weekStart ?? computeDefaultWeek(summaries.map((s) => s.weekStart));
 }

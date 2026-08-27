@@ -5,11 +5,16 @@ type WeekPickerProps = {
     weeks: string[];
     selectedWeek: string;
     onWeekChange: (dateFrom: string) => void;
+    /** Week start -> matches still to predict in it, for weeks that have any. */
+    outstanding?: Map<string, number>;
 };
 
-function formatWeek(week: string): string {
+function formatWeek(week: string, outstandingCount: number | undefined): string {
     // Browser locale (not a hardcoded one) - matches every other date in the app.
-    return new Date(week).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+    const formatted = new Date(week).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+
+    // A native <option> can't carry a badge element, so the marker has to be part of its text.
+    return outstandingCount ? `${formatted} (${outstandingCount} to predict)` : formatted;
 }
 
 // Clamps the day-of-month to the last day of the target month (matches date-fns' addMonths), so
@@ -22,7 +27,7 @@ function addMonths(date: Date, months: number): Date {
     return result;
 }
 
-export function WeekPicker({ weeks, selectedWeek, onWeekChange }: WeekPickerProps) {
+export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: WeekPickerProps) {
     const weekDates = weeks.map((w) => new Date(w));
     const index = weeks.indexOf(selectedWeek);
 
@@ -64,7 +69,7 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange }: WeekPickerProp
 
                 <NativeSelect.Root width="auto" size="sm">
                     <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
-                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w)}</option>)}
+                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.get(w))}</option>)}
                     </NativeSelect.Field>
                     <NativeSelect.Indicator />
                 </NativeSelect.Root>

@@ -1,4 +1,4 @@
-using Mapster;
+﻿using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Predictathon.Application.Constants;
@@ -166,6 +166,20 @@ public class CompetitionController : ApiControllerBase
     public async Task<ActionResult<IReadOnlyList<DateTime>>> GetWeeks(Guid id)
     {
         return Ok(await _competitionService.GetCompetitionWeeksAsync(id));
+    }
+
+    /// <summary>
+    /// Get the competition's match weeks summarised for the current user - when each week's last
+    /// match kicks off, and how many matches in it they can still predict. Used by the Predictions
+    /// page to pick which week to land on and to flag weeks with outstanding predictions.
+    /// </summary>
+    /// <param name="id">The competition to get week summaries for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{id:guid}/WeekSummaries")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<CompetitionWeekSummary>>> GetWeekSummaries(Guid id, CancellationToken cancellationToken)
+    {
+        return Ok(await _competitionService.GetCompetitionWeekSummariesAsync(id, CurrentUserId, cancellationToken));
     }
 
     /// <summary>

@@ -63,6 +63,16 @@ public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel
     Task<IList<System.DateTime>> GetCompetitionWeeksAsync(Guid competitionId);
 
     /// <summary>
+    /// Gets the distinct Friday-to-Thursday match weeks for a competition, ordered ascending, each
+    /// summarised for the given user: when the week's last match kicks off, and how many matches in
+    /// it they have yet to predict but still can.
+    /// </summary>
+    /// <param name="competitionId">The competition to get weeks for.</param>
+    /// <param name="userId">The user whose outstanding predictions to count.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IReadOnlyList<CompetitionWeekSummary>> GetCompetitionWeekSummariesAsync(Guid competitionId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets site-wide stats shown on the pre-login landing page.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
