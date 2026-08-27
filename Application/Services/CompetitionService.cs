@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Base;
@@ -133,25 +134,74 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
     /// <inheritdoc />
     public async Task<IList<DateTime>> GetCompetitionWeeksAsync(Guid competitionId)
     {
-        var knownFriday = new DateTime(1990, 1, 5);
-
         var dates = await _appDbContext.Match
             .Where(m => m.CompetitionID == competitionId)
             .Select(m => m.MatchDateTime.Date)
             .Distinct()
             .ToListAsync();
 
-        var weeks = dates.Select(d =>
-        {
-            var diff = (int)(d - knownFriday).TotalDays;
-            var mod = ((diff % 7) + 7) % 7;
-            return d.AddDays(-mod);
-        })
-        .Distinct()
-        .OrderBy(d => d)
-        .ToList();
+        var weeks = dates.Select(MatchWeekStart)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList();
 
         return weeks;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CompetitionWeekSummary>> GetCompetitionWeekSummariesAsync(
+        Guid competitionId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var matches = await _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId)
+            .Select(m => new { m.MatchID, m.MatchDateTime })
+            .ToListAsync(cancellationToken);
+
+        // Queried separately (rather than via m.Prediction.Any(...)) so this doesn't depend on the
+        // Match.Prediction navigation being populated - keeps it working against the unit tests'
+        // InMemory context, which strips navigations by default.
+        var matchIds = _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId)
+            .Select(m => m.MatchID);
+
+        var predictedMatchIds = (await _appDbContext.Prediction
+            .Where(p => p.UserID == userId
+                && matchIds.Contains(p.MatchID)
+                && p.HomeTeamGoals != null
+                && p.AwayTeamGoals != null)
+            .Select(p => p.MatchID)
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        // MatchDateTime is naive UK wall-clock, so compare against UK now rather than server-local.
+        var now = UkClock.Now;
+
+        return matches
+            .GroupBy(m => MatchWeekStart(m.MatchDateTime.Date))
+            .OrderBy(g => g.Key)
+            .Select(g => new CompetitionWeekSummary
+            {
+                WeekStart = g.Key,
+                LastMatchDateTime = g.Max(m => m.MatchDateTime),
+                OpenUnpredictedCount = g.Count(m => m.MatchDateTime > now && !predictedMatchIds.Contains(m.MatchID)),
+            })
+            .ToList();
+    }
+
+    /// <summary>
+    /// Buckets a match date to the Friday its match week starts on. Mirrored client-side by
+    /// prediction-service.ts's matchWeekStartDate - keep the two in step.
+    /// </summary>
+    /// <param name="date">The match date to bucket.</param>
+    private static DateTime MatchWeekStart(DateTime date)
+    {
+        var knownFriday = new DateTime(1990, 1, 5);
+        var diff = (int)(date.Date - knownFriday).TotalDays;
+        var mod = ((diff % 7) + 7) % 7;
+
+        return date.Date.AddDays(-mod);
     }
 
     /// <inheritdoc />
