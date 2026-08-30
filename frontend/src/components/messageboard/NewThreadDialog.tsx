@@ -66,7 +66,7 @@ export function NewThreadDialog({ open, onClose, onCreated }: {
                                 disabled={!subject.trim() || !content.trim()}
                                 onClick={() => { void handleCreate(); }}
                             >
-                                Create thread
+                                Create Thread
                             </Button>
                         </Dialog.Footer>
                     </Dialog.Content>

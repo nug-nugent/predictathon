@@ -40,7 +40,7 @@ export function CompetitionsAdminPage() {
         <VStack align="stretch" gap={4}>
             <PageHeading>Tournaments</PageHeading>
             <HStack justify="flex-end">
-                <Button size="sm" colorPalette="action" onClick={() => setAdding(true)}>Add competition</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setAdding(true)}>Add Competition</Button>
             </HStack>
 
             <Panel overflowX="auto">

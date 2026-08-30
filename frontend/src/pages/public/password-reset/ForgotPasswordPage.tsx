@@ -61,7 +61,7 @@ export function ForgotPasswordPage() {
                         disabled={!userNameOrEmail}
                         colorPalette="action"
                     >
-                        Send reset link
+                        Send Reset Link
                     </Button>
                 </VStack>
             </Panel>

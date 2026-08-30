@@ -108,7 +108,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
                         <Dialog.Body>
                             <VStack align="stretch" gap={3}>
                                 {!imageSrc ? (
-                                    <Button onClick={() => fileInputRef.current?.click()}>Choose a photo</Button>
+                                    <Button onClick={() => fileInputRef.current?.click()}>Choose a Photo</Button>
                                 ) : (
                                     <>
                                         <Box position="relative" h="300px" bg="bg.muted" rounded="md" overflow="hidden">
@@ -137,7 +137,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
                                             </Slider.Control>
                                         </Slider.Root>
                                         <Button size="xs" variant="ghost" alignSelf="start" onClick={() => fileInputRef.current?.click()}>
-                                            Choose a different photo
+                                            Choose a Different Photo
                                         </Button>
                                     </>
                                 )}
@@ -148,7 +148,7 @@ export function AvatarUploadDialog({ open, onClose, hasAvatar, onUploaded, onRem
                         <Dialog.Footer justifyContent={hasAvatar ? "space-between" : "flex-end"}>
                             {hasAvatar && (
                                 <Button variant="ghost" colorPalette="red" loading={removing} disabled={busy} onClick={() => { void handleRemove(); }}>
-                                    Remove photo
+                                    Remove Photo
                                 </Button>
                             )}
                             <HStack>

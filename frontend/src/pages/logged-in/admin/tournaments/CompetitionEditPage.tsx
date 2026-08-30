@@ -388,7 +388,7 @@ function FixtureImportSection({
                             disabled={importing || !canImport}
                             onClick={() => setConfirming(true)}
                         >
-                            Import season fixtures
+                            Import Season Fixtures
                         </Button>
                     </HStack>
                 </VStack>
@@ -497,7 +497,7 @@ function HallOfFameSection({ competitionId }: { competitionId: string }) {
                             disabled={generating || alreadyGenerated || !status.allMatchesPlayed}
                             onClick={() => setConfirming(true)}
                         >
-                            Generate Hall of Fame entry
+                            Generate Hall of Fame Entry
                         </Button>
                     </HStack>
                 </VStack>

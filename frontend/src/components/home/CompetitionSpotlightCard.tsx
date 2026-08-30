@@ -115,7 +115,7 @@ function ScoringExplainerDialog({
                             </VStack>
                         </Dialog.Body>
                         <Dialog.Footer>
-                            <Button colorPalette="action" onClick={onClose}>Got it</Button>
+                            <Button colorPalette="action" onClick={onClose}>Got It</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

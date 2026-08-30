@@ -34,7 +34,7 @@ export function BoardPage() {
             <HStack justify="space-between" mb={2}>
                 <PageHeading>Messageboard</PageHeading>
                 <Button size="sm" colorPalette="action" onClick={() => setDialogOpen(true)} ml="auto">
-                    <Plus size={16} /> New thread
+                    <Plus size={16} /> New Thread
                 </Button>
             </HStack>
             {threads.length === 0 ? (

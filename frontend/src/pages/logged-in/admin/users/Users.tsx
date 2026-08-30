@@ -233,7 +233,7 @@ function UserEditDialog({ user, onClose, onSaved }: {
                                         loading={sendingReset} disabled={sendingReset || resetSent}
                                         onClick={() => { void sendResetEmail(); }}
                                     >
-                                        {resetSent ? "Reset email sent" : "Send password reset email"}
+                                        {resetSent ? "Reset Email Sent" : "Send Password Reset Email"}
                                     </Button>
                                 </Field.Root>
 

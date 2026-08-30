@@ -95,7 +95,7 @@ export function ResetPasswordPage() {
                         disabled={!newPassword || !confirmPassword}
                         colorPalette="action"
                     >
-                        Reset password
+                        Reset Password
                     </Button>
                 </VStack>
             </Panel>

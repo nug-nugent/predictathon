@@ -177,7 +177,7 @@ function RegisterForm({ competition }: { competition: CompetitionRegistrationDet
                             loading={submitting}
                             disabled={!fields.forenames || !fields.surname || !fields.userName || !fields.email || !fields.password || !confirmPassword}
                         >
-                            {competition.entranceFee > 0 ? "Continue to payment" : "Register"}
+                            {competition.entranceFee > 0 ? "Continue to Payment" : "Register"}
                         </Button>
                     </VStack>
                 </Panel>

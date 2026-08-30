@@ -49,7 +49,7 @@ export function PaymentStep({
         return (
             <VStack align="stretch" gap={3}>
                 {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
-                <Button colorPalette="action" loading={submitting} onClick={() => { void joinFree(); }}>Join competition</Button>
+                <Button colorPalette="action" loading={submitting} onClick={() => { void joinFree(); }}>Join Competition</Button>
             </VStack>
         );
     }
@@ -65,7 +65,7 @@ export function PaymentStep({
                         <Input size="sm" disabled={submitting} value={code} onChange={(e) => setCode(e.target.value)} />
                     </Field.Root>
                     <Button colorPalette="action" loading={submitting} disabled={!code} onClick={() => { void redeemCode(); }} alignSelf="flex-start">
-                        Redeem code
+                        Redeem Code
                     </Button>
                 </VStack>
 

@@ -107,7 +107,7 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
                             </Avatar.Root>
                             <Button size="sm" variant="outline" onClick={() => setAvatarDialogOpen(true)}>
                                 <Box as={Camera} boxSize={4} mr={1} />
-                                Change photo
+                                Change Photo
                             </Button>
                         </HStack>
                     )}

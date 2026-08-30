@@ -34,7 +34,7 @@ test("a player's photo can be uploaded, opened full size, and removed", async ({
     await dialog.getByRole("button", { name: "Close" }).click();
 
     await page.getByRole("button", { name: "Change photo" }).click();
-    await page.getByRole("button", { name: "Remove photo" }).click();
+    await page.getByRole("button", { name: "Remove Photo" }).click();
 
     await expect(openFullSize).toBeHidden();
 });

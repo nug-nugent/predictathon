@@ -99,7 +99,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                 <Popover.Root open={open} onOpenChange={(e) => handleOpenChange(e.open)} positioning={{ placement: "bottom-end" }}>
                     <Popover.Trigger asChild>
                         <Button size="2xs" variant="ghost">
-                            All predictions <ChevronDown size={12} />
+                            All Predictions <ChevronDown size={12} />
                         </Button>
                     </Popover.Trigger>
                     <Portal>

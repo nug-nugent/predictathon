@@ -101,7 +101,7 @@ export function ThreadPage() {
             <Center mt={4}>
                 <VStack gap={3}>
                     <Text>{error.messages.join(" ")}</Text>
-                    <Button onClick={() => { setError(null); reload(); }}>Try again</Button>
+                    <Button onClick={() => { setError(null); reload(); }}>Try Again</Button>
                 </VStack>
             </Center>
         );
@@ -123,7 +123,7 @@ export function ThreadPage() {
                 {hasMore && (
                     <Center mb={2}>
                         <Button size="xs" variant="ghost" loading={loadingOlder} onClick={() => { void loadOlder(); }}>
-                            Load older messages
+                            Load Older Messages
                         </Button>
                     </Center>
                 )}

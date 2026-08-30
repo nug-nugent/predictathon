@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     <VStack gap={3}>
                         <Heading size="md">Something went wrong</Heading>
                         <Text>Sorry about that - please try reloading the page.</Text>
-                        <Button onClick={() => window.location.reload()}>Reload page</Button>
+                        <Button onClick={() => window.location.reload()}>Reload Page</Button>
                     </VStack>
                 </Center>
             );

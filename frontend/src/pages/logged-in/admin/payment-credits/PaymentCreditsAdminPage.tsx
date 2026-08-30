@@ -61,7 +61,7 @@ export function PaymentCreditsAdminPage() {
             <PageHeading>Payment Credits</PageHeading>
             <HStack justify="flex-end">
                 <Button size="sm" colorPalette="action" onClick={() => setAdding(true)} disabled={competitions.length === 0}>
-                    Add credit
+                    Add Credit
                 </Button>
             </HStack>
 

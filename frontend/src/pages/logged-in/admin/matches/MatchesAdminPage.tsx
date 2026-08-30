@@ -104,7 +104,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                     <Checkbox.Control />
                     <Checkbox.Label>Include played matches</Checkbox.Label>
                 </Checkbox.Root>
-                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add match</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add Match</Button>
             </HStack>
 
             <HStack wrap="wrap" gap={3} align="end">

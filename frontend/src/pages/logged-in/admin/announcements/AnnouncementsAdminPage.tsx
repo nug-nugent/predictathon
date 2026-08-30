@@ -60,7 +60,7 @@ export function AnnouncementsAdminPage() {
         <VStack align="stretch" gap={4}>
             <PageHeading>Announcements</PageHeading>
             <HStack justify="flex-end">
-                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add announcement</Button>
+                <Button size="sm" colorPalette="action" onClick={() => setEditing("new")}>Add Announcement</Button>
             </HStack>
 
             <Panel overflowX="auto">

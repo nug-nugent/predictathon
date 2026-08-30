@@ -22,7 +22,7 @@ test("a user not registered for any competition is confined to the sign-up promp
     await page.getByLabel("Email").fill(`${username}@example.com`);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
     await page.getByRole("textbox", { name: "Confirm password" }).fill(password);
-    await page.getByRole("button", { name: "Continue to payment" }).click();
+    await page.getByRole("button", { name: "Continue to Payment" }).click();
 
     // The account now exists (and is logged in) but no UserCompetition row was ever created -
     // abandon here instead of redeeming a payment credit code.
@@ -51,7 +51,7 @@ test("a user not registered for any competition is confined to the sign-up promp
     // Completing a (free) registration from the prompt lifts the gate.
     await page.getByRole("link", { name: /Register for Sample Cup/ }).click();
     await expect(page.getByRole("heading", { name: "Join a competition" })).toBeVisible();
-    await page.getByRole("button", { name: "Join competition" }).click();
+    await page.getByRole("button", { name: "Join Competition" }).click();
 
     await expect(page).toHaveURL("/");
     await expect(page.getByText("You're not registered for any competitions yet.")).not.toBeVisible();
