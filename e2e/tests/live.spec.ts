@@ -32,9 +32,9 @@ test("a live match on the home page opens the live page focused on it", async ({
 
     // Predictions are only served from two minutes before kick-off, which every match in the Live
     // group is past - so the full list renders rather than the API's "not yet" refusal.
-    await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "All live matches" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All Live Matches" })).toBeVisible();
 });
 
 test("the card's corner link opens the live page", async ({ page }) => {
@@ -43,19 +43,19 @@ test("the card's corner link opens the live page", async ({ page }) => {
     await page.getByRole("link", { name: "Live page" }).click();
 
     await expect(page).toHaveURL(/\/live$/);
-    await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
 });
 
 test("the live page picks a match in play when the url names none", async ({ page }) => {
     await page.goto("/live");
 
-    await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
     await expect(page.getByText("LIVE", { exact: true }).first()).toBeVisible();
 });
 
 test("the live score section is hidden from players", async ({ page }) => {
     await page.goto("/live");
 
-    await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Update the live score" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Update the Live Score" })).toHaveCount(0);
 });

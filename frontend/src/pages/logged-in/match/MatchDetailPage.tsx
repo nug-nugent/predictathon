@@ -102,7 +102,7 @@ function MatchDetailContent({ match, predictions }: {
                 </Panel>
 
                 <Panel accent hoverLift>
-                    <Heading size="sm" mb={2}>All predictions</Heading>
+                    <Heading size="sm" mb={2}>All Predictions</Heading>
                     <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>

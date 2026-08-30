@@ -27,6 +27,6 @@ test("team detail page hides the league table for a competition with knockout ma
 
     // Sample Cup has a knockout stage (Scripts/Sample/04_Match.sql), so a single table would be
     // meaningless - the API returns no league table and the page leaves the panel out entirely.
-    await expect(page.getByRole("heading", { name: "League table" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "League Table" })).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "PTS" })).toHaveCount(0);
 });

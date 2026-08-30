@@ -11,7 +11,7 @@ export function PredictableTeamsTable({ teams }: { teams: PredictableTeam[] }) {
     return (
         <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
-                <Heading size="sm" mb={2}>Average Prediction Score By Team</Heading>
+                <Heading size="sm" mb={2}>Average Prediction Score by Team</Heading>
                 <Table.Root size="sm" variant="line">
                     <Table.Header>
                         <Table.Row>

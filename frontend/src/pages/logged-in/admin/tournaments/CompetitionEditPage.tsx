@@ -97,7 +97,7 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                 </Button>
             </HStack>
 
-            <Heading size="lg">{form.competitionName || "Edit competition"}</Heading>
+            <Heading size="lg">{form.competitionName || "Edit Competition"}</Heading>
 
             <Panel>
                 <VStack align="stretch" gap={3}>
@@ -364,7 +364,7 @@ function FixtureImportSection({
         <>
             <Panel>
                 <VStack align="stretch" gap={3}>
-                    <Heading size="md">Fixture import</Heading>
+                    <Heading size="md">Fixture Import</Heading>
 
                     <Text color="fg.muted">
                         {canImport

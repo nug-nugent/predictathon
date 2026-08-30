@@ -10,7 +10,7 @@ test("a match admin can put a live score in, and it shows wherever the match app
     await expect(page.getByRole("button", { name: DEMO_ADMIN.username })).toBeVisible();
 
     await page.goto("/live");
-    await expect(page.getByRole("heading", { name: "Update the live score" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Update the Live Score" })).toBeVisible();
 
     await page.getByRole("textbox", { name: "Home goals" }).fill("4");
     await page.getByRole("textbox", { name: "Away goals" }).fill("2");

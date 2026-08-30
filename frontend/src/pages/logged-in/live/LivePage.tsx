@@ -107,7 +107,7 @@ function NothingLive({ groups }: { groups: LiveMatchGroups }) {
                     </VStack>
                 ) : (
                     <VStack gap={3} py={4}>
-                        <Heading size="md">No matches today</Heading>
+                        <Heading size="md">No Matches Today</Heading>
                         <HStack gap={4}>
                             <ChakraLink asChild colorPalette="action" fontWeight="bold"><RouterLink to="/predictions">Predictions</RouterLink></ChakraLink>
                             <ChakraLink asChild colorPalette="action" fontWeight="bold"><RouterLink to="/results">Results</RouterLink></ChakraLink>
@@ -221,7 +221,7 @@ function AdminLiveScore({ match, status, onSaved }: { match: MatchPrediction; st
         <Panel>
             <HStack justify="space-between" wrap="wrap" gap={3}>
                 <VStack align="flex-start" gap={0}>
-                    <Heading size="sm">Update the live score</Heading>
+                    <Heading size="sm">Update the Live Score</Heading>
                     <Text fontSize="xs" color="fg.muted">Shown to everyone straight away. Doesn't score any predictions.</Text>
                 </VStack>
 
@@ -286,7 +286,7 @@ function MatchPredictions({ match, status }: { match: MatchPrediction; status: M
 
     return (
         <Panel overflowX="auto">
-            <Heading size="sm" mb={2}>All predictions</Heading>
+            <Heading size="sm" mb={2}>All Predictions</Heading>
 
             <PredictionsSummary predictions={predictions} isPost={isPost} />
 
@@ -335,7 +335,7 @@ function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPredi
     return (
         <Panel accent>
             <HStack gap={2} mb={3}>
-                <Heading size="sm">All live matches</Heading>
+                <Heading size="sm">All Live Matches</Heading>
                 {matches.length > 0 && <LiveBadge size="xs" />}
             </HStack>
 

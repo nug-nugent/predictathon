@@ -50,7 +50,7 @@ test("a user not registered for any competition is confined to the sign-up promp
 
     // Completing a (free) registration from the prompt lifts the gate.
     await page.getByRole("link", { name: /Register for Sample Cup/ }).click();
-    await expect(page.getByRole("heading", { name: "Join a competition" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Join a Competition" })).toBeVisible();
     await page.getByRole("button", { name: "Join Competition" }).click();
 
     await expect(page).toHaveURL("/");

@@ -57,7 +57,7 @@ function CompetitionSignUpPrompt() {
 
     return (
         <VStack align="stretch" gap={4} maxW="640px" mx="auto" mt={4}>
-            <PageHeading>Join a competition</PageHeading>
+            <PageHeading>Join a Competition</PageHeading>
             <Text color="fg.muted">You're not registered for any competitions yet. Sign up to one below to get started.</Text>
 
             {error && <ErrorState error={error} />}

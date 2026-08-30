@@ -95,7 +95,7 @@ function ProfileEditForm({ profile }: { profile: UserProfileEdit }) {
                 </RouterLink>
             </Link>
 
-            <Heading size="lg">Edit profile</Heading>
+            <Heading size="lg">Edit Profile</Heading>
 
             <Panel>
                 <VStack align="stretch" gap={3}>
