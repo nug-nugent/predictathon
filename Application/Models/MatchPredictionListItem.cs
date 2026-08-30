@@ -21,4 +21,11 @@ public class MatchPredictionListItem
     public int? AwayTeamGoals { get; set; }
 
     public int? Score { get; set; }
+
+    /// <summary>
+    /// What this prediction is currently worth against the match's provisional live score. Null for
+    /// a match with no live score, and for one that already has a confirmed result - there
+    /// <see cref="Score"/> is the real answer.
+    /// </summary>
+    public int? ProjectedScore { get; set; }
 }

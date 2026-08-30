@@ -30,6 +30,20 @@ export async function getLeagueTable(competitionId: string, dateFrom?: string, d
     return getJsonAuthenticated<LeagueTableItem[]>(`/League/${competitionId}${query ? `?${query}` : ""}`);
 }
 
+// Matches Application/Models/LiveLeagueTableItem.cs.
+export type LiveLeagueTableItem = LeagueTableItem & {
+    /** How much of `score` comes from matches still in play, and is therefore provisional. */
+    livePoints: number;
+};
+
+/// The league table as it would stand if every match in play ended on its current scoreline. Every
+/// column already has the live scores applied, and `previousLeaguePosition` is where the user stands
+/// on confirmed results alone - so the usual position-change arrow shows the move the live scores
+/// have made.
+export async function getLiveLeagueTable(competitionId: string): Promise<LiveLeagueTableItem[]> {
+    return getJsonAuthenticated<LiveLeagueTableItem[]>(`/League/${competitionId}/Live`);
+}
+
 export type UserWeekStat = { points: number; position: number; previousPosition: number | null };
 
 export type UserLeagueStats = {

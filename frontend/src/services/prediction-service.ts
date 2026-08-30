@@ -73,6 +73,11 @@ export type MatchPredictionListItem = {
     homeTeamGoals: number | null;
     awayTeamGoals: number | null;
     score: number | null;
+    /**
+     * What the prediction is currently worth against the match's live score. Null when the match has
+     * no live score, and when it has a confirmed result - `score` is the real answer there.
+     */
+    projectedScore: number | null;
 };
 
 /// Every registered competitor's prediction for a match. Only available once the match is within

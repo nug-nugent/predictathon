@@ -62,3 +62,26 @@ test("the live score section is hidden from players", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Update the Live Score" })).toHaveCount(0);
 });
+
+test("the live league table shows what each player is gaining, and folds away", async ({ page }) => {
+    await page.goto("/live");
+
+    const table = page.getByRole("button", { name: "Live League Table" });
+    await expect(table).toBeVisible();
+
+    // Open to start with - while a match is on, this is what people are here to watch.
+    await expect(page.getByRole("columnheader", { name: "In play" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Points" })).toBeVisible();
+
+    // Scoped to the standings: the predictions table above lists the same names, so an unscoped
+    // match would find either and prove neither.
+    const standings = page.locator("table").filter({ has: page.getByRole("columnheader", { name: "In play" }) });
+
+    // Every registered player has a row whether or not they predicted anything in play, so the
+    // seeded demo accounts are always in here.
+    await expect(standings.getByRole("cell", { name: "DemoPredictor" })).toBeVisible();
+
+    // ...and folds away again for anyone who only wants the match in front of them.
+    await table.click();
+    await expect(page.getByRole("columnheader", { name: "In play" })).toBeHidden();
+});

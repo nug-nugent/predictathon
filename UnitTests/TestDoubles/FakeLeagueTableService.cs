@@ -19,4 +19,11 @@ public class FakeLeagueTableService : ILeagueTableService
         DateOnly? dateForComparison = null,
         CancellationToken cancellationToken = default)
         => Task.FromResult(Table);
+
+    public IReadOnlyList<LiveLeagueTableItem> LiveTable { get; set; } = [];
+
+    public Task<IReadOnlyList<LiveLeagueTableItem>> GetLiveLeagueTableAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(LiveTable);
 }

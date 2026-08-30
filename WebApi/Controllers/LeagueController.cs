@@ -37,4 +37,18 @@ public class LeagueController : ApiControllerBase
 
         return Ok(results);
     }
+
+    /// <summary>
+    /// Get the league table for a competition, each row carrying the points the matches currently
+    /// in play are worth to that user so far - the Live page's table.
+    /// </summary>
+    /// <param name="competitionId"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Live")]
+    public async Task<ActionResult<IReadOnlyList<LiveLeagueTableItem>>> GetLive(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var results = await _leagueTableService.GetLiveLeagueTableAsync(competitionId, cancellationToken);
+
+        return Ok(results);
+    }
 }

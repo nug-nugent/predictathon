@@ -13,6 +13,7 @@ import { groupLiveMatches, hasLiveDayMatches, type LiveMatchGroups } from "../..
 import { LiveMatchLine } from "../../../components/match/live-match-line/LiveMatchLine";
 import { LiveMatchRow } from "../../../components/match/live-match-row/LiveMatchRow";
 import { LiveBadge } from "../../../components/match/live-badge/LiveBadge";
+import { LiveLeagueTable } from "../../../components/league/LiveLeagueTable";
 import { PredictionsSummary } from "../../../components/match/predictions-summary/PredictionsSummary";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 import { PageHeading } from "../../../components/ui/page-heading";
@@ -93,6 +94,12 @@ function LiveDay({ competitionId, requestedMatchId }: { competitionId: string; r
 
                 {showAllLiveMatches && <AllLiveMatches matches={groups.live} selectedMatchId={selected.matchID} now={now} />}
             </SimpleGrid>
+
+            {/* Below the grid rather than in it: the standings are about the competition, not about
+                the match the rest of the page is showing. */}
+            <Box mt={4}>
+                <LiveLeagueTable competitionId={competitionId} />
+            </Box>
         </>
     );
 }
@@ -300,13 +307,15 @@ function MatchPredictions({ match, status }: { match: MatchPrediction; status: M
                     <Table.Row>
                         <Table.ColumnHeader>Predictor</Table.ColumnHeader>
                         <Table.ColumnHeader textAlign="center">Prediction</Table.ColumnHeader>
-                        {isPost && <Table.ColumnHeader textAlign="center">Points</Table.ColumnHeader>}
+                        {isPost
+                            ? <Table.ColumnHeader textAlign="center">Points</Table.ColumnHeader>
+                            : <Table.ColumnHeader textAlign="center">Projected score</Table.ColumnHeader>}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
                     {predictions.length === 0 ? (
                         <Table.Row>
-                            <Table.Cell colSpan={isPost ? 3 : 2}><Text color="fg.muted">No predictions found.</Text></Table.Cell>
+                            <Table.Cell colSpan={3}><Text color="fg.muted">No predictions found.</Text></Table.Cell>
                         </Table.Row>
                     ) : predictions.map((p) => (
                         <PredictionRow key={p.userID} prediction={p} isPost={isPost} isMe={p.userID === user?.id} />
@@ -326,8 +335,16 @@ function PredictionRow({ prediction, isPost, isMe }: { prediction: MatchPredicti
                 <ChakraLink asChild variant="underline"><RouterLink to={`/profile/${prediction.userID}`}>{prediction.username}</RouterLink></ChakraLink>
             </Table.Cell>
             <Table.Cell textAlign="center">{madePrediction ? `${prediction.homeTeamGoals} - ${prediction.awayTeamGoals}` : "? - ?"}</Table.Cell>
-            {isPost && (
+            {isPost ? (
                 <Table.Cell textAlign="center" fontWeight="bold" color={`points.${prediction.score ?? 0}`}>{prediction.score ?? 0}</Table.Cell>
+            ) : (
+                // Coloured on the same points scale the real scores use, so a live 3-pointer reads
+                // the same way it will once the result is confirmed. A dash where there's nothing to
+                // project from - no live score yet, or no prediction to project.
+                <Table.Cell textAlign="center" fontWeight="bold"
+                    color={prediction.projectedScore === null ? "fg.muted" : `points.${prediction.projectedScore}`}>
+                    {prediction.projectedScore ?? "–"}
+                </Table.Cell>
             )}
         </Table.Row>
     );

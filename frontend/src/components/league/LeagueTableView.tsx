@@ -1,21 +1,40 @@
-import { HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
-import { CircleHelp } from "lucide-react";
+import { Box, HStack, IconButton, Popover, Portal, Table, Text } from "@chakra-ui/react";
+import { CircleHelp, TrendingUp } from "lucide-react";
 import { Link } from "react-router";
 import { Panel } from "../ui/panel";
 import { LeaguePositionChangeIcon } from "./LeaguePositionChangeIcon";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { useUser } from "../../hooks/useUser";
-import type { LeagueTableItem } from "../../services/league-service";
+import type { LeagueTableItem, LiveLeagueTableItem } from "../../services/league-service";
+
+type LeagueTableViewProps = {
+    items: LeagueTableItem[];
+    /**
+     * Adds an AVG column (score / predictions made) - only meaningful for the all-time table, where
+     * competitions of differing lengths make the raw points total hard to compare.
+     */
+    showAveragePointsPerPrediction?: boolean;
+    /**
+     * Adds an IN PLAY column showing how much of each row's points are still provisional. For the
+     * Live page, whose rows are LiveLeagueTableItems. Nothing else changes: those rows already
+     * carry the live scores in every column, and their previousLeaguePosition is the confirmed
+     * standing, so the position-change arrow below works on them unaltered.
+     */
+    showLivePoints?: boolean;
+    /** Renders without the surrounding Panel, for embedding inside one (see LiveLeagueTable). */
+    bare?: boolean;
+};
 
 // Shared table markup for any ranked list of LeagueTableItem rows - a single competition's league
-// table (LeaguePage) or the all-time table aggregated across every competition (Statistics page).
-// showAveragePointsPerPrediction adds an AVG column (score / predictions made) - only meaningful for
-// the all-time table, where competitions of differing lengths make the raw points total hard to compare.
-export function LeagueTableView({ items, showAveragePointsPerPrediction = false }: { items: LeagueTableItem[]; showAveragePointsPerPrediction?: boolean }) {
+// table (LeaguePage), the all-time table aggregated across every competition (Statistics page), or
+// the Live page's standings. One definition of what a league table looks like, so the three can't
+// drift into looking like different things.
+export function LeagueTableView({ items, showAveragePointsPerPrediction = false, showLivePoints = false, bare = false }: LeagueTableViewProps) {
     const { user } = useUser();
+    const Wrapper = bare ? Box : Panel;
 
     return (
-        <Panel overflowX="auto" accent>
+        <Wrapper overflowX="auto" {...(bare ? {} : { accent: true })}>
             <Table.Root size="sm" variant="line" showColumnBorder stickyHeader>
                 <Table.ColumnGroup>
                     <Table.Column htmlWidth="20px" />
@@ -29,6 +48,7 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                     <Table.Column />
                     {showAveragePointsPerPrediction && <Table.Column />}
                     <Table.Column />
+                    {showLivePoints && <Table.Column />}
                 </Table.ColumnGroup>
                 <Table.Header>
                     <Table.Row>
@@ -69,6 +89,9 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                                 </Popover.Root>
                             </HStack>
                         </Table.ColumnHeader>
+                        {showLivePoints && (
+                            <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>IN PLAY</Table.ColumnHeader>
+                        )}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -99,11 +122,36 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false 
                                     <Table.Cell fontSize={"0.9em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>{averagePointsPerPrediction.toFixed(3)}</Table.Cell>
                                 )}
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
+                                {showLivePoints && (
+                                    <Table.Cell fontSize={"0.9em"} textAlign={"center"}><LivePoints points={liveItem(item).livePoints} /></Table.Cell>
+                                )}
                             </Table.Row>
                         );
                     })}
                 </Table.Body>
             </Table.Root>
-        </Panel>
+        </Wrapper>
+    );
+}
+
+// showLivePoints is the caller promising these rows carry the live fields; this is where that
+// promise is cashed in, in one place, rather than casting at each use.
+function liveItem(item: LeagueTableItem): LiveLeagueTableItem {
+    return item as LiveLeagueTableItem;
+}
+
+/// What the matches in play are worth to one user so far. A gain gets an arrow and a sign so it
+/// reads as movement rather than as another total sitting beside the real one; nothing gained is a
+/// dash rather than a "+0", which would look like a score.
+function LivePoints({ points }: { points: number }) {
+    if (points === 0) {
+        return <Text as="span" color="fg.muted">&ndash;</Text>;
+    }
+
+    return (
+        <HStack gap={1} justify="center" color="status.relaxed" fontWeight="bold">
+            <TrendingUp size={14} aria-hidden="true" />
+            <Text as="span">+{points}</Text>
+        </HStack>
     );
 }
