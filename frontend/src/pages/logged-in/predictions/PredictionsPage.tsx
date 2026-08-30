@@ -113,26 +113,41 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       .catch((err) => {
         if (requestSeq.current === seq) setError(toApiErrorOrGeneric(err));
       });
+
+    // Refresh the markers too. The correction below only ever covers the selected week, so the
+    // week being left behind would otherwise fall back to the snapshot taken on arrival and get
+    // its marker back despite having just been completed. A failure here leaves the markers
+    // already on screen standing - they're a hint, not worth failing the page over.
+    getCompetitionWeekSummaries(competitionId)
+      .then((refreshed) => {
+        if (requestSeq.current === seq) setSummaries(refreshed);
+      })
+      .catch(() => {
+        // Keep whatever markers we already have.
+      });
   };
 
   // Whether the week on screen still has anything outstanding is worked out from the matches
   // already loaded rather than from the summary, so its marker clears as soon as the last
-  // prediction saves instead of going stale the moment you type.
-  const outstandingHere = (matches ?? []).filter(
-    (m) => computeMatchStatus(m, now).status === "Pre"
-      && m.homeTeamGoals === null
-      && m.awayTeamGoals === null
-      && !savedMatchIds.has(m.matchID)
-  ).length;
+  // prediction saves instead of going stale the moment you type. Null while they're loading -
+  // an empty list isn't a finished week, and treating it as one flickers the marker off.
+  const outstandingHere = matches === null
+    ? null
+    : matches.filter(
+      (m) => computeMatchStatus(m, now).status === "Pre"
+        && m.homeTeamGoals === null
+        && m.awayTeamGoals === null
+        && !savedMatchIds.has(m.matchID)
+    ).length;
 
   const outstanding = useMemo(() => {
     const weeksWithOutstanding = new Set(
       (summaries ?? []).filter((s) => s.openUnpredictedCount > 0).map((s) => s.weekStart)
     );
 
-    // Other weeks can't change while you're on this one, so only the selected week's marker needs
-    // correcting against what's actually happened on screen.
-    if (selectedWeek) {
+    // The selected week is the only one that can still be changing, so it's corrected against
+    // what's actually on screen rather than against the snapshot.
+    if (selectedWeek && outstandingHere !== null) {
       if (outstandingHere > 0) {
         weeksWithOutstanding.add(selectedWeek);
       } else {
