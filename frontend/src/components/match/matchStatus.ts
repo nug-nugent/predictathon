@@ -20,7 +20,7 @@ export function computeMatchStatus(match: MatchPrediction, now: Date): ComputedM
     const minutesToPredict = Math.ceil((kickoff.getTime() - (now.getTime() + CUTOFF_MINUTES * 60000)) / 60000);
 
     const status: MatchStatusValue = minutesToPredict < 1
-        ? (match.actualHomeTeamGoals === null ? "During" : "Post")
+        ? (match.matchPlayed ? "Post" : "During")
         : "Pre";
 
     return { status, minutesToPredict };

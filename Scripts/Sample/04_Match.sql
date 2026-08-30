@@ -1,4 +1,4 @@
-/*
+﻿/*
 64 matches for "Sample Cup" - full 32-team World Cup format (8 groups of 4, round-robin group
 stage, then Round of 16, Quarter-finals, Semi-finals, 3rd Place Play-off, Final). Scores are
 deterministically generated (not random), and the schedule is roughly halfway through: the group
@@ -37,10 +37,33 @@ DECLARE @UkNow DATETIME = CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'GMT Standard Ti
 DECLARE @QF1TargetDateTime DATETIME = DATEADD(MINUTE, 30, @UkNow);
 DECLARE @DateShiftDays INT = DATEDIFF(DAY, '2026-07-21', @QF1TargetDateTime);
 
+-- Three more matches are pinned to today's clock rather than shifted by whole days, so the Home
+-- page's Live updates section has something in each of its three groups the moment the stack comes
+-- up (Quarter Final 1, above, covers "Coming up"):
+--
+--   Quarter Final 2 - kicked off 95 minutes ago, no result yet. Far enough back that the Process
+--     Results page will accept a result for it (MatchService's 90-minute rule), which is what the
+--     e2e process-results spec drives; being unplayed still makes it "Live" here.
+--   Quarter Final 4 - kicked off 40 minutes ago: genuinely mid-match, and too recent to process.
+--     Quarter Final 3 is deliberately left in the future - it's Brazil's next fixture, and
+--     e2e/tests/team.spec.ts leans on Brazil having one.
+--   Round of 16 match 56 - played earlier today, so "Completed" has a row. Clamped to just after
+--     midnight when the stack is seeded in the small hours, so it can't land on yesterday (where
+--     a confirmed result drops out of today's window - see LiveDayWindow).
+DECLARE @StartOfToday DATETIME = CAST(CAST(@UkNow AS DATE) AS DATETIME);
+DECLARE @QF2TargetDateTime DATETIME = DATEADD(MINUTE, -95, @UkNow);
+DECLARE @QF4TargetDateTime DATETIME = DATEADD(MINUTE, -40, @UkNow);
+DECLARE @CompletedTodayDateTime DATETIME = CASE
+    WHEN DATEADD(HOUR, -5, @UkNow) < @StartOfToday THEN DATEADD(MINUTE, 1, @StartOfToday)
+    ELSE DATEADD(HOUR, -5, @UkNow) END;
+
 MERGE INTO [dbo].[Match] AS [Target]
 USING (
     SELECT [MatchID],[CompetitionID],
         CASE WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000057' THEN @QF1TargetDateTime
+             WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000058' THEN @QF2TargetDateTime
+             WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000060' THEN @QF4TargetDateTime
+             WHEN [MatchID] = 'FA000000-0000-0000-0000-000000000056' THEN @CompletedTodayDateTime
              ELSE DATEADD(DAY, @DateShiftDays, [MatchDateTime]) END AS [MatchDateTime],
         [HomeTeam].[TeamID] AS [HomeTeamID],[AwayTeam].[TeamID] AS [AwayTeamID],
         [MatchPlayed],[HomeTeamGoals],[AwayTeamGoals],[NeutralGround],

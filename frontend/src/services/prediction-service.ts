@@ -20,6 +20,8 @@ export type MatchPrediction = {
     awayTeamGoals: number | null;
     actualHomeTeamGoals: number | null;
     actualAwayTeamGoals: number | null;
+    /** Whether the result has been confirmed - a match is still in play until this is true. */
+    matchPlayed: boolean;
     score: number | null;
     description: string | null;
     knockout: boolean;
@@ -81,6 +83,17 @@ function matchWeekStartDate(date: Date): Date {
     bucketed.setHours(0, 0, 0, 0);
     bucketed.setDate(bucketed.getDate() - mod);
     return bucketed;
+}
+
+/// The week-start string a given kick-off falls in, in the same shape the API returns week starts
+/// in ("yyyy-MM-ddT00:00:00") - so a ?week= link built from a match lands the Predictions page on
+/// that match's week. A mismatch is harmless: PredictionsPage only honours a ?week= it can find in
+/// the weeks the API returned, and falls back to its usual landing week otherwise.
+export function matchWeekStart(matchDateTime: string): string {
+    const start = matchWeekStartDate(new Date(matchDateTime));
+    const pad = (value: number) => String(value).padStart(2, "0");
+
+    return `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}T00:00:00`;
 }
 
 /// Picks which week to show by default: the week containing today (if it has matches), the most

@@ -75,6 +75,31 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<UserMatchPredictionListItem>> GetLiveDayMatchesAsync(
+        Guid userId,
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = UkClock.Now;
+
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+            new SqlParameter("@DateFrom", SqlDbType.DateTime) { Value = LiveDayWindow.Start(now) },
+            new SqlParameter("@DateTo", SqlDbType.DateTime) { Value = LiveDayWindow.End(now) },
+        };
+
+        var matches = await _dbContext.CallStoredProcedureAsync<UserMatchPredictionListItem>("UserMatchPredictionListGet", parameters, cancellationToken);
+
+        // The procedure's window is a plain date range, so it can't express "yesterday's matches
+        // only while they're still unresolved" - that second half of the rule is applied here.
+        return matches
+            .Where(m => LiveDayWindow.Includes(m.MatchDateTime, m.MatchPlayed, now))
+            .ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<MatchModel>> GetForAdminAsync(
         Guid competitionId,
         bool includePlayed,
@@ -96,10 +121,14 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
         Guid competitionId,
         CancellationToken cancellationToken = default)
     {
-        var now = UkClock.Now;
+        // The same 90 minutes SaveResultAsync enforces: a match that kicked off twenty minutes ago
+        // can't have a result saved for it, so offering it here only invites a rejected save. That
+        // gap went unnoticed while no sample fixture was ever mid-match; the Live updates section
+        // put one there.
+        var eligibleFrom = UkClock.Now.AddMinutes(-ResultEligibleMinutesAfterKickoff);
 
         var matches = await _appDbContext.Match
-            .Where(m => m.CompetitionID == competitionId && !m.MatchPlayed && m.MatchDateTime <= now)
+            .Where(m => m.CompetitionID == competitionId && !m.MatchPlayed && m.MatchDateTime <= eligibleFrom)
             .OrderBy(m => m.MatchDateTime)
             .ThenBy(m => m.HomeTeam != null ? m.HomeTeam.TeamName : m.HomeTeamTBC)
             .ToListAsync(cancellationToken);

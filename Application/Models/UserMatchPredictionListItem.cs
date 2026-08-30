@@ -50,6 +50,12 @@ public class UserMatchPredictionListItem
 
     public int? ActualAwayTeamGoals { get; set; }
 
+    /// <summary>
+    /// Whether the match's result has been confirmed. Distinct from ActualHomeTeamGoals being
+    /// non-null: a match is in play (or over but not yet processed) until this is set.
+    /// </summary>
+    public bool MatchPlayed { get; set; }
+
     public int? Score { get; set; }
 
     public string? Description { get; set; }

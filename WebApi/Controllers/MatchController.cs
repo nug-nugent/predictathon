@@ -49,6 +49,20 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get today's matches for a competition, each joined with the current user's own prediction
+    /// for it (if any) - the Home page's Live updates section and the Live page.
+    /// </summary>
+    /// <param name="competitionId"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Today")]
+    public async Task<ActionResult<IReadOnlyList<UserMatchPredictionListItem>>> GetToday(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var matches = await _matchService.GetLiveDayMatchesAsync(CurrentUserId, competitionId, cancellationToken);
+
+        return Ok(matches);
+    }
+
+    /// <summary>
     /// Get every played match for a competition, most recent first, for the public Results page.
     /// </summary>
     [HttpGet("{competitionId:guid}/Results")]
@@ -135,8 +149,8 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get unplayed matches for a competition whose kickoff has already passed - the pool of
-    /// matches a result could plausibly be entered for.
+    /// Get unplayed matches for a competition whose kickoff was at least 90 minutes ago - the pool
+    /// of matches a result can actually be entered for.
     /// </summary>
     [HttpGet("Processing/{competitionId:guid}")]
     [Authorize(Roles = RoleConstants.MatchAdministrator)]

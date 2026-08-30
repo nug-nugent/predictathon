@@ -31,6 +31,7 @@ BEGIN
 		, Prediction.AwayTeamGoals
 		, ActualHomeTeamGoals = m.HomeTeamGoals
 		, ActualAwayTeamGoals = m.AwayTeamGoals
+		, m.MatchPlayed
 		, Score = CASE WHEN m.MatchPlayed = 1 AND Prediction.PredictionID IS NULL THEN 0 ELSE Prediction.Score END
 		, m.Description
 		, m.Knockout
