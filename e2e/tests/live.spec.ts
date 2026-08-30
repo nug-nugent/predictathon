@@ -34,7 +34,10 @@ test("a live match on the home page opens the live page focused on it", async ({
     // group is past - so the full list renders rather than the API's "not yet" refusal.
     await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "All Live Matches" })).toBeVisible();
+
+    // Deliberately nothing about the "All Live Matches" panel: it only appears when more than one
+    // match is in play, and process-results.spec can take one of the seeded pair out from under
+    // this test by confirming its result. Asserting on it here would pass or fail on test order.
 });
 
 test("the card's corner link opens the live page", async ({ page }) => {

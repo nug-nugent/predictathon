@@ -76,17 +76,22 @@ function LiveDay({ competitionId, requestedMatchId }: { competitionId: string; r
 
     const { status } = computeMatchStatus(selected, now);
 
+    // A list of one, whose only entry is the match already filling the rest of the page, tells the
+    // reader nothing - so it only earns its column when there's somewhere else to go. Without it the
+    // focused match takes the full width rather than leaving a third of the page empty.
+    const showAllLiveMatches = groups.live.length > 1;
+
     return (
         <>
             <PageHeading mb={4}>Live</PageHeading>
             <SimpleGrid columns={{ base: 1, lg: 3 }} gap={4} alignItems="start">
-                <VStack align="stretch" gap={4} gridColumn={{ lg: "span 2" }}>
+                <VStack align="stretch" gap={4} gridColumn={{ lg: showAllLiveMatches ? "span 2" : "span 3" }}>
                     <FocusedMatch match={selected} status={status} />
                     <AdminLiveScore key={`admin-${selected.matchID}`} match={selected} status={status} onSaved={reload} />
                     <MatchPredictions key={selected.matchID} match={selected} status={status} />
                 </VStack>
 
-                <AllLiveMatches matches={groups.live} selectedMatchId={selected.matchID} now={now} />
+                {showAllLiveMatches && <AllLiveMatches matches={groups.live} selectedMatchId={selected.matchID} now={now} />}
             </SimpleGrid>
         </>
     );
@@ -331,39 +336,37 @@ function PredictionRow({ prediction, isPost, isMe }: { prediction: MatchPredicti
 /// Every match in play, the focused one included and marked rather than left out. Keeping the list
 /// complete and in one order means it doesn't reshuffle as you click between matches - the highlight
 /// moves instead, so you can see where you are without having to re-find everything else.
+///
+/// Only rendered when more than one match is in play - see the caller.
 function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPrediction[]; selectedMatchId: string; now: Date }) {
     return (
         <Panel accent>
             <HStack gap={2} mb={3}>
                 <Heading size="sm">All Live Matches</Heading>
-                {matches.length > 0 && <LiveBadge size="xs" />}
+                <LiveBadge size="xs" />
             </HStack>
 
-            {matches.length === 0 ? (
-                <Text color="fg.muted" fontSize="sm">No matches are in play right now.</Text>
-            ) : (
-                <VStack align="stretch" gap={1}>
-                    {matches.map((match) => {
-                        const isSelected = match.matchID === selectedMatchId;
+            <VStack align="stretch" gap={1}>
+                {matches.map((match) => {
+                    const isSelected = match.matchID === selectedMatchId;
 
-                        return (
-                            <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
-                                bg={isSelected ? "surface.highlightRow" : undefined}
-                                _hover={{ bg: "bg.muted", textDecoration: "none" }}
-                                _focusVisible={{ bg: "bg.muted", outline: "2px solid", outlineColor: "input.borderFocus" }}>
-                                {/* aria-current carries the same "you are here" the highlight does,
-                                    for anyone who can't see the highlight. */}
-                                <RouterLink to={`/live/${match.matchID}`} aria-current={isSelected ? "true" : undefined}>
-                                    <VStack align="stretch" gap={0} px={2} py={2}>
-                                        <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
-                                        {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
-                                    </VStack>
-                                </RouterLink>
-                            </ChakraLink>
-                        );
-                    })}
-                </VStack>
-            )}
+                    return (
+                        <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
+                            bg={isSelected ? "surface.highlightRow" : undefined}
+                            _hover={{ bg: "bg.muted", textDecoration: "none" }}
+                            _focusVisible={{ bg: "bg.muted", outline: "2px solid", outlineColor: "input.borderFocus" }}>
+                            {/* aria-current carries the same "you are here" the highlight does,
+                                for anyone who can't see the highlight. */}
+                            <RouterLink to={`/live/${match.matchID}`} aria-current={isSelected ? "true" : undefined}>
+                                <VStack align="stretch" gap={0} px={2} py={2}>
+                                    <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
+                                    {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
+                                </VStack>
+                            </RouterLink>
+                        </ChakraLink>
+                    );
+                })}
+            </VStack>
         </Panel>
     );
 }
