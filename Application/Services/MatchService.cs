@@ -123,7 +123,7 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
     {
         // The same 90 minutes SaveResultAsync enforces: a match that kicked off twenty minutes ago
         // can't have a result saved for it, so offering it here only invites a rejected save. That
-        // gap went unnoticed while no sample fixture was ever mid-match; the Live updates section
+        // gap went unnoticed while no sample fixture was ever mid-match; the Today's Matches section
         // put one there.
         var eligibleFrom = UkClock.Now.AddMinutes(-ResultEligibleMinutesAfterKickoff);
 

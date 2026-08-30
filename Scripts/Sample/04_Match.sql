@@ -163,3 +163,21 @@ WHEN MATCHED THEN
         [Target].[Description] = [Source].[Description],
         [Target].[Knockout] = [Source].[Knockout];
 GO
+
+-- Every sample match carries an external id, without which the live-score poller ignores it (it has
+-- no way to ask the provider about a fixture the provider can't identify). Taken from the last three
+-- digits of the hand-authored MatchIDs above - 'FA000000-...-000000000057' becomes 57 - so the ids
+-- are stable across re-seeds, unique within the competition, and legible against the fixture list.
+UPDATE [dbo].[Match]
+SET [ExternalMatchID] = CAST(RIGHT(CAST([MatchID] AS CHAR(36)), 3) AS INT)
+WHERE [CompetitionID] = 'CA000000-0000-0000-0000-000000000001';
+GO
+
+-- Live scores are derived from the fixtures above and are reset with them. Re-seeding puts every
+-- sample match back to unplayed, so a score left over from a previous run would show a match in
+-- progress that has just been rewound to "not started".
+DELETE FROM [dbo].[MatchLiveScore]
+WHERE [MatchID] IN (
+    SELECT [MatchID] FROM [dbo].[Match] WHERE [CompetitionID] = 'CA000000-0000-0000-0000-000000000001'
+);
+GO

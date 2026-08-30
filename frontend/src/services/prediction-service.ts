@@ -22,6 +22,15 @@ export type MatchPrediction = {
     actualAwayTeamGoals: number | null;
     /** Whether the result has been confirmed - a match is still in play until this is true. */
     matchPlayed: boolean;
+    /**
+     * The provisional in-play score, null until something has been heard about the match. Never a
+     * confirmed result - that's actualHomeTeamGoals/actualAwayTeamGoals, which stay null while a
+     * match is live however this reads.
+     */
+    liveHomeTeamGoals: number | null;
+    liveAwayTeamGoals: number | null;
+    /** When the live score last changed - not when it was last confirmed unchanged. */
+    liveScoreUpdatedDateTime: string | null;
     score: number | null;
     description: string | null;
     knockout: boolean;

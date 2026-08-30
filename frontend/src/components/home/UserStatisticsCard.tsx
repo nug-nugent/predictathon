@@ -14,7 +14,7 @@ type Stats = {
     overall: UserWeekStat | null;
     lastWeek: UserWeekStat | null;
     thisWeek: UserWeekStat | null;
-    thisWeekLabel: "Current Matches" | "Last Matches";
+    thisWeekLabel: "This Match Week" | "Last Matches";
 };
 
 export function UserStatisticsCard({ competitionId }: { competitionId: string }) {
@@ -38,7 +38,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
         const thisWeekLabel: Stats["thisWeekLabel"] =
             leagueStats.currentWeek && new Date(weekEnd(leagueStats.currentWeek)) < new Date()
                 ? "Last Matches"
-                : "Current Matches";
+                : "This Match Week";
 
         return {
             overall: leagueStats.overall,

@@ -11,6 +11,7 @@ public interface IApplicationDbContext : IGenericDbContext
     DbSet<FixtureChangeProposal> FixtureChangeProposal { get; }
     DbSet<HallOfFame> HallOfFame { get; }
     DbSet<Match> Match { get; }
+    DbSet<MatchLiveScore> MatchLiveScore { get; }
     DbSet<Message> Message { get; }
     DbSet<MessageReaction> MessageReaction { get; }
     DbSet<MessageThread> MessageThread { get; }

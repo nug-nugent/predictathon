@@ -1,11 +1,12 @@
-import { Box, Center, Heading, HStack, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, Button, Center, Heading, HStack, Input, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink, useParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { useUser } from "../../../hooks/useUser";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { useMinuteTick } from "../../../hooks/useMinuteTick";
 import { usePolling } from "../../../hooks/usePolling";
-import { getTodaysMatches } from "../../../services/match-service";
+import { getTodaysMatches, saveLiveScore } from "../../../services/match-service";
 import { getMatchPredictions, type MatchPrediction, type MatchPredictionListItem } from "../../../services/prediction-service";
 import { computeMatchStatus, type MatchStatusValue } from "../../../components/match/matchStatus";
 import { groupLiveMatches, hasLiveDayMatches, type LiveMatchGroups } from "../../../utils/liveMatches";
@@ -15,6 +16,9 @@ import { LiveBadge } from "../../../components/match/live-badge/LiveBadge";
 import { PredictionsSummary } from "../../../components/match/predictions-summary/PredictionsSummary";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 import { PageHeading } from "../../../components/ui/page-heading";
+import { Role } from "../../../constants/roles";
+import { ApiError } from "../../../services/api";
+import { parseDigit } from "../../../utils/parseDigit";
 import { Panel } from "../../../components/ui/panel";
 
 // Faster than the Home card's minute: this is the page left open while a match plays, so the moment
@@ -49,6 +53,7 @@ function LiveDay({ competitionId, requestedMatchId }: { competitionId: string; r
 
     usePolling(reload, DAY_REFRESH_MS);
 
+
     if (error) {
         return <ErrorState error={error} onRetry={reload} />;
     }
@@ -70,7 +75,6 @@ function LiveDay({ competitionId, requestedMatchId }: { competitionId: string; r
     }
 
     const { status } = computeMatchStatus(selected, now);
-    const others = groups.live.filter((m) => m.matchID !== selected.matchID);
 
     return (
         <>
@@ -78,10 +82,11 @@ function LiveDay({ competitionId, requestedMatchId }: { competitionId: string; r
             <SimpleGrid columns={{ base: 1, lg: 3 }} gap={4} alignItems="start">
                 <VStack align="stretch" gap={4} gridColumn={{ lg: "span 2" }}>
                     <FocusedMatch match={selected} status={status} />
+                    <AdminLiveScore key={`admin-${selected.matchID}`} match={selected} status={status} onSaved={reload} />
                     <MatchPredictions key={selected.matchID} match={selected} status={status} />
                 </VStack>
 
-                <OtherLiveMatches matches={others} now={now} />
+                <AllLiveMatches matches={groups.live} selectedMatchId={selected.matchID} now={now} />
             </SimpleGrid>
         </>
     );
@@ -125,7 +130,9 @@ function TodayGroup({ title, matches, status }: { title: string; matches: MatchP
                 {title}
             </Text>
             {matches.map((match) => (
-                <LiveMatchRow key={match.matchID} match={match} status={status} />
+                // A finished match goes to its own page rather than the Results list: you arrived
+                // here looking at one match at a time, so that's what the next click should give you.
+                <LiveMatchRow key={match.matchID} match={match} status={status} completedTarget="match" />
             ))}
         </Box>
     );
@@ -145,6 +152,14 @@ function FocusedMatch({ match, status }: { match: MatchPrediction; status: Match
 
             <LiveMatchLine match={match} status={status} size="lg" />
 
+            {/* The feed is delayed, so say when the score we're showing was last actually current
+                rather than letting it read as this second's score. */}
+            {status === "During" && match.liveScoreUpdatedDateTime && (
+                <Text textAlign="center" mt={1} color="fg.muted" fontSize="xs">
+                    Score as at {new Date(match.liveScoreUpdatedDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                </Text>
+            )}
+
             {match.description && <Text textAlign="center" mt={3} color="fg.muted" fontSize="sm">{match.description}</Text>}
 
             <HStack justify="center" gap={6} mt={4}>
@@ -160,6 +175,84 @@ function FocusedMatch({ match, status }: { match: MatchPrediction; status: Match
                 )}
             </HStack>
         </Panel>
+    );
+}
+
+/// Lets a match administrator put a score in directly - to get ahead of the provider's delayed feed,
+/// or to correct it. Unlike the feed an admin may lower a score, which is the only way to take back
+/// a goal the provider reported and a VAR review then chalked off.
+///
+/// Renders nothing for everyone else, and nothing once the match is over: a finished match's score
+/// is the Process Results page's business, and that one counts.
+function AdminLiveScore({ match, status, onSaved }: { match: MatchPrediction; status: MatchStatusValue; onSaved: () => void }) {
+    const { user } = useUser();
+
+    // Seeded once from whatever the score was when this match came into focus, and deliberately not
+    // resynced afterwards - a background poll landing mid-edit shouldn't rewrite what's being typed.
+    const [homeInput, setHomeInput] = useState(match.liveHomeTeamGoals !== null ? String(match.liveHomeTeamGoals) : "");
+    const [awayInput, setAwayInput] = useState(match.liveAwayTeamGoals !== null ? String(match.liveAwayTeamGoals) : "");
+    const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    if (!user?.roles.includes(Role.MatchAdministrator) || status !== "During") {
+        return null;
+    }
+
+    const canSave = homeInput !== "" && awayInput !== "" && saveState !== "saving";
+
+    // Not async: an onClick handler's return value is ignored, so handing it a promise leaves
+    // rejections unhandled. The state updates below are the only "result" this needs.
+    const save = () => {
+        setSaveState("saving");
+        setErrorMessage(null);
+
+        saveLiveScore(match.matchID, Number(homeInput), Number(awayInput))
+            .then(() => {
+                setSaveState("saved");
+                onSaved();
+            })
+            .catch((error: unknown) => {
+                setSaveState("error");
+                setErrorMessage(error instanceof ApiError ? error.messages.join(" ") : "Couldn't save the score.");
+            });
+    };
+
+    return (
+        <Panel>
+            <HStack justify="space-between" wrap="wrap" gap={3}>
+                <VStack align="flex-start" gap={0}>
+                    <Heading size="sm">Update the live score</Heading>
+                    <Text fontSize="xs" color="fg.muted">Shown to everyone straight away. Doesn't score any predictions.</Text>
+                </VStack>
+
+                <HStack gap={2}>
+                    <ScoreInput value={homeInput} onChange={setHomeInput} label="Home goals" />
+                    <Text>-</Text>
+                    <ScoreInput value={awayInput} onChange={setAwayInput} label="Away goals" />
+                    <Button size="sm" colorPalette="action" onClick={save} disabled={!canSave} ml={2}>
+                        {saveState === "saving" ? "Saving..." : "Save"}
+                    </Button>
+                </HStack>
+            </HStack>
+
+            {saveState === "saved" && <Text fontSize="sm" color="fg.success" mt={2}>Live score saved.</Text>}
+            {saveState === "error" && <Text fontSize="sm" color="fg.error" mt={2}>{errorMessage}</Text>}
+        </Panel>
+    );
+}
+
+function ScoreInput({ value, onChange, label }: { value: string; onChange: (value: string) => void; label: string }) {
+    return (
+        <Input value={value} aria-label={label} autoComplete="off" textAlign="center" inputMode="numeric" pattern="[0-9]*"
+            size="sm" width="44px" bg="input.bg" borderColor="input.border" _focusVisible={{ borderColor: "input.borderFocus" }}
+            onChange={(event) => {
+                // Same single-digit gate the Predictions page's score inputs use, so a pasted value
+                // can't put something unsendable in the box.
+                const parsed = parseDigit(event.target.value);
+                if (parsed !== null) {
+                    onChange(parsed);
+                }
+            }} />
     );
 }
 
@@ -235,30 +328,40 @@ function PredictionRow({ prediction, isPost, isMe }: { prediction: MatchPredicti
     );
 }
 
-function OtherLiveMatches({ matches, now }: { matches: MatchPrediction[]; now: Date }) {
+/// Every match in play, the focused one included and marked rather than left out. Keeping the list
+/// complete and in one order means it doesn't reshuffle as you click between matches - the highlight
+/// moves instead, so you can see where you are without having to re-find everything else.
+function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPrediction[]; selectedMatchId: string; now: Date }) {
     return (
         <Panel accent>
             <HStack gap={2} mb={3}>
-                <Heading size="sm">Also live</Heading>
+                <Heading size="sm">All live matches</Heading>
                 {matches.length > 0 && <LiveBadge size="xs" />}
             </HStack>
 
             {matches.length === 0 ? (
-                <Text color="fg.muted" fontSize="sm">No other matches are in play right now.</Text>
+                <Text color="fg.muted" fontSize="sm">No matches are in play right now.</Text>
             ) : (
                 <VStack align="stretch" gap={1}>
-                    {matches.map((match) => (
-                        <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
-                            _hover={{ bg: "bg.muted", textDecoration: "none" }}
-                            _focusVisible={{ bg: "bg.muted", outline: "2px solid", outlineColor: "input.borderFocus" }}>
-                            <RouterLink to={`/live/${match.matchID}`}>
-                                <VStack align="stretch" gap={0} px={2} py={2}>
-                                    <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
-                                    {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
-                                </VStack>
-                            </RouterLink>
-                        </ChakraLink>
-                    ))}
+                    {matches.map((match) => {
+                        const isSelected = match.matchID === selectedMatchId;
+
+                        return (
+                            <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
+                                bg={isSelected ? "surface.highlightRow" : undefined}
+                                _hover={{ bg: "bg.muted", textDecoration: "none" }}
+                                _focusVisible={{ bg: "bg.muted", outline: "2px solid", outlineColor: "input.borderFocus" }}>
+                                {/* aria-current carries the same "you are here" the highlight does,
+                                    for anyone who can't see the highlight. */}
+                                <RouterLink to={`/live/${match.matchID}`} aria-current={isSelected ? "true" : undefined}>
+                                    <VStack align="stretch" gap={0} px={2} py={2}>
+                                        <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
+                                        {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
+                                    </VStack>
+                                </RouterLink>
+                            </ChakraLink>
+                        );
+                    })}
                 </VStack>
             )}
         </Panel>

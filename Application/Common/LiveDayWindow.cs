@@ -1,7 +1,7 @@
 namespace Predictathon.Application.Common;
 
 /// <summary>
-/// The span of matches the Home page's Live updates section (and the Live page behind it) covers:
+/// The span of matches the Home page's Today's Matches section (and the Live page behind it) covers:
 /// everything kicking off today, plus anything that kicked off shortly before midnight and could
 /// still be in play. Without that carry-over a late-night match would vanish from the section at
 /// midnight, mid-game.

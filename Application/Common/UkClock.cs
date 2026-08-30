@@ -15,4 +15,11 @@ public static class UkClock
     /// MatchDateTime is stored and compared in.
     /// </summary>
     public static DateTime ToUkLocal(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), UkTimeZone);
+
+    /// <summary>
+    /// Converts a stored UK wall-clock time (e.g. a MatchDateTime) back to UTC, for talking to an
+    /// external API that works in UTC. The inverse of <see cref="ToUkLocal"/>.
+    /// </summary>
+    /// <param name="ukLocal">A naive UK wall-clock time.</param>
+    public static DateTime ToUtc(DateTime ukLocal) => TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(ukLocal, DateTimeKind.Unspecified), UkTimeZone);
 }

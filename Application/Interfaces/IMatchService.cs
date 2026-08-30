@@ -35,7 +35,7 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets today's matches for a competition - the Home page's Live updates section and the Live
+    /// Gets today's matches for a competition - the Home page's Today's Matches section and the Live
     /// page - each joined with the given user's own prediction for it (if any), earliest first.
     /// Matches that kicked off shortly before midnight are carried over while they're still
     /// unresolved; see <see cref="Common.LiveDayWindow"/>.

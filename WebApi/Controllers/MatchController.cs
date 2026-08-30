@@ -11,10 +11,12 @@ namespace Predictathon.WebApi.Controllers;
 public class MatchController : ApiControllerBase
 {
     private readonly IMatchService _matchService;
+    private readonly ILiveScoreService _liveScoreService;
 
-    public MatchController(IMatchService matchService)
+    public MatchController(IMatchService matchService, ILiveScoreService liveScoreService)
     {
         _matchService = matchService;
+        _liveScoreService = liveScoreService;
     }
 
     /// <summary>
@@ -50,7 +52,7 @@ public class MatchController : ApiControllerBase
 
     /// <summary>
     /// Get today's matches for a competition, each joined with the current user's own prediction
-    /// for it (if any) - the Home page's Live updates section and the Live page.
+    /// for it (if any) - the Home page's Today's Matches section and the Live page.
     /// </summary>
     /// <param name="competitionId"></param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -144,6 +146,27 @@ public class MatchController : ApiControllerBase
     public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _matchService.DeleteById(id, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Record or correct a match's provisional in-play score, shown on the Live page while the
+    /// match is being played. Separate from SaveResult: this score is provisional and scores no
+    /// predictions.
+    /// </summary>
+    /// <param name="matchId">The match to score, taken from the route.</param>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPut("{matchId:guid}/LiveScore")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<MatchLiveScoreModel?>> SaveLiveScore(
+        Guid matchId,
+        SaveLiveScoreRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _liveScoreService.SaveAdminScoreAsync(
+            matchId, request.HomeTeamGoals, request.AwayTeamGoals, CurrentUserId, cancellationToken);
 
         return FromResult(result);
     }

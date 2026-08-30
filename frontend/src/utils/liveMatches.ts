@@ -1,7 +1,7 @@
 import { computeMatchStatus, type MatchStatusValue } from "../components/match/matchStatus";
 import { matchWeekStart, type MatchPrediction } from "../services/prediction-service";
 
-// The three buckets today's matches fall into, in the order the Live updates section shows them.
+// The three buckets today's matches fall into, in the order the Today's Matches section shows them.
 export type LiveMatchGroups = {
     /** Kick-off is still far enough away to predict - links to /predictions. */
     comingUp: MatchPrediction[];
@@ -34,19 +34,32 @@ export function groupLiveMatches(matches: MatchPrediction[], now: Date): LiveMat
     return groups;
 }
 
-/// Whether there's anything at all to show - the Live updates section hides itself entirely on days
+/// Whether there's anything at all to show - the Today's Matches section hides itself entirely on days
 /// with no matches rather than rendering an empty card.
 export function hasLiveDayMatches(groups: LiveMatchGroups): boolean {
     return groups.comingUp.length > 0 || groups.live.length > 0 || groups.completed.length > 0;
 }
 
+/// Where a finished match's row leads. The Home card sends you to the Results list, since it's a
+/// summary of the day and the list is the natural next thing to scan; the Live page sends you to
+/// the one match, since you were already looking at matches one at a time.
+export type CompletedMatchTarget = "results" | "match";
+
 /// Where a match row takes you depends on what you can still do about it: predict it, watch it, or
-/// read how it went. Shared so the Home page's Live updates section and the Live page's own
-/// "nothing in play" state can't drift apart on where a given row points.
-export function liveMatchHref(match: MatchPrediction, status: MatchStatusValue): string {
+/// read how it went. Shared so every list of matches agrees on the first two, and is explicit about
+/// the third rather than each caller inventing its own.
+export function liveMatchHref(
+    match: MatchPrediction,
+    status: MatchStatusValue,
+    completedTarget: CompletedMatchTarget = "results",
+): string {
     if (status === "Pre") {
         return `/predictions?week=${encodeURIComponent(matchWeekStart(match.matchDateTime))}`;
     }
 
-    return status === "During" ? `/live/${match.matchID}` : "/results";
+    if (status === "During") {
+        return `/live/${match.matchID}`;
+    }
+
+    return completedTarget === "match" ? `/match/${match.matchID}` : "/results";
 }

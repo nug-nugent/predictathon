@@ -26,6 +26,7 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
     public virtual DbSet<HallOfFame> HallOfFame => Set<HallOfFame>();
 
     public virtual DbSet<Match> Match => Set<Match>();
+    public virtual DbSet<MatchLiveScore> MatchLiveScore => Set<MatchLiveScore>();
 
     public virtual DbSet<Message> Message => Set<Message>();
 
@@ -166,6 +167,31 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.HasOne(d => d.HomeTeam).WithMany(p => p.MatchHomeTeam)
                 .HasForeignKey(d => d.HomeTeamID)
                 .HasConstraintName("FK_Match_HomeTeam");
+        });
+
+        modelBuilder.Entity<MatchLiveScore>(entity =>
+        {
+            // Declared explicitly: convention only finds a key called Id or MatchLiveScoreId, and
+            // this table is deliberately keyed on the match it belongs to.
+            entity.HasKey(e => e.MatchID);
+
+            entity.Property(e => e.MatchID).ValueGeneratedNever();
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Source)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDateTime)
+                .HasDefaultValueSql("getdate()", "DF_MatchLiveScore_UpdatedDateTime")
+                .HasColumnType("datetime");
+            entity.Property(e => e.LastPolledDateTime).HasColumnType("datetime");
+
+            // One row per match, hanging off Match's own primary key - the shared key is what makes
+            // this one-to-one rather than one-to-many.
+            entity.HasOne(d => d.Match).WithOne(p => p.MatchLiveScore)
+                .HasForeignKey<MatchLiveScore>(d => d.MatchID)
+                .HasConstraintName("FK_MatchLiveScore_Match_MatchID");
         });
 
         modelBuilder.Entity<Message>(entity =>

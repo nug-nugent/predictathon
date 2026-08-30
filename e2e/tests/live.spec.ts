@@ -12,14 +12,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("home page shows today's matches grouped into live and completed", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Live updates" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
 
     await expect(page.getByText("LIVE", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Completed", { exact: true })).toBeVisible();
 });
 
 test("a live match on the home page opens the live page focused on it", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Live updates" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
 
     // Rows are whole-row links; the live ones are the only /live/ hrefs on the page.
     const liveRow = page.locator('a[href^="/live/"]').first();
@@ -34,11 +34,11 @@ test("a live match on the home page opens the live page focused on it", async ({
     // group is past - so the full list renders rather than the API's "not yet" refusal.
     await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Also live" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "All live matches" })).toBeVisible();
 });
 
 test("the card's corner link opens the live page", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Live updates" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
 
     await page.getByRole("link", { name: "Live page" }).click();
 
@@ -51,4 +51,11 @@ test("the live page picks a match in play when the url names none", async ({ pag
 
     await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
     await expect(page.getByText("LIVE", { exact: true }).first()).toBeVisible();
+});
+
+test("the live score section is hidden from players", async ({ page }) => {
+    await page.goto("/live");
+
+    await expect(page.getByRole("heading", { name: "All predictions" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Update the live score" })).toHaveCount(0);
 });

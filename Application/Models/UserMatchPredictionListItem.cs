@@ -56,6 +56,19 @@ public class UserMatchPredictionListItem
     /// </summary>
     public bool MatchPlayed { get; set; }
 
+    /// <summary>
+    /// The provisional in-play score, null until something has been heard about the match. Never a
+    /// confirmed result - that's ActualHomeTeamGoals/ActualAwayTeamGoals, which stay null while a
+    /// match is live no matter what this says.
+    /// </summary>
+    public int? LiveHomeTeamGoals { get; set; }
+
+    /// <inheritdoc cref="LiveHomeTeamGoals" />
+    public int? LiveAwayTeamGoals { get; set; }
+
+    /// <summary>When the live score last changed - not when it was last confirmed unchanged.</summary>
+    public DateTime? LiveScoreUpdatedDateTime { get; set; }
+
     public int? Score { get; set; }
 
     public string? Description { get; set; }

@@ -3,21 +3,23 @@ import { Box, HStack, Link as ChakraLink, Text, VStack } from "@chakra-ui/react"
 import { Link as RouterLink } from "react-router";
 import type { MatchPrediction } from "../../../services/prediction-service";
 import type { MatchStatusValue } from "../matchStatus";
-import { liveMatchHref } from "../../../utils/liveMatches";
+import { liveMatchHref, type CompletedMatchTarget } from "../../../utils/liveMatches";
 import { LiveMatchLine } from "../live-match-line/LiveMatchLine";
 
 type LiveMatchRowProps = {
     match: MatchPrediction;
     status: MatchStatusValue;
+    /** Where a finished match leads - the Results list by default. */
+    completedTarget?: CompletedMatchTarget;
 };
 
 /// One match as a whole-row link: the two teams, and what the match is worth to you on the right.
-export function LiveMatchRow({ match, status }: LiveMatchRowProps) {
+export function LiveMatchRow({ match, status, completedTarget }: LiveMatchRowProps) {
     return (
         <ChakraLink asChild variant="plain" display="block" borderRadius="8px"
             _hover={{ bg: "bg.muted", textDecoration: "none" }}
             _focusVisible={{ bg: "bg.muted", outline: "2px solid", outlineColor: "input.borderFocus" }}>
-            <RouterLink to={liveMatchHref(match, status)}>
+            <RouterLink to={liveMatchHref(match, status, completedTarget)}>
                 <HStack gap={{ base: 1, md: 2 }} px={2} py={2} width="full">
                     <LiveMatchLine match={match} status={status} />
                     <Box minW={{ base: "54px", md: "78px" }} textAlign="right" flexShrink={0}>
@@ -31,7 +33,7 @@ export function LiveMatchRow({ match, status }: LiveMatchRowProps) {
 
 // The one number that makes a match yours: what you predicted, and (once it's settled) what that
 // prediction was worth.
-function YourPrediction({ match, status }: LiveMatchRowProps): ReactNode {
+function YourPrediction({ match, status }: { match: MatchPrediction; status: MatchStatusValue }): ReactNode {
     const predicted = match.homeTeamGoals !== null && match.awayTeamGoals !== null;
 
     if (!predicted) {

@@ -19,9 +19,19 @@ function kickoffTime(matchDateTime: string): string {
     return new Date(matchDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
+// Both sides or neither: a half-populated scoreline would be worse than none.
+function liveScore(match: MatchPrediction): string | null {
+    if (match.liveHomeTeamGoals === null || match.liveAwayTeamGoals === null) {
+        return null;
+    }
+
+    return `${match.liveHomeTeamGoals} - ${match.liveAwayTeamGoals}`;
+}
+
 /// The two teams either side of a centre slot holding whatever the match's stage calls for: its
-/// kick-off time before it starts, "v" while it's in play (the app has no live score feed - the
-/// scoreline arrives when an admin confirms the result), and the final score once it has one.
+/// kick-off time before it starts, the running score while it's in play, and the confirmed result
+/// once it has one. A live match with no score yet shows "v" - either nobody has heard from the
+/// provider about it, or it's genuinely goalless and the feed hasn't said so.
 ///
 /// Deliberately non-interactive, unlike MatchRow's TeamName: every caller wraps the whole line in
 /// a single link or button, and a clickable team name nested inside that would be both a confusing
@@ -48,7 +58,7 @@ export function LiveMatchLine({ match, status, size = "sm" }: LiveMatchLineProps
                 color={status === "During" ? "status.live" : undefined}
             >
                 {status === "Post" ? `${match.actualHomeTeamGoals} - ${match.actualAwayTeamGoals}`
-                    : status === "During" ? "v"
+                    : status === "During" ? liveScore(match) ?? "v"
                         : kickoffTime(match.matchDateTime)}
             </Box>
 
