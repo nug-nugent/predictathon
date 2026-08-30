@@ -50,6 +50,7 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
         return <Text textAlign="center" py={4}>No matches found.</Text>;
     }
 
+    // Only worth explaining when a row actually carries the marker - see MatchRow.
     const showKnockoutWarning = matches.some((m) => m.knockout);
     const dateHeadings = matches.map((m) => formatDateHeading(m.matchDateTime));
 
