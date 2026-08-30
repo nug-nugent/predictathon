@@ -1,4 +1,4 @@
-import { Badge, Center, Flex, Text } from "@chakra-ui/react";
+import { Center, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
@@ -115,8 +115,9 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       });
   };
 
-  // The count for the week on screen is derived from the matches already loaded rather than from
-  // the summary, so it falls as predictions are saved instead of going stale the moment you type.
+  // Whether the week on screen still has anything outstanding is worked out from the matches
+  // already loaded rather than from the summary, so its marker clears as soon as the last
+  // prediction saves instead of going stale the moment you type.
   const outstandingHere = (matches ?? []).filter(
     (m) => computeMatchStatus(m, now).status === "Pre"
       && m.homeTeamGoals === null
@@ -155,14 +156,6 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
     <>
       <PageHeading mb={4}>Predictions</PageHeading>
       <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} outstanding={outstanding} />
-
-      <Flex justify="center" mb={2} minHeight="24px">
-        {outstandingHere > 0 && (
-          <Badge colorPalette="orange" variant="subtle" size="sm" borderRadius="full" px={2.5}>
-            {outstandingHere} still to predict
-          </Badge>
-        )}
-      </Flex>
 
       {error ? (
         <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />

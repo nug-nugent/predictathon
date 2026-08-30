@@ -80,7 +80,7 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
 
             {showKnockoutWarning && (
                 <Text fontSize="sm" fontStyle="italic" textAlign="center" py={2}>
-                    <Text as="span" fontWeight="bold" color="orange.500">*</Text> Extra time excluded
+                    <Text as="span" fontWeight="bold" color="orange.500">**</Text> Extra time excluded
                 </Text>
             )}
         </Stack>
