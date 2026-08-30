@@ -1,4 +1,4 @@
-import { Center, Text } from "@chakra-ui/react";
+import { Badge, Center, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
@@ -8,6 +8,8 @@ import { MatchList } from "../../../components/match/match-list/MatchList";
 import { ApiError } from "../../../services/api";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
+import { computeMatchStatus } from "../../../components/match/matchStatus";
+import { useMinuteTick } from "../../../hooks/useMinuteTick";
 
 export function PredictionsPage() {
   const { currentCompetitionId, isLoading } = useCompetition();
@@ -40,6 +42,8 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
   const [matches, setMatches] = useState<MatchPrediction[] | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [savedMatchIds, setSavedMatchIds] = useState<Set<string>>(new Set());
+  const now = useMinuteTick();
 
   // Read once, on arrival - lazy initial state rather than a ref, because a ref's current value
   // can't be read during render. The selected week gets stamped back into ?week= below, so reading
@@ -99,6 +103,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
     setSelectedWeek(dateFrom);
     setMatches(null);
     setError(null);
+    setSavedMatchIds(new Set());
 
     const seq = ++requestSeq.current;
     getMatchesForWeek(competitionId, dateFrom)
@@ -110,10 +115,32 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       });
   };
 
-  const outstanding = useMemo(
-    () => new Map((summaries ?? []).filter((s) => s.openUnpredictedCount > 0).map((s) => [s.weekStart, s.openUnpredictedCount])),
-    [summaries]
-  );
+  // The count for the week on screen is derived from the matches already loaded rather than from
+  // the summary, so it falls as predictions are saved instead of going stale the moment you type.
+  const outstandingHere = (matches ?? []).filter(
+    (m) => computeMatchStatus(m, now).status === "Pre"
+      && m.homeTeamGoals === null
+      && m.awayTeamGoals === null
+      && !savedMatchIds.has(m.matchID)
+  ).length;
+
+  const outstanding = useMemo(() => {
+    const weeksWithOutstanding = new Set(
+      (summaries ?? []).filter((s) => s.openUnpredictedCount > 0).map((s) => s.weekStart)
+    );
+
+    // Other weeks can't change while you're on this one, so only the selected week's marker needs
+    // correcting against what's actually happened on screen.
+    if (selectedWeek) {
+      if (outstandingHere > 0) {
+        weeksWithOutstanding.add(selectedWeek);
+      } else {
+        weeksWithOutstanding.delete(selectedWeek);
+      }
+    }
+
+    return weeksWithOutstanding;
+  }, [summaries, selectedWeek, outstandingHere]);
 
   if (summaries === null) {
     if (error) {
@@ -129,12 +156,20 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
       <PageHeading mb={4}>Predictions</PageHeading>
       <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} outstanding={outstanding} />
 
+      <Flex justify="center" mb={2} minHeight="24px">
+        {outstandingHere > 0 && (
+          <Badge colorPalette="orange" variant="subtle" size="sm" borderRadius="full" px={2.5}>
+            {outstandingHere} still to predict
+          </Badge>
+        )}
+      </Flex>
+
       {error ? (
         <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />
       ) : matches === null ? (
         <LoadingSpinner />
       ) : (
-        <MatchList key={selectedWeek} matches={matches} />
+        <MatchList key={selectedWeek} matches={matches} onPredictionSaved={(matchId) => setSavedMatchIds((prev) => new Set(prev).add(matchId))} />
       )}
     </>
   );

@@ -7,6 +7,8 @@ import type { MatchPrediction } from "../../../services/prediction-service";
 
 type MatchListProps = {
     matches: MatchPrediction[];
+    /** Called after each successful save, so the page can keep its outstanding count in step. */
+    onPredictionSaved?: (matchId: string) => void;
 };
 
 function isPredicted(match: MatchPrediction): boolean {
@@ -23,7 +25,7 @@ function formatDateHeading(dateTime: string): string {
     return new Date(dateTime).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-export function MatchList({ matches }: MatchListProps) {
+export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
     const now = useMinuteTick();
 
     const [predictedIds, setPredictedIds] = useState<Set<string>>(
@@ -37,6 +39,7 @@ export function MatchList({ matches }: MatchListProps) {
         const updated = new Set(predictedIds);
         updated.add(matchId);
         setPredictedIds(updated);
+        onPredictionSaved?.(matchId);
 
         const index = matches.findIndex((m) => m.matchID === matchId);
         const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !updated.has(m.matchID));
