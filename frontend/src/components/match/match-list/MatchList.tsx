@@ -7,6 +7,8 @@ import type { MatchPrediction } from "../../../services/prediction-service";
 
 type MatchListProps = {
     matches: MatchPrediction[];
+    /** Called after each successful save, so the page can keep its outstanding count in step. */
+    onPredictionSaved?: (matchId: string) => void;
 };
 
 function isPredicted(match: MatchPrediction): boolean {
@@ -23,7 +25,7 @@ function formatDateHeading(dateTime: string): string {
     return new Date(dateTime).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-export function MatchList({ matches }: MatchListProps) {
+export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
     const now = useMinuteTick();
 
     const [predictedIds, setPredictedIds] = useState<Set<string>>(
@@ -37,6 +39,7 @@ export function MatchList({ matches }: MatchListProps) {
         const updated = new Set(predictedIds);
         updated.add(matchId);
         setPredictedIds(updated);
+        onPredictionSaved?.(matchId);
 
         const index = matches.findIndex((m) => m.matchID === matchId);
         const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !updated.has(m.matchID));
@@ -47,6 +50,7 @@ export function MatchList({ matches }: MatchListProps) {
         return <Text textAlign="center" py={4}>No matches found.</Text>;
     }
 
+    // Only worth explaining when a row actually carries the marker - see MatchRow.
     const showKnockoutWarning = matches.some((m) => m.knockout);
     const dateHeadings = matches.map((m) => formatDateHeading(m.matchDateTime));
 
@@ -77,7 +81,7 @@ export function MatchList({ matches }: MatchListProps) {
 
             {showKnockoutWarning && (
                 <Text fontSize="sm" fontStyle="italic" textAlign="center" py={2}>
-                    <Text as="span" fontWeight="bold" color="orange.500">*</Text> Extra time excluded
+                    <Text as="span" fontWeight="bold" color="orange.500">**</Text> Extra time excluded
                 </Text>
             )}
         </Stack>

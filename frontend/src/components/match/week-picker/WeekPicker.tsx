@@ -5,16 +5,17 @@ type WeekPickerProps = {
     weeks: string[];
     selectedWeek: string;
     onWeekChange: (dateFrom: string) => void;
-    /** Week start -> matches still to predict in it, for weeks that have any. */
-    outstanding?: Map<string, number>;
+    /** The weeks that still have matches left to predict. */
+    outstanding?: Set<string>;
 };
 
-function formatWeek(week: string, outstandingCount: number | undefined): string {
+function formatWeek(week: string, hasOutstanding: boolean): string {
     // Browser locale (not a hardcoded one) - matches every other date in the app.
     const formatted = new Date(week).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 
-    // A native <option> can't carry a badge element, so the marker has to be part of its text.
-    return outstandingCount ? `${formatted} (${outstandingCount} to predict)` : formatted;
+    // A native <option> can't carry a badge element, so the marker has to be part of its text. A
+    // bare star keeps it to a few pixels - the count lives in a real, styleable element alongside.
+    return hasOutstanding ? `${formatted} *` : formatted;
 }
 
 // Clamps the day-of-month to the last day of the target month (matches date-fns' addMonths), so
@@ -67,16 +68,9 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: W
                     <ChevronLeft size={16} />
                 </NavButton>
 
-                {/* The outstanding-predictions marker makes this too wide to sit between the nav
-                    buttons on a phone - they'd wrap around it in pieces. Give it its own line
-                    there instead, with all four buttons flowing beneath it. */}
-                <NativeSelect.Root
-                    width={{ base: "100%", md: "auto" }}
-                    order={{ base: -1, md: 0 }}
-                    size="sm"
-                >
+                <NativeSelect.Root width="auto" size="sm">
                     <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
-                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.get(w))}</option>)}
+                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.has(w) ?? false)}</option>)}
                     </NativeSelect.Field>
                     <NativeSelect.Indicator />
                 </NativeSelect.Root>

@@ -154,6 +154,12 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
                         <HStack flex="1" minW="0" gap={2}>
                             <TeamName teamId={match.awayTeamID} name={teamName(match.awayTeam, match.awayTeamShortName)}
                                 shortName={teamName(match.awayTeamShortName, match.awayTeam)} crest={awayCrest} crestPosition="before" />
+
+                            {/* Referent for MatchList's "** Extra time excluded" note - keep the two in step. */}
+                            {match.knockout && (
+                                <Text as="span" fontWeight="bold" color="orange.500" flexShrink={0}
+                                    title="Extra time excluded" aria-label="Extra time excluded">**</Text>
+                            )}
                         </HStack>
                     </Flex>
 
