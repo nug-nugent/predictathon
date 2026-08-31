@@ -30,8 +30,15 @@
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1E4FD1" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <!--
+      The address-bar tint on mobile Chrome and on Safari 15+. Deliberately one tag rather than the
+      usual media="(prefers-color-scheme: ...)" pair: those follow the operating system, which here
+      is only the default - the site has its own light/dark toggle, and an address bar that stayed
+      black behind a page the reader had just switched to light would be the one part of the window
+      ignoring them. The boot script below sets it to the mode actually in use before first paint,
+      and ColorModeProvider keeps it there afterwards.
+    -->
+    <meta name="theme-color" content="#1E4FD1" />
   </head>
   <body>
     <script>
@@ -46,6 +53,13 @@
             ? stored
             : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
           document.documentElement.classList.add(mode);
+
+          // Same hand-sync caveat as the key above: these two colours are THEME_COLORS in
+          // src/components/ui/color-mode-context.ts, which this script can't import either.
+          var themeColor = document.querySelector('meta[name="theme-color"]');
+          if (themeColor) {
+            themeColor.setAttribute("content", mode === "dark" ? "#000000" : "#1E4FD1");
+          }
         } catch (e) {}
       })();
     </script>

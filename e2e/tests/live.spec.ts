@@ -56,6 +56,25 @@ test("the live page picks a match in play when the url names none", async ({ pag
     await expect(page.getByText("LIVE", { exact: true }).first()).toBeVisible();
 });
 
+test("the predictions list reads best-first", async ({ page }) => {
+    await page.goto("/live");
+
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+
+    // The predictions table is the one with a Predictor column - the standings below it and the
+    // summary above it both have neither.
+    const predictions = page.locator("table").filter({ has: page.getByRole("columnheader", { name: "Predictor" }) });
+    const projected = await predictions.locator("tbody tr td:nth-child(3)").allInnerTexts();
+
+    expect(projected.length).toBeGreaterThan(1);
+
+    // "-" is the dash shown for a prediction there's nothing to project - no live score yet, or
+    // nobody predicted - and belongs below every real figure rather than sorted among them.
+    const ranked = projected.map((text) => (/^\d+$/.test(text.trim()) ? Number(text.trim()) : -1));
+
+    expect(ranked).toEqual([...ranked].sort((a, b) => b - a));
+});
+
 test("the live score section is hidden from players", async ({ page }) => {
     await page.goto("/live");
 
