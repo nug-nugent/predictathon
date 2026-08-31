@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using Predictathon.Application.Errors;
@@ -18,6 +18,7 @@ public class MessageboardServiceTests
     private readonly Mock<IMessageImageService> _messageImageService = new();
     private readonly Mock<IMessageboardNotifier> _notifier = new();
     private readonly Mock<IReactionCatalogue> _reactionCatalogue = new();
+    private readonly Mock<ITrophyService> _trophyService = new();
     private readonly Mock<UserManager<ApplicationUser>> _userManager = MockUserManager.Create();
 
     public MessageboardServiceTests()
@@ -27,10 +28,15 @@ public class MessageboardServiceTests
         // ReactionCatalogueTests.
         _reactionCatalogue.Setup(c => c.ResolveImageFile(It.IsAny<string>())).Returns("1f44d.svg");
         _reactionCatalogue.Setup(c => c.Canonicalise(It.IsAny<string>())).Returns((string id) => id);
+
+        // Trophies are their own feature with their own tests - nobody here has won anything.
+        _trophyService.Setup(t => t.GetForUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _trophyService.Setup(t => t.GetForUsersAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, List<UserTrophyModel>>());
     }
 
     private MessageboardService MakeService()
-        => new(_dbContext, _avatarService.Object, _messageImageService.Object, _notifier.Object, _reactionCatalogue.Object, _userManager.Object);
+        => new(_dbContext, _avatarService.Object, _messageImageService.Object, _notifier.Object, _reactionCatalogue.Object, _trophyService.Object, _userManager.Object);
 
     private ApplicationUser AddViewer(bool canViewMessageboard = true, int totalPosts = 0)
     {

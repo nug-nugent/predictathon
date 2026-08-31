@@ -7,7 +7,8 @@ import {
 import { ArrowLeft, X } from "lucide-react";
 import { useCompetition } from "../../../../hooks/useCompetition";
 import {
-    getCompetition, updateCompetition, importFixtures, type CompetitionAdmin, type FixtureImportSummary,
+    getCompetition, updateCompetition, importFixtures, getCompetitionSeries,
+    type CompetitionAdmin, type CompetitionSeries, type FixtureImportSummary,
 } from "../../../../services/competition-admin-service";
 import {
     getAssignedTeamsForCompetition, getUnassignedTeamsForCompetition,
@@ -157,6 +158,11 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                         </Field.HelperText>
                     </Field.Root>
 
+                    <SeriesField
+                        value={form.competitionSeriesID}
+                        onChange={(competitionSeriesID) => update({ competitionSeriesID })}
+                    />
+
                     <VStack align="stretch" gap={2}>
                         <Checkbox.Root checked={form.duplicateFixturesAllowed} onCheckedChange={(e) => update({ duplicateFixturesAllowed: !!e.checked })}>
                             <Checkbox.HiddenInput />
@@ -213,6 +219,36 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
 
             <HallOfFameSection competitionId={form.competitionID} />
         </VStack>
+    );
+}
+
+// The series a competition belongs to, which is what groups repeated wins into a single counted
+// trophy on a profile. The series themselves are reference data seeded by the database, so this
+// only ever picks from them - there is nothing to create or edit here.
+function SeriesField({ value, onChange }: { value: string | null; onChange: (value: string | null) => void }) {
+    const { data: series, error } = useAsyncData(getCompetitionSeries, []);
+
+    return (
+        <Field.Root>
+            <Field.Label>Series</Field.Label>
+            <NativeSelect.Root size="sm" maxW="300px" disabled={series === null || error !== null}>
+                <NativeSelect.Field
+                    value={value ?? ""}
+                    onChange={(e) => onChange(e.target.value || null)}
+                >
+                    <option value="">-- none --</option>
+                    {series?.map((s: CompetitionSeries) => (
+                        <option key={s.competitionSeriesID} value={s.competitionSeriesID}>{s.seriesName}</option>
+                    ))}
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+            </NativeSelect.Root>
+            <Field.HelperText>
+                {error
+                    ? "The series list could not be loaded."
+                    : "Groups this competition's winners with other years of the same competition, so repeated wins show as one trophy. Leave as none for a one-off."}
+            </Field.HelperText>
+        </Field.Root>
     );
 }
 

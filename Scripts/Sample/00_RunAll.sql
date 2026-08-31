@@ -24,6 +24,7 @@ GO
 :r 07_UserCompetition.sql
 :r 08_SampleCompetitors.sql
 :r 09_Predictions.sql
+:r 10_HallOfFame.sql
 
 PRINT 'Sample data seeded.';
 GO

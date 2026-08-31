@@ -7,6 +7,7 @@ public interface IApplicationDbContext : IGenericDbContext
 {
     DbSet<Announcement> Announcement { get; }
     DbSet<Competition> Competition { get; }
+    DbSet<CompetitionSeries> CompetitionSeries { get; }
     DbSet<ErrorLog> ErrorLog { get; }
     DbSet<FixtureChangeProposal> FixtureChangeProposal { get; }
     DbSet<HallOfFame> HallOfFame { get; }

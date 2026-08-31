@@ -15,8 +15,17 @@
     [DefaultToNeutralGround]           BIT              CONSTRAINT [DF_Competition_DefaultToNeutralGround] DEFAULT ((0)) NOT NULL,
     [AllowTwoPointers]                 BIT              CONSTRAINT [DF_Competition_AllowTwoPointers] DEFAULT ((1)) NOT NULL,
     [ExternalApiCompetitionCode]       VARCHAR (10)     NULL,
-    CONSTRAINT [PK_Competition] PRIMARY KEY CLUSTERED ([CompetitionID] ASC)
+    [CompetitionSeriesID]              UNIQUEIDENTIFIER NULL,
+    CONSTRAINT [PK_Competition] PRIMARY KEY CLUSTERED ([CompetitionID] ASC),
+    CONSTRAINT [FK_Competition_CompetitionSeries_CompetitionSeriesID] FOREIGN KEY ([CompetitionSeriesID]) REFERENCES [dbo].[CompetitionSeries] ([CompetitionSeriesID])
 );
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Competition_CompetitionSeriesID] ON [dbo].[Competition]
+(
+	[CompetitionSeriesID] ASC
+);
+GO
 
 
 

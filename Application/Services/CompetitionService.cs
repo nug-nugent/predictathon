@@ -39,6 +39,24 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<CompetitionSeriesModel>> GetCompetitionSeriesListAsync(CancellationToken cancellationToken = default)
+    {
+        return await _appDbContext.CompetitionSeries
+            .OrderBy(s => s.DisplayOrder)
+            .ThenBy(s => s.SeriesName)
+            .Select(s => new CompetitionSeriesModel
+            {
+                CompetitionSeriesID = s.CompetitionSeriesID,
+                SeriesName = s.SeriesName,
+                ShortName = s.ShortName,
+                BadgeIcon = s.BadgeIcon,
+                BadgeColour = s.BadgeColour,
+                DisplayOrder = s.DisplayOrder,
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<UserCompetitionRegistrationListItem>> GetUserCompetitionRegistrationListAsync(Guid userId)
     {
         var parameters = new List<SqlParameter>

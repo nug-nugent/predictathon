@@ -102,6 +102,13 @@ export const predictTheme = createSystem(defaultConfig, {
           border: { value: { _light: "#D8DCE6", _dark: "#45464D" } },
           borderFocus: { value: { _light: "#1E4FD1", _dark: "#4FD9B5" } },
         },
+        // Trophy gold - the fallback badge colour for a competition series that names none of its
+        // own, and the colour of the win count beside it. Functional like the points scale: it
+        // marks an actual competition win, so don't reuse it as a decorative accent. Lightened in
+        // dark mode, where the light-mode gold goes muddy against the panel.
+        trophy: {
+          DEFAULT: { value: { _light: "#B8860B", _dark: "#E8C15A" } },
+        },
         status: {
           urgent: { value: { _light: "#D69A1F", _dark: "#E0A93A" } },
           relaxed: { value: { _light: "#2E9B4A", _dark: "#3FCB4A" } },

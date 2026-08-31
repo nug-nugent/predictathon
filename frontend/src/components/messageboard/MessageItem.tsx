@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Message, MessageReaction } from "../../services/messageboard-service";
 import { ReactionBar } from "./ReactionBar";
+import { TrophyStamp } from "../trophies/TrophyStamp";
 
 const markdownComponents = {
     p: ({ children }: { children?: React.ReactNode }) => <Text mb={2} _last={{ mb: 0 }}>{children}</Text>,
@@ -24,6 +25,7 @@ export function MessageItem({ message, onReactionsChanged }: {
             <VStack align="start" gap={1} flex="1" minW={0}>
                 <HStack gap={2}>
                     <Text fontWeight="bold">{message.postedByUsername}</Text>
+                    <TrophyStamp trophies={message.posterTrophies} />
                     <Text fontSize="xs" color="fg.muted">{new Date(message.messageDateTime).toLocaleString()}</Text>
                     <Text fontSize="xs" color="fg.muted">&middot; post #{message.posterTotalMessageboardPosts}</Text>
                 </HStack>

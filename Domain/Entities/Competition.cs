@@ -40,6 +40,10 @@ public partial class Competition
 
     public string? ExternalApiCompetitionCode { get; set; }
 
+    public Guid? CompetitionSeriesID { get; set; }
+
+    public virtual CompetitionSeries? CompetitionSeries { get; set; }
+
     public virtual ICollection<HallOfFame> HallOfFame { get; set; } = new List<HallOfFame>();
 
     public virtual ICollection<Match> Match { get; set; } = new List<Match>();

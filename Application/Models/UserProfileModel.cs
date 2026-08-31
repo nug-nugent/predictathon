@@ -1,4 +1,4 @@
-namespace Predictathon.Application.Models;
+﻿namespace Predictathon.Application.Models;
 
 /// <summary>
 /// Publicly-viewable profile information for a user (Identity.Users).
@@ -24,4 +24,10 @@ public class UserProfileModel
     /// page. Null whenever <see cref="AvatarUrl"/> is.
     /// </summary>
     public string? AvatarLargeUrl { get; set; }
+
+    /// <summary>
+    /// Competitions this user has won, best-known series first. Empty for the majority who have
+    /// never won one - the profile draws nothing at all in that case.
+    /// </summary>
+    public List<UserTrophyModel> Trophies { get; set; } = [];
 }

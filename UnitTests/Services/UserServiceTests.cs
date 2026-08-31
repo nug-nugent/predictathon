@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -18,6 +18,13 @@ public class UserServiceTests
     private readonly Mock<IAvatarService> _avatarService = new();
     private readonly Mock<UserManager<ApplicationUser>> _userManager = MockUserManager.Create();
     private readonly Mock<IEmailService> _emailService = new();
+    private readonly Mock<ITrophyService> _trophyService = new();
+
+    public UserServiceTests()
+    {
+        // Trophies are their own feature with their own tests - nobody here has won anything.
+        _trophyService.Setup(t => t.GetForUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+    }
 
     private UserService MakeService()
         => new(
@@ -25,6 +32,7 @@ public class UserServiceTests
             _userManager.Object,
             _dbContext,
             _emailService.Object,
+            _trophyService.Object,
             new ConfigurationBuilder().Build(),
             NullLogger<UserService>.Instance);
 

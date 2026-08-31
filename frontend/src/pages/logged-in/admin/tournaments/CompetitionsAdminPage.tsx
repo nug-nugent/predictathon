@@ -130,6 +130,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                 defaultToNeutralGround: false,
                 allowTwoPointers: true,
                 externalApiCompetitionCode: null,
+                competitionSeriesID: null,
             });
 
             onCreated(created.competitionID);

@@ -1,5 +1,6 @@
 import { getJsonAuthenticated, putJsonAuthenticated, postFormAuthenticated, deleteAuthenticated } from "./api";
 import type { MatchPrediction } from "./prediction-service";
+import type { UserTrophy } from "./trophy-service";
 
 // Matches Application/Models/UserProfileModel.cs.
 export type UserProfile = {
@@ -11,6 +12,7 @@ export type UserProfile = {
     profileText: string | null;
     avatarUrl: string | null;
     avatarLargeUrl: string | null;
+    trophies: UserTrophy[];
 };
 
 export async function getUserProfile(userId: string): Promise<UserProfile> {

@@ -19,6 +19,8 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
 
     public virtual DbSet<Competition> Competition => Set<Competition>();
 
+    public virtual DbSet<CompetitionSeries> CompetitionSeries => Set<CompetitionSeries>();
+
     public virtual DbSet<ErrorLog> ErrorLog => Set<ErrorLog>();
 
     public virtual DbSet<FixtureChangeProposal> FixtureChangeProposal => Set<FixtureChangeProposal>();
@@ -83,6 +85,28 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.Property(e => e.Information).IsUnicode(false);
             entity.Property(e => e.PayPalPaymentAvailable).HasDefaultValue(true, "DF_Competition_PayPalPaymentAvailable");
             entity.Property(e => e.AllowTwoPointers).HasDefaultValue(true, "DF_Competition_AllowTwoPointers");
+
+            entity.HasOne(d => d.CompetitionSeries).WithMany(p => p.Competition)
+                .HasForeignKey(d => d.CompetitionSeriesID)
+                .HasConstraintName("FK_Competition_CompetitionSeries_CompetitionSeriesID");
+        });
+
+        modelBuilder.Entity<CompetitionSeries>(entity =>
+        {
+            entity.Property(e => e.CompetitionSeriesID).HasDefaultValueSql("newid()");
+            entity.Property(e => e.SeriesName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ShortName)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.BadgeIcon)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.BadgeColour)
+                .HasMaxLength(7)
+                .IsUnicode(false);
+            entity.Property(e => e.DisplayOrder).HasDefaultValue(0, "DF_CompetitionSeries_DisplayOrder");
         });
 
         modelBuilder.Entity<ErrorLog>(entity =>
@@ -135,6 +159,10 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.HasOne(d => d.Competition).WithMany(p => p.HallOfFame)
                 .HasForeignKey(d => d.CompetitionID)
                 .HasConstraintName("FK_HallOfFame_Competition");
+
+            entity.HasOne(d => d.CompetitionSeries).WithMany(p => p.HallOfFame)
+                .HasForeignKey(d => d.CompetitionSeriesID)
+                .HasConstraintName("FK_HallOfFame_CompetitionSeries_CompetitionSeriesID");
         });
 
         modelBuilder.Entity<Match>(entity =>
