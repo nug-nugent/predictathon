@@ -69,6 +69,13 @@ public class UserMatchPredictionListItem
     /// <summary>When the live score last changed - not when it was last confirmed unchanged.</summary>
     public DateTime? LiveScoreUpdatedDateTime { get; set; }
 
+    /// <summary>
+    /// When the provider was last heard from about this match, whether or not the score moved. Null
+    /// for a match only ever scored by an admin. This is the honest "as at" for a reader: through a
+    /// goalless spell LiveScoreUpdatedDateTime stops moving and starts reading as a stalled page.
+    /// </summary>
+    public DateTime? LiveScoreLastPolledDateTime { get; set; }
+
     public int? Score { get; set; }
 
     public string? Description { get; set; }

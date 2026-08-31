@@ -153,6 +153,12 @@ function TodayGroup({ title, matches, status }: { title: string; matches: MatchP
 function FocusedMatch({ match, status }: { match: MatchPrediction; status: MatchStatusValue }) {
     const predicted = match.homeTeamGoals !== null && match.awayTeamGoals !== null;
 
+    // When we last heard from the provider, rather than when the scoreline last moved: through a
+    // goalless half-hour the latter sits still and the page reads as stuck, when in fact the score
+    // has been confirmed unchanged the whole time. Falls back to the change time for a match only
+    // ever scored by an admin, which is never polled.
+    const scoreAsAt = match.liveScoreLastPolledDateTime ?? match.liveScoreUpdatedDateTime;
+
     return (
         <Panel accent>
             <HStack justify="space-between" mb={4}>
@@ -166,9 +172,9 @@ function FocusedMatch({ match, status }: { match: MatchPrediction; status: Match
 
             {/* The feed is delayed, so say when the score we're showing was last actually current
                 rather than letting it read as this second's score. */}
-            {status === "During" && match.liveScoreUpdatedDateTime && (
+            {status === "During" && scoreAsAt && (
                 <Text textAlign="center" mt={1} color="fg.muted" fontSize="xs">
-                    Score as at {new Date(match.liveScoreUpdatedDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                    Score as at {new Date(scoreAsAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                 </Text>
             )}
 

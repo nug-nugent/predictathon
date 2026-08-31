@@ -65,7 +65,10 @@ public class LiveScoreStoreTests
             AwayTeamGoals = 1,
             Status = "IN_PLAY",
             Source = LiveScoreSource.Api,
-            UpdatedDateTime = now,
+            // Deliberately apart: a match can go half an hour without a goal while still being
+            // polled every minute, and the Live page shows the poll time so a quiet spell doesn't
+            // read as a stalled feed.
+            UpdatedDateTime = now.AddMinutes(-30),
             LastPolledDateTime = now,
         });
 
@@ -78,7 +81,8 @@ public class LiveScoreStoreTests
             var scored = matches.Single(m => m.MatchID == liveMatch.MatchID);
             scored.LiveHomeTeamGoals.Should().Be(2);
             scored.LiveAwayTeamGoals.Should().Be(1);
-            scored.LiveScoreUpdatedDateTime.Should().NotBeNull();
+            scored.LiveScoreUpdatedDateTime.Should().BeCloseTo(now.AddMinutes(-30), TimeSpan.FromSeconds(1));
+            scored.LiveScoreLastPolledDateTime.Should().BeCloseTo(now, TimeSpan.FromSeconds(1));
 
             // The confirmed-result columns stay empty: a live score carries no scoring weight, and
             // the two must never be conflated.
@@ -89,6 +93,7 @@ public class LiveScoreStoreTests
             var unscored = matches.Single(m => m.MatchID == unscoredMatch.MatchID);
             unscored.LiveHomeTeamGoals.Should().BeNull();
             unscored.LiveAwayTeamGoals.Should().BeNull();
+            unscored.LiveScoreLastPolledDateTime.Should().BeNull();
         }
         finally
         {
