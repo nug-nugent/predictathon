@@ -22,6 +22,21 @@ test("a player's trophy cabinet groups repeated wins and keeps one-offs apart", 
     await expect(page.getByText("Millennium Shield")).toBeVisible();
 });
 
+// The Home dashboard's own-profile card carries the compact stamp rather than the full cabinet.
+// Unlike the profile page and the message board, that card has no payload of its own to fold the
+// trophies into, so this also covers the /Trophy/User endpoint it fetches them from.
+test("the home dashboard's profile card stamps the player's wins beside their name", async ({ page }) => {
+    await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
+    await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
+
+    // The stamp is icon-only, so its accessible name is the whole of what it conveys.
+    await expect(page.getByRole("img", { name: "World Cup, won 3 times: 1998, 2006, 2014" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Millennium Shield, won in 2000" })).toBeVisible();
+
+    // Wins only, and only on the profile card - the mini league table beside it stays unstamped.
+    await expect(page.getByRole("img", { name: /won/ })).toHaveCount(2);
+});
+
 // Most players have never won anything, and the cabinet is meant to draw nothing at all for them
 // rather than an empty panel.
 test("a player with no wins gets no trophy cabinet", async ({ page }) => {
