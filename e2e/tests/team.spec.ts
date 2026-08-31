@@ -30,3 +30,31 @@ test("team detail page hides the league table for a competition with knockout ma
     await expect(page.getByRole("heading", { name: "League Table" })).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "PTS" })).toHaveCount(0);
 });
+
+test("recent results for a team open from its name on the predictions page", async ({ page }) => {
+    await page.goto("/predictions");
+
+    // The week picker only renders once matches for the default week have loaded.
+    await expect(page.getByRole("combobox")).toBeVisible();
+
+    // Which teams are on show depends on the week, so drive whichever one is listed first rather
+    // than hardcoding a team. The user-menu chip and each row's "All Predictions" toggle are
+    // popovers too, hence the filters.
+    const teamTrigger = page.locator('[data-scope="popover"][data-part="trigger"]')
+        .filter({ hasNotText: "All Predictions" })
+        .filter({ hasNotText: DEMO_PREDICTOR.username })
+        .first();
+    const teamName = (await teamTrigger.innerText()).trim();
+
+    await teamTrigger.click();
+
+    const popover = page.locator('[data-scope="popover"][data-part="content"][data-state="open"]');
+    await popover.getByRole("button", { name: "Recent Results" }).click();
+
+    const dialog = page.getByRole("dialog").filter({ hasText: "Recent Results" });
+    await expect(dialog.getByRole("heading", { name: `${teamName} - Recent Results` })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "View Team Detail" })).toBeVisible();
+
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toHaveCount(0);
+});

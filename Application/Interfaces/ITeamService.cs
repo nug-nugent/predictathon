@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Predictathon.Application.Models;
 
 namespace Predictathon.Application.Interfaces;
@@ -38,4 +38,11 @@ public interface ITeamService
     /// "your score" columns.
     /// </summary>
     Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a team's most recently played matches within a competition, newest first, capped at
+    /// <paramref name="count"/> - the quick "how have they been doing?" list shown from a team's
+    /// name, without the rest of the Team Detail page's data.
+    /// </summary>
+    Task<IReadOnlyList<TeamRecentResultItem>> GetRecentResultsAsync(Guid competitionId, Guid teamId, int count, CancellationToken cancellationToken = default);
 }

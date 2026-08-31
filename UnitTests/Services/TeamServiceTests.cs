@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Predictathon.Application.Services;
 using Predictathon.UnitTests.TestDoubles;
 using DomainEntities = Predictathon.Domain.Entities;
@@ -263,5 +263,105 @@ public class TeamServiceTests
         detail.GoalsFor.Should().Be(4);
         detail.GoalsAgainst.Should().Be(4);
         detail.AverageGoalsForTotal.Should().BeApproximately(4m / 3m, 0.0001m);
+    }
+
+    /// <summary>
+    /// Builds a played match at a given kick-off, so recent-results ordering can be asserted.
+    /// </summary>
+    private static DomainEntities.Match MakePlayedMatchOn(Guid competitionId, DomainEntities.Team home, DomainEntities.Team away, int homeGoals, int awayGoals, DateTime kickoff)
+    {
+        var match = MakePlayedMatch(competitionId, home, away, homeGoals, awayGoals);
+        match.MatchDateTime = kickoff;
+
+        return match;
+    }
+
+    [Fact]
+    public async Task GetRecentResultsAsync_ReturnsOnlyThisTeamsPlayedMatches_NewestFirst()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var arsenal = MakeTeam("Arsenal", "ARS");
+        var chelsea = MakeTeam("Chelsea", "CHE");
+        var everton = MakeTeam("Everton", "EVE");
+        Register(dbContext, competitionId, arsenal, chelsea, everton);
+
+        var kickoff = new DateTime(2026, 8, 15, 15, 0, 0);
+        dbContext.Match.AddRange(
+            MakePlayedMatchOn(competitionId, arsenal, chelsea, 2, 1, kickoff),
+            MakePlayedMatchOn(competitionId, everton, arsenal, 0, 3, kickoff.AddDays(7)),
+            // Not played, another competition, and another team's match - none of them belong.
+            new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = kickoff.AddDays(14), HomeTeamID = arsenal.TeamID, AwayTeamID = everton.TeamID },
+            MakePlayedMatchOn(Guid.NewGuid(), arsenal, chelsea, 1, 0, kickoff.AddDays(1)),
+            MakePlayedMatchOn(competitionId, chelsea, everton, 1, 0, kickoff.AddDays(2)));
+        await dbContext.SaveChangesAsync();
+
+        var results = await service.GetRecentResultsAsync(competitionId, arsenal.TeamID, 6);
+
+        results.Select(r => r.MatchDateTime).Should().Equal(kickoff.AddDays(7), kickoff);
+        results[0].HomeTeamShortName.Should().Be("EVE");
+        results[0].AwayTeam.Should().Be("Arsenal");
+        results[0].HomeTeamGoals.Should().Be(0);
+        results[0].AwayTeamGoals.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GetRecentResultsAsync_SetsOutcomeFromTheRequestedTeamsPointOfView()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var arsenal = MakeTeam("Arsenal", "ARS");
+        var chelsea = MakeTeam("Chelsea", "CHE");
+        Register(dbContext, competitionId, arsenal, chelsea);
+
+        var kickoff = new DateTime(2026, 8, 15, 15, 0, 0);
+        dbContext.Match.AddRange(
+            // Home win, away win, and a draw.
+            MakePlayedMatchOn(competitionId, arsenal, chelsea, 2, 1, kickoff),
+            MakePlayedMatchOn(competitionId, chelsea, arsenal, 0, 1, kickoff.AddDays(1)),
+            MakePlayedMatchOn(competitionId, arsenal, chelsea, 1, 1, kickoff.AddDays(2)));
+        await dbContext.SaveChangesAsync();
+
+        var arsenalResults = await service.GetRecentResultsAsync(competitionId, arsenal.TeamID, 6);
+        var chelseaResults = await service.GetRecentResultsAsync(competitionId, chelsea.TeamID, 6);
+
+        arsenalResults.Select(r => r.Outcome).Should().Equal("Draw", "Win", "Win");
+        chelseaResults.Select(r => r.Outcome).Should().Equal("Draw", "Loss", "Loss");
+    }
+
+    [Fact]
+    public async Task GetRecentResultsAsync_ReturnsAtMostTheRequestedCount()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var arsenal = MakeTeam("Arsenal", "ARS");
+        var chelsea = MakeTeam("Chelsea", "CHE");
+        Register(dbContext, competitionId, arsenal, chelsea);
+
+        var kickoff = new DateTime(2026, 8, 15, 15, 0, 0);
+        for (var week = 0; week < 5; week++)
+        {
+            dbContext.Match.Add(MakePlayedMatchOn(competitionId, arsenal, chelsea, week, 0, kickoff.AddDays(week * 7)));
+        }
+        await dbContext.SaveChangesAsync();
+
+        var results = await service.GetRecentResultsAsync(competitionId, arsenal.TeamID, 3);
+
+        results.Should().HaveCount(3);
+        results.Select(r => r.HomeTeamGoals).Should().Equal(4, 3, 2);
+    }
+
+    [Fact]
+    public async Task GetRecentResultsAsync_ReturnsEmpty_WhenTheTeamHasNotPlayedYet()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var arsenal = MakeTeam("Arsenal", "ARS");
+        Register(dbContext, competitionId, arsenal);
+        await dbContext.SaveChangesAsync();
+
+        var results = await service.GetRecentResultsAsync(competitionId, arsenal.TeamID, 6);
+
+        results.Should().BeEmpty();
     }
 }

@@ -1,5 +1,7 @@
-import { Button, HStack, Image, Popover, Portal, Text } from "@chakra-ui/react";
+import { useState } from "react";
+import { Button, HStack, Image, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
+import { RecentResultsDialog } from "../../team/RecentResultsDialog";
 
 type TeamNameProps = {
     /** Null for a not-yet-decided knockout placeholder - rendered as plain, non-clickable text. */
@@ -13,6 +15,10 @@ type TeamNameProps = {
 };
 
 export function TeamName({ teamId, name, shortName, crest, crestPosition }: TeamNameProps) {
+    // The popover is controlled so picking "Recent Results" can close it as the dialog opens -
+    // leaving it open behind a modal traps focus in a menu nobody can see.
+    const [popoverOpen, setPopoverOpen] = useState(false);
+    const [resultsOpen, setResultsOpen] = useState(false);
     const textAlign = crestPosition === "after" ? "right" : "left";
 
     const label = (
@@ -29,24 +35,34 @@ export function TeamName({ teamId, name, shortName, crest, crestPosition }: Team
     }
 
     return (
-        <Popover.Root positioning={{ placement: "bottom" }}>
-            <Popover.Trigger asChild>
-                <Button variant="plain" size="sm" p={0} h="auto" minW="0" fontWeight="normal">
-                    <HStack gap={2} minW="0">{label}</HStack>
-                </Button>
-            </Popover.Trigger>
-            <Portal>
-                <Popover.Positioner>
-                    <Popover.Content width="auto">
-                        <Popover.Arrow />
-                        <Popover.Body p={2}>
-                            <Button asChild size="xs" variant="ghost">
-                                <RouterLink to={`/team/${teamId}`}>View Team Detail</RouterLink>
-                            </Button>
-                        </Popover.Body>
-                    </Popover.Content>
-                </Popover.Positioner>
-            </Portal>
-        </Popover.Root>
+        <>
+            <Popover.Root open={popoverOpen} onOpenChange={(e) => setPopoverOpen(e.open)} positioning={{ placement: "bottom" }}>
+                <Popover.Trigger asChild>
+                    <Button variant="plain" size="sm" p={0} h="auto" minW="0" fontWeight="normal">
+                        <HStack gap={2} minW="0">{label}</HStack>
+                    </Button>
+                </Popover.Trigger>
+                <Portal>
+                    <Popover.Positioner>
+                        <Popover.Content width="auto">
+                            <Popover.Arrow />
+                            <Popover.Body p={2}>
+                                <Stack gap={1} align="stretch">
+                                    <Button size="xs" variant="ghost" justifyContent="flex-start"
+                                        onClick={() => { setPopoverOpen(false); setResultsOpen(true); }}>
+                                        Recent Results
+                                    </Button>
+                                    <Button asChild size="xs" variant="ghost" justifyContent="flex-start">
+                                        <RouterLink to={`/team/${teamId}`}>View Team Detail</RouterLink>
+                                    </Button>
+                                </Stack>
+                            </Popover.Body>
+                        </Popover.Content>
+                    </Popover.Positioner>
+                </Portal>
+            </Popover.Root>
+
+            <RecentResultsDialog open={resultsOpen} onClose={() => setResultsOpen(false)} teamId={teamId} teamName={name} />
+        </>
     );
 }

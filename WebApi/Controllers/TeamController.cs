@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Predictathon.Application.Constants;
 using Predictathon.Application.Interfaces;
@@ -62,6 +62,18 @@ public class TeamController : ApiControllerBase
         var detail = await _teamService.GetTeamDetailAsync(competitionId, teamId, CurrentUserId, cancellationToken);
 
         return OkOrNotFound(detail);
+    }
+
+    /// <summary>
+    /// Get a team's most recently played matches in a competition, newest first - the quick
+    /// recent-form list shown from a team's name, without the whole Team Detail payload.
+    /// </summary>
+    [HttpGet("{competitionId:guid}/{teamId:guid}/RecentResults")]
+    public async Task<ActionResult<IReadOnlyList<TeamRecentResultItem>>> GetRecentResults(Guid competitionId, Guid teamId, CancellationToken cancellationToken, [FromQuery] int count = 6)
+    {
+        var results = await _teamService.GetRecentResultsAsync(competitionId, teamId, count, cancellationToken);
+
+        return Ok(results);
     }
 
     /// <summary>
