@@ -31,6 +31,11 @@ export type MatchPrediction = {
     liveAwayTeamGoals: number | null;
     /** When the live score last changed - not when it was last confirmed unchanged. */
     liveScoreUpdatedDateTime: string | null;
+    /**
+     * When the provider was last heard from about this match, whether or not the score moved. Null
+     * for a match only ever scored by an admin.
+     */
+    liveScoreLastPolledDateTime: string | null;
     score: number | null;
     description: string | null;
     knockout: boolean;

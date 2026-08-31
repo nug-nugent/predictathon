@@ -37,7 +37,11 @@ BEGIN
 		-- confirmed, scored result - see dbo.MatchLiveScore.
 		, LiveHomeTeamGoals = LiveScore.HomeTeamGoals
 		, LiveAwayTeamGoals = LiveScore.AwayTeamGoals
+		-- When the scoreline itself last moved, and when we last heard from the provider at all.
+		-- The reader is shown the latter: on a quiet spell the former stops moving and starts
+		-- reading as a stall.
 		, LiveScoreUpdatedDateTime = LiveScore.UpdatedDateTime
+		, LiveScoreLastPolledDateTime = LiveScore.LastPolledDateTime
 		, Score = CASE WHEN m.MatchPlayed = 1 AND Prediction.PredictionID IS NULL THEN 0 ELSE Prediction.Score END
 		, m.Description
 		, m.Knockout
