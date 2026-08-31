@@ -99,3 +99,30 @@ export type TeamDetail = {
 export async function getTeamDetail(competitionId: string, teamId: string): Promise<TeamDetail> {
     return getJsonAuthenticated<TeamDetail>(`/Team/${competitionId}/${teamId}/Detail`);
 }
+
+// Matches Application/Models/TeamRecentResultItem.cs.
+export type TeamRecentResult = {
+    matchID: string;
+    matchDateTime: string;
+    homeTeamID: string | null;
+    homeTeam: string | null;
+    homeTeamShortName: string;
+    homeTeamImage: string | null;
+    awayTeamID: string | null;
+    awayTeam: string | null;
+    awayTeamShortName: string;
+    awayTeamImage: string | null;
+    homeTeamGoals: number;
+    awayTeamGoals: number;
+    neutralGround: boolean;
+    description: string | null;
+    knockout: boolean;
+    /// From the point of view of the team the results were asked for.
+    outcome: "Win" | "Draw" | "Loss";
+};
+
+/// A team's most recently played matches in a competition, newest first - the recent-form list
+/// shown from a team's name, without the whole Team Detail payload.
+export async function getTeamRecentResults(competitionId: string, teamId: string, count = 6): Promise<TeamRecentResult[]> {
+    return getJsonAuthenticated<TeamRecentResult[]>(`/Team/${competitionId}/${teamId}/RecentResults?count=${count}`);
+}

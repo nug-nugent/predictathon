@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Mapster;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +15,9 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class TeamService : ITeamService
 {
+    /// <summary>The most recent results any one caller can ask for in a single request.</summary>
+    private const int MaximumRecentResults = 20;
+
     private readonly IApplicationDbContext _dbContext;
 
     public TeamService(IApplicationDbContext dbContext)
@@ -166,6 +169,65 @@ public class TeamService : ITeamService
             Fixtures = fixtures,
             LeagueTable = leagueTable,
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TeamRecentResultItem>> GetRecentResultsAsync(Guid competitionId, Guid teamId, int count, CancellationToken cancellationToken = default)
+    {
+        // The popup this feeds shows a handful of matches, so keep the query bounded whatever the
+        // caller asks for.
+        var take = Math.Clamp(count, 1, MaximumRecentResults);
+
+        var matches = await _dbContext.Match
+            .Where(m => m.CompetitionID == competitionId && m.MatchPlayed && (m.HomeTeamID == teamId || m.AwayTeamID == teamId))
+            .OrderByDescending(m => m.MatchDateTime)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        var teamIds = matches
+            .SelectMany(m => new[] { m.HomeTeamID, m.AwayTeamID })
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        var teamsById = await _dbContext.Team
+            .Where(t => teamIds.Contains(t.TeamID))
+            .ToDictionaryAsync(t => t.TeamID, cancellationToken);
+
+        return matches
+            .Select(m =>
+            {
+                var homeTeam = m.HomeTeamID.HasValue && teamsById.TryGetValue(m.HomeTeamID.Value, out var home) ? home : null;
+                var awayTeam = m.AwayTeamID.HasValue && teamsById.TryGetValue(m.AwayTeamID.Value, out var away) ? away : null;
+                var homeGoals = m.HomeTeamGoals ?? 0;
+                var awayGoals = m.AwayTeamGoals ?? 0;
+                var wasHome = m.HomeTeamID == teamId;
+                var goalsFor = wasHome ? homeGoals : awayGoals;
+                var goalsAgainst = wasHome ? awayGoals : homeGoals;
+
+                return new TeamRecentResultItem
+                {
+                    MatchID = m.MatchID,
+                    MatchDateTime = m.MatchDateTime,
+                    HomeTeamID = m.HomeTeamID,
+                    // Mirrors BuildFixtures' handling of a not-yet-decided knockout slot.
+                    HomeTeam = homeTeam?.TeamName ?? m.HomeTeamTBC,
+                    HomeTeamShortName = homeTeam?.ShortName ?? "TBC",
+                    HomeTeamImage = homeTeam?.ImageName,
+                    AwayTeamID = m.AwayTeamID,
+                    AwayTeam = awayTeam?.TeamName ?? m.AwayTeamTBC,
+                    AwayTeamShortName = awayTeam?.ShortName ?? "TBC",
+                    AwayTeamImage = awayTeam?.ImageName,
+                    HomeTeamGoals = homeGoals,
+                    AwayTeamGoals = awayGoals,
+                    NeutralGround = m.NeutralGround,
+                    Description = m.Description,
+                    Knockout = m.Knockout,
+                    Outcome = goalsFor > goalsAgainst ? "Win" : goalsFor == goalsAgainst ? "Draw" : "Loss",
+                };
+            })
+            .ToList();
     }
 
     /// <summary>
