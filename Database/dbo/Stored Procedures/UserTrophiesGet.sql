@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		David Huggett
 -- Create date: 31/08/2026
 -- Description:	Returns each user's competition wins, grouped into trophies. Wins in the same
@@ -15,11 +15,15 @@ BEGIN
 
 	-- A series is resolved from the Hall of Fame row first and the competition second: the oldest
 	-- entries predate the Competition table entirely and carry no CompetitionID to resolve through.
+	--
+	-- TrophyKey is what decides whether two wins are the same trophy: the series for a win that has
+	-- one, so its rows collapse together, and the Hall of Fame row's own id otherwise, so each
+	-- series-less one-off stays a trophy in its own right.
 	WITH CompetitionWins AS
 	(
 		SELECT
 			UserID = hof.WinnerUserID
-			, HallOfFameID = hof.HallOfFameID
+			, TrophyKey = COALESCE(hof.CompetitionSeriesID, c.CompetitionSeriesID, hof.HallOfFameID)
 			, CompetitionSeriesID = COALESCE(hof.CompetitionSeriesID, c.CompetitionSeriesID)
 			, CompetitionName = COALESCE(hof.CompetitionName, c.CompetitionName)
 			, EndDate = hof.EndDate
@@ -41,21 +45,33 @@ BEGIN
 		, DisplayOrder = ISNULL(cs.DisplayOrder, 1000)
 		, WinCount = COUNT(1)
 		, MostRecentWin = MAX(Wins.EndDate)
-		, Years = STRING_AGG(CAST(YEAR(Wins.EndDate) AS VARCHAR(4)), ', ') WITHIN GROUP (ORDER BY YEAR(Wins.EndDate))
+		-- The years making up this trophy, oldest first. STUFF/FOR XML PATH rather than STRING_AGG:
+		-- STRING_AGG needs SQL Server 2017 and database compatibility level 110+, which not every
+		-- instance this schema deploys to has. TYPE/.value keeps the concatenation from XML-escaping
+		-- its own separator.
+		, Years = STUFF((
+			SELECT
+				', ' + CAST(YEAR(Year.EndDate) AS VARCHAR(4))
+			FROM
+				CompetitionWins AS Year
+			WHERE
+				Year.UserID = Wins.UserID
+				AND Year.TrophyKey = Wins.TrophyKey
+			ORDER BY
+				Year.EndDate
+			FOR XML PATH(''), TYPE).value('.', 'VARCHAR(MAX)'), 1, 2, '')
 	FROM
 		CompetitionWins AS Wins
 		LEFT JOIN [dbo].[CompetitionSeries] AS cs ON Wins.CompetitionSeriesID = cs.CompetitionSeriesID
 	GROUP BY
 		Wins.UserID
+		, Wins.TrophyKey
 		, Wins.CompetitionSeriesID
 		, COALESCE(cs.SeriesName, Wins.CompetitionName, 'Competition')
 		, cs.ShortName
 		, cs.BadgeIcon
 		, cs.BadgeColour
 		, cs.DisplayOrder
-		-- Constant (NULL) for a series win so its rows collapse together, unique per row for a
-		-- series-less one-off so each stays its own trophy.
-		, CASE WHEN Wins.CompetitionSeriesID IS NULL THEN Wins.HallOfFameID END
 	ORDER BY
 		Wins.UserID
 		, ISNULL(cs.DisplayOrder, 1000)

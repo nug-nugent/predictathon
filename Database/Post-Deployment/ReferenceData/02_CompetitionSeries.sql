@@ -12,7 +12,7 @@ anything it doesn't recognise, so reusing an existing icon for a new series need
 MERGE [dbo].[CompetitionSeries] AS target
 USING (VALUES
     ('B1111111-1111-1111-1111-111111111111', 'World Cup', 'WC', 'trophy', '#D4AF37', 10),
-    ('B2222222-2222-2222-2222-222222222222', 'European Championships', 'EUR', 'star', '#1E4FD1', 20),
+    ('B2222222-2222-2222-2222-222222222222', 'European Championship', 'EUR', 'star', '#1E4FD1', 20),
     ('B3333333-3333-3333-3333-333333333333', 'Premier League', 'PL', 'crown', '#3D195B', 30)
 ) AS source ([CompetitionSeriesID], [SeriesName], [ShortName], [BadgeIcon], [BadgeColour], [DisplayOrder])
 ON target.[CompetitionSeriesID] = CONVERT(UNIQUEIDENTIFIER, source.[CompetitionSeriesID])
