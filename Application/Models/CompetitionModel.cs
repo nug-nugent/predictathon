@@ -34,6 +34,13 @@ public class CreateCompetitionModel
     public bool AllowTwoPointers { get; set; }
 
     /// <summary>
+    /// The competition series this competition belongs to, if any - what groups repeated wins in
+    /// the same competition into a single counted trophy on a profile. Null for a one-off, which
+    /// still earns its own trophy, just an ungrouped one.
+    /// </summary>
+    public Guid? CompetitionSeriesID { get; set; }
+
+    /// <summary>
     /// The external fixture data source's competition code (e.g. "PL" for football-data.org's
     /// Premier League), used by fixture import/sync. Null if this competition has no external source.
     /// </summary>

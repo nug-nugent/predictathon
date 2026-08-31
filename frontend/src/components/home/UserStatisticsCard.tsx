@@ -9,12 +9,15 @@ import { Panel } from "../ui/panel";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 import { LeaguePositionChangeIcon } from "../league/LeaguePositionChangeIcon";
+import { TrophyStamp } from "../trophies/TrophyStamp";
+import { getUserTrophies, type UserTrophy } from "../../services/trophy-service";
 
 type Stats = {
     overall: UserWeekStat | null;
     lastWeek: UserWeekStat | null;
     thisWeek: UserWeekStat | null;
     thisWeekLabel: "This Match Week" | "Last Matches";
+    trophies: UserTrophy[];
 };
 
 export function UserStatisticsCard({ competitionId }: { competitionId: string }) {
@@ -24,7 +27,12 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
     const { data: stats, error } = useAsyncData<Stats | null>(async () => {
         if (!userId) return null;
 
-        const leagueStats = await getUserLeagueStats(competitionId, userId);
+        // Trophies are all-time rather than competition-scoped, but they belong to the same
+        // card, so they are fetched alongside rather than as a second render pass.
+        const [leagueStats, trophies] = await Promise.all([
+            getUserLeagueStats(competitionId, userId),
+            getUserTrophies(userId),
+        ]);
 
         // Only show "this week" once at least one match in it has actually been played.
         let thisWeek = leagueStats.thisWeek;
@@ -45,6 +53,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
             lastWeek: leagueStats.lastWeek,
             thisWeek,
             thisWeekLabel,
+            trophies,
         };
     }, [competitionId, userId]);
 
@@ -67,6 +76,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                         <Avatar.Fallback name={user.name} />
                     </Avatar.Root>
                     <Heading fontSize="17px" fontWeight="bold">{user.name}</Heading>
+                    <TrophyStamp trophies={stats.trophies} />
                 </HStack>
                 <Button asChild size="xs" variant="ghost">
                     <RouterLink to="/profile/edit">Edit User</RouterLink>

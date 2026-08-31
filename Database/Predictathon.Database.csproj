@@ -2,6 +2,15 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<SqlServerVersion>Sql150</SqlServerVersion>
+		<!-- Declares the compatibility level every environment is expected to run at. STRING_AGG and
+		     friends gate on this rather than on the engine version, so a database left at an older
+		     level rejects syntax the server itself supports - which is exactly how UserTrophiesGet
+		     failed to deploy against a SQL 2019 instance still sitting at level 100. SqlPackage only
+		     acts on this when a publish passes /p:ScriptDatabaseCompatibility=True (it defaults to
+		     False, so the production profile leaves the live setting well alone); Database/
+		     Dockerfile.migrate opts in, so the dev stack cannot drift ahead of production and hide
+		     a compatibility-gated bug the way it did that time. -->
+		<CompatibilityLevel>150</CompatibilityLevel>
 		<RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
 		<!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
 		<!-- ...and https://learn.microsoft.com/en-gb/dotnet/api/microsoft.sqlserver.dac.model.tsqlmodeloptions?view=sql-dacfx-162 -->

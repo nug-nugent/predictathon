@@ -2,6 +2,7 @@ import {
     getJsonAuthenticated, postJsonAuthenticated, postFormAuthenticated, deleteJsonAuthenticated,
 } from "./api";
 import { type PagedResult } from "./users-admin-service";
+import type { UserTrophy } from "./trophy-service";
 
 // Matches Application/Models/MessageThreadSummaryModel.cs.
 export type MessageThreadSummary = {
@@ -53,6 +54,7 @@ export type Message = {
     youTubeVideoID: string | null;
     imageUrl: string | null;
     posterTotalMessageboardPosts: number;
+    posterTrophies: UserTrophy[];
     reactions: MessageReaction[];
 };
 

@@ -17,12 +17,29 @@ export type CreateCompetitionAdmin = {
     defaultToNeutralGround: boolean;
     allowTwoPointers: boolean;
     externalApiCompetitionCode: string | null;
+    competitionSeriesID: string | null;
 };
 
 // Matches Application/Models/CompetitionModel.cs.
 export type CompetitionAdmin = CreateCompetitionAdmin & {
     competitionID: string;
 };
+
+// Matches Application/Models/CompetitionSeriesModel.cs. Reference data seeded by the database's
+// post-deployment scripts, not maintained through the app - see 02_CompetitionSeries.sql.
+export type CompetitionSeries = {
+    competitionSeriesID: string;
+    seriesName: string;
+    shortName: string;
+    badgeIcon: string | null;
+    badgeColour: string | null;
+    displayOrder: number;
+};
+
+/// Every competition series, in display order.
+export async function getCompetitionSeries(): Promise<CompetitionSeries[]> {
+    return getJsonAuthenticated<CompetitionSeries[]>("/Competition/Series");
+}
 
 // Matches Application/Models/FixtureImportSummary.cs.
 export type FixtureImportSummary = {

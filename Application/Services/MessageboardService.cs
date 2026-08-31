@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,7 @@ public class MessageboardService : IMessageboardService
     private readonly IMessageImageService _messageImageService;
     private readonly IMessageboardNotifier _notifier;
     private readonly IReactionCatalogue _reactionCatalogue;
+    private readonly ITrophyService _trophyService;
     private readonly UserManager<ApplicationUser> _userManager;
 
     public MessageboardService(
@@ -30,6 +31,7 @@ public class MessageboardService : IMessageboardService
         IMessageImageService messageImageService,
         IMessageboardNotifier notifier,
         IReactionCatalogue reactionCatalogue,
+        ITrophyService trophyService,
         UserManager<ApplicationUser> userManager)
     {
         _dbContext = dbContext;
@@ -37,6 +39,7 @@ public class MessageboardService : IMessageboardService
         _messageImageService = messageImageService;
         _notifier = notifier;
         _reactionCatalogue = reactionCatalogue;
+        _trophyService = trophyService;
         _userManager = userManager;
     }
 
@@ -136,8 +139,9 @@ public class MessageboardService : IMessageboardService
             .Select(m => m.PostedByUserID)
             .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)));
         var users = await GetUsersByIdAsync(userIds, cancellationToken);
+        var trophies = await _trophyService.GetForUsersAsync(messages.Select(m => m.PostedByUserID), cancellationToken);
 
-        return Result.Ok(messages.Select(m => MapMessage(m, users)).ToList());
+        return Result.Ok(messages.Select(m => MapMessage(m, users, trophies)).ToList());
     }
 
     /// <inheritdoc />
@@ -272,6 +276,7 @@ public class MessageboardService : IMessageboardService
             YouTubeVideoID = message.YouTubeVideoID,
             ImageUrl = _messageImageService.GetImageUrl(messageId, hasLinkedImage),
             PosterTotalMessageboardPosts = newTotalPosts,
+            PosterTrophies = [.. await _trophyService.GetForUserAsync(userId, cancellationToken)],
             Reactions = [],
         };
 
@@ -467,7 +472,7 @@ public class MessageboardService : IMessageboardService
         ImageFile = _reactionCatalogue.ResolveImageFile(reaction.ReactionId) ?? string.Empty,
     };
 
-    private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users)
+    private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users, IReadOnlyDictionary<Guid, List<UserTrophyModel>> trophies)
     {
         var poster = users.GetValueOrDefault(message.PostedByUserID);
 
@@ -483,6 +488,7 @@ public class MessageboardService : IMessageboardService
             YouTubeVideoID = message.YouTubeVideoID,
             ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
             PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
+            PosterTrophies = trophies.GetValueOrDefault(message.PostedByUserID) ?? [],
             // Ordered to match GetReactionsAsync: the client groups by identity and keeps the
             // first row's details, so both paths must agree on which row that is.
             Reactions = message.MessageReaction

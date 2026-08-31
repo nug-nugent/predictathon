@@ -73,6 +73,13 @@ public interface ICompetitionService : ICrudService<Guid, CreateCompetitionModel
     Task<IReadOnlyList<CompetitionWeekSummary>> GetCompetitionWeekSummariesAsync(Guid competitionId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets every competition series, in display order - reference data for the admin form's
+    /// series picker.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IReadOnlyList<CompetitionSeriesModel>> GetCompetitionSeriesListAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets site-wide stats shown on the pre-login landing page.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

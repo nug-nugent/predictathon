@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,7 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
+    private readonly ITrophyService _trophyService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<UserService> _logger;
     private readonly IValidator<UpdateProfileModel>? _updateProfileValidator;
@@ -31,6 +32,7 @@ public class UserService : IUserService
         UserManager<ApplicationUser> userManager,
         IApplicationDbContext dbContext,
         IEmailService emailService,
+        ITrophyService trophyService,
         IConfiguration configuration,
         ILogger<UserService> logger,
         IValidator<UpdateProfileModel>? updateProfileValidator = null)
@@ -39,6 +41,7 @@ public class UserService : IUserService
         _userManager = userManager;
         _dbContext = dbContext;
         _emailService = emailService;
+        _trophyService = trophyService;
         _configuration = configuration;
         _logger = logger;
         _updateProfileValidator = updateProfileValidator;
@@ -53,6 +56,8 @@ public class UserService : IUserService
             return null;
         }
 
+        var trophies = await _trophyService.GetForUserAsync(user.Id, cancellationToken);
+
         return new UserProfileModel
         {
             UserID = user.Id,
@@ -63,6 +68,7 @@ public class UserService : IUserService
             ProfileText = user.ProfileText,
             AvatarUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded),
             AvatarLargeUrl = _avatarService.GetAvatarUrl(user.Id, user.ImageUploaded, large: true),
+            Trophies = [.. trophies],
         };
     }
 

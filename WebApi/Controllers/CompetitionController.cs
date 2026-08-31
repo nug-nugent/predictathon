@@ -203,6 +203,17 @@ public class CompetitionController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get every competition series, in display order, for the admin form's series picker.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("Series")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<IReadOnlyList<CompetitionSeriesModel>>> GetSeries(CancellationToken cancellationToken)
+    {
+        return Ok(await _competitionService.GetCompetitionSeriesListAsync(cancellationToken));
+    }
+
+    /// <summary>
     /// Create a new competition.
     /// </summary>
     /// <param name="model"></param>

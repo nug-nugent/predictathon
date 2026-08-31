@@ -8,6 +8,7 @@ import { Role } from "../../constants/roles";
 import { AvatarUploadDialog } from "./AvatarUploadDialog";
 import { AvatarViewerDialog } from "./AvatarViewerDialog";
 import { Panel } from "../ui/panel";
+import { TrophyCabinet } from "../trophies/TrophyCabinet";
 
 export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; isOwnProfile: boolean }) {
     const { user, setUser } = useUser();
@@ -108,6 +109,8 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
                     )}
                 </VStack>
             </HStack>
+
+            <TrophyCabinet trophies={profile.trophies} />
 
             {avatarLargeUrl && (
                 <AvatarViewerDialog

@@ -1,4 +1,4 @@
-namespace Predictathon.Application.Models;
+﻿namespace Predictathon.Application.Models;
 
 /// <summary>
 /// A single post within a message thread.
@@ -27,6 +27,12 @@ public class MessageModel
     /// The poster's total messageboard post count at the time this message was posted.
     /// </summary>
     public int PosterTotalMessageboardPosts { get; set; }
+
+    /// <summary>
+    /// The poster's trophies, so their wins show beside their name without the board having to
+    /// fetch a profile per author.
+    /// </summary>
+    public List<UserTrophyModel> PosterTrophies { get; set; } = [];
 
     public List<MessageReactionModel> Reactions { get; set; } = [];
 }

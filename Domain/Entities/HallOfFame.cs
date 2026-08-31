@@ -30,5 +30,9 @@ public partial class HallOfFame
 
     public string? ImageFilename { get; set; }
 
+    public Guid? CompetitionSeriesID { get; set; }
+
     public virtual Competition? Competition { get; set; }
+
+    public virtual CompetitionSeries? CompetitionSeries { get; set; }
 }
