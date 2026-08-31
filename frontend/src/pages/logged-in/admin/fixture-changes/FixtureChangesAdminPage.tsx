@@ -107,12 +107,6 @@ export function FixtureChangesAdminPage() {
 
             <Panel overflowX="auto">
                 <VStack align="stretch" gap={3}>
-                    <Text color="fg.muted">
-                        Reschedules detected against the external fixture data source, awaiting review. Confirming
-                        updates the match's kickoff time; dismissing leaves it as-is. Nothing runs in the
-                        background - click "Check for changes" to check now.
-                    </Text>
-
                     {actionError && <Text fontSize="sm" color="fg.error">{actionError}</Text>}
 
                     {proposals.length === 0 ? (
