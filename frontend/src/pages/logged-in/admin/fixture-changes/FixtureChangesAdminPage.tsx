@@ -20,6 +20,7 @@ export function FixtureChangesAdminPage() {
     const { data: proposals, error, reload } = useAsyncData(getPendingFixtureChanges, []);
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [syncing, setSyncing] = useState(false);
+    const [confirmingAll, setConfirmingAll] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
 
     if (error) {
@@ -44,6 +45,29 @@ export function FixtureChangesAdminPage() {
         }
     };
 
+    const runConfirmAll = async () => {
+        setConfirmingAll(true);
+        setActionError(null);
+
+        let confirmed = 0;
+
+        try {
+            for (const p of proposals) {
+                await confirmFixtureChange(p.fixtureChangeProposalID);
+                confirmed++;
+            }
+        } catch (e) {
+            const message = e instanceof ApiError ? e.messages.join(" ") : "Something went wrong. Please try again.";
+
+            setActionError(confirmed === 0
+                ? message
+                : `Confirmed ${confirmed} of ${proposals.length} changes before stopping. ${message}`);
+        } finally {
+            setConfirmingAll(false);
+            reload();
+        }
+    };
+
     const runSyncNow = async () => {
         setSyncing(true);
         setActionError(null);
@@ -62,9 +86,23 @@ export function FixtureChangesAdminPage() {
         <VStack align="stretch" gap={4}>
             <HStack justify="space-between">
                 <PageHeading>Fixture Changes</PageHeading>
-                <Button size="sm" variant="outline" loading={syncing} disabled={syncing} onClick={() => { void runSyncNow(); }}>
-                    Check for Changes
-                </Button>
+                <HStack>
+                    <Button
+                        size="sm" variant="outline" loading={syncing} disabled={syncing || confirmingAll}
+                        onClick={() => { void runSyncNow(); }}
+                    >
+                        Check for Changes
+                    </Button>
+                    {proposals.length > 0 && (
+                        <Button
+                            size="sm" colorPalette="action" loading={confirmingAll}
+                            disabled={confirmingAll || processingId !== null}
+                            onClick={() => { void runConfirmAll(); }}
+                        >
+                            Confirm All ({proposals.length})
+                        </Button>
+                    )}
+                </HStack>
             </HStack>
 
             <Panel overflowX="auto">
@@ -91,7 +129,8 @@ export function FixtureChangesAdminPage() {
                             </Table.Header>
                             <Table.Body>
                                 {proposals.map((p: FixtureChangeProposal) => {
-                                    const busy = processingId === p.fixtureChangeProposalID;
+                                    const processing = processingId === p.fixtureChangeProposalID;
+                                    const busy = processing || confirmingAll;
 
                                     return (
                                         <Table.Row key={p.fixtureChangeProposalID}>
@@ -109,7 +148,7 @@ export function FixtureChangesAdminPage() {
                                                         Dismiss
                                                     </Button>
                                                     <Button
-                                                        size="xs" colorPalette="action" loading={busy} disabled={busy}
+                                                        size="xs" colorPalette="action" loading={processing} disabled={busy}
                                                         onClick={() => { void runAction(confirmFixtureChange, p.fixtureChangeProposalID); }}
                                                     >
                                                         Confirm
