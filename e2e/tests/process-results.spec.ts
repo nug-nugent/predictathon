@@ -22,7 +22,14 @@ test("an admin can enter a result for a match that's due", async ({ page }) => {
 
     test.skip(await noneDue.isVisible(), "No match is currently due for a result - re-run `docker compose up` to reseed and reset.");
 
+    // Score entry is numeric-only, so a phone gets the number pad rather than a full keyboard.
+    await expect(scoreInputs.nth(0)).toHaveAttribute("inputmode", "numeric");
+
     await scoreInputs.nth(0).fill("2");
+
+    // Entering the home score hands focus straight to the away box, as on the predictions page.
+    await expect(scoreInputs.nth(1)).toBeFocused();
+
     await scoreInputs.nth(1).fill("1");
 
     await expect(page.getByText("Saved")).toBeVisible();

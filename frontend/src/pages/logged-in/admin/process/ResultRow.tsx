@@ -39,6 +39,12 @@ export function ResultRow({
     const homeInputRef = useRef<HTMLInputElement>(null);
     const awayInputRef = useRef<HTMLInputElement>(null);
 
+    // Correcting an already-saved score fires a save per digit change (home, then away), so two
+    // POSTs can overlap. Chaining them guarantees the server processes them in entry order, and the
+    // sequence number keeps a superseded save's outcome from clobbering the UI state that matters.
+    const saveChain = useRef<Promise<void>>(Promise.resolve());
+    const saveSeq = useRef(0);
+
     useEffect(() => {
         if (hasFocus && document.activeElement !== awayInputRef.current) {
             homeInputRef.current?.focus();
@@ -46,27 +52,36 @@ export function ResultRow({
     }, [hasFocus]);
 
     const eligible = isResultEligible(matchDateTime, now);
-    // Stays editable after a save so a mis-entered score can be corrected here, rather than
-    // forcing a trip to the fixture admin page.
-    const locked = !eligible || saveState === "saving";
+    // Stays editable after a save - and while one is in flight - so a mis-entered score can be
+    // corrected here, rather than forcing a trip to the fixture admin page. Locking during the
+    // save would also swallow the away digit typed straight after the auto-shift on a correction.
+    const locked = !eligible;
 
-    const save = async (homeValue: string, awayValue: string, focusNext: boolean) => {
+    const save = (homeValue: string, awayValue: string, focusNext: boolean) => {
         if (homeValue === "" || awayValue === "") return;
 
+        const seq = ++saveSeq.current;
         setSaveState("saving");
         setErrorMessage(null);
-        try {
-            await saveMatchResult(matchId, Number(homeValue), Number(awayValue));
-            setSaveState("saved");
-            onSaved(matchId);
 
-            if (focusNext) {
-                awayInputRef.current?.blur();
+        saveChain.current = saveChain.current.then(async () => {
+            try {
+                await saveMatchResult(matchId, Number(homeValue), Number(awayValue));
+                if (saveSeq.current !== seq) return;
+
+                setSaveState("saved");
+                onSaved(matchId);
+
+                if (focusNext) {
+                    awayInputRef.current?.blur();
+                }
+            } catch (error) {
+                if (saveSeq.current !== seq) return;
+
+                setErrorMessage(error instanceof ApiError ? error.messages.join(" ") : "Something went wrong.");
+                setSaveState("error");
             }
-        } catch (error) {
-            setErrorMessage(error instanceof ApiError ? error.messages.join(" ") : "Something went wrong.");
-            setSaveState("error");
-        }
+        });
     };
 
     const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
@@ -86,7 +101,7 @@ export function ResultRow({
         if (value === null) return;
 
         setHomeInput(value);
-        void save(value, awayInput, false);
+        save(value, awayInput, false);
         if (value !== "") {
             awayInputRef.current?.focus();
         }
@@ -97,7 +112,7 @@ export function ResultRow({
         if (value === null) return;
 
         setAwayInput(value);
-        void save(homeInput, value, true);
+        save(homeInput, value, true);
     };
 
     const statusText = saveState === "saving"
@@ -108,6 +123,13 @@ export function ResultRow({
                 ? errorMessage
                 : "";
 
+    // Same reading as the predictions page's status line - see MatchStatus.
+    const statusColour = saveState === "error"
+        ? "fg.error"
+        : saveState === "saved"
+            ? "fg.success"
+            : "fg.info";
+
     return (
         <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} py={2} px={{ base: 2, md: 4 }} gap={1}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
@@ -116,23 +138,23 @@ export function ResultRow({
                 </HStack>
 
                 <HStack gap={1}>
-                    <Input ref={homeInputRef} value={homeInput} autoComplete="off" textAlign="center"
+                    <Input ref={homeInputRef} value={homeInput} autoComplete="off" textAlign="center" inputMode="numeric" pattern="[0-9]*"
                         size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onHomeChange} />
                     <Text>-</Text>
-                    <Input ref={awayInputRef} value={awayInput} autoComplete="off" textAlign="center"
+                    <Input ref={awayInputRef} value={awayInput} autoComplete="off" textAlign="center" inputMode="numeric" pattern="[0-9]*"
                         size="sm" width="40px" readOnly={locked} onFocus={onInputFocus} onMouseUp={onInputMouseUp} onChange={onAwayChange} />
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>
                     <TeamName teamId={awayTeamId} name={awayTeamName} shortName={awayTeamShortName} crest={awayCrest} crestPosition="before" />
                 </HStack>
-
-                {statusText && (
-                    <Text fontSize="xs" color={saveState === "error" ? "fg.error" : "fg.muted"} textAlign="right">
-                        {statusText}
-                    </Text>
-                )}
             </Flex>
+
+            {/* Its own row rather than trailing the away team, so it has room to read on a phone.
+                Always rendered, so a row doesn't jump as its status appears and clears. */}
+            <Text fontSize="xs" lineHeight="1.25rem" minH="1.25rem" color={statusColour} textAlign={{ base: "center", md: "right" }}>
+                {statusText}
+            </Text>
         </Flex>
     );
 }
