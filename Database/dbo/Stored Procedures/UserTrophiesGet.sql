@@ -45,21 +45,10 @@ BEGIN
 		, DisplayOrder = ISNULL(cs.DisplayOrder, 1000)
 		, WinCount = COUNT(1)
 		, MostRecentWin = MAX(Wins.EndDate)
-		-- The years making up this trophy, oldest first. STUFF/FOR XML PATH rather than STRING_AGG:
-		-- STRING_AGG needs SQL Server 2017 and database compatibility level 110+, which not every
-		-- instance this schema deploys to has. TYPE/.value keeps the concatenation from XML-escaping
-		-- its own separator.
-		, Years = STUFF((
-			SELECT
-				', ' + CAST(YEAR(Year.EndDate) AS VARCHAR(4))
-			FROM
-				CompetitionWins AS Year
-			WHERE
-				Year.UserID = Wins.UserID
-				AND Year.TrophyKey = Wins.TrophyKey
-			ORDER BY
-				Year.EndDate
-			FOR XML PATH(''), TYPE).value('.', 'VARCHAR(MAX)'), 1, 2, '')
+		-- The years making up this trophy, oldest first. STRING_AGG needs database compatibility
+		-- level 110+, not merely SQL Server 2017+ - this database ran at level 100 until 2026-08-31,
+		-- long after the engine under it was capable of more.
+		, Years = STRING_AGG(CAST(YEAR(Wins.EndDate) AS VARCHAR(4)), ', ') WITHIN GROUP (ORDER BY YEAR(Wins.EndDate))
 	FROM
 		CompetitionWins AS Wins
 		LEFT JOIN [dbo].[CompetitionSeries] AS cs ON Wins.CompetitionSeriesID = cs.CompetitionSeriesID
