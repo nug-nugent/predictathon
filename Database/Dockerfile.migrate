@@ -7,4 +7,8 @@ RUN dotnet build Database/Predictathon.Database.csproj -c Release -o /out
 RUN dotnet tool install --global microsoft.sqlpackage
 ENV PATH="$PATH:/root/.dotnet/tools"
 
-ENTRYPOINT ["/bin/sh", "-c", "sqlpackage /Action:Publish /SourceFile:/out/Predictathon.Database.dacpac /TargetConnectionString:\"Server=db,1433;Database=Predictathon;User Id=sa;Password=$MSSQL_SA_PASSWORD;TrustServerCertificate=True;\""]
+# ScriptDatabaseCompatibility pins the container database to the CompatibilityLevel declared in
+# the project. Without it this image runs SQL 2022, which gives a freshly created database
+# level 160 - ten levels ahead of production - so the dev stack would happily accept T-SQL that
+# the real database rejects at deploy time.
+ENTRYPOINT ["/bin/sh", "-c", "sqlpackage /Action:Publish /p:ScriptDatabaseCompatibility=True /SourceFile:/out/Predictathon.Database.dacpac /TargetConnectionString:\"Server=db,1433;Database=Predictathon;User Id=sa;Password=$MSSQL_SA_PASSWORD;TrustServerCertificate=True;\""]
