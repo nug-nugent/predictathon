@@ -12,7 +12,7 @@ export type CompetitionContextType = {
     isLoading: boolean;
 };
 
-export const defaultCompetitionContextValue: CompetitionContextType = {
+const defaultCompetitionContextValue: CompetitionContextType = {
     competitions: [],
     currentCompetitionId: null,
     setCurrentCompetitionId: () => { },

@@ -16,23 +16,16 @@ export type User = {
     tokenExpiresAtUtc?: string;
 };
 
-export const UserProvider = ({ mockUser, children }: { mockUser?: User | null, children: React.ReactNode }) => {
-    const [user, setUser] = useState<User | null>(mockUser ?? null);
-    // mockUser is only ever undefined when this isn't Storybook/a test (see .storybook/preview.tsx,
-    // which always passes a concrete value, even explicit null for "logged out").
-    const [isLoading, setIsLoading] = useState(mockUser === undefined);
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (mockUser !== undefined) {
-            return;
-        }
-
         refreshSession()
             .then(setUser)
             .catch(() => setUser(null))
             .finally(() => setIsLoading(false));
         // Deliberately runs once on mount only.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Keeps api.ts's module-level token store in sync so plain (non-React) service functions can

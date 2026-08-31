@@ -2,20 +2,6 @@ import type { User } from "../providers/UserProvider";
 import { Role } from "../constants/roles";
 import { postJson, refreshAccessToken } from "./api";
 
-// Mock users, kept for Storybook stories only - real logins come from the API below.
-export const stu: User = {
-    id: "11111111-1111-1111-1111-111111111111",
-    name: "Stu has a really long username",
-    roles: [],
-    avatarUrl: "https://www.predictathon.co.uk/Uploads/Images/13473b15-dc61-437c-833a-af2b987b67ef_sm.jpg",
-};
-export const nug: User = {
-    id: "22222222-2222-2222-2222-222222222222",
-    name: "Nugsson",
-    roles: [Role.MatchAdministrator, Role.UserAdministrator, Role.CompetitionAdministrator],
-    avatarUrl: "https://www.predictathon.co.uk/Uploads/Images/da93a123-baae-4ca4-9874-aad53feac685_sm.jpg",
-};
-
 type AuthResult = {
     token: string;
     expiresAtUtc: string;

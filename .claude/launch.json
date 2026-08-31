@@ -12,12 +12,6 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "WebApi", "--launch-profile", "https"],
       "port": 7046
-    },
-    {
-      "name": "frontend-storybook",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "storybook", "--prefix", "frontend"],
-      "port": 6006
     }
   ]
 }

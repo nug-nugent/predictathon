@@ -29,5 +29,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", ".storybook/main.ts", ".storybook/preview.tsx"]
+  "include": ["src"]
 }

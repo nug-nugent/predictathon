@@ -59,7 +59,6 @@ Frontend (`frontend/`):
 npm run dev              # Vite dev server, http://localhost:5173
 npm run build             # tsc -b && vite build
 npm run lint               # ESLint (type-checked + a11y rules are on)
-npm run storybook          # Storybook dev server on :6006
 ```
 There is no frontend unit/component test runner configured yet (no vitest/jest).
 
