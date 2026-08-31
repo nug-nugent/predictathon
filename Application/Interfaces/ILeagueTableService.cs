@@ -19,4 +19,17 @@ public interface ILeagueTableService
         DateOnly? dateTo = null,
         DateOnly? dateForComparison = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the competition's league table as it stands, with each row carrying what the matches
+    /// currently in play are worth to that user so far - the Live page's table. The standings
+    /// themselves are unchanged and stay in their real order: the live points are what's *not* in
+    /// them yet, and sorting by a projection would make the table reshuffle under a reader watching
+    /// a match.
+    /// </summary>
+    /// <param name="competitionId">The competition to get the table for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IReadOnlyList<LiveLeagueTableItem>> GetLiveLeagueTableAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default);
 }

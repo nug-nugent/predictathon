@@ -44,5 +44,7 @@ public partial class Match
 
     public virtual Team? HomeTeam { get; set; }
 
+    public virtual MatchLiveScore? MatchLiveScore { get; set; }
+
     public virtual ICollection<Prediction> Prediction { get; set; } = new List<Prediction>();
 }

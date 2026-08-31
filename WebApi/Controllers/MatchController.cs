@@ -11,10 +11,12 @@ namespace Predictathon.WebApi.Controllers;
 public class MatchController : ApiControllerBase
 {
     private readonly IMatchService _matchService;
+    private readonly ILiveScoreService _liveScoreService;
 
-    public MatchController(IMatchService matchService)
+    public MatchController(IMatchService matchService, ILiveScoreService liveScoreService)
     {
         _matchService = matchService;
+        _liveScoreService = liveScoreService;
     }
 
     /// <summary>
@@ -44,6 +46,20 @@ public class MatchController : ApiControllerBase
     {
         var includeFuture = userId == CurrentUserId;
         var matches = await _matchService.GetUserPredictionHistoryAsync(userId, competitionId, includeFuture, cancellationToken);
+
+        return Ok(matches);
+    }
+
+    /// <summary>
+    /// Get today's matches for a competition, each joined with the current user's own prediction
+    /// for it (if any) - the Home page's Today's Matches section and the Live page.
+    /// </summary>
+    /// <param name="competitionId"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Today")]
+    public async Task<ActionResult<IReadOnlyList<UserMatchPredictionListItem>>> GetToday(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var matches = await _matchService.GetLiveDayMatchesAsync(CurrentUserId, competitionId, cancellationToken);
 
         return Ok(matches);
     }
@@ -135,8 +151,29 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get unplayed matches for a competition whose kickoff has already passed - the pool of
-    /// matches a result could plausibly be entered for.
+    /// Record or correct a match's provisional in-play score, shown on the Live page while the
+    /// match is being played. Separate from SaveResult: this score is provisional and scores no
+    /// predictions.
+    /// </summary>
+    /// <param name="matchId">The match to score, taken from the route.</param>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPut("{matchId:guid}/LiveScore")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<MatchLiveScoreModel?>> SaveLiveScore(
+        Guid matchId,
+        SaveLiveScoreRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _liveScoreService.SaveAdminScoreAsync(
+            matchId, request.HomeTeamGoals, request.AwayTeamGoals, CurrentUserId, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Get unplayed matches for a competition whose kickoff was at least 90 minutes ago - the pool
+    /// of matches a result can actually be entered for.
     /// </summary>
     [HttpGet("Processing/{competitionId:guid}")]
     [Authorize(Roles = RoleConstants.MatchAdministrator)]

@@ -10,7 +10,7 @@ export function LeagueStandingsTable({ standings, highlightTeamId }: { standings
     return (
         <Panel overflowX="auto" accent>
             <VStack align="stretch" gap={1}>
-                <Heading size="sm" mb={2}>League table</Heading>
+                <Heading size="sm" mb={2}>League Table</Heading>
                 <Table.Root size="sm" variant="line" showColumnBorder stickyHeader>
                     <Table.Header>
                         <Table.Row>

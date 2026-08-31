@@ -9,7 +9,7 @@ import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
 
-type State = { label: "This week's best prediction" | "Last week's best prediction"; entry: BestPrediction | null };
+type State = { label: "Prediction of the Week" | "Last Week's Best Prediction"; entry: BestPrediction | null };
 
 export function PredictionOfTheWeekCard({ competitionId }: { competitionId: string }) {
     const { data: state, error } = useAsyncData<State>(async () => {
@@ -20,11 +20,11 @@ export function PredictionOfTheWeekCard({ competitionId }: { competitionId: stri
 
         const thisWeekBest = currentWeek ? await getBestPredictions(competitionId, currentWeek, weekEnd(currentWeek)) : [];
         if (thisWeekBest.length > 0) {
-            return { label: "This week's best prediction", entry: thisWeekBest[0] };
+            return { label: "Prediction of the Week", entry: thisWeekBest[0] };
         }
 
         const lastWeekBest = previousWeek ? await getBestPredictions(competitionId, previousWeek, weekEnd(previousWeek)) : [];
-        return { label: "Last week's best prediction", entry: lastWeekBest[0] ?? null };
+        return { label: "Last Week's Best Prediction", entry: lastWeekBest[0] ?? null };
     }, [competitionId]);
 
     if (error) {

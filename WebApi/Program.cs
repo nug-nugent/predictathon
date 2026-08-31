@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Predictathon.Application.Extensions;
@@ -13,10 +14,13 @@ using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Mapping;
 using Predictathon.Application.Options;
+using Predictathon.Application.Services;
 using Predictathon.Domain.Identity;
 using Predictathon.Infrastructure.Persistence;
 using Predictathon.WebApi.Extensions;
 using Predictathon.WebApi.HealthChecks;
+using Predictathon.WebApi.Development;
+using Predictathon.WebApi.HostedServices;
 using Predictathon.WebApi.Hubs;
 using Predictathon.WebApi.Options;
 using Predictathon.WebApi.Realtime;
@@ -202,6 +206,38 @@ try
     // and Application can't reference the WebApi project.
     builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection(PayPalOptions.SectionName));
     builder.Services.Configure<FootballDataApiOptions>(builder.Configuration.GetSection(FootballDataApiOptions.SectionName));
+
+    // The football-data.org rate limit is per API key, not per caller, so the tally of recent calls
+    // has to be one object shared by everything in the process - a scoped limiter would let each
+    // request start from zero and enforce nothing. TimeProvider is the clock it measures its window
+    // against, registered here so tests can substitute a fake one.
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton<IExternalApiRateLimiter, ExternalApiRateLimiter>();
+
+    // Polls the provider for in-play scores. See LiveScorePollingService for why an in-process loop
+    // is acceptable here when the daily maintenance jobs deliberately run off external pings.
+    builder.Services.AddHostedService<LiveScorePollingService>();
+
+    // The Docker dev stack has no API key, and its sample fixtures don't exist at football-data.org,
+    // so the real client would have nothing to report and the live-score feature would be invisible
+    // locally. Swapping in a simulated provider is a capability toggle rather than an environment
+    // identity - the native dev workflow can opt in the same way by setting this in its own
+    // appsettings, and Production can't be caught out by it whatever the config says.
+    var footballDataOptions = builder.Configuration.GetSection(FootballDataApiOptions.SectionName).Get<FootballDataApiOptions>()
+        ?? new FootballDataApiOptions();
+
+    if (footballDataOptions.UseSimulatedProvider && !builder.Environment.IsProduction())
+    {
+        builder.Services.Replace(ServiceDescriptor.Scoped<IExternalMatchDataService, SimulatedMatchDataService>());
+    }
+    else if (footballDataOptions.UseSimulatedProvider)
+    {
+        // Ignored rather than obeyed, but never silently: serving invented scores to real predictors
+        // would be worse than any startup failure, and a misplaced setting should be findable.
+        Log.Warning(
+            "{Setting} is set in Production and has been ignored - live scores will come from the real provider.",
+            $"{FootballDataApiOptions.SectionName}:{nameof(FootballDataApiOptions.UseSimulatedProvider)}");
+    }
 
     var avatarsSection = builder.Configuration.GetSection(AvatarsOptions.SectionName);
     builder.Services.Configure<AvatarsOptions>(avatarsSection);

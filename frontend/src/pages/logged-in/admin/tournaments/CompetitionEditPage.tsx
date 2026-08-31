@@ -97,7 +97,7 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                 </Button>
             </HStack>
 
-            <Heading size="lg">{form.competitionName || "Edit competition"}</Heading>
+            <Heading size="lg">{form.competitionName || "Edit Competition"}</Heading>
 
             <Panel>
                 <VStack align="stretch" gap={3}>
@@ -364,7 +364,7 @@ function FixtureImportSection({
         <>
             <Panel>
                 <VStack align="stretch" gap={3}>
-                    <Heading size="md">Fixture import</Heading>
+                    <Heading size="md">Fixture Import</Heading>
 
                     <Text color="fg.muted">
                         {canImport
@@ -388,7 +388,7 @@ function FixtureImportSection({
                             disabled={importing || !canImport}
                             onClick={() => setConfirming(true)}
                         >
-                            Import season fixtures
+                            Import Season Fixtures
                         </Button>
                     </HStack>
                 </VStack>
@@ -497,7 +497,7 @@ function HallOfFameSection({ competitionId }: { competitionId: string }) {
                             disabled={generating || alreadyGenerated || !status.allMatchesPlayed}
                             onClick={() => setConfirming(true)}
                         >
-                            Generate Hall of Fame entry
+                            Generate Hall of Fame Entry
                         </Button>
                     </HStack>
                 </VStack>

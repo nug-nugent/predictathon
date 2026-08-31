@@ -28,6 +28,7 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Entities.FixtureChangeProposal> FixtureChangeProposal => Set<Entities.FixtureChangeProposal>();
     public DbSet<Entities.HallOfFame> HallOfFame => Set<Entities.HallOfFame>();
     public DbSet<Entities.Match> Match => Set<Entities.Match>();
+    public DbSet<Entities.MatchLiveScore> MatchLiveScore => Set<Entities.MatchLiveScore>();
     public DbSet<Entities.Message> Message => Set<Entities.Message>();
     public DbSet<Entities.MessageReaction> MessageReaction => Set<Entities.MessageReaction>();
     public DbSet<Entities.MessageThread> MessageThread => Set<Entities.MessageThread>();
@@ -47,12 +48,16 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
 
     // Navigations kept out of the blanket-strip below because specific service tests query through
     // them - PaymentCreditService.GetAllAsync (ForCompetition), MessageboardService.GetMessagesAsync
-    // (.Include(m => m.MessageReaction)) and MatchService.GetForAdminAsync (.HomeTeam.TeamName).
+    // (.Include(m => m.MessageReaction)), MatchService.GetForAdminAsync (.HomeTeam.TeamName) and
+    // LiveScoreService (.Competition.ExternalApiCompetitionCode, .MatchLiveScore).
     private static readonly HashSet<(Type EntityType, string PropertyName)> PreservedNavigations =
     [
         (typeof(Entities.PaymentCredit), nameof(Entities.PaymentCredit.ForCompetition)),
         (typeof(Entities.Message), nameof(Entities.Message.MessageReaction)),
         (typeof(Entities.Match), nameof(Entities.Match.HomeTeam)),
+        (typeof(Entities.Match), nameof(Entities.Match.Competition)),
+        (typeof(Entities.Match), nameof(Entities.Match.MatchLiveScore)),
+        (typeof(Entities.MatchLiveScore), nameof(Entities.MatchLiveScore.Match)),
     ];
 
     /// <summary>
@@ -92,6 +97,19 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
             .HasMany(m => m.MessageReaction)
             .WithOne()
             .HasForeignKey(r => r.MessageID);
+
+        // This model is built from scratch rather than inherited from ApplicationDbContext, so
+        // anything convention can't work out for itself has to be repeated here. Every other entity
+        // gets away with it because its key is named <Type>ID; MatchLiveScore is keyed on the match
+        // it hangs off, which convention doesn't recognise, and the one-to-one back to Match needs
+        // saying out loud or EF invents a shadow foreign key that doesn't line up with MatchID.
+        modelBuilder.Entity<Entities.MatchLiveScore>(entity =>
+        {
+            entity.HasKey(e => e.MatchID);
+            entity.HasOne(e => e.Match)
+                .WithOne(m => m.MatchLiveScore)
+                .HasForeignKey<Entities.MatchLiveScore>(e => e.MatchID);
+        });
     }
 
     public IQueryable<T> Query<T>() where T : class => Set<T>();

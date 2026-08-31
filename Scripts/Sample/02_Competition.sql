@@ -1,4 +1,4 @@
-/*
+﻿/*
 "Sample Cup" - a hand-crafted competition, not sourced from real data. Deliberately free
 (EntranceFee = 0) and PayPal-disabled so registration always works with zero external
 dependencies, regardless of the real World Cup competition's live registration/payment state.
@@ -67,4 +67,15 @@ WHEN NOT MATCHED BY TARGET THEN
         [Source].[OpenForRegistration], [Source].[RegistrationAvailableOnLoginPage],
         [Source].[ShowInHallOfFame], [Source].[EntranceFee], [Source].[PayPalPaymentAvailable],
         [Source].[Information], [Source].[ImageFilename], [Source].[DefaultToNeutralGround]);
+GO
+
+-- Sample Cup claims an external competition code so the live-score poller has something to ask
+-- about (it skips any competition without one). "SAMPLE" is deliberately not a real football-data.org
+-- code: the Docker stack answers with a simulated provider, and if anyone points a real API key at
+-- this data instead, an unknown code fails plainly rather than quietly importing someone else's
+-- league. Set after the MERGE rather than inside it because the MERGE only inserts, so an existing
+-- development database would never pick this up.
+UPDATE [dbo].[Competition]
+SET [ExternalApiCompetitionCode] = 'SAMPLE'
+WHERE [CompetitionID] = 'CA000000-0000-0000-0000-000000000001';
 GO

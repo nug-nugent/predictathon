@@ -61,4 +61,25 @@ public class MatchServiceTests
 
         matches.Select(m => m.HomeTeamID).Should().Equal(chelsea.TeamID, arsenal.TeamID, chelsea.TeamID);
     }
+
+    [Fact]
+    public async Task GetForProcessingAsync_ExcludesMatchesStillInsideTheNinetyMinuteResultWindow()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+
+        var team = new DomainEntities.Team { TeamID = Guid.NewGuid(), TeamName = "Arsenal", ShortName = "ARS" };
+        dbContext.Team.Add(team);
+
+        // SaveResultAsync refuses a result until 90 minutes after kick-off, so a match that started
+        // half an hour ago has no business being offered on the Process Results page.
+        var inPlay = new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = UkClock.Now.AddMinutes(-30), HomeTeamID = team.TeamID };
+        var finished = new DomainEntities.Match { MatchID = Guid.NewGuid(), CompetitionID = competitionId, MatchDateTime = UkClock.Now.AddMinutes(-120), HomeTeamID = team.TeamID };
+        dbContext.Match.AddRange(inPlay, finished);
+        await dbContext.SaveChangesAsync();
+
+        var matches = await service.GetForProcessingAsync(competitionId);
+
+        matches.Select(m => m.MatchID).Should().Equal(finished.MatchID);
+    }
 }

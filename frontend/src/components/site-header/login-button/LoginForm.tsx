@@ -58,7 +58,7 @@ export function LoginForm() {
                         You'll need to reset your password before you can log in again. It only takes a minute.
                     </Text>
                     <Button h="44px" fontSize="15px" colorPalette="action" alignSelf="flex-start" onClick={goToPasswordReset}>
-                        Reset your password
+                        Reset Your Password
                     </Button>
                 </Stack>
             </Panel>

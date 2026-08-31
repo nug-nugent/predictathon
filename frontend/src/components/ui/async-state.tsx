@@ -8,7 +8,7 @@ export function ErrorState({ error, onRetry }: { error: ApiError; onRetry?: () =
         <Center mt={4}>
             <VStack gap={3}>
                 <Text>{error.messages.join(" ")}</Text>
-                {onRetry && <Button onClick={onRetry}>Try again</Button>}
+                {onRetry && <Button onClick={onRetry}>Try Again</Button>}
             </VStack>
         </Center>
     );

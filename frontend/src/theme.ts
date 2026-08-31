@@ -105,6 +105,9 @@ export const predictTheme = createSystem(defaultConfig, {
         status: {
           urgent: { value: { _light: "#D69A1F", _dark: "#E0A93A" } },
           relaxed: { value: { _light: "#2E9B4A", _dark: "#3FCB4A" } },
+          // "In play right now" - the broadcast red every score service uses for it. Functional,
+          // like the points scale: it marks a match you can still watch unfold, not decoration.
+          live: { value: { _light: "#D92D20", _dark: "#FF6257" } },
         },
         // Primary-action colour for buttons/checkboxes/links: the header's blue in light mode,
         // switching to the same bright turquoise (and near-black contrast text) already used for

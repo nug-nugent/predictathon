@@ -17,7 +17,12 @@ public static class LeagueTableItemExtensions
     /// <param name="items">The league table rows to populate.</param>
     /// <param name="avatarService">The service that resolves a user's avatar URL.</param>
     /// <returns>The same rows, for convenient chaining onto the procedure call.</returns>
-    public static IReadOnlyList<LeagueTableItem> WithAvatarUrls(this IReadOnlyList<LeagueTableItem> items, IAvatarService avatarService)
+    /// <typeparam name="T">
+    /// The row type - generic so a richer row (see <see cref="Models.LiveLeagueTableItem"/>) comes
+    /// back as itself rather than as its base type.
+    /// </typeparam>
+    public static IReadOnlyList<T> WithAvatarUrls<T>(this IReadOnlyList<T> items, IAvatarService avatarService)
+        where T : LeagueTableItem
     {
         foreach (var item in items)
         {

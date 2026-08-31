@@ -63,7 +63,7 @@ export function FixtureChangesAdminPage() {
             <HStack justify="space-between">
                 <PageHeading>Fixture Changes</PageHeading>
                 <Button size="sm" variant="outline" loading={syncing} disabled={syncing} onClick={() => { void runSyncNow(); }}>
-                    Check for changes
+                    Check for Changes
                 </Button>
             </HStack>
 

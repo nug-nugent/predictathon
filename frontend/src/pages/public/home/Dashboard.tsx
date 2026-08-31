@@ -1,6 +1,7 @@
 import { SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { useAsyncData } from "../../../hooks/useAsyncData";
+import { TodaysMatchesCard } from "../../../components/home/TodaysMatchesCard";
 import { UserStatisticsCard } from "../../../components/home/UserStatisticsCard";
 import { CompetitionRegistrationsCard } from "../../../components/home/CompetitionRegistrationsCard";
 import { CompetitionSpotlightCard } from "../../../components/home/CompetitionSpotlightCard";
@@ -29,6 +30,9 @@ export function Dashboard() {
     return (
         <>
             <AnnouncementFeed audience="all" />
+            {/* Full width above the two-column grid, and only present on days the competition
+                actually has matches - see TodaysMatchesCard. */}
+            <TodaysMatchesCard key={`live-${currentCompetitionId}`} competitionId={currentCompetitionId} />
             <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
                 <VStack align="stretch" gap={3}>
                     <UserStatisticsCard competitionId={currentCompetitionId} />
@@ -53,7 +57,7 @@ function CompetitionSignUpPrompt() {
 
     return (
         <VStack align="stretch" gap={4} maxW="640px" mx="auto" mt={4}>
-            <PageHeading>Join a competition</PageHeading>
+            <PageHeading>Join a Competition</PageHeading>
             <Text color="fg.muted">You're not registered for any competitions yet. Sign up to one below to get started.</Text>
 
             {error && <ErrorState error={error} />}

@@ -41,7 +41,7 @@ export function TeamName({ teamId, name, shortName, crest, crestPosition }: Team
                         <Popover.Arrow />
                         <Popover.Body p={2}>
                             <Button asChild size="xs" variant="ghost">
-                                <RouterLink to={`/team/${teamId}`}>View team detail</RouterLink>
+                                <RouterLink to={`/team/${teamId}`}>View Team Detail</RouterLink>
                             </Button>
                         </Popover.Body>
                     </Popover.Content>

@@ -23,7 +23,7 @@ export function ResetPasswordPage() {
             <Center mt={8}>
                 <Panel maxW="sm">
                     <VStack gap={3} textAlign="center">
-                        <Heading size="md">Invalid reset link</Heading>
+                        <Heading size="md">Invalid Reset Link</Heading>
                         <Text>This password reset link is missing some information. Please request a new one.</Text>
                         <Link asChild variant="underline"><RouterLink to="/password-reset">Request a new link</RouterLink></Link>
                     </VStack>
@@ -37,7 +37,7 @@ export function ResetPasswordPage() {
             <Center mt={8}>
                 <Panel maxW="sm">
                     <VStack gap={3} textAlign="center">
-                        <Heading size="md">Password reset</Heading>
+                        <Heading size="md">Password Reset</Heading>
                         <Text>Your password has been reset. You can now log in with your new password.</Text>
                         <Button colorPalette="action" onClick={() => { void navigate("/"); }}>Go to Predictathon</Button>
                     </VStack>
@@ -95,7 +95,7 @@ export function ResetPasswordPage() {
                         disabled={!newPassword || !confirmPassword}
                         colorPalette="action"
                     >
-                        Reset password
+                        Reset Password
                     </Button>
                 </VStack>
             </Panel>

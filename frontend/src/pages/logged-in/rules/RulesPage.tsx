@@ -32,10 +32,10 @@ export function RulesPage() {
 
     return (
         <VStack align="stretch" gap={6} maxW="container.md">
-            <PageHeading textAlign="center">Rules of the game</PageHeading>
+            <PageHeading textAlign="center">Rules of the Game</PageHeading>
 
             <Panel accent hoverLift>
-                <Heading size="md" mb={2}>Scoring points</Heading>
+                <Heading size="md" mb={2}>Scoring Points</Heading>
                 <Text mb={2}>
                     Players predict the score for every match in {competitionName}. They then score points based on the accuracy of those predictions.
                 </Text>
@@ -65,7 +65,7 @@ export function RulesPage() {
             </Panel>
 
             <Panel accent hoverLift>
-                <Heading size="md" mb={2}>Goal difference</Heading>
+                <Heading size="md" mb={2}>Goal Difference</Heading>
                 <Text mb={2}>
                     Throughout the competition, your goal difference will be adversely affected by all but perfect predictions.
                 </Text>
@@ -76,7 +76,7 @@ export function RulesPage() {
             </Panel>
 
             <Panel accent hoverLift>
-                <Heading size="md" mb={2}>Deciding the victor</Heading>
+                <Heading size="md" mb={2}>Deciding the Victor</Heading>
                 <Text mb={2}>
                     At the end of the competition, players on equal points will be separated by goal difference.
                 </Text>

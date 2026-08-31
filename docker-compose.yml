@@ -49,6 +49,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Server=db,1433;Database=Predictathon;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true
+      # No API key here, and Sample Cup's fixtures don't exist at football-data.org - so live scores
+      # are simulated from the seeded fixtures instead. See WebApi/Development/SimulatedMatchDataService.cs.
+      FootballDataApi__UseSimulatedProvider: "true"
       Cors__AllowedOrigins__0: http://localhost:5174
       Avatars__PublicBaseUrl: http://localhost:7047
       MessageImages__PublicBaseUrl: http://localhost:7047

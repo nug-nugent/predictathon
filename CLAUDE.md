@@ -19,7 +19,10 @@ Predictathon is a football score-prediction competition site for a private group
 
 ## UI text conventions
 
-- All user-facing labels (tab labels, button text, column headers, page headings, etc.) use sentence case — only the first word (and proper nouns) capitalised, e.g. "Current competition", not "Current Competition".
+- Headings and button text use Title Case — page, card, panel and section headings, and the label on any button or button-styled link, e.g. "Today's Matches", "League Table", "Add Match", "Send Password Reset Email".
+- Title Case is for labels, not prose: a heading or button whose text reads as a sentence or a question keeps sentence case, e.g. "Where does my money go?", "This is your current competition".
+- All other user-facing text uses sentence case — tab labels, table column headers, form labels, helper text, status and error messages: only the first word (and proper nouns) capitalised, e.g. "Average score", not "Average Score".
+- `aria-label` on an icon-only control describes what the control does rather than labelling it, so it stays sentence case ("View DemoPredictor's photo full size").
 
 ## Common commands
 
