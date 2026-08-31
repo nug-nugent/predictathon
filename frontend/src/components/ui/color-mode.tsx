@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ColorModeContext, STORAGE_KEY, type ColorMode } from "./color-mode-context";
+import { ColorModeContext, STORAGE_KEY, THEME_COLORS, type ColorMode } from "./color-mode-context";
 
 function getInitialColorMode(): ColorMode {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -14,6 +14,11 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
         document.documentElement.classList.toggle("dark", colorMode === "dark");
         document.documentElement.classList.toggle("light", colorMode === "light");
         window.localStorage.setItem(STORAGE_KEY, colorMode);
+
+        // The browser re-reads this tag when it changes, so the address bar follows the toggle
+        // rather than the operating system's preference. index.html has already set it for the mode
+        // we started in; this is what keeps it right after a toggle.
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[colorMode]);
     }, [colorMode]);
 
     return (
