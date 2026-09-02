@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Button, HStack, Image, Popover, Portal, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Image, Link as ChakraLink, Popover, Portal, Stack, Text } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router";
 import { SmilePlus } from "lucide-react";
 import { Picker } from "emoji-mart";
 // @emoji-mart/data's default export (sets/15/native.json) omits the x/y sheet-position fields
@@ -16,8 +17,8 @@ type ReactionGroup = {
     reactionId: string;
     reactionName: string;
     imageFile: string;
-    userIds: string[];
-    usernames: string[];
+    // Who reacted, in the order the server returned them (oldest reaction first).
+    users: { userId: string; username: string }[];
 };
 
 // Grouped by identity, not display name: the same emoji can reach us under more than one name
@@ -29,15 +30,13 @@ function groupReactions(reactions: MessageReaction[]): ReactionGroup[] {
     for (const reaction of reactions) {
         const existing = groups.get(reaction.reactionId);
         if (existing) {
-            existing.userIds.push(reaction.userID);
-            existing.usernames.push(reaction.username);
+            existing.users.push({ userId: reaction.userID, username: reaction.username });
         } else {
             groups.set(reaction.reactionId, {
                 reactionId: reaction.reactionId,
                 reactionName: reaction.reactionName,
                 imageFile: reaction.imageFile,
-                userIds: [reaction.userID],
-                usernames: [reaction.username],
+                users: [{ userId: reaction.userID, username: reaction.username }],
             });
         }
     }
@@ -123,19 +122,26 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
 }) {
     const { user } = useUser();
     const [pickerOpen, setPickerOpen] = useState(false);
+    // At most one pill's "who reacted" popover is open at a time, tracked by reaction identity
+    // rather than a flag per pill so opening one closes any other.
+    const [openGroupId, setOpenGroupId] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
     const groups = groupReactions(reactions);
 
-    const toggle = async (reactionId: string, reactionName: string) => {
-        if (busy) return;
+    // Adds or removes the caller's own reaction from an existing pill. The popover deliberately
+    // stays open afterwards: the list it is showing is the thing that just changed - and if the
+    // pill was only there because of this user, it and its popover disappear anyway.
+    const toggle = async (group: ReactionGroup, mine: boolean) => {
+        if (busy) {
+            return;
+        }
+
         setBusy(true);
         try {
-            const hasReacted = user !== null
-                && groups.some((g) => g.reactionId === reactionId && g.userIds.includes(user.id));
-            const updated = hasReacted
-                ? await removeReaction(messageId, reactionId)
-                : await addReaction(messageId, reactionId, reactionName);
+            const updated = mine
+                ? await removeReaction(messageId, group.reactionId)
+                : await addReaction(messageId, group.reactionId, group.reactionName);
             onChanged(updated);
         } catch (error) {
             // Leave the pills as they were - the server state didn't change, so there's nothing
@@ -164,28 +170,72 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
     return (
         <HStack gap={1} wrap="wrap" mt={1}>
             {groups.map((group) => {
-                const mine = user !== null && group.userIds.includes(user.id);
+                const mine = user !== null && group.users.some((u) => u.userId === user.id);
+                // imageFile is empty only when the server can't resolve the identity to a file at
+                // all - fall back to the name rather than a broken image.
+                const emoji = (size: string) => (group.imageFile
+                    ? <Image src={getReactionImageUrl(group.imageFile)} boxSize={size} alt={group.reactionName} />
+                    : <Text as="span" fontSize="2xs">{group.reactionName}</Text>);
+
                 return (
-                    <Button
+                    <Popover.Root
                         key={group.reactionId}
-                        size="xs"
-                        // Both states are outlines: a filled pill for "mine" read as a heavy blue
-                        // block next to the emoji it was meant to be a backdrop for. The accent
-                        // border and count carry the meaning instead.
-                        variant="outline"
-                        colorPalette={mine ? "action" : "gray"}
-                        rounded="full"
-                        px={2}
-                        title={group.usernames.join(", ")}
-                        onClick={() => { void toggle(group.reactionId, group.reactionName); }}
+                        open={openGroupId === group.reactionId}
+                        onOpenChange={(e) => setOpenGroupId(e.open ? group.reactionId : null)}
+                        positioning={{ placement: "bottom-start" }}
                     >
-                        {/* imageFile is empty only when the server can't resolve the identity to a
-                            file at all - fall back to the name rather than a broken image. */}
-                        {group.imageFile
-                            ? <Image src={getReactionImageUrl(group.imageFile)} boxSize="18px" alt={group.reactionName} />
-                            : <Text as="span" fontSize="2xs">{group.reactionName}</Text>}
-                        {group.usernames.length}
-                    </Button>
+                        <Popover.Trigger asChild>
+                            <Button
+                                size="xs"
+                                // Both states are outlines: a filled pill for "mine" read as a heavy
+                                // blue block next to the emoji it was meant to be a backdrop for. The
+                                // accent border and count carry the meaning instead.
+                                variant="outline"
+                                colorPalette={mine ? "action" : "gray"}
+                                rounded="full"
+                                px={2}
+                                aria-label={`${group.reactionName}, ${group.users.length} ${group.users.length === 1 ? "reaction" : "reactions"}. Show who reacted`}
+                            >
+                                {emoji("18px")}
+                                {group.users.length}
+                            </Button>
+                        </Popover.Trigger>
+                        <Portal>
+                            <Popover.Positioner>
+                                <Popover.Content width="auto" minW="180px" maxW="260px">
+                                    <Popover.Arrow />
+                                    <Popover.Body p={3}>
+                                        <Stack gap={2} align="stretch">
+                                            <HStack gap={2} minW={0}>
+                                                {emoji("22px")}
+                                                <Text fontSize="sm" fontWeight="semibold" truncate>{group.reactionName}</Text>
+                                            </HStack>
+                                            {/* Capped rather than unbounded: a reaction everyone piles
+                                                onto would otherwise run the popover off the screen. */}
+                                            <Stack gap={1} align="stretch" maxH="180px" overflowY="auto">
+                                                {group.users.map((u) => (
+                                                    <ChakraLink key={u.userId} asChild fontSize="sm" variant="underline">
+                                                        <RouterLink to={`/profile/${u.userId}`}>
+                                                            {u.userId === user?.id ? `${u.username} (you)` : u.username}
+                                                        </RouterLink>
+                                                    </ChakraLink>
+                                                ))}
+                                            </Stack>
+                                            <Button
+                                                size="xs"
+                                                variant="outline"
+                                                colorPalette={mine ? "gray" : "action"}
+                                                loading={busy}
+                                                onClick={() => { void toggle(group, mine); }}
+                                            >
+                                                {mine ? "Remove me" : "Add me"}
+                                            </Button>
+                                        </Stack>
+                                    </Popover.Body>
+                                </Popover.Content>
+                            </Popover.Positioner>
+                        </Portal>
+                    </Popover.Root>
                 );
             })}
 
