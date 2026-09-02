@@ -7,6 +7,6 @@
        build systems, so if you ever hand-edit one for a deliberate minor/major bump, edit the
        other to match in the same PR. -->
   <PropertyGroup>
-    <Version>2.0.14</Version>
+    <Version>2.0.15</Version>
   </PropertyGroup>
 </Project>
