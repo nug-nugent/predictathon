@@ -239,7 +239,12 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                 );
             })}
 
-            <Popover.Root open={pickerOpen} onOpenChange={(e) => setPickerOpen(e.open)}>
+            {/* lazyMount/unmountOnExit are load-bearing, not tidiness: without them Ark mounts every
+                message's picker content up front, so a 30-message page builds 30 emoji-mart pickers
+                (each parsing the dataset and laying out its grid) for a page where the user usually
+                opens none. EmojiPicker's effect appends/detaches the Picker per mount, so it copes
+                with the real mount/unmount cycles these introduce. */}
+            <Popover.Root open={pickerOpen} onOpenChange={(e) => setPickerOpen(e.open)} lazyMount unmountOnExit>
                 <Popover.Trigger asChild>
                     {/* Labelled rather than icon-only: a bare smiley was easy to miss entirely,
                         and on a phone it was a small target to hit. The visible text is the
