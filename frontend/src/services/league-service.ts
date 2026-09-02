@@ -1,6 +1,6 @@
 import { getJsonAuthenticated } from "./api";
-import { getCompetitionWeeks, computeDefaultWeek } from "./prediction-service";
-import { weekEnd } from "../utils/matchWeek";
+import { getCompetitionWeeks, computeDefaultWeek, getMatchesForWeek } from "./prediction-service";
+import { weekEnd, weekOver } from "../utils/matchWeek";
 import { toDateOnly } from "../utils/toDateOnly";
 
 // Matches Application/Models/LeagueTableItem.cs, as returned by the LeagueTableGet stored procedure.
@@ -62,19 +62,43 @@ async function findUserRow(competitionId: string, userId: string, dateFrom?: str
     return mine ? { points: mine.score, position: mine.leaguePosition, previousPosition: mine.previousLeaguePosition } : null;
 }
 
-export type UserFormWeek = { week: string; points: number };
+export type UserFormWeek = {
+    week: string;
+    points: number;
+    /** The total can still move: at least one match in the week has no confirmed result yet. */
+    provisional: boolean;
+};
 
-/// A user's points for their most recent finished match weeks, oldest first - powers the Home page's
-/// form-strip widget. A week counts as "finished" once its end date has passed, regardless of
-/// whether every match in it has actually been played yet.
+/// A user's points for their most recent match weeks, oldest first - powers the Home page's
+/// form-strip widget. Weeks that are over always count, and the week in progress joins them as soon
+/// as one of its matches has been played: waiting for the whole calendar week to elapse left the
+/// card showing nothing for a match week whose football had already finished. That week stays
+/// flagged `provisional` until every match in it has been processed.
 export async function getUserRecentForm(competitionId: string, userId: string, count = 5): Promise<UserFormWeek[]> {
     const weeks = await getCompetitionWeeks(competitionId);
-    const finishedWeeks = weeks.filter((w) => new Date(weekEnd(w)) < new Date());
-    const recentWeeks = finishedWeeks.slice(-count);
+    const now = new Date();
+
+    // Weeks come back oldest first, so the ones that are over form a prefix and the first week
+    // after them - if the competition has reached it - is the week currently in progress.
+    const finishedWeeks = weeks.filter((w) => weekOver(w) <= now);
+    const currentWeek: string | undefined = weeks[finishedWeeks.length];
+
+    const currentWeekMatches = currentWeek ? await getMatchesForWeek(competitionId, currentWeek) : [];
+    // Same "has anything actually happened yet" rule the Home statistics card applies to its own
+    // current-week row.
+    const currentWeekStarted = currentWeekMatches.some((m) => m.actualHomeTeamGoals !== null);
+    const currentWeekProcessed = currentWeekMatches.every((m) => m.matchPlayed);
+
+    const shownWeeks = currentWeek && currentWeekStarted ? [...finishedWeeks, currentWeek] : finishedWeeks;
+    const recentWeeks = shownWeeks.slice(-count);
 
     const rows = await Promise.all(recentWeeks.map((w) => findUserRow(competitionId, userId, w, weekEnd(w))));
 
-    return recentWeeks.map((week, i) => ({ week, points: rows[i]?.points ?? 0 }));
+    return recentWeeks.map((week, i) => ({
+        week,
+        points: rows[i]?.points ?? 0,
+        provisional: week === currentWeek && !currentWeekProcessed,
+    }));
 }
 
 /// One user's overall league standing plus their standings within the previous and current match

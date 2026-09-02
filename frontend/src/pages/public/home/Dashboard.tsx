@@ -1,4 +1,4 @@
-import { SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { Box, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { TodaysMatchesCard } from "../../../components/home/TodaysMatchesCard";
@@ -33,13 +33,23 @@ export function Dashboard() {
             {/* Full width above the two-column grid, and only present on days the competition
                 actually has matches - see TodaysMatchesCard. */}
             <TodaysMatchesCard key={`live-${currentCompetitionId}`} competitionId={currentCompetitionId} />
+            {/* Two stacked columns at lg and up. Below that the grid collapses to one column, and
+                the columns would otherwise interleave as "all of the left, then all of the right",
+                burying the league table below the competition list. display:contents dissolves the
+                column wrappers on mobile so every card is a direct grid item, which in turn lets
+                `order` decide where a card lands in the single-column stack. */}
             <SimpleGrid key={currentCompetitionId} columns={{ base: 1, lg: 2 }} gap={3}>
-                <VStack align="stretch" gap={3}>
+                <VStack align="stretch" gap={3} display={{ base: "contents", lg: "flex" }}>
                     <UserStatisticsCard competitionId={currentCompetitionId} />
                     <PredictionDeadlineCard competitionId={currentCompetitionId} />
-                    <CompetitionRegistrationsCard />
+                    {/* Housekeeping rather than competition news, so it goes to the bottom of the
+                        mobile stack. _empty keeps the wrapper from leaving a phantom grid gap on
+                        the (common) days the card itself renders nothing. */}
+                    <Box order={{ base: 1, lg: 0 }} _empty={{ display: "none" }}>
+                        <CompetitionRegistrationsCard />
+                    </Box>
                 </VStack>
-                <VStack align="stretch" gap={3}>
+                <VStack align="stretch" gap={3} display={{ base: "contents", lg: "flex" }}>
                     <MiniLeagueTableCard competitionId={currentCompetitionId} />
                     <PredictionOfTheWeekCard competitionId={currentCompetitionId} />
                     <PersonalFormStripCard competitionId={currentCompetitionId} />

@@ -4,7 +4,7 @@ import { useUser } from "../../hooks/useUser";
 import { getUserLeagueStats, type UserWeekStat } from "../../services/league-service";
 import { getMatchesForWeek } from "../../services/prediction-service";
 import { ordinal } from "../../utils/ordinal";
-import { weekEnd } from "../../utils/matchWeek";
+import { weekOver } from "../../utils/matchWeek";
 import { Panel } from "../ui/panel";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
@@ -44,7 +44,7 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
         }
 
         const thisWeekLabel: Stats["thisWeekLabel"] =
-            leagueStats.currentWeek && new Date(weekEnd(leagueStats.currentWeek)) < new Date()
+            leagueStats.currentWeek && weekOver(leagueStats.currentWeek) <= new Date()
                 ? "Last Matches"
                 : "This Match Week";
 
@@ -71,11 +71,18 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
         <Panel p={3} accent hoverLift>
             <HStack justify="space-between" mb={2}>
                 <HStack gap={3}>
-                    <Avatar.Root size="md">
-                        <Avatar.Image src={user.avatarUrl} />
-                        <Avatar.Fallback name={user.name} />
-                    </Avatar.Root>
-                    <Heading fontSize="17px" fontWeight="bold">{user.name}</Heading>
+                    {/* Photo and name are a single link to the read-only profile rather than two
+                        adjacent links to the same place. The hover underline is scoped to the
+                        heading so the avatar's fallback initials don't get underlined too. */}
+                    <HStack asChild gap={3} css={{ "&:hover h2": { textDecoration: "underline" } }}>
+                        <RouterLink to={`/profile/${user.id}`}>
+                            <Avatar.Root size="md">
+                                <Avatar.Image src={user.avatarUrl} />
+                                <Avatar.Fallback name={user.name} />
+                            </Avatar.Root>
+                            <Heading fontSize="17px" fontWeight="bold">{user.name}</Heading>
+                        </RouterLink>
+                    </HStack>
                     <TrophyStamp trophies={stats.trophies} />
                 </HStack>
                 <Button asChild size="xs" variant="ghost">

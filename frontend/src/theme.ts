@@ -93,9 +93,21 @@ export const predictTheme = createSystem(defaultConfig, {
         border: {
           hairline: { value: { _light: "#E4E6EB", _dark: "#2E3038" } },
           card: { value: { _light: "#E4E6EB", _dark: "transparent" } },
+          // A divider meant to be seen rather than just felt: it separates one person's post from
+          // the next in a message thread, where a hairline all but vanishes and the posts run into
+          // each other. A step stronger than hairline in both modes, deliberately.
+          divider: { value: { _light: "#D8DCE6", _dark: "#3C3E47" } },
         },
         card: {
           accentStripe: { value: { _light: "#2E9B4A", _dark: "{colors.brand.accent}" } },
+        },
+        // Home page's Recent Form bars. `provisional` marks a match week whose matches haven't all
+        // been processed, so its total can still move - functional, like the points scale, not a
+        // decorative second blue. Kept deliberately paler than the settled bar in both modes so the
+        // difference reads as "not final yet" rather than "a different kind of week".
+        form: {
+          bar: { value: { _light: "{colors.blue.500}", _dark: "{colors.blue.400}" } },
+          barProvisional: { value: { _light: "{colors.blue.200}", _dark: "{colors.blue.700}" } },
         },
         input: {
           bg: { value: { _light: "#FFFFFF", _dark: "#35363C" } },

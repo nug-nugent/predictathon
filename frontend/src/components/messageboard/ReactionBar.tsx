@@ -168,8 +168,11 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                 return (
                     <Button
                         key={group.reactionId}
-                        size="2xs"
-                        variant={mine ? "subtle" : "outline"}
+                        size="xs"
+                        // Both states are outlines: a filled pill for "mine" read as a heavy blue
+                        // block next to the emoji it was meant to be a backdrop for. The accent
+                        // border and count carry the meaning instead.
+                        variant="outline"
                         colorPalette={mine ? "action" : "gray"}
                         rounded="full"
                         px={2}
@@ -179,7 +182,7 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
                         {/* imageFile is empty only when the server can't resolve the identity to a
                             file at all - fall back to the name rather than a broken image. */}
                         {group.imageFile
-                            ? <Image src={getReactionImageUrl(group.imageFile)} boxSize="14px" alt={group.reactionName} />
+                            ? <Image src={getReactionImageUrl(group.imageFile)} boxSize="18px" alt={group.reactionName} />
                             : <Text as="span" fontSize="2xs">{group.reactionName}</Text>}
                         {group.usernames.length}
                     </Button>
@@ -188,8 +191,12 @@ export function ReactionBar({ messageId, reactions, onChanged }: {
 
             <Popover.Root open={pickerOpen} onOpenChange={(e) => setPickerOpen(e.open)}>
                 <Popover.Trigger asChild>
-                    <Button size="2xs" variant="ghost" rounded="full" px={2} aria-label="Add reaction">
+                    {/* Labelled rather than icon-only: a bare smiley was easy to miss entirely,
+                        and on a phone it was a small target to hit. The visible text is the
+                        accessible name, so no aria-label. */}
+                    <Button size="xs" variant="outline" rounded="full" px={2.5} gap={1}>
                         <SmilePlus size={14} />
+                        React
                     </Button>
                 </Popover.Trigger>
                 <Portal>

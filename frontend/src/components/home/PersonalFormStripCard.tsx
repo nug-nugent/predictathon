@@ -54,18 +54,30 @@ export function PersonalFormStripCard({ competitionId }: { competitionId: string
             </HStack>
             <HStack align="flex-end" gap={3} justify="space-around">
                 {form.map((week) => (
-                    <VStack key={week.week} gap={1}>
-                        <Text fontSize="xs" fontWeight="bold">{week.points}</Text>
+                    <VStack
+                        key={week.week}
+                        gap={1}
+                        title={week.provisional ? "In progress" : undefined}
+                    >
+                        <Text fontSize="xs" fontWeight="bold" color={week.provisional ? "fg.muted" : undefined}>
+                            {week.points}
+                        </Text>
                         <Box
                             width="24px"
                             height={`${Math.max(4, (week.points / maxPoints) * BAR_MAX_HEIGHT)}px`}
-                            bg="blue.500"
+                            bg={week.provisional ? "form.barProvisional" : "form.bar"}
                             borderRadius="sm"
                         />
-                        <Text fontSize="xs" color="fg.muted">{formatWeekLabel(week.week)}</Text>
+                        <Text fontSize="xs" color="fg.muted">
+                            {formatWeekLabel(week.week)}{week.provisional ? " *" : ""}
+                        </Text>
                     </VStack>
                 ))}
             </HStack>
+            {/* Colour alone shouldn't be the only thing marking a week as unfinished. */}
+            {form.some((w) => w.provisional) && (
+                <Text mt={2} fontSize="xs" color="fg.muted">* In progress</Text>
+            )}
         </Panel>
     );
 }
