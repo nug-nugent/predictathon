@@ -1,6 +1,7 @@
 import { Badge, Box, HStack, Stack, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import type { MessageThreadSummary } from "../../services/messageboard-service";
+import { formatDateTime } from "../../utils/formatDateTime";
 
 export function ThreadListItem({ thread, striped = false }: { thread: MessageThreadSummary; striped?: boolean }) {
     return (
@@ -31,7 +32,7 @@ export function ThreadListItem({ thread, striped = false }: { thread: MessageThr
                     </Text>
                 </VStack>
                 <VStack align={{ base: "start", md: "end" }} gap={0} flexShrink={0}>
-                    <Text fontSize="sm" color="fg.muted">{new Date(thread.lastMessageDateTime).toLocaleString()}</Text>
+                    <Text fontSize="sm" color="fg.muted">{formatDateTime(thread.lastMessageDateTime)}</Text>
                     <Text fontSize="sm" color="fg.muted">by {thread.lastMessageByUsername}</Text>
                 </VStack>
             </Stack>
