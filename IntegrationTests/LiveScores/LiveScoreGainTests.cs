@@ -1,4 +1,5 @@
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Predictathon.Application.Common;
 using Predictathon.Application.Constants;
 using Predictathon.Application.Services;
@@ -27,8 +28,11 @@ public class LiveScoreGainTests
         _fixture = fixture;
     }
 
+    // A cache of its own per service, so the brief reuse window the Live page relies on can't
+    // carry one test's table into another's assertions - these tests each set up their own
+    // competition and ask for its table once.
     private static LeagueTableService MakeService(ApplicationDbContext dbContext)
-        => new(dbContext, new StubAvatarService());
+        => new(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
 
     [Theory]
     // A perfect prediction is three, whatever the competition allows.

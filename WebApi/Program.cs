@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -165,6 +166,27 @@ try
     builder.Services.AddSingleton(config);
     builder.Services.AddScoped<IMapper, Mapper>();
 
+    // IIS won't compress what comes back through ASP.NET Core here: dynamic compression is off on
+    // the host, and "application/json" isn't in its default dynamicTypes list even where it's on.
+    // Measured in production, a league table came back as 7,201 bytes of entirely uncompressed JSON
+    // - fifty rows of repeated property names, usernames and small integers, which is about the most
+    // compressible payload the API has, and the Live page re-fetches it every 30 seconds per viewer.
+    // Doing it in-process rather than in IIS also covers the reaction SVGs and uploaded images, which
+    // are served through this pipeline and so look like dynamic content to IIS as well.
+    //
+    // EnableForHttps is off by default because compressing a response that mixes a secret with
+    // attacker-influenced input is what BREACH exploits. Nothing here reflects request input back
+    // alongside a token - the login response carries a JWT and little else - so the precondition
+    // isn't present, and every response is over TLS anyway.
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json", "image/svg+xml"]);
+    });
+
+    // Backing store for the live league table's short-lived cache - see LeagueTableService.
+    builder.Services.AddMemoryCache();
+
     // Add services to the container.
     builder.Services.AddControllers();
 
@@ -302,6 +324,10 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    // Ahead of the static-file mounts and the controllers below, so everything downstream that
+    // produces a body gets compressed rather than just the API's JSON.
+    app.UseResponseCompression();
 
     app.UseCors(FrontendCorsPolicy);
 
