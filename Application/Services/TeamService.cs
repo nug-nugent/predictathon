@@ -29,6 +29,7 @@ public class TeamService : ITeamService
     public async Task<IReadOnlyList<TeamModel>> GetForCompetitionAsync(Guid competitionId, CancellationToken cancellationToken = default)
     {
         var teams = await _dbContext.TeamCompetition
+            .AsNoTracking()
             .Where(tc => tc.CompetitionID == competitionId)
             .Select(tc => tc.Team)
             .OrderBy(t => t.TeamName)
@@ -62,6 +63,7 @@ public class TeamService : ITeamService
             .Select(tc => tc.TeamID);
 
         var teams = await _dbContext.Team
+            .AsNoTracking()
             .Where(t => !assignedTeamIds.Contains(t.TeamID))
             .OrderBy(t => t.TeamName)
             .ToListAsync(cancellationToken);
@@ -104,13 +106,14 @@ public class TeamService : ITeamService
     /// <inheritdoc />
     public async Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default)
     {
-        var team = await _dbContext.Team.FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);
+        var team = await _dbContext.Team.AsNoTracking().FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);
         if (team is null)
         {
             return null;
         }
 
         var competitionMatches = await _dbContext.Match
+            .AsNoTracking()
             .Where(m => m.CompetitionID == competitionId)
             .ToListAsync(cancellationToken);
 
@@ -179,6 +182,7 @@ public class TeamService : ITeamService
         var take = Math.Clamp(count, 1, MaximumRecentResults);
 
         var matches = await _dbContext.Match
+            .AsNoTracking()
             .Where(m => m.CompetitionID == competitionId && m.MatchPlayed && (m.HomeTeamID == teamId || m.AwayTeamID == teamId))
             .OrderByDescending(m => m.MatchDateTime)
             .Take(take)
