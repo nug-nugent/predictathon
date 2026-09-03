@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -34,7 +34,7 @@ public class LiveScoreStoreTests
     private static MatchService MakeMatchService(ApplicationDbContext dbContext)
     {
         var dependencyAggregate = new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper());
-        return new MatchService(dependencyAggregate, dbContext, dbContext);
+        return new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueDataCache());
     }
 
     private static LiveScoreService MakeLiveScoreService(ApplicationDbContext dbContext)

@@ -29,13 +29,13 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
     /// <inheritdoc />
     public async Task<IReadOnlyList<Competition>> GetCompetitionListAsync()
     {
-        return await _appDbContext.Competition.OrderByDescending(c => c.StartDate).ToListAsync();
+        return await _appDbContext.Competition.AsNoTracking().OrderByDescending(c => c.StartDate).ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<Competition>> GetCompetitionListForLoginPageAsync()
     {
-        return await _appDbContext.Competition.Where(c => c.RegistrationAvailableOnLoginPage).OrderByDescending(c => c.StartDate).ToListAsync();
+        return await _appDbContext.Competition.AsNoTracking().Where(c => c.RegistrationAvailableOnLoginPage).OrderByDescending(c => c.StartDate).ToListAsync();
     }
 
     /// <inheritdoc />

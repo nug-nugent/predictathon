@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using Predictathon.Application.Attributes;
@@ -14,11 +14,13 @@ public class UserCompetitionService : IUserCompetitionService
 {
     private readonly IApplicationDbContext _appDbContext;
     private readonly IPayPalService _payPalService;
+    private readonly ILeagueDataCache _leagueDataCache;
 
-    public UserCompetitionService(IApplicationDbContext appDbContext, IPayPalService payPalService)
+    public UserCompetitionService(IApplicationDbContext appDbContext, IPayPalService payPalService, ILeagueDataCache leagueDataCache)
     {
         _appDbContext = appDbContext ?? throw new ArgumentNullException(nameof(appDbContext));
         _payPalService = payPalService ?? throw new ArgumentNullException(nameof(payPalService));
+        _leagueDataCache = leagueDataCache ?? throw new ArgumentNullException(nameof(leagueDataCache));
     }
 
     /// <inheritdoc />
@@ -218,6 +220,11 @@ public class UserCompetitionService : IUserCompetitionService
         _appDbContext.UpdateRange(existingRegistrations);
         _appDbContext.UserCompetition.Add(userCompetition);
         await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        // A registrant is a league table row - they appear on nil points rather than not at all -
+        // so a cached table computed a moment ago is now missing somebody. Every registration route
+        // (free, payment credit and PayPal) lands here, so this covers all three.
+        _leagueDataCache.Invalidate(competitionId);
 
         return userCompetition;
     }

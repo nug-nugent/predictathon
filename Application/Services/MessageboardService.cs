@@ -443,7 +443,7 @@ public class MessageboardService : IMessageboardService
     private async Task<Dictionary<Guid, ApplicationUser>> GetUsersByIdAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {
         var ids = userIds.Distinct().ToList();
-        var users = await _dbContext.Query<ApplicationUser>().Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
+        var users = await _dbContext.Query<ApplicationUser>().AsNoTracking().Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
         return users.ToDictionary(u => u.Id);
     }
 
@@ -453,6 +453,7 @@ public class MessageboardService : IMessageboardService
         // an unordered read would make which row wins depend on whatever order SQL happened to
         // return them in.
         var reactions = await _dbContext.MessageReaction
+            .AsNoTracking()
             .Where(r => r.MessageID == messageId)
             .OrderBy(r => r.CreationDate)
             .ThenBy(r => r.MessageReactionID)

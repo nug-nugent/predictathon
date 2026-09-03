@@ -1,9 +1,10 @@
-using Mapster;
+﻿using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -165,6 +166,24 @@ try
     builder.Services.AddSingleton(config);
     builder.Services.AddScoped<IMapper, Mapper>();
 
+    // IIS won't compress what comes back through ASP.NET Core here: dynamic compression is off on
+    // the host, and "application/json" isn't in its default dynamicTypes list even where it's on.
+    // Measured in production, a league table came back as 7,201 bytes of entirely uncompressed JSON
+    // - fifty rows of repeated property names, usernames and small integers, which is about the most
+    // compressible payload the API has, and the Live page re-fetches it every 30 seconds per viewer.
+    // Doing it in-process rather than in IIS also covers the reaction SVGs and uploaded images, which
+    // are served through this pipeline and so look like dynamic content to IIS as well.
+    //
+    // EnableForHttps is off by default because compressing a response that mixes a secret with
+    // attacker-influenced input is what BREACH exploits. Nothing here reflects request input back
+    // alongside a token - the login response carries a JWT and little else - so the precondition
+    // isn't present, and every response is over TLS anyway.
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json", "image/svg+xml"]);
+    });
+
     // Add services to the container.
     builder.Services.AddControllers();
 
@@ -213,6 +232,11 @@ try
     // against, registered here so tests can substitute a fake one.
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<IExternalApiRateLimiter, ExternalApiRateLimiter>();
+
+    // Held for the process rather than the request, for the same reason as the rate limiter above:
+    // a cache rebuilt per request would start empty every time and cache nothing. Registered by
+    // hand rather than through the [ScopedService] scan, which would give it the wrong lifetime.
+    builder.Services.AddSingleton<ILeagueDataCache, LeagueDataCache>();
 
     // Polls the provider for in-play scores. See LiveScorePollingService for why an in-process loop
     // is acceptable here when the daily maintenance jobs deliberately run off external pings.
@@ -302,6 +326,10 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    // Ahead of the static-file mounts and the controllers below, so everything downstream that
+    // produces a body gets compressed rather than just the API's JSON.
+    app.UseResponseCompression();
 
     app.UseCors(FrontendCorsPolicy);
 

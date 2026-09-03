@@ -87,7 +87,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService());
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -176,7 +176,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService());
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID, dateForComparison: today);
@@ -221,7 +221,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService());
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -259,7 +259,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService());
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
