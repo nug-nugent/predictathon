@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Predictathon.Application.Services;
 using Predictathon.Domain.Entities;
 using Predictathon.Domain.Identity;
@@ -88,7 +87,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueTableCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -177,7 +176,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueTableCache());
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID, dateForComparison: today);
@@ -222,7 +221,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueTableCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 
@@ -260,7 +259,7 @@ public class LeagueTableServiceTests
 
         try
         {
-            var service = new LeagueTableService(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueTableCache());
 
             var table = await service.GetLeagueTableAsync(competition.CompetitionID);
 

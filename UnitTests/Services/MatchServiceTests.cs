@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MapsterMapper;
 using Predictathon.Application.Common;
 using Predictathon.Application.Models;
@@ -14,7 +14,7 @@ public class MatchServiceTests
     {
         var dbContext = new InMemoryApplicationDbContext();
         var dependencyAggregate = new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper());
-        var service = new MatchService(dependencyAggregate, dbContext, dbContext);
+        var service = new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueTableCache());
         return (dbContext, service);
     }
 

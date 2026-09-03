@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Mapster;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -19,15 +19,18 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
 {
     private readonly IGenericDbContext _dbContext;
     private readonly IApplicationDbContext _appDbContext;
+    private readonly ILeagueTableCache _leagueTableCache;
 
     public MatchService(
         ICrudServiceDependencyAggregate<CreateMatchModel, MatchModel> dependencyAggregate,
         IGenericDbContext dbContext,
-        IApplicationDbContext appDbContext
+        IApplicationDbContext appDbContext,
+        ILeagueTableCache leagueTableCache
     ) : base(dependencyAggregate)
     {
         _dbContext = dbContext;
         _appDbContext = appDbContext;
+        _leagueTableCache = leagueTableCache;
     }
 
     /// <inheritdoc />
@@ -190,6 +193,21 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
         };
 
         await _dbContext.CallStoredProcedureAsync("MatchPredictionScoreSet", parameters, cancellationToken);
+
+        // Every route that changes what a match is worth comes through here - a result being
+        // entered, and an admin correcting one afterwards - so this is the one place the cached
+        // league tables have to be dropped. The competition is looked up rather than passed in for
+        // the same reason: it keeps the invalidation attached to the recalculation instead of to
+        // each caller remembering to do it.
+        var competitionId = await _appDbContext.Match
+            .Where(m => m.MatchID == matchId)
+            .Select(m => m.CompetitionID)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (competitionId != Guid.Empty)
+        {
+            _leagueTableCache.Invalidate(competitionId);
+        }
     }
 
     /// <inheritdoc />

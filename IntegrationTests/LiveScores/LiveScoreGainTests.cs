@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Caching.Memory;
 using Predictathon.Application.Common;
 using Predictathon.Application.Constants;
 using Predictathon.Application.Services;
@@ -32,7 +31,7 @@ public class LiveScoreGainTests
     // carry one test's table into another's assertions - these tests each set up their own
     // competition and ask for its table once.
     private static LeagueTableService MakeService(ApplicationDbContext dbContext)
-        => new(dbContext, new StubAvatarService(), new MemoryCache(new MemoryCacheOptions()));
+        => new(dbContext, new StubAvatarService(), new LeagueTableCache());
 
     [Theory]
     // A perfect prediction is three, whatever the competition allows.

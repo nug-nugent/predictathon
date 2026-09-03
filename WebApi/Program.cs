@@ -184,9 +184,6 @@ try
         options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json", "image/svg+xml"]);
     });
 
-    // Backing store for the live league table's short-lived cache - see LeagueTableService.
-    builder.Services.AddMemoryCache();
-
     // Add services to the container.
     builder.Services.AddControllers();
 
@@ -235,6 +232,11 @@ try
     // against, registered here so tests can substitute a fake one.
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddSingleton<IExternalApiRateLimiter, ExternalApiRateLimiter>();
+
+    // Held for the process rather than the request, for the same reason as the rate limiter above:
+    // a cache rebuilt per request would start empty every time and cache nothing. Registered by
+    // hand rather than through the [ScopedService] scan, which would give it the wrong lifetime.
+    builder.Services.AddSingleton<ILeagueTableCache, LeagueTableCache>();
 
     // Polls the provider for in-play scores. See LiveScorePollingService for why an in-process loop
     // is acceptable here when the daily maintenance jobs deliberately run off external pings.

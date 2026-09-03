@@ -1,12 +1,11 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Data.SqlClient;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
 using Predictathon.Application.Models;
-using System.Collections.Concurrent;
 using System.Data;
+using System.Globalization;
 
 namespace Predictathon.Application.Services;
 
@@ -14,25 +13,27 @@ namespace Predictathon.Application.Services;
 public class LeagueTableService : ILeagueTableService
 {
     /// <summary>
-    /// How long a computed live table is served to everyone else asking for the same competition.
-    /// Shorter than the Live page's 30-second poll, so no viewer is shown a table staler than their
-    /// own refresh interval already allows - it only collapses the viewers who happen to poll in
-    /// the same window onto one computation.
+    /// How long a confirmed league table is reused for. Short, but the cache doesn't lean on it:
+    /// the things that change this table - a result being processed, somebody joining - invalidate
+    /// it outright, so this is a backstop for whatever that misses. It matters most during an
+    /// overlapped IIS recycle, when two workers run side by side and an invalidation raised in one
+    /// never reaches the other's cache.
+    /// </summary>
+    private static readonly TimeSpan TableLifetime = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// How long a live table is reused for. Shorter than the confirmed one and expiring on time
+    /// alone, because what changes it - a goal arriving from the provider's feed - isn't a write
+    /// anybody can hang an invalidation off. Shorter than the Live page's own 30-second poll, so no
+    /// viewer sees a table staler than their refresh interval already allows.
     /// </summary>
     private static readonly TimeSpan LiveTableLifetime = TimeSpan.FromSeconds(15);
 
-    /// <summary>
-    /// One gate per competition, so the first request through recomputes and everybody else waits
-    /// for its answer instead of piling a second identical LiveLeagueTableGet onto the database the
-    /// moment the entry expires.
-    /// </summary>
-    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> LiveTableGates = new();
-
     private readonly IGenericDbContext _dbContext;
     private readonly IAvatarService _avatarService;
-    private readonly IMemoryCache _cache;
+    private readonly ILeagueTableCache _cache;
 
-    public LeagueTableService(IGenericDbContext dbContext, IAvatarService avatarService, IMemoryCache cache)
+    public LeagueTableService(IGenericDbContext dbContext, IAvatarService avatarService, ILeagueTableCache cache)
     {
         _dbContext = dbContext;
         _avatarService = avatarService;
@@ -40,12 +41,67 @@ public class LeagueTableService : ILeagueTableService
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Cached per competition and date range. Nothing about the caller reaches this query, so every
+    /// viewer of a competition's League page - and every Home page's mini table, which asks with
+    /// today's date as the comparison - is asking the identical question. Results going in is
+    /// exactly when everyone looks at once, and that's also the moment the entry is thrown away, so
+    /// the burst that follows a processed result is served from one computation rather than fifty.
+    /// </remarks>
     public async Task<IReadOnlyList<LeagueTableItem>> GetLeagueTableAsync(
         Guid competitionId,
         DateOnly? dateFrom = null,
         DateOnly? dateTo = null,
         DateOnly? dateForComparison = null,
         CancellationToken cancellationToken = default)
+    {
+        var key = $"table:{competitionId}:{Stamp(dateFrom)}:{Stamp(dateTo)}:{Stamp(dateForComparison)}";
+
+        return await _cache.GetOrCreateAsync(
+            competitionId,
+            key,
+            () => LoadLeagueTableAsync(competitionId, dateFrom, dateTo, dateForComparison, cancellationToken),
+            TableLifetime,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Cached like the confirmed table above, and for a stronger reason: this is the heaviest read
+    /// in the app - every registered user crossed with every played match, plus a per-prediction
+    /// scoring pass over whatever is in play - and the Live page re-fetches it every 30 seconds for
+    /// as long as it's left open. Twenty people watching a Saturday afternoon would otherwise mean
+    /// twenty identical runs of it every half minute.
+    ///
+    /// The cached rows carry avatar URLs, so a picture changed mid-match can take until the entry
+    /// expires to appear.
+    /// </remarks>
+    public async Task<IReadOnlyList<LiveLeagueTableItem>> GetLiveLeagueTableAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _cache.GetOrCreateAsync(
+            competitionId,
+            $"live:{competitionId}",
+            () => LoadLiveLeagueTableAsync(competitionId, cancellationToken),
+            LiveTableLifetime,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Runs the confirmed league table and stamps avatar URLs onto it.
+    /// </summary>
+    /// <param name="competitionId">The competition whose table to compute.</param>
+    /// <param name="dateFrom">Only include matches played on or after this date.</param>
+    /// <param name="dateTo">Only include matches played on or before this date.</param>
+    /// <param name="dateForComparison">If supplied, each row's previous position as of this date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task<IReadOnlyList<LeagueTableItem>> LoadLeagueTableAsync(
+        Guid competitionId,
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        DateOnly? dateForComparison,
+        CancellationToken cancellationToken)
     {
         var parameters = new List<SqlParameter>
         {
@@ -60,62 +116,13 @@ public class LeagueTableService : ILeagueTableService
         return table.WithAvatarUrls(_avatarService);
     }
 
-    /// <inheritdoc />
-    /// <remarks>
-    /// Cached briefly, unlike every other read here, because this is the one that gets asked the
-    /// same question by many people at once: the answer depends only on the competition - no user
-    /// context reaches it - and the Live page re-fetches it every 30 seconds for as long as it is
-    /// left open. Twenty people watching a Saturday afternoon otherwise means twenty identical runs
-    /// of LiveLeagueTableGet every half minute, which is the heaviest read in the app: every
-    /// registered user crossed with every played match, plus a per-prediction scoring pass over the
-    /// matches in play.
-    ///
-    /// Expiry is by time alone, with no invalidation on write. That is deliberate - IIS runs two
-    /// worker processes side by side during an overlapped recycle, so an invalidation raised in one
-    /// would never reach the other's cache, and a scheme that only sometimes works is worse than one
-    /// that visibly always lags by a bounded amount. The cached rows carry avatar URLs too, so a
-    /// picture changed mid-match can take up to <see cref="LiveTableLifetime"/> to appear.
-    /// </remarks>
-    public async Task<IReadOnlyList<LiveLeagueTableItem>> GetLiveLeagueTableAsync(
-        Guid competitionId,
-        CancellationToken cancellationToken = default)
-    {
-        var cacheKey = $"LiveLeagueTable:{competitionId}";
-        if (_cache.TryGetValue(cacheKey, out IReadOnlyList<LiveLeagueTableItem>? cached) && cached is not null)
-        {
-            return cached;
-        }
-
-        var gate = LiveTableGates.GetOrAdd(competitionId, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(cancellationToken);
-
-        try
-        {
-            // Whoever was holding the gate has just filled the cache, so look again before repeating
-            // their work.
-            if (_cache.TryGetValue(cacheKey, out cached) && cached is not null)
-            {
-                return cached;
-            }
-
-            var table = await LoadLiveLeagueTableAsync(competitionId, cancellationToken);
-            _cache.Set(cacheKey, table, LiveTableLifetime);
-
-            return table;
-        }
-        finally
-        {
-            gate.Release();
-        }
-    }
-
     /// <summary>
-    /// Runs the live table for a competition and stamps avatar URLs onto it.
+    /// Runs the live league table and stamps avatar URLs onto it.
     ///
-    /// Kept separate so the cache stores a finished result rather than the in-flight task that
-    /// produced it. Sharing the task would tie every waiting request to the first caller's scoped
-    /// DbContext, and the Live page abandons its poll whenever someone navigates away - disposing
-    /// that scope out from under everyone still awaiting it.
+    /// Kept separate from the cache lookup so what's stored is a finished result rather than the
+    /// in-flight task that produced it. Sharing the task would tie every waiting request to the
+    /// first caller's scoped DbContext, and the Live page abandons its poll whenever somebody
+    /// navigates away - disposing that scope out from under everyone still awaiting it.
     /// </summary>
     /// <param name="competitionId">The competition whose live table to compute.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -136,6 +143,14 @@ public class LeagueTableService : ILeagueTableService
 
         return table.WithAvatarUrls(_avatarService);
     }
+
+    /// <summary>
+    /// Renders an optional date for use in a cache key, so that "no date" and a real one can't
+    /// collide.
+    /// </summary>
+    /// <param name="date">The date to render.</param>
+    private static string Stamp(DateOnly? date)
+        => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "-";
 
     private static object ToSqlValue(DateOnly? date)
         => date.HasValue ? date.Value.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
