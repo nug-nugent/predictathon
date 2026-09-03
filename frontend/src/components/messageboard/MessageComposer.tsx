@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Box, Button, HStack, Input, Text, Textarea, VStack } from "@chakra-ui/react";
+import { Button, HStack, Input, Text, Textarea, VStack } from "@chakra-ui/react";
 import { Image as ImageIcon, Link2, Video, X } from "lucide-react";
 import { postMessage, postMessageWithImage } from "../../services/messageboard-service";
 import { ApiError } from "../../services/api";
@@ -95,8 +95,8 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
 
             {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
-            <HStack justify="space-between">
-                <HStack gap={1}>
+            <HStack gap={2} wrap="wrap">
+                <HStack gap={1} wrap="wrap">
                     <Button size="xs" variant={attachmentType === "file" ? "solid" : "ghost"} onClick={() => chooseAttachment("file")}>
                         <ImageIcon size={14} /> Photo
                     </Button>
@@ -107,11 +107,17 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
                         <Video size={14} /> YouTube
                     </Button>
                 </HStack>
-                <Box>
-                    <Button size="sm" colorPalette="action" loading={posting} disabled={!canSubmit} onClick={() => { void handleSubmit(); }}>
-                        Post
-                    </Button>
-                </Box>
+                <Button
+                    size="sm"
+                    colorPalette="action"
+                    ml="auto"
+                    flexShrink={0}
+                    loading={posting}
+                    disabled={!canSubmit}
+                    onClick={() => { void handleSubmit(); }}
+                >
+                    Post
+                </Button>
             </HStack>
         </VStack>
     );

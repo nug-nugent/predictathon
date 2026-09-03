@@ -37,7 +37,7 @@ export function MessageItem({ message, onReactionsChanged }: {
                 >
                     <HStack gap={2} minW={0} maxW="100%">
                         <Text fontWeight="bold" truncate>{message.postedByUsername}</Text>
-                        <TrophyStamp trophies={message.posterTrophies} />
+                        <TrophyStamp trophies={message.posterTrophies} interactive ownerName={message.postedByUsername} />
                     </HStack>
                     <HStack gap={2} flexShrink={0} fontSize="xs" color="fg.muted">
                         <Text whiteSpace="nowrap">{formatDateTime(message.messageDateTime)}</Text>
