@@ -17,4 +17,14 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
+  server: {
+    watch: {
+      // A Windows/macOS bind mount into the Linux dev container delivers no filesystem events to
+      // the watcher inside it, so an edit made on the host is invisible to Vite until the container
+      // is restarted - polling is the only thing that sees those. Off unless asked for: the native
+      // host workflow gets real events already, and shouldn't pay a poll of the whole tree for
+      // nothing. docker-compose.yml sets this for the frontend container.
+      usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    },
+  },
 })

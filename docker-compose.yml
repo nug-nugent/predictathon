@@ -66,6 +66,9 @@ services:
       context: ./frontend
     environment:
       VITE_API_BASE_URL: http://localhost:7047
+      # The bind mount below delivers no filesystem events into the container, so Vite polls for
+      # host edits instead - see vite.config.ts's server.watch.
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./frontend:/app
       - /app/node_modules
