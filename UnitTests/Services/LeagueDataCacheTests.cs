@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Predictathon.Application.Services;
 
 namespace Predictathon.UnitTests.Services;
@@ -8,14 +8,14 @@ namespace Predictathon.UnitTests.Services;
 /// good, and letting go of it the moment something makes it wrong. The second is the one worth
 /// testing - a cache that never invalidates still looks fast, and shows everyone last week's table.
 /// </summary>
-public class LeagueTableCacheTests
+public class LeagueDataCacheTests
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(5);
 
     [Fact]
     public async Task GetOrCreateAsync_RunsTheQueryOnce_AndReusesTheResult()
     {
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var competitionId = Guid.NewGuid();
         var calls = 0;
 
@@ -36,7 +36,7 @@ public class LeagueTableCacheTests
     [Fact]
     public async Task Invalidate_MakesTheNextRequestRecompute()
     {
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var competitionId = Guid.NewGuid();
         var calls = 0;
 
@@ -60,7 +60,7 @@ public class LeagueTableCacheTests
         // A processed result changes the full table, each week's filtered table and each comparison
         // date's - so invalidating has to take them all, not just the one that happens to be keyed
         // on no dates at all.
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var competitionId = Guid.NewGuid();
         var calls = 0;
 
@@ -87,7 +87,7 @@ public class LeagueTableCacheTests
     [Fact]
     public async Task Invalidate_LeavesOtherCompetitionsAlone()
     {
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var invalidated = Guid.NewGuid();
         var untouched = Guid.NewGuid();
         var calls = 0;
@@ -115,7 +115,7 @@ public class LeagueTableCacheTests
         // The reason the gate exists: the Live page has every viewer polling on their own timer, so
         // an expired entry is asked for by several at once. Without it they'd each run the heaviest
         // query in the app rather than waiting for the first one's answer.
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var competitionId = Guid.NewGuid();
         var calls = 0;
         var release = new TaskCompletionSource();
@@ -144,7 +144,7 @@ public class LeagueTableCacheTests
         // The order that matters: if the entry were registered against an invalidation token taken
         // before the query ran, an invalidation raised while it was running would be spent on
         // nothing and the result it was meant to discard would be cached anyway.
-        var cache = new LeagueTableCache();
+        var cache = new LeagueDataCache();
         var competitionId = Guid.NewGuid();
         var calls = 0;
         var started = new TaskCompletionSource();
@@ -173,5 +173,82 @@ public class LeagueTableCacheTests
 
         calls.Should().Be(2);
         next.Should().Be("table 2");
+    }
+
+    [Fact]
+    public async Task GetOrCreateAllTimeAsync_RunsTheQueryOnce_AndReusesTheResult()
+    {
+        var cache = new LeagueDataCache();
+        var calls = 0;
+
+        Task<string> Factory()
+        {
+            calls++;
+            return Task.FromResult("all-time");
+        }
+
+        await cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+        var second = await cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+
+        second.Should().Be("all-time");
+        calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Invalidate_DropsTheAllTimeAggregates_WhateverCompetitionTheResultWasIn()
+    {
+        // The all-time tables span every competition, so a result anywhere changes what they say -
+        // including in a competition that has nothing of its own cached.
+        var cache = new LeagueDataCache();
+        var calls = 0;
+
+        Task<string> Factory()
+        {
+            calls++;
+            return Task.FromResult($"all-time {calls}");
+        }
+
+        await cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+        calls.Should().Be(1);
+
+        cache.Invalidate(Guid.NewGuid());
+
+        var afterInvalidation = await cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+
+        calls.Should().Be(2);
+        afterInvalidation.Should().Be("all-time 2");
+    }
+
+    [Fact]
+    public async Task Invalidate_DuringAnAllTimeQuery_DoesNotLeaveTheStaleResultCached()
+    {
+        var cache = new LeagueDataCache();
+        var calls = 0;
+        var started = new TaskCompletionSource();
+        var release = new TaskCompletionSource();
+
+        async Task<string> Factory()
+        {
+            var call = Interlocked.Increment(ref calls);
+            if (call == 1)
+            {
+                started.SetResult();
+                await release.Task;
+            }
+
+            return $"all-time {call}";
+        }
+
+        var inFlight = cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+        await started.Task;
+
+        cache.Invalidate(Guid.NewGuid());
+        release.SetResult();
+        await inFlight;
+
+        var next = await cache.GetOrCreateAllTimeAsync("key", Factory, Lifetime);
+
+        calls.Should().Be(2);
+        next.Should().Be("all-time 2");
     }
 }

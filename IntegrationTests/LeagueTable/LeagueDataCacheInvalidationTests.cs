@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MapsterMapper;
 using Predictathon.Application.Models;
 using Predictathon.Application.Services;
@@ -17,11 +17,11 @@ namespace Predictathon.IntegrationTests.LeagueTable;
 /// league table, just the one from before the result went in.
 /// </summary>
 [Collection(DatabaseCollection.Name)]
-public class LeagueTableCacheInvalidationTests
+public class LeagueDataCacheInvalidationTests
 {
     private readonly DatabaseFixture _fixture;
 
-    public LeagueTableCacheInvalidationTests(DatabaseFixture fixture)
+    public LeagueDataCacheInvalidationTests(DatabaseFixture fixture)
     {
         _fixture = fixture;
     }
@@ -80,7 +80,7 @@ public class LeagueTableCacheInvalidationTests
         {
             // One cache between the two services, which is what the running app has - a singleton
             // shared by every scoped service that touches it.
-            var cache = new LeagueTableCache();
+            var cache = new LeagueDataCache();
             var leagueTableService = new LeagueTableService(dbContext, new StubAvatarService(), cache);
             var matchService = new MatchService(
                 new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper()),

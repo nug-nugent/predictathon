@@ -108,7 +108,7 @@ public class AllTimeLeagueTableTests
 
         try
         {
-            var service = new StatisticsService(dbContext, new StubAvatarService());
+            var service = new StatisticsService(dbContext, new StubAvatarService(), new LeagueDataCache());
 
             var table = await service.GetAllTimeLeagueTableAsync();
 

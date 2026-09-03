@@ -1,4 +1,4 @@
-using Mapster;
+﻿using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
@@ -236,7 +236,7 @@ try
     // Held for the process rather than the request, for the same reason as the rate limiter above:
     // a cache rebuilt per request would start empty every time and cache nothing. Registered by
     // hand rather than through the [ScopedService] scan, which would give it the wrong lifetime.
-    builder.Services.AddSingleton<ILeagueTableCache, LeagueTableCache>();
+    builder.Services.AddSingleton<ILeagueDataCache, LeagueDataCache>();
 
     // Polls the provider for in-play scores. See LiveScorePollingService for why an in-process loop
     // is acceptable here when the daily maintenance jobs deliberately run off external pings.

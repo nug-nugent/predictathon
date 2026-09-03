@@ -34,7 +34,7 @@ public class LiveScoreStoreTests
     private static MatchService MakeMatchService(ApplicationDbContext dbContext)
     {
         var dependencyAggregate = new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper());
-        return new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueTableCache());
+        return new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueDataCache());
     }
 
     private static LiveScoreService MakeLiveScoreService(ApplicationDbContext dbContext)

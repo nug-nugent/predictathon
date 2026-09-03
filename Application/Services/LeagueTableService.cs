@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Extensions;
 using Predictathon.Application.Interfaces;
@@ -31,9 +31,9 @@ public class LeagueTableService : ILeagueTableService
 
     private readonly IGenericDbContext _dbContext;
     private readonly IAvatarService _avatarService;
-    private readonly ILeagueTableCache _cache;
+    private readonly ILeagueDataCache _cache;
 
-    public LeagueTableService(IGenericDbContext dbContext, IAvatarService avatarService, ILeagueTableCache cache)
+    public LeagueTableService(IGenericDbContext dbContext, IAvatarService avatarService, ILeagueDataCache cache)
     {
         _dbContext = dbContext;
         _avatarService = avatarService;
@@ -63,6 +63,14 @@ public class LeagueTableService : ILeagueTableService
             () => LoadLeagueTableAsync(competitionId, dateFrom, dateTo, dateForComparison, cancellationToken),
             TableLifetime,
             cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<LeagueTableItem>> GetLeagueTableUncachedAsync(
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await LoadLeagueTableAsync(competitionId, dateFrom: null, dateTo: null, dateForComparison: null, cancellationToken);
     }
 
     /// <inheritdoc />

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Predictathon.Application.Interfaces;
 using System.Collections.Concurrent;
@@ -6,11 +6,11 @@ using System.Collections.Concurrent;
 namespace Predictathon.Application.Services;
 
 /// <summary>
-/// The <see cref="ILeagueTableCache"/> implementation. Registered as a singleton in Program.cs
+/// The <see cref="ILeagueDataCache"/> implementation. Registered as a singleton in Program.cs
 /// rather than picked up by the [ScopedService] scan - a per-request cache would start empty on
 /// every request and cache nothing at all.
 /// </summary>
-public sealed class LeagueTableCache : ILeagueTableCache
+public sealed class LeagueDataCache : ILeagueDataCache
 {
     /// <summary>
     /// A ceiling on how many tables are held at once. The date parameters that form part of a key
@@ -29,6 +29,12 @@ public sealed class LeagueTableCache : ILeagueTableCache
     /// token is the supported way to tie a group of entries to a single signal.
     /// </summary>
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _invalidationTokens = new();
+
+    /// <summary>
+    /// The equivalent for entries that span every competition. Held as one field rather than in the
+    /// dictionary above because there's only ever one such group, and every invalidation clears it.
+    /// </summary>
+    private CancellationTokenSource _allTimeInvalidationToken = new();
 
     /// <summary>
     /// One gate per key, so that when an entry expires the first caller recomputes it and the rest
@@ -72,14 +78,47 @@ public sealed class LeagueTableCache : ILeagueTableCache
 
             var value = await factory();
 
-            var options = new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = lifetime,
-                Size = 1,
-            };
-            options.AddExpirationToken(new CancellationChangeToken(invalidationToken.Token));
+            _cache.Set(key, value, BuildOptions(lifetime, invalidationToken));
 
-            _cache.Set(key, value, options);
+            return value;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<T> GetOrCreateAllTimeAsync<T>(
+        string key,
+        Func<Task<T>> factory,
+        TimeSpan lifetime,
+        CancellationToken cancellationToken = default)
+        where T : class
+    {
+        if (_cache.TryGetValue(key, out T? cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        var gate = _gates.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
+
+        try
+        {
+            if (_cache.TryGetValue(key, out cached) && cached is not null)
+            {
+                return cached;
+            }
+
+            // Read before the query runs, for the same reason as the per-competition path above:
+            // an invalidation raised while it's running has to land on the token this entry ends up
+            // registered against.
+            var invalidationToken = Volatile.Read(ref _allTimeInvalidationToken);
+
+            var value = await factory();
+
+            _cache.Set(key, value, BuildOptions(lifetime, invalidationToken));
 
             return value;
         }
@@ -92,6 +131,11 @@ public sealed class LeagueTableCache : ILeagueTableCache
     /// <inheritdoc />
     public void Invalidate(Guid competitionId)
     {
+        // The all-time aggregates go first and unconditionally: they're affected by a result in any
+        // competition, including one that has nothing cached of its own.
+        var previousAllTime = Interlocked.Exchange(ref _allTimeInvalidationToken, new CancellationTokenSource());
+        previousAllTime.Cancel();
+
         if (_invalidationTokens.TryRemove(competitionId, out var tokenSource))
         {
             // Cancelled but deliberately not disposed. A caller in GetOrCreateAsync may be holding
@@ -100,5 +144,23 @@ public sealed class LeagueTableCache : ILeagueTableCache
             // better trade than a lock on the read path.
             tokenSource.Cancel();
         }
+    }
+
+    /// <summary>
+    /// The entry options every cached value shares: a lifetime, a unit of the size budget, and the
+    /// token that lets its whole group be dropped at once.
+    /// </summary>
+    /// <param name="lifetime">How long the value stays usable.</param>
+    /// <param name="invalidationToken">The group this entry is dropped with.</param>
+    private static MemoryCacheEntryOptions BuildOptions(TimeSpan lifetime, CancellationTokenSource invalidationToken)
+    {
+        var options = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = lifetime,
+            Size = 1,
+        };
+        options.AddExpirationToken(new CancellationChangeToken(invalidationToken.Token));
+
+        return options;
     }
 }

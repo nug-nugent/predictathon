@@ -19,18 +19,18 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
 {
     private readonly IGenericDbContext _dbContext;
     private readonly IApplicationDbContext _appDbContext;
-    private readonly ILeagueTableCache _leagueTableCache;
+    private readonly ILeagueDataCache _leagueDataCache;
 
     public MatchService(
         ICrudServiceDependencyAggregate<CreateMatchModel, MatchModel> dependencyAggregate,
         IGenericDbContext dbContext,
         IApplicationDbContext appDbContext,
-        ILeagueTableCache leagueTableCache
+        ILeagueDataCache leagueDataCache
     ) : base(dependencyAggregate)
     {
         _dbContext = dbContext;
         _appDbContext = appDbContext;
-        _leagueTableCache = leagueTableCache;
+        _leagueDataCache = leagueDataCache;
     }
 
     /// <inheritdoc />
@@ -206,7 +206,7 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
 
         if (competitionId != Guid.Empty)
         {
-            _leagueTableCache.Invalidate(competitionId);
+            _leagueDataCache.Invalidate(competitionId);
         }
     }
 

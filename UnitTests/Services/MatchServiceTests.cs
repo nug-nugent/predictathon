@@ -14,7 +14,7 @@ public class MatchServiceTests
     {
         var dbContext = new InMemoryApplicationDbContext();
         var dependencyAggregate = new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper());
-        var service = new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueTableCache());
+        var service = new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueDataCache());
         return (dbContext, service);
     }
 

@@ -1,4 +1,4 @@
-namespace Predictathon.Application.Interfaces;
+﻿namespace Predictathon.Application.Interfaces;
 
 /// <summary>
 /// Holds computed league tables for a short while and drops them when something makes them wrong.
@@ -9,12 +9,17 @@ namespace Predictathon.Application.Interfaces;
 /// ones many people request at once, whether by leaving the Live page polling or by all opening the
 /// League page after results go in.
 ///
-/// Entries are grouped by competition rather than held individually, because what invalidates them
-/// invalidates them together: a processed result changes every variant of a competition's table at
-/// once - the full one, each week's, and each comparison date's - and there's no useful way to work
-/// out which subset a given result touched.
+/// Entries are grouped rather than held individually, because what invalidates them invalidates
+/// them together: a processed result changes every variant of a competition's table at once - the
+/// full one, each week's, and each comparison date's - and there's no useful way to work out which
+/// subset a given result touched.
+///
+/// Some of what belongs here spans every competition rather than sitting inside one - the all-time
+/// league table and the all-time statistics, which aggregate across the lot. Those are held under
+/// their own group and dropped by any competition's invalidation, since a result anywhere changes
+/// what they say.
 /// </summary>
-public interface ILeagueTableCache
+public interface ILeagueDataCache
 {
     /// <summary>
     /// Returns the cached value for a key, computing and storing it if it isn't there. Concurrent
@@ -36,7 +41,24 @@ public interface ILeagueTableCache
         where T : class;
 
     /// <summary>
-    /// Drops every cached table for a competition. Call this after anything that changes what its
+    /// Returns the cached value for a key that spans every competition, computing and storing it if
+    /// it isn't there. Same contract as <see cref="GetOrCreateAsync"/> otherwise.
+    /// </summary>
+    /// <typeparam name="T">The cached value's type.</typeparam>
+    /// <param name="key">Identifies this particular aggregate.</param>
+    /// <param name="factory">Computes the value when it isn't already cached.</param>
+    /// <param name="lifetime">How long the computed value stays usable.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<T> GetOrCreateAllTimeAsync<T>(
+        string key,
+        Func<Task<T>> factory,
+        TimeSpan lifetime,
+        CancellationToken cancellationToken = default)
+        where T : class;
+
+    /// <summary>
+    /// Drops every cached table for a competition, and every all-time aggregate along with it -
+    /// a result in any competition changes what the all-time tables say. Call this after anything that changes what its
     /// league table would say - a result being processed, or somebody joining.
     /// </summary>
     /// <param name="competitionId">The competition whose tables are now out of date.</param>

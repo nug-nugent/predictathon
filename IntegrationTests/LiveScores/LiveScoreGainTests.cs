@@ -31,7 +31,7 @@ public class LiveScoreGainTests
     // carry one test's table into another's assertions - these tests each set up their own
     // competition and ask for its table once.
     private static LeagueTableService MakeService(ApplicationDbContext dbContext)
-        => new(dbContext, new StubAvatarService(), new LeagueTableCache());
+        => new(dbContext, new StubAvatarService(), new LeagueDataCache());
 
     [Theory]
     // A perfect prediction is three, whatever the competition allows.

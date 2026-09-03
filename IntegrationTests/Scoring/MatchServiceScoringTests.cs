@@ -28,7 +28,7 @@ public class MatchServiceScoringTests
     private static MatchService MakeService(ApplicationDbContext dbContext)
     {
         var dependencyAggregate = new CrudServiceDependencyAggregate<CreateMatchModel, MatchModel>(dbContext, new Mapper());
-        return new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueTableCache());
+        return new MatchService(dependencyAggregate, dbContext, dbContext, new LeagueDataCache());
     }
 
     [Fact]

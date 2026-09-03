@@ -14,13 +14,13 @@ public class UserCompetitionService : IUserCompetitionService
 {
     private readonly IApplicationDbContext _appDbContext;
     private readonly IPayPalService _payPalService;
-    private readonly ILeagueTableCache _leagueTableCache;
+    private readonly ILeagueDataCache _leagueDataCache;
 
-    public UserCompetitionService(IApplicationDbContext appDbContext, IPayPalService payPalService, ILeagueTableCache leagueTableCache)
+    public UserCompetitionService(IApplicationDbContext appDbContext, IPayPalService payPalService, ILeagueDataCache leagueDataCache)
     {
         _appDbContext = appDbContext ?? throw new ArgumentNullException(nameof(appDbContext));
         _payPalService = payPalService ?? throw new ArgumentNullException(nameof(payPalService));
-        _leagueTableCache = leagueTableCache ?? throw new ArgumentNullException(nameof(leagueTableCache));
+        _leagueDataCache = leagueDataCache ?? throw new ArgumentNullException(nameof(leagueDataCache));
     }
 
     /// <inheritdoc />
@@ -224,7 +224,7 @@ public class UserCompetitionService : IUserCompetitionService
         // A registrant is a league table row - they appear on nil points rather than not at all -
         // so a cached table computed a moment ago is now missing somebody. Every registration route
         // (free, payment credit and PayPal) lands here, so this covers all three.
-        _leagueTableCache.Invalidate(competitionId);
+        _leagueDataCache.Invalidate(competitionId);
 
         return userCompetition;
     }

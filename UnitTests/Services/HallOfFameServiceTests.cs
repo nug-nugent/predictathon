@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Models;
 using Predictathon.Application.Services;
@@ -109,6 +109,29 @@ public class HallOfFameServiceTests
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
+    }
+
+    [Fact]
+    public async Task GenerateForCompetitionAsync_ReadsTheLeagueTableUncached()
+    {
+        // The Hall of Fame entry is written once and never revisited, so who it records as having
+        // won can't come from a table that might have been computed before the last result went in.
+        var (dbContext, leagueTableService, service) = MakeService();
+        var competition = MakeCompetition();
+        dbContext.Competition.Add(competition);
+        dbContext.Match.Add(MakeMatch(competition.CompetitionID, played: true));
+        await dbContext.SaveChangesAsync();
+        leagueTableService.Table =
+        [
+            MakeLeagueTableEntry(1, "Alice"),
+            MakeLeagueTableEntry(2, "Bob"),
+            MakeLeagueTableEntry(3, "Carol"),
+        ];
+
+        var result = await service.GenerateForCompetitionAsync(competition.CompetitionID);
+
+        result.IsSuccess.Should().BeTrue();
+        leagueTableService.UncachedTableRequested.Should().BeTrue();
     }
 
     [Fact]

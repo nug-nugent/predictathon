@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
 using Predictathon.Application.Errors;
@@ -73,7 +73,9 @@ public class HallOfFameService : IHallOfFameService
             return Result.Fail(new ConflictError("Not all matches in this competition have been played yet."));
         }
 
-        var leagueTable = await _leagueTableService.GetLeagueTableAsync(competitionId, cancellationToken: cancellationToken);
+        // Uncached deliberately - this table decides who is recorded as having won, and that entry
+        // isn't revisited afterwards. See GetLeagueTableUncachedAsync.
+        var leagueTable = await _leagueTableService.GetLeagueTableUncachedAsync(competitionId, cancellationToken);
         if (leagueTable.Count < 3)
         {
             return Result.Fail(new ConflictError("At least 3 users need a league position before Hall of Fame entries can be generated."));
