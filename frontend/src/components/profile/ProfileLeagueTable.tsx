@@ -1,6 +1,13 @@
 import { Heading, Table, Text } from "@chakra-ui/react";
 import type { CompetitionUserLeagueTableItem } from "../../services/profile-service";
 import { Panel } from "../ui/panel";
+import { ShortLabel } from "../ui/short-label";
+import { compactCellsOnSmallScreens } from "../ui/table-density";
+
+// Goals for and against stand down on phones, as they do on the team page's own standings table:
+// goal difference is the column that actually separates teams here, and all ten together are wider
+// than the screen.
+const GOALS_DISPLAY = { base: "none", sm: "table-cell" };
 
 export function ProfileLeagueTable({ username, table }: { username: string; table: CompetitionUserLeagueTableItem[] }) {
     return (
@@ -9,7 +16,7 @@ export function ProfileLeagueTable({ username, table }: { username: string; tabl
             {table.length === 0 ? (
                 <Text color="fg.muted">No league data found</Text>
             ) : (
-                <Table.Root size="sm" variant="line">
+                <Table.Root size="sm" variant="line" css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader textAlign="center">Pos</Table.ColumnHeader>
@@ -18,10 +25,10 @@ export function ProfileLeagueTable({ username, table }: { username: string; tabl
                             <Table.ColumnHeader textAlign="center">W</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">D</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">L</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">GF</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">GA</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={GOALS_DISPLAY}>GF</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={GOALS_DISPLAY}>GA</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">GD</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Points</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Points" /></Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -33,8 +40,8 @@ export function ProfileLeagueTable({ username, table }: { username: string; tabl
                                 <Table.Cell textAlign="center">{row.won}</Table.Cell>
                                 <Table.Cell textAlign="center">{row.drawn}</Table.Cell>
                                 <Table.Cell textAlign="center">{row.lost}</Table.Cell>
-                                <Table.Cell textAlign="center">{row.goalsFor}</Table.Cell>
-                                <Table.Cell textAlign="center">{row.goalsAgainst}</Table.Cell>
+                                <Table.Cell textAlign="center" display={GOALS_DISPLAY}>{row.goalsFor}</Table.Cell>
+                                <Table.Cell textAlign="center" display={GOALS_DISPLAY}>{row.goalsAgainst}</Table.Cell>
                                 <Table.Cell textAlign="center">{row.goalDifference}</Table.Cell>
                                 <Table.Cell textAlign="center" fontWeight="bold">{row.points}</Table.Cell>
                             </Table.Row>

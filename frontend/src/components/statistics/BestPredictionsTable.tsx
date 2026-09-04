@@ -4,8 +4,15 @@ import { Link as RouterLink } from "react-router";
 import type { BestPrediction } from "../../services/statistics-service";
 import { Panel } from "../ui/panel";
 import { TablePagination } from "../ui/table-pagination";
+import { ShortLabel } from "../ui/short-label";
+import { breakableCellText, compactCellsOnSmallScreens } from "../ui/table-density";
 
 const PAGE_SIZE = 10;
+
+// The field average and the margin over it are the two columns that stand down on a phone: they are
+// the workings behind the ranking rather than the prediction itself, and they are what takes this
+// table off the side of the screen.
+const WORKINGS_DISPLAY = { base: "none", md: "table-cell" };
 
 export function BestPredictionsTable({ predictions }: { predictions: BestPrediction[] }) {
     const [page, setPage] = useState(1);
@@ -15,16 +22,17 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
         <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
                 <Heading size="sm" mb={2}>Best Predictions</Heading>
-                <Table.Root size="sm" variant="line">
+                <Table.Root size="sm" variant="line"
+                    css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>User</Table.ColumnHeader>
                             <Table.ColumnHeader>Match</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Result</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Prediction</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Score</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Average score</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Difference</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Pred" full="Prediction" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Score" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Average score</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Difference</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -36,15 +44,15 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                             </Table.Row>
                         ) : pagePredictions.map((p) => (
                             <Table.Row key={`${p.matchID}-${p.userID}`}>
-                                <Table.Cell>
+                                <Table.Cell css={breakableCellText}>
                                     <Link asChild><RouterLink to={`/profile/${p.userID}`}>{p.username}</RouterLink></Link>
                                 </Table.Cell>
                                 <Table.Cell>{p.homeTeamShortName} vs {p.awayTeamShortName}</Table.Cell>
                                 <Table.Cell textAlign="center">{p.homeTeamGoals ?? "?"}-{p.awayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center">{p.predictionHomeTeamGoals ?? "?"}-{p.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center" color={`points.${p.predictionScore}`} fontWeight="bold">{p.predictionScore}</Table.Cell>
-                                <Table.Cell textAlign="center">{p.averagePredictionScore.toFixed(2)}</Table.Cell>
-                                <Table.Cell textAlign="center">{p.scoreDifference.toFixed(2)}</Table.Cell>
+                                <Table.Cell textAlign="center" display={WORKINGS_DISPLAY}>{p.averagePredictionScore.toFixed(2)}</Table.Cell>
+                                <Table.Cell textAlign="center" display={WORKINGS_DISPLAY}>{p.scoreDifference.toFixed(2)}</Table.Cell>
                             </Table.Row>
                         ))}
                     </Table.Body>

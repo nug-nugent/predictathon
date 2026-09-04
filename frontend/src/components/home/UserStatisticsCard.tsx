@@ -70,7 +70,9 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
     return (
         <Panel p={3} accent hoverLift>
             <HStack justify="space-between" mb={2}>
-                <HStack gap={3}>
+                {/* minW: without it this side of the row refuses to shrink, and on a narrow phone
+                    the Edit User button opposite is pushed off the edge of the screen. */}
+                <HStack gap={3} minW="0">
                     {/* Photo and name are a single link to the read-only profile rather than two
                         adjacent links to the same place. The hover underline is scoped to the
                         heading so the avatar's fallback initials don't get underlined too. */}
@@ -80,12 +82,12 @@ export function UserStatisticsCard({ competitionId }: { competitionId: string })
                                 <Avatar.Image src={user.avatarUrl} />
                                 <Avatar.Fallback name={user.name} />
                             </Avatar.Root>
-                            <Heading fontSize="17px" fontWeight="bold">{user.name}</Heading>
+                            <Heading fontSize="17px" fontWeight="bold" truncate>{user.name}</Heading>
                         </RouterLink>
                     </HStack>
                     <TrophyStamp trophies={stats.trophies} />
                 </HStack>
-                <Button asChild size="xs" variant="ghost">
+                <Button asChild size="xs" variant="ghost" flexShrink="0">
                     <RouterLink to="/profile/edit">Edit User</RouterLink>
                 </Button>
             </HStack>

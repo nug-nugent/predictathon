@@ -16,6 +16,7 @@ import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
 import { TablePagination } from "../../../../components/ui/table-pagination";
+import { compactCellsOnSmallScreens } from "../../../../components/ui/table-density";
 
 const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     competitionID: competitionId,
@@ -55,6 +56,10 @@ export function MatchesAdminPage() {
 
     return <MatchesAdminTable key={currentCompetitionId} competitionId={currentCompetitionId} />;
 }
+
+// The round/stage description is the one column here a phone can do without - the two teams and
+// the date already identify the match, and the description is on the edit dialog a tap away.
+const DESCRIPTION_DISPLAY = { base: "none", md: "table-cell" };
 
 const PAGE_SIZE = 20;
 
@@ -150,13 +155,13 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
             </HStack>
 
             <Panel overflowX="auto">
-                <Table.Root size="sm" variant="line" striped showColumnBorder>
+                <Table.Root size="sm" variant="line" striped showColumnBorder css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Home</Table.ColumnHeader>
                             <Table.ColumnHeader>Away</Table.ColumnHeader>
                             <Table.ColumnHeader>Date</Table.ColumnHeader>
-                            <Table.ColumnHeader>Description</Table.ColumnHeader>
+                            <Table.ColumnHeader display={DESCRIPTION_DISPLAY}>Description</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Score</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -168,7 +173,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                                 {/* "medium" spells the month, so it reads unambiguously regardless of
                                     whether the user's locale orders day/month as DD/MM or MM/DD. */}
                                 <Table.Cell>{new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
-                                <Table.Cell>{m.description}</Table.Cell>
+                                <Table.Cell display={DESCRIPTION_DISPLAY}>{m.description}</Table.Cell>
                                 <Table.Cell textAlign="center">
                                     {m.matchPlayed ? `${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"}` : ""}
                                 </Table.Cell>

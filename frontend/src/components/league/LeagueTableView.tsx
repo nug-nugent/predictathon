@@ -4,6 +4,8 @@ import { Link } from "react-router";
 import { Panel } from "../ui/panel";
 import { LeaguePositionChangeIcon } from "./LeaguePositionChangeIcon";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { ShortLabel } from "../ui/short-label";
+import { breakableCellText, compactCellsOnSmallScreens } from "../ui/table-density";
 import { useUser } from "../../hooks/useUser";
 import type { LeagueTableItem, LiveLeagueTableItem } from "../../services/league-service";
 
@@ -33,9 +35,23 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false,
     const { user } = useUser();
     const Wrapper = bare ? Box : Panel;
 
+    // The Live table carries an extra IN PLAY column - the thing people are on that page to watch,
+    // and so the one column that never stands down. Everything optional beside it waits an extra
+    // breakpoint to make the room: the points breakdown appears from `md` rather than `sm`, and
+    // AGD, the tie-break detail, hides outright below `md`. Neither applies to the League page or
+    // the all-time table, which have the room and keep both at every width.
+    const breakdownDisplay = showLivePoints
+        ? { base: "none", md: "table-cell" }
+        : { base: "none", sm: "table-cell" };
+    const agdDisplay = showLivePoints ? { base: "none", md: "table-cell" } : undefined;
+
     return (
         <Wrapper overflowX="auto" {...(bare ? {} : { accent: true })}>
-            <Table.Root size="sm" variant="line" showColumnBorder stickyHeader>
+            {/* A phone is around 40px short of the room this table needs at the default cell
+                padding, which is the whole difference between it fitting and it scrolling sideways
+                inside its own card. Trimmed below `md` only; the full padding is back from there. */}
+            <Table.Root size="sm" variant="line" showColumnBorder stickyHeader
+                css={compactCellsOnSmallScreens}>
                 <Table.ColumnGroup>
                     <Table.Column htmlWidth="20px" />
                     <Table.Column htmlWidth="20px" />
@@ -55,16 +71,16 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false,
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POS</Table.ColumnHeader>
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}></Table.ColumnHeader>
                         <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>NAME</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>3</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>2</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>1</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>0</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>-</Table.ColumnHeader>
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>POINTS</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={breakdownDisplay}>3</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={breakdownDisplay}>2</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={breakdownDisplay}>1</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={breakdownDisplay}>0</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={breakdownDisplay}>-</Table.ColumnHeader>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}><ShortLabel short="PTS" full="POINTS" /></Table.ColumnHeader>
                         {showAveragePointsPerPrediction && (
                             <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>AVG</Table.ColumnHeader>
                         )}
-                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"}>
+                        <Table.ColumnHeader fontWeight={"bold"} fontSize={"0.8em"} textAlign={"center"} display={agdDisplay}>
                             <HStack justify="center" gap={0.5}>
                                 <Text>AGD</Text>
                                 <Popover.Root positioning={{ placement: "bottom" }}>
@@ -106,22 +122,22 @@ export function LeagueTableView({ items, showAveragePointsPerPrediction = false,
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>
                                     <LeaguePositionChangeIcon current={item.leaguePosition} previous={item.previousLeaguePosition} />
                                 </Table.Cell>
-                                <Table.Cell fontSize={"0.9em"}>
+                                <Table.Cell fontSize={"0.9em"} css={breakableCellText}>
                                     <HStack gap={2}>
                                         <PlayerAvatar username={item.username} avatarUrl={item.avatarUrl} />
                                         <Link to={`/profile/${item.userID}`}>{item.username}</Link>
                                     </HStack>
                                 </Table.Cell>
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={{ base: "none", sm: "table-cell" }}>{item.threePointers}</Table.Cell>
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={{ base: "none", sm: "table-cell" }}>{item.twoPointers}</Table.Cell>
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={{ base: "none", sm: "table-cell" }}>{item.onePointers}</Table.Cell>
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPointers}</Table.Cell>
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={{ base: "none", sm: "table-cell" }}>{item.noPredictions}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.3"} display={breakdownDisplay}>{item.threePointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.2"} display={breakdownDisplay}>{item.twoPointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.1"} display={breakdownDisplay}>{item.onePointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={breakdownDisplay}>{item.noPointers}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} color={"points.0"} display={breakdownDisplay}>{item.noPredictions}</Table.Cell>
                                 <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.score}</Table.Cell>
                                 {showAveragePointsPerPrediction && (
                                     <Table.Cell fontSize={"0.9em"} textAlign={"center"} display={{ base: "none", sm: "table-cell" }}>{averagePointsPerPrediction.toFixed(3)}</Table.Cell>
                                 )}
-                                <Table.Cell fontSize={"0.9em"} textAlign={"center"}>{item.averageGoalDifference}</Table.Cell>
+                                <Table.Cell fontSize={"0.9em"} textAlign={"center"} display={agdDisplay}>{item.averageGoalDifference}</Table.Cell>
                                 {showLivePoints && (
                                     <Table.Cell fontSize={"0.9em"} textAlign={"center"}><LivePoints points={liveItem(item).livePoints} /></Table.Cell>
                                 )}

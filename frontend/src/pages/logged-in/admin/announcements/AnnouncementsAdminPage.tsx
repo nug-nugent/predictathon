@@ -13,8 +13,14 @@ import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
 import { TablePagination } from "../../../../components/ui/table-pagination";
+import { compactCellsOnSmallScreens } from "../../../../components/ui/table-density";
+import { ShortLabel } from "../../../../components/ui/short-label";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
+
+// Severity and the created date are the two columns a phone gives up: where an announcement shows
+// and when it expires is what this list is scanned for, and both of these are on the edit dialog.
+const SECONDARY_DISPLAY = { base: "none", md: "table-cell" };
 
 const PAGE_SIZE = 20;
 
@@ -64,24 +70,24 @@ export function AnnouncementsAdminPage() {
             </HStack>
 
             <Panel overflowX="auto">
-                <Table.Root size="sm" variant="line" striped showColumnBorder>
+                <Table.Root size="sm" variant="line" striped showColumnBorder css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Content</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Shown on login page</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Shown on homepage</Table.ColumnHeader>
-                            <Table.ColumnHeader>Severity</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Login" full="Shown on login page" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Home" full="Shown on homepage" /></Table.ColumnHeader>
+                            <Table.ColumnHeader display={SECONDARY_DISPLAY}>Severity</Table.ColumnHeader>
                             <Table.ColumnHeader>Expires</Table.ColumnHeader>
-                            <Table.ColumnHeader>Created</Table.ColumnHeader>
+                            <Table.ColumnHeader display={SECONDARY_DISPLAY}>Created</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {pageAnnouncements.map((a) => (
                             <ClickableRow key={a.announcementID} onActivate={() => setEditing(a)}>
-                                <Table.Cell maxW="400px" truncate>{a.content}</Table.Cell>
+                                <Table.Cell maxW={{ base: "110px", md: "400px" }} truncate>{a.content}</Table.Cell>
                                 <Table.Cell textAlign="center">{a.showOnLoginPage ? "Yes" : ""}</Table.Cell>
                                 <Table.Cell textAlign="center">{a.showOnHomepage ? "Yes" : ""}</Table.Cell>
-                                <Table.Cell color={a.severity === "Warning" ? "status.urgent" : undefined} fontWeight={a.severity === "Warning" ? "medium" : undefined}>
+                                <Table.Cell display={SECONDARY_DISPLAY} color={a.severity === "Warning" ? "status.urgent" : undefined} fontWeight={a.severity === "Warning" ? "medium" : undefined}>
                                     {a.severity === "Warning" ? "Warning" : ""}
                                 </Table.Cell>
                                 <Table.Cell>
@@ -89,7 +95,7 @@ export function AnnouncementsAdminPage() {
                                         ? new Date(a.expiryDateTimeUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
                                         : "Never"}
                                 </Table.Cell>
-                                <Table.Cell>{new Date(a.createdAtUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
+                                <Table.Cell display={SECONDARY_DISPLAY}>{new Date(a.createdAtUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
                             </ClickableRow>
                         ))}
                     </Table.Body>
