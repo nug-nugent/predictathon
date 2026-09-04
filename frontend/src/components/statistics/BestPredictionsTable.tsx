@@ -6,6 +6,7 @@ import { Panel } from "../ui/panel";
 import { TablePagination } from "../ui/table-pagination";
 import { ShortLabel } from "../ui/short-label";
 import { breakableCellText, compactCellsOnSmallScreens } from "../ui/table-density";
+import { TeamLabel } from "../team/TeamLabel";
 
 const PAGE_SIZE = 10;
 
@@ -47,7 +48,11 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                                 <Table.Cell css={breakableCellText}>
                                     <Link asChild><RouterLink to={`/profile/${p.userID}`}>{p.username}</RouterLink></Link>
                                 </Table.Cell>
-                                <Table.Cell>{p.homeTeamShortName} vs {p.awayTeamShortName}</Table.Cell>
+                                <Table.Cell whiteSpace="nowrap">
+                                    <TeamLabel name={p.homeTeam} shortName={p.homeTeamShortName} acronym={p.homeTeamAcronym} />
+                                    {" vs "}
+                                    <TeamLabel name={p.awayTeam} shortName={p.awayTeamShortName} acronym={p.awayTeamAcronym} />
+                                </Table.Cell>
                                 <Table.Cell textAlign="center">{p.homeTeamGoals ?? "?"}-{p.awayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center">{p.predictionHomeTeamGoals ?? "?"}-{p.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center" color={`points.${p.predictionScore}`} fontWeight="bold">{p.predictionScore}</Table.Cell>

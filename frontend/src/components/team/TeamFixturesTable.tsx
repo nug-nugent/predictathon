@@ -8,12 +8,6 @@ import { TablePagination } from "../ui/table-pagination";
 
 const PAGE_SIZE = 10;
 
-// Undecided future matches without a real team assigned should never render blank - same rule as
-// MatchRow's.
-function teamName(preferred: string | null, fallback: string | null): string {
-    return preferred || fallback || "TBC";
-}
-
 /// A team's not-yet-played matches, soonest first, paged client-side (the whole list arrives with
 /// the team detail). Laid out like MatchRow - home team and crest, kick-off, away crest and team -
 /// so both sides line up down the list, with the date sat above the kick-off time in the middle.
@@ -38,8 +32,8 @@ export function TeamFixturesTable({ fixtures }: { fixtures: TeamFixture[] }) {
                                     borderTopWidth={index === 0 ? "0" : "1px"} borderTopColor="border.hairline">
                                     <Flex align="center" gap={{ base: 2, md: 4 }}>
                                         <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                                            <TeamName teamId={fixture.homeTeamID} name={teamName(fixture.homeTeam, fixture.homeTeamShortName)}
-                                                shortName={teamName(fixture.homeTeamShortName, fixture.homeTeam)}
+                                            <TeamName teamId={fixture.homeTeamID} name={fixture.homeTeam}
+                                                shortName={fixture.homeTeamShortName} acronym={fixture.homeTeamAcronym}
                                                 crest={crestUrl(fixture.homeTeamImage)} crestPosition="after" />
                                         </HStack>
 
@@ -53,8 +47,8 @@ export function TeamFixturesTable({ fixtures }: { fixtures: TeamFixture[] }) {
                                         </VStack>
 
                                         <HStack flex="1" minW="0" gap={2}>
-                                            <TeamName teamId={fixture.awayTeamID} name={teamName(fixture.awayTeam, fixture.awayTeamShortName)}
-                                                shortName={teamName(fixture.awayTeamShortName, fixture.awayTeam)}
+                                            <TeamName teamId={fixture.awayTeamID} name={fixture.awayTeam}
+                                                shortName={fixture.awayTeamShortName} acronym={fixture.awayTeamAcronym}
                                                 crest={crestUrl(fixture.awayTeamImage)} crestPosition="before" />
                                         </HStack>
                                     </Flex>

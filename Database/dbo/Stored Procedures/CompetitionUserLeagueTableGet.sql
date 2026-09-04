@@ -18,6 +18,7 @@ BEGIN
 		, Lost = SUM(Results.Lost)
 		, Drawn = SUM(Results.Drawn)
 		, t.ShortName
+		, t.Acronym
 		, Points = (SUM(Results.Won) * 3) + SUM(Results.Drawn)
 		, GoalsFor = SUM(Results.GoalsFor)
 		, GoalsAgainst = SUM(Results.GoalsAgainst)
@@ -60,6 +61,7 @@ BEGIN
 	GROUP BY
 		t.TeamID
 		, t.ShortName
+		, t.Acronym
 	ORDER BY
 		Position
 		, t.ShortName;

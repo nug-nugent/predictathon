@@ -5,6 +5,7 @@ import { useAsyncData } from "../../hooks/useAsyncData";
 import { getTeamRecentResults, type TeamRecentResult } from "../../services/team-service";
 import { crestUrl } from "../../utils/crestUrl";
 import { ErrorState, LoadingSpinner } from "../ui/async-state";
+import { TeamLabel, type TeamNames } from "./TeamLabel";
 
 const RESULT_COUNT = 6;
 
@@ -92,8 +93,8 @@ function ResultRow({ result, teamId, isFirst }: { result: TeamRecentResult; team
                 </Badge>
 
                 <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                    <TeamLabel name={result.homeTeam} shortName={result.homeTeamShortName} image={result.homeTeamImage}
-                        isThisTeam={result.homeTeamID === teamId} crestPosition="after" />
+                    <ResultTeamName name={result.homeTeam} shortName={result.homeTeamShortName} acronym={result.homeTeamAcronym}
+                        image={result.homeTeamImage} isThisTeam={result.homeTeamID === teamId} crestPosition="after" />
                 </HStack>
 
                 <VStack gap={0} flexShrink={0} minW="52px">
@@ -104,8 +105,8 @@ function ResultRow({ result, teamId, isFirst }: { result: TeamRecentResult; team
                 </VStack>
 
                 <HStack flex="1" minW="0" gap={2}>
-                    <TeamLabel name={result.awayTeam} shortName={result.awayTeamShortName} image={result.awayTeamImage}
-                        isThisTeam={result.awayTeamID === teamId} crestPosition="before" />
+                    <ResultTeamName name={result.awayTeam} shortName={result.awayTeamShortName} acronym={result.awayTeamAcronym}
+                        image={result.awayTeamImage} isThisTeam={result.awayTeamID === teamId} crestPosition="before" />
                 </HStack>
             </Flex>
 
@@ -117,10 +118,8 @@ function ResultRow({ result, teamId, isFirst }: { result: TeamRecentResult; team
 }
 
 /// Plain (non-clickable) team name and crest - a TeamName here would nest another popover inside
-/// the dialog this one opened. Same short-name-on-mobile rule as TeamName.
-function TeamLabel({ name, shortName, image, isThisTeam, crestPosition }: {
-    name: string | null;
-    shortName: string;
+/// the dialog this one opened. Same width-dependent naming as TeamName, via the same TeamLabel.
+function ResultTeamName({ name, shortName, acronym, image, isThisTeam, crestPosition }: TeamNames & {
     image: string | null;
     isThisTeam: boolean;
     crestPosition: "before" | "after";
@@ -132,8 +131,9 @@ function TeamLabel({ name, shortName, image, isThisTeam, crestPosition }: {
     return (
         <HStack gap={2} minW="0">
             {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
-            <Text fontSize="0.9em" fontWeight={fontWeight} textAlign={textAlign} truncate minW="0" hideFrom="md">{shortName}</Text>
-            <Text fontSize="0.9em" fontWeight={fontWeight} textAlign={textAlign} truncate minW="0" hideBelow="md">{name || shortName}</Text>
+            <Text fontSize="0.9em" fontWeight={fontWeight} textAlign={textAlign} truncate minW="0">
+                <TeamLabel name={name} shortName={shortName} acronym={acronym} />
+            </Text>
             {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
         </HStack>
     );

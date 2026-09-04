@@ -104,3 +104,33 @@ test("the live league table shows what each player is gaining, and folds away", 
     await table.click();
     await expect(page.getByRole("columnheader", { name: "In play" })).toBeHidden();
 });
+
+test("a team on the focused match links to its team page", async ({ page }) => {
+    await page.goto("/live");
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+
+    // The focused match at the top is the only thing on this page offering the teams as links of
+    // their own - everything below it is a whole-row link to another match.
+    const teamLink = page.locator('a[href^="/team/"]').first();
+    await expect(teamLink).toBeVisible();
+
+    const href = await teamLink.getAttribute("href");
+    // The line renders each team's name at three lengths and shows one per screen width, so read
+    // the screen-reader copy: it is the full name the team page's heading uses, at every width.
+    const teamName = ((await teamLink.locator('[data-role="team-full-name"]').textContent()) ?? "").trim();
+
+    await teamLink.click();
+
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+    await expect(page.getByRole("heading", { name: teamName })).toBeVisible();
+});
+
+test("the live page nests no links inside other links", async ({ page }) => {
+    await page.goto("/live");
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+
+    // The focused match's team links are only safe because that one line isn't itself wrapped in a
+    // link, unlike every other match line on the page. An anchor inside an anchor would be invalid
+    // markup and an ambiguous target, so guard the distinction rather than trusting it holds.
+    expect(await page.locator("a a").count()).toBe(0);
+});

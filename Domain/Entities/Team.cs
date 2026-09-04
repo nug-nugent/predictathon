@@ -14,6 +14,8 @@ public partial class Team
 
     public string ShortName { get; set; } = null!;
 
+    public string? Acronym { get; set; }
+
     public string? ImageName { get; set; }
 
     public string? ExternalApiCode { get; set; }

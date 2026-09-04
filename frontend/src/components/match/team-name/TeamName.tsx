@@ -2,19 +2,17 @@ import { useState } from "react";
 import { Button, HStack, Image, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { RecentResultsDialog } from "../../team/RecentResultsDialog";
+import { TeamLabel, type TeamNames } from "../../team/TeamLabel";
 
-type TeamNameProps = {
+type TeamNameProps = TeamNames & {
     /** Null for a not-yet-decided knockout placeholder - rendered as plain, non-clickable text. */
     teamId: string | null;
-    name: string;
-    /** Shown instead of `name` on mobile, where full names like "Brighton & Hove Albion" don't fit. */
-    shortName: string;
     crest: string | undefined;
     /** Home teams show the crest after the name, away teams before - matches MatchRow's layout either side of the score inputs. */
     crestPosition: "before" | "after";
 };
 
-export function TeamName({ teamId, name, shortName, crest, crestPosition }: TeamNameProps) {
+export function TeamName({ teamId, name, shortName, acronym, crest, crestPosition }: TeamNameProps) {
     // The popover is controlled so picking "Recent Results" can close it as the dialog opens -
     // leaving it open behind a modal traps focus in a menu nobody can see.
     const [popoverOpen, setPopoverOpen] = useState(false);
@@ -24,8 +22,9 @@ export function TeamName({ teamId, name, shortName, crest, crestPosition }: Team
     const label = (
         <>
             {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
-            <Text fontSize="0.9em" textAlign={textAlign} truncate minW="0" hideFrom="md">{shortName}</Text>
-            <Text fontSize="0.9em" textAlign={textAlign} truncate minW="0" hideBelow="md">{name}</Text>
+            <Text fontSize="0.9em" textAlign={textAlign} truncate minW="0">
+                <TeamLabel name={name} shortName={shortName} acronym={acronym} />
+            </Text>
             {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
         </>
     );
@@ -62,7 +61,7 @@ export function TeamName({ teamId, name, shortName, crest, crestPosition }: Team
                 </Portal>
             </Popover.Root>
 
-            <RecentResultsDialog open={resultsOpen} onClose={() => setResultsOpen(false)} teamId={teamId} teamName={name} />
+            <RecentResultsDialog open={resultsOpen} onClose={() => setResultsOpen(false)} teamId={teamId} teamName={name || shortName || "TBC"} />
         </>
     );
 }

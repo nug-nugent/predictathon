@@ -3,6 +3,7 @@ import type { CompetitionUserLeagueTableItem } from "../../services/profile-serv
 import { Panel } from "../ui/panel";
 import { ShortLabel } from "../ui/short-label";
 import { compactCellsOnSmallScreens } from "../ui/table-density";
+import { TeamLabel } from "../team/TeamLabel";
 
 // Goals for and against stand down on phones, as they do on the team page's own standings table:
 // goal difference is the column that actually separates teams here, and all ten together are wider
@@ -35,7 +36,7 @@ export function ProfileLeagueTable({ username, table }: { username: string; tabl
                         {table.map((row) => (
                             <Table.Row key={row.teamID}>
                                 <Table.Cell textAlign="center">{row.position}</Table.Cell>
-                                <Table.Cell>{row.shortName}</Table.Cell>
+                                <Table.Cell><TeamLabel name={null} shortName={row.shortName} acronym={row.acronym} /></Table.Cell>
                                 <Table.Cell textAlign="center">{row.played}</Table.Cell>
                                 <Table.Cell textAlign="center">{row.won}</Table.Cell>
                                 <Table.Cell textAlign="center">{row.drawn}</Table.Cell>

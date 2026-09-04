@@ -328,6 +328,9 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
         modelBuilder.Entity<Team>(entity =>
         {
             entity.Property(e => e.TeamID).ValueGeneratedNever();
+            entity.Property(e => e.Acronym)
+                .HasMaxLength(3)
+                .IsUnicode(false);
             entity.Property(e => e.ExternalApiCode)
                 .HasMaxLength(10)
                 .IsUnicode(false);

@@ -26,6 +26,12 @@ public class UserMatchPredictionListItem
 
     public string HomeTeamShortName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The three-letter code shown in place of HomeTeamShortName at phone widths. Null where a team
+    /// has no acronym yet, and for a TBC knockout placeholder, which has no team behind it.
+    /// </summary>
+    public string? HomeTeamAcronym { get; set; }
+
     public string? HomeTeamImage { get; set; }
 
     /// <summary>
@@ -36,6 +42,12 @@ public class UserMatchPredictionListItem
     public string? AwayTeam { get; set; }
 
     public string AwayTeamShortName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The three-letter code shown in place of AwayTeamShortName at phone widths. Null where a team
+    /// has no acronym yet, and for a TBC knockout placeholder, which has no team behind it.
+    /// </summary>
+    public string? AwayTeamAcronym { get; set; }
 
     public string? AwayTeamImage { get; set; }
 

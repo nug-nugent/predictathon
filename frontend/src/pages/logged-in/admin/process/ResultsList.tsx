@@ -12,12 +12,15 @@ type ResultsListProps = {
     teams: Team[];
 };
 
-function teamDisplay(teamId: string | null, tbc: string | null, teams: Team[]): { teamId: string | null; name: string; shortName: string; crest: string | undefined } {
+function teamDisplay(teamId: string | null, tbc: string | null, teams: Team[]):
+    { teamId: string | null; name: string; shortName: string; acronym: string | null; crest: string | undefined } {
     const team = teams.find((t) => t.teamID === teamId);
     return {
         teamId,
         name: team?.teamName ?? tbc ?? "TBC",
         shortName: team?.shortName ?? tbc ?? "TBC",
+        // An undecided knockout slot has no team behind it, so no acronym to shorten it to.
+        acronym: team?.acronym ?? null,
         crest: crestUrl(team?.imageName ?? null),
     };
 }
@@ -79,8 +82,8 @@ export function ResultsList({ matches, teams }: ResultsListProps) {
                                 <ResultRow
                                     key={match.matchID}
                                     matchId={match.matchID} matchDateTime={match.matchDateTime}
-                                    homeTeamId={home.teamId} homeTeamName={home.name} homeTeamShortName={home.shortName}
-                                    awayTeamId={away.teamId} awayTeamName={away.name} awayTeamShortName={away.shortName}
+                                    homeTeamId={home.teamId} homeTeamName={home.name} homeTeamShortName={home.shortName} homeTeamAcronym={home.acronym}
+                                    awayTeamId={away.teamId} awayTeamName={away.name} awayTeamShortName={away.shortName} awayTeamAcronym={away.acronym}
                                     homeCrest={home.crest} awayCrest={away.crest}
                                     now={now} hasFocus={match.matchID === focusedMatchId}
                                     isFirstInGroup={index === 0} onFocus={setFocusedMatchId} onSaved={handleSaved}

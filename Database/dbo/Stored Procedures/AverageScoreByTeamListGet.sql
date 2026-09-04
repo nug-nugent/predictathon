@@ -18,6 +18,7 @@ BEGIN
 	SELECT
 		t.TeamID
 		, t.ShortName
+		, t.Acronym
 		, t.TeamName
 		, TeamImage = t.ImageName
 		, AverageScore = AVG(CAST(p.Score AS DECIMAL(9,2)))
@@ -35,6 +36,7 @@ BEGIN
 	GROUP BY
 		t.TeamID
 		, t.ShortName
+		, t.Acronym
 		, t.TeamName
 		, t.ImageName
 	ORDER BY

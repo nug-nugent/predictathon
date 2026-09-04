@@ -85,6 +85,7 @@ export type CompetitionUserLeagueTableItem = {
     lost: number;
     drawn: number;
     shortName: string;
+    acronym: string | null;
     points: number;
     goalsFor: number;
     goalsAgainst: number;

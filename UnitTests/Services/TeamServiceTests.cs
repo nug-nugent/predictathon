@@ -14,8 +14,8 @@ public class TeamServiceTests
         return (dbContext, service);
     }
 
-    private static DomainEntities.Team MakeTeam(string name, string shortName)
-        => new() { TeamID = Guid.NewGuid(), TeamName = name, ShortName = shortName };
+    private static DomainEntities.Team MakeTeam(string name, string shortName, string? acronym = null)
+        => new() { TeamID = Guid.NewGuid(), TeamName = name, ShortName = shortName, Acronym = acronym };
 
     /// <summary>
     /// Registers teams for a competition, so they appear in its league table whether or not they've
@@ -108,7 +108,57 @@ public class TeamServiceTests
         detail!.Fixtures.Should().ContainSingle();
         detail.Fixtures[0].AwayTeam.Should().Be("Winner of QF2");
         detail.Fixtures[0].AwayTeamShortName.Should().Be("TBC");
+        detail.Fixtures[0].AwayTeamAcronym.Should().BeNull();
         detail.Fixtures[0].Knockout.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_CarriesTeamAcronymsThroughTheTeamItsFixturesAndTheLeagueTable()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var brighton = MakeTeam("Brighton & Hove Albion", "Brighton", "BHA");
+        var forest = MakeTeam("Nottingham Forest", "Forest", "NFO");
+        Register(dbContext, competitionId, brighton, forest);
+
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, brighton, forest, 2, 1),
+            new DomainEntities.Match
+            {
+                MatchID = Guid.NewGuid(),
+                CompetitionID = competitionId,
+                MatchDateTime = new DateTime(2026, 8, 22, 15, 0, 0),
+                HomeTeamID = forest.TeamID,
+                AwayTeamID = brighton.TeamID,
+            });
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, brighton.TeamID, Guid.NewGuid());
+
+        detail!.Acronym.Should().Be("BHA");
+        detail.Fixtures[0].HomeTeamAcronym.Should().Be("NFO");
+        detail.Fixtures[0].AwayTeamAcronym.Should().Be("BHA");
+        detail.LeagueTable!.Single(s => s.TeamID == brighton.TeamID).Acronym.Should().Be("BHA");
+        detail.LeagueTable!.Single(s => s.TeamID == forest.TeamID).Acronym.Should().Be("NFO");
+    }
+
+    /// <summary>
+    /// A team added without an acronym is left null rather than given a made-up one - the UI falls
+    /// back to the short name for those.
+    /// </summary>
+    [Fact]
+    public async Task GetTeamDetailAsync_LeavesTheAcronymNull_WhenTheTeamHasNoneYet()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var newcomer = MakeTeam("Wimbledon", "Wimbledon");
+        Register(dbContext, competitionId, newcomer);
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, newcomer.TeamID, Guid.NewGuid());
+
+        detail!.ShortName.Should().Be("Wimbledon");
+        detail.Acronym.Should().BeNull();
     }
 
     [Fact]
@@ -303,6 +353,25 @@ public class TeamServiceTests
         results[0].AwayTeam.Should().Be("Arsenal");
         results[0].HomeTeamGoals.Should().Be(0);
         results[0].AwayTeamGoals.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GetRecentResultsAsync_CarriesBothTeamsAcronyms()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var brighton = MakeTeam("Brighton & Hove Albion", "Brighton", "BHA");
+        var forest = MakeTeam("Nottingham Forest", "Forest", "NFO");
+        Register(dbContext, competitionId, brighton, forest);
+
+        dbContext.Match.Add(MakePlayedMatch(competitionId, brighton, forest, 2, 1));
+        await dbContext.SaveChangesAsync();
+
+        var results = await service.GetRecentResultsAsync(competitionId, brighton.TeamID, 6);
+
+        results.Should().ContainSingle();
+        results[0].HomeTeamAcronym.Should().Be("BHA");
+        results[0].AwayTeamAcronym.Should().Be("NFO");
     }
 
     [Fact]

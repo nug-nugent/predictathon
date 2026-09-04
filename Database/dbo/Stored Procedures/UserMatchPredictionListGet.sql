@@ -22,10 +22,12 @@ BEGIN
 		, m.HomeTeamID
 		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+		, HomeTeamAcronym = HomeTeam.Acronym
 		, HomeTeamImage = HomeTeam.ImageName
 		, m.AwayTeamID
 		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+		, AwayTeamAcronym = AwayTeam.Acronym
 		, AwayTeamImage = AwayTeam.ImageName
 		, Prediction.HomeTeamGoals
 		, Prediction.AwayTeamGoals

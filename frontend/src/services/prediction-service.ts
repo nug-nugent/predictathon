@@ -10,11 +10,13 @@ export type MatchPrediction = {
     homeTeamID: string | null;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     homeTeamImage: string | null;
     /** Null for a not-yet-decided knockout placeholder. */
     awayTeamID: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     awayTeamImage: string | null;
     homeTeamGoals: number | null;
     awayTeamGoals: number | null;

@@ -44,7 +44,10 @@ test("recent results for a team open from its name on the predictions page", asy
         .filter({ hasNotText: "All Predictions" })
         .filter({ hasNotText: DEMO_PREDICTOR.username })
         .first();
-    const teamName = (await teamTrigger.innerText()).trim();
+    // The trigger renders the team's name at three lengths (acronym, short, full) and shows one
+    // of them per screen width, so read the screen-reader copy: it is the full name the dialog
+    // heading uses, at every width.
+    const teamName = ((await teamTrigger.locator('[data-role="team-full-name"]').textContent()) ?? "").trim();
 
     await teamTrigger.click();
 

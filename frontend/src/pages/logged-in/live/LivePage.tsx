@@ -170,7 +170,9 @@ function FocusedMatch({ match, status }: { match: MatchPrediction; status: Match
                 {status === "During" ? <LiveBadge /> : <Text fontSize="xs" fontWeight="bold" color="fg.muted">FULL TIME</Text>}
             </HStack>
 
-            <LiveMatchLine match={match} status={status} size="lg" />
+            {/* The only LiveMatchLine that isn't itself inside a link, so it's the one that can
+                offer the teams as links of their own. */}
+            <LiveMatchLine match={match} status={status} size="lg" linkTeams />
 
             {/* The feed is delayed, so say when the score we're showing was last actually current
                 rather than letting it read as this second's score. */}
