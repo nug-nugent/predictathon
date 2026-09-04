@@ -5,8 +5,14 @@ import { ScoreComparisonIcon } from "./ScoreComparisonIcon";
 import { Panel } from "../ui/panel";
 import { TablePagination } from "../ui/table-pagination";
 import { ClickableRow } from "../ui/clickable-row";
+import { ShortLabel } from "../ui/short-label";
+import { compactCellsOnSmallScreens } from "../ui/table-density";
 
 const DEFAULT_PAGE_SIZE = 5;
+
+// How your score compared with everyone else's - the average and the icon reading it - is the pair
+// of columns that stands down on a phone, where the table would otherwise run off the screen.
+const COMPARISON_DISPLAY = { base: "none", md: "table-cell" };
 
 export function PredictableMatchesTable({ title, matches, onRowClick, pageSize = DEFAULT_PAGE_SIZE }: { title: string; matches: MatchListItem[]; onRowClick?: (matchId: string) => void; pageSize?: number }) {
     const [page, setPage] = useState(1);
@@ -16,16 +22,21 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
         <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
                 <Heading size="sm" mb={2}>{title}</Heading>
-                <Table.Root size="sm" variant="line">
+                {/* Seven columns of dates, scores and averages are about 180px more than a phone
+                    has: below `md` the kick-off time, the field average and the icon comparing the
+                    two step aside, leaving what the row is actually about - the match, the result,
+                    your prediction and what it scored. The full set is a tap away on the match. */}
+                <Table.Root size="sm" variant="line"
+                    css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
-                            <Table.ColumnHeader>Date / time</Table.ColumnHeader>
+                            <Table.ColumnHeader><ShortLabel short="Date" full="Date / time" /></Table.ColumnHeader>
                             <Table.ColumnHeader>Match</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Result</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Your prediction</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Your score</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Average score</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center"></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Yours" full="Your prediction" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Your score" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={COMPARISON_DISPLAY}>Average score</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={COMPARISON_DISPLAY}></Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -38,13 +49,18 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
                         ) : pageMatches.map((m) => {
                             const cells = (
                                 <>
-                                    <Table.Cell>{new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}</Table.Cell>
+                                    <Table.Cell whiteSpace="nowrap">
+                                        <ShortLabel
+                                            short={new Date(m.matchDateTime).toLocaleDateString(undefined, { dateStyle: "short" })}
+                                            full={new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                                        />
+                                    </Table.Cell>
                                     <Table.Cell>{m.homeTeamShortName} vs {m.awayTeamShortName}</Table.Cell>
                                     <Table.Cell textAlign="center">{m.homeTeamGoals ?? "?"}-{m.awayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center">{m.predictionHomeTeamGoals ?? "?"}-{m.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center" color={`points.${m.yourPredictionScore}`} fontWeight="bold">{m.yourPredictionScore}</Table.Cell>
-                                    <Table.Cell textAlign="center">{m.averagePredictionScore.toFixed(2)}</Table.Cell>
-                                    <Table.Cell textAlign="center"><ScoreComparisonIcon yours={m.yourPredictionScore} average={m.averagePredictionScore} /></Table.Cell>
+                                    <Table.Cell textAlign="center" display={COMPARISON_DISPLAY}>{m.averagePredictionScore.toFixed(2)}</Table.Cell>
+                                    <Table.Cell textAlign="center" display={COMPARISON_DISPLAY}><ScoreComparisonIcon yours={m.yourPredictionScore} average={m.averagePredictionScore} /></Table.Cell>
                                 </>
                             );
 

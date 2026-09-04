@@ -45,9 +45,9 @@ export function ProfileCard({ profile, isOwnProfile }: { profile: UserProfile; i
     return (
         <Panel accent hoverLift>
             <HStack justify="space-between" mb={3}>
-                <Heading size="md">{profile.username}</Heading>
+                <Heading size="md" minW="0" truncate>{profile.username}</Heading>
                 {canEdit && (
-                    <Button asChild size="xs" variant="ghost">
+                    <Button asChild size="xs" variant="ghost" flexShrink="0">
                         <RouterLink to={isOwnProfile ? "/profile/edit" : `/profile/${profile.userID}/edit`}>Edit User</RouterLink>
                     </Button>
                 )}

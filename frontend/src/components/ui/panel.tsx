@@ -9,6 +9,9 @@ type PanelProps = BoxProps & {
 
 // Standard "pill" container for content sections - gives dark mode surfaces contrast against
 // the near-black page background instead of borderless default boxes blending into it.
+//
+// Padding is 12px on phones rather than 16px: 32px of it either side of a 360px screen is a lot to
+// give up, and several of the tables inside these cards fit or don't fit on exactly those 8px.
 export function Panel({ accent = false, hoverLift = false, ...props }: PanelProps) {
     return (
         <Box
@@ -17,7 +20,7 @@ export function Panel({ accent = false, hoverLift = false, ...props }: PanelProp
             borderWidth="1px"
             borderColor="border.card"
             borderRadius="card"
-            p={4}
+            p={{ base: 3, md: 4 }}
             {...(accent && {
                 _before: {
                     content: '""',

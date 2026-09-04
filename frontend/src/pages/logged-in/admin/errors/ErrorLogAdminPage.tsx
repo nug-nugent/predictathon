@@ -7,6 +7,7 @@ import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
 import { TablePagination } from "../../../../components/ui/table-pagination";
+import { compactCellsOnSmallScreens } from "../../../../components/ui/table-density";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
 
@@ -48,7 +49,7 @@ export function ErrorLogAdminPage() {
                 <LoadingSpinner />
             ) : (
                 <Panel overflowX="auto">
-                    <Table.Root size="sm" variant="line" striped showColumnBorder>
+                    <Table.Root size="sm" variant="line" striped showColumnBorder css={compactCellsOnSmallScreens}>
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Time</Table.ColumnHeader>
@@ -59,11 +60,17 @@ export function ErrorLogAdminPage() {
                         <Table.Body>
                             {errors.map((e) => (
                                 <ClickableRow key={e.id} onActivate={() => setViewing(e)}>
-                                    <Table.Cell whiteSpace="nowrap">{formatTime(e.timeStampUtc)}</Table.Cell>
+                                    {/* Kept on one line from `md`, but allowed to wrap below it: on
+                                        a phone a full timestamp held on one line is a third of the
+                                        screen before the message has had any. */}
+                                    <Table.Cell whiteSpace={{ base: "normal", md: "nowrap" }}>{formatTime(e.timeStampUtc)}</Table.Cell>
                                     <Table.Cell>
                                         <Badge colorPalette={levelColour(e.level)} size="sm">{e.level ?? "Unknown"}</Badge>
                                     </Table.Cell>
-                                    <Table.Cell maxWidth="600px">
+                                    {/* The message is truncated to whatever the screen can spare and
+                                        read in full in the dialog, so the cap comes down on a phone
+                                        rather than taking the table off the side of it. */}
+                                    <Table.Cell maxWidth={{ base: "150px", md: "600px" }}>
                                         <Text truncate>{e.message}</Text>
                                     </Table.Cell>
                                 </ClickableRow>

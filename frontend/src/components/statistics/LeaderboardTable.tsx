@@ -2,6 +2,7 @@ import { Heading, Link, Table, Text, VStack } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import type { ReactNode } from "react";
 import { Panel } from "../ui/panel";
+import { breakableCellText } from "../ui/table-density";
 
 type LeaderboardItem = { userID: string; username: string };
 
@@ -30,7 +31,7 @@ export function LeaderboardTable<T extends LeaderboardItem>({ title, items, colu
                             </Table.Row>
                         ) : items.map((item) => (
                             <Table.Row key={item.userID}>
-                                <Table.Cell>
+                                <Table.Cell css={breakableCellText}>
                                     <Link asChild><RouterLink to={`/profile/${item.userID}`}>{item.username}</RouterLink></Link>
                                 </Table.Cell>
                                 {columns.map((c) => <Table.Cell key={c.header} textAlign="center">{c.render(item)}</Table.Cell>)}

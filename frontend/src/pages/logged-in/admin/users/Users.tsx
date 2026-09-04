@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-    Badge, Button, Center, Checkbox, Dialog, Field, HStack, Input,
+    Badge, Box, Button, Center, Checkbox, Dialog, Field, HStack, Input,
     Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
 import { useUser } from "../../../../hooks/useUser";
@@ -13,8 +13,14 @@ import { Panel } from "../../../../components/ui/panel";
 import { PageHeading } from "../../../../components/ui/page-heading";
 import { ClickableRow } from "../../../../components/ui/clickable-row";
 import { TablePagination } from "../../../../components/ui/table-pagination";
+import { ShortLabel } from "../../../../components/ui/short-label";
+import { compactCellsOnSmallScreens } from "../../../../components/ui/table-density";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
+
+// Who the account belongs to, shown as its own two columns from `md` and folded under the
+// username below that - see the cell for why it is folded rather than dropped.
+const IDENTITY_DISPLAY = { base: "none", md: "table-cell" };
 
 const PAGE_SIZE = 20;
 const ALL_ROLES = [Role.UserAdministrator, Role.CompetitionAdministrator, Role.MatchAdministrator];
@@ -55,12 +61,12 @@ export function UsersPage() {
                 <LoadingSpinner />
             ) : (
                 <Panel overflowX="auto">
-                    <Table.Root size="sm" variant="line" striped showColumnBorder>
+                    <Table.Root size="sm" variant="line" striped showColumnBorder css={compactCellsOnSmallScreens}>
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Username</Table.ColumnHeader>
-                                <Table.ColumnHeader>Name</Table.ColumnHeader>
-                                <Table.ColumnHeader>Email</Table.ColumnHeader>
+                                <Table.ColumnHeader display={IDENTITY_DISPLAY}>Name</Table.ColumnHeader>
+                                <Table.ColumnHeader display={IDENTITY_DISPLAY}>Email</Table.ColumnHeader>
                                 <Table.ColumnHeader>Roles</Table.ColumnHeader>
                                 <Table.ColumnHeader>Status</Table.ColumnHeader>
                             </Table.Row>
@@ -68,12 +74,29 @@ export function UsersPage() {
                         <Table.Body>
                             {users.map((u) => (
                                 <ClickableRow key={u.id} onActivate={() => setEditing(u)}>
-                                    <Table.Cell>{u.userName}</Table.Cell>
-                                    <Table.Cell>{[u.forenames, u.surname].filter(Boolean).join(" ")}</Table.Cell>
-                                    <Table.Cell>{u.email}</Table.Cell>
+                                    <Table.Cell>
+                                        {u.userName}
+                                        {/* Below `md` the name and email columns are folded in here
+                                            rather than dropped: five columns of them is roughly
+                                            twice a phone's width, but an admin looking someone up
+                                            still needs to see which person a username belongs to. */}
+                                        <Box hideFrom="md" fontSize="xs" color="fg.muted" overflowWrap="anywhere">
+                                            {[[u.forenames, u.surname].filter(Boolean).join(" "), u.email].filter(Boolean).join(" - ")}
+                                        </Box>
+                                    </Table.Cell>
+                                    <Table.Cell display={IDENTITY_DISPLAY}>{[u.forenames, u.surname].filter(Boolean).join(" ")}</Table.Cell>
+                                    <Table.Cell display={IDENTITY_DISPLAY}>{u.email}</Table.Cell>
                                     <Table.Cell>
                                         <HStack gap={1} wrap="wrap">
-                                            {u.roles.map((r) => <Badge key={r} size="sm">{r}</Badge>)}
+                                            {/* "CompetitionAdministrator" on its own is wider than a
+                                                third of a phone screen, and there is no breaking a
+                                                single word - so below `md` the badges drop the
+                                                "Administrator" the three roles all share. */}
+                                            {u.roles.map((r) => (
+                                                <Badge key={r} size="sm">
+                                                    <ShortLabel short={r.replace("Administrator", "")} full={r} />
+                                                </Badge>
+                                            ))}
                                         </HStack>
                                     </Table.Cell>
                                     <Table.Cell>

@@ -21,6 +21,8 @@ import { Role } from "../../../constants/roles";
 import { ApiError } from "../../../services/api";
 import { parseDigit } from "../../../utils/parseDigit";
 import { Panel } from "../../../components/ui/panel";
+import { ShortLabel } from "../../../components/ui/short-label";
+import { compactCellsOnSmallScreens } from "../../../components/ui/table-density";
 
 // Faster than the Home card's minute: this is the page left open while a match plays, so the moment
 // a result is confirmed it should turn into scores and points without a manual refresh.
@@ -308,14 +310,14 @@ function MatchPredictions({ match, status }: { match: MatchPrediction; status: M
 
             <PredictionsSummary predictions={predictions} isPost={isPost} />
 
-            <Table.Root size="sm" variant="line">
+            <Table.Root size="sm" variant="line" css={compactCellsOnSmallScreens}>
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>Predictor</Table.ColumnHeader>
                         <Table.ColumnHeader textAlign="center">Prediction</Table.ColumnHeader>
                         {isPost
                             ? <Table.ColumnHeader textAlign="center">Points</Table.ColumnHeader>
-                            : <Table.ColumnHeader textAlign="center">Projected score</Table.ColumnHeader>}
+                            : <Table.ColumnHeader textAlign="center"><ShortLabel short="Projected" full="Projected score" /></Table.ColumnHeader>}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
