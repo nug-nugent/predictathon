@@ -19,8 +19,10 @@ BEGIN
 		, MatchAveragePrediction.MatchDateTime
 		, MatchAveragePrediction.HomeTeam
 		, MatchAveragePrediction.HomeTeamShortName
+		, MatchAveragePrediction.HomeTeamAcronym
 		, MatchAveragePrediction.AwayTeam
 		, MatchAveragePrediction.AwayTeamShortName
+		, MatchAveragePrediction.AwayTeamAcronym
 		, MatchAveragePrediction.HomeTeamGoals
 		, MatchAveragePrediction.AwayTeamGoals
 		, MatchAveragePrediction.AveragePredictionScore
@@ -35,8 +37,10 @@ BEGIN
 			, m.MatchDateTime
 			, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 			, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+			, HomeTeamAcronym = HomeTeam.Acronym
 			, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 			, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+			, AwayTeamAcronym = AwayTeam.Acronym
 			, HomeTeamGoals = m.HomeTeamGoals
 			, AwayTeamGoals = m.AwayTeamGoals
 			, AveragePredictionScore = ISNULL(AVG(CAST(p.Score AS DECIMAL(4, 3))), CAST(0 AS DECIMAL(4, 3)))
@@ -57,9 +61,11 @@ BEGIN
 			, HomeTeam.TeamName
 			, m.HomeTeamTBC
 			, HomeTeam.ShortName
+			, HomeTeam.Acronym
 			, AwayTeam.TeamName
 			, m.AwayTeamTBC
 			, AwayTeam.ShortName
+			, AwayTeam.Acronym
 			, m.HomeTeamGoals
 			, m.AwayTeamGoals
 			, m.Description

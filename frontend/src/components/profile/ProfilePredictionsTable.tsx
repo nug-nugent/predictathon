@@ -4,6 +4,7 @@ import type { MatchPrediction } from "../../services/prediction-service";
 import { crestUrl } from "../../utils/crestUrl";
 import { Panel } from "../ui/panel";
 import { TablePagination } from "../ui/table-pagination";
+import { TeamLabel } from "../team/TeamLabel";
 
 const PAGE_SIZE = 10;
 
@@ -24,7 +25,9 @@ export function ProfilePredictionsTable({ predictions }: { predictions: MatchPre
                                 <Table.Row key={m.matchID}>
                                     <Table.Cell>
                                         <HStack justify="flex-end" gap={2}>
-                                            <Text>{m.homeTeamShortName}</Text>
+                                            <Text truncate minW="0">
+                                                <TeamLabel name={m.homeTeam} shortName={m.homeTeamShortName} acronym={m.homeTeamAcronym} />
+                                            </Text>
                                             {crestUrl(m.homeTeamImage) && <Image src={crestUrl(m.homeTeamImage)} h="16px" alt="" />}
                                         </HStack>
                                     </Table.Cell>
@@ -34,7 +37,9 @@ export function ProfilePredictionsTable({ predictions }: { predictions: MatchPre
                                     <Table.Cell>
                                         <HStack gap={2}>
                                             {crestUrl(m.awayTeamImage) && <Image src={crestUrl(m.awayTeamImage)} h="16px" alt="" />}
-                                            <Text>{m.awayTeamShortName}</Text>
+                                            <Text truncate minW="0">
+                                                <TeamLabel name={m.awayTeam} shortName={m.awayTeamShortName} acronym={m.awayTeamAcronym} />
+                                            </Text>
                                         </HStack>
                                     </Table.Cell>
                                     <Table.Cell textAlign="center" color={m.score !== null ? `points.${m.score}` : undefined} fontWeight="bold">

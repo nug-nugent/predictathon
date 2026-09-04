@@ -20,6 +20,7 @@ export type AllTimeStatistics = {
 export type PredictableTeam = {
     teamID: string;
     shortName: string;
+    acronym: string | null;
     teamName: string;
     teamImage: string | null;
     averageScore: number;
@@ -31,10 +32,12 @@ export type MatchListItem = {
     homeTeamID: string | null;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     homeTeamImage: string | null;
     awayTeamID: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     awayTeamImage: string | null;
     homeTeamGoals: number | null;
     awayTeamGoals: number | null;
@@ -53,8 +56,10 @@ export type BestPrediction = {
     matchDateTime: string;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     homeTeamGoals: number | null;
     awayTeamGoals: number | null;
     predictionHomeTeamGoals: number | null;

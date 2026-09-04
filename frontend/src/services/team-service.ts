@@ -6,6 +6,7 @@ export type Team = {
     teamID: string;
     teamName: string;
     shortName: string;
+    acronym: string | null;
     imageName: string | null;
 };
 
@@ -46,10 +47,12 @@ export type TeamFixture = {
     homeTeamID: string | null;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     homeTeamImage: string | null;
     awayTeamID: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     awayTeamImage: string | null;
     neutralGround: boolean;
     description: string | null;
@@ -63,6 +66,7 @@ export type TeamStanding = {
     teamID: string;
     teamName: string;
     shortName: string;
+    acronym: string | null;
     imageName: string | null;
     played: number;
     won: number;
@@ -79,6 +83,7 @@ export type TeamDetail = {
     teamID: string;
     teamName: string;
     shortName: string;
+    acronym: string | null;
     imageName: string | null;
     goalsFor: number;
     goalsAgainst: number;
@@ -107,10 +112,12 @@ export type TeamRecentResult = {
     homeTeamID: string | null;
     homeTeam: string | null;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     homeTeamImage: string | null;
     awayTeamID: string | null;
     awayTeam: string | null;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     awayTeamImage: string | null;
     homeTeamGoals: number;
     awayTeamGoals: number;

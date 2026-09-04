@@ -12,9 +12,11 @@ type ResultRowProps = {
     homeTeamId: string | null;
     homeTeamName: string;
     homeTeamShortName: string;
+    homeTeamAcronym: string | null;
     awayTeamId: string | null;
     awayTeamName: string;
     awayTeamShortName: string;
+    awayTeamAcronym: string | null;
     homeCrest: string | undefined;
     awayCrest: string | undefined;
     now: Date;
@@ -28,7 +30,8 @@ type ResultRowProps = {
 type RowSaveState = "idle" | "saving" | "saved" | "error";
 
 export function ResultRow({
-    matchId, matchDateTime, homeTeamId, homeTeamName, homeTeamShortName, awayTeamId, awayTeamName, awayTeamShortName, homeCrest, awayCrest,
+    matchId, matchDateTime, homeTeamId, homeTeamName, homeTeamShortName, homeTeamAcronym,
+    awayTeamId, awayTeamName, awayTeamShortName, awayTeamAcronym, homeCrest, awayCrest,
     now, hasFocus, isFirstInGroup, onFocus, onSaved,
 }: ResultRowProps) {
     const [homeInput, setHomeInput] = useState("");
@@ -134,7 +137,8 @@ export function ResultRow({
         <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} py={2} px={{ base: 2, md: 4 }} gap={1}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
                 <HStack flex="1" minW="0" justify="flex-end" gap={2}>
-                    <TeamName teamId={homeTeamId} name={homeTeamName} shortName={homeTeamShortName} crest={homeCrest} crestPosition="after" />
+                    <TeamName teamId={homeTeamId} name={homeTeamName} shortName={homeTeamShortName} acronym={homeTeamAcronym}
+                        crest={homeCrest} crestPosition="after" />
                 </HStack>
 
                 <HStack gap={1}>
@@ -146,7 +150,8 @@ export function ResultRow({
                 </HStack>
 
                 <HStack flex="1" minW="0" gap={2}>
-                    <TeamName teamId={awayTeamId} name={awayTeamName} shortName={awayTeamShortName} crest={awayCrest} crestPosition="before" />
+                    <TeamName teamId={awayTeamId} name={awayTeamName} shortName={awayTeamShortName} acronym={awayTeamAcronym}
+                        crest={awayCrest} crestPosition="before" />
                 </HStack>
             </Flex>
 

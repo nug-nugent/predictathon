@@ -7,6 +7,7 @@ import { TablePagination } from "../ui/table-pagination";
 import { ClickableRow } from "../ui/clickable-row";
 import { ShortLabel } from "../ui/short-label";
 import { compactCellsOnSmallScreens } from "../ui/table-density";
+import { TeamLabel } from "../team/TeamLabel";
 
 const DEFAULT_PAGE_SIZE = 5;
 
@@ -55,7 +56,11 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
                                             full={new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
                                         />
                                     </Table.Cell>
-                                    <Table.Cell>{m.homeTeamShortName} vs {m.awayTeamShortName}</Table.Cell>
+                                    <Table.Cell whiteSpace="nowrap">
+                                        <TeamLabel name={m.homeTeam} shortName={m.homeTeamShortName} acronym={m.homeTeamAcronym} />
+                                        {" vs "}
+                                        <TeamLabel name={m.awayTeam} shortName={m.awayTeamShortName} acronym={m.awayTeamAcronym} />
+                                    </Table.Cell>
                                     <Table.Cell textAlign="center">{m.homeTeamGoals ?? "?"}-{m.awayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center">{m.predictionHomeTeamGoals ?? "?"}-{m.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center" color={`points.${m.yourPredictionScore}`} fontWeight="bold">{m.yourPredictionScore}</Table.Cell>

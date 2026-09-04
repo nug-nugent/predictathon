@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { TeamStanding } from "../../services/team-service";
 import { crestUrl } from "../../utils/crestUrl";
 import { Panel } from "../ui/panel";
+import { TeamLabel } from "./TeamLabel";
 
 /// The competition's actual football league table (not the users' prediction league - see
 /// LeagueTableView), with the team whose page this is picked out.
@@ -44,8 +45,7 @@ export function LeagueStandingsTable({ standings, highlightTeamId }: { standings
                                         <HStack gap={2} minW="0">
                                             {crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
                                             <Link to={`/team/${standing.teamID}`}>
-                                                <Text as="span" hideFrom="md">{standing.shortName}</Text>
-                                                <Text as="span" hideBelow="md">{standing.teamName}</Text>
+                                                <TeamLabel name={standing.teamName} shortName={standing.shortName} acronym={standing.acronym} />
                                             </Link>
                                         </HStack>
                                     </Table.Cell>

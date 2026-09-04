@@ -159,6 +159,7 @@ public class TeamService : ITeamService
             TeamID = team.TeamID,
             TeamName = team.TeamName,
             ShortName = team.ShortName,
+            Acronym = team.Acronym,
             ImageName = team.ImageName,
             GoalsFor = goalsFor,
             GoalsAgainst = goalsAgainst,
@@ -218,10 +219,12 @@ public class TeamService : ITeamService
                     // Mirrors BuildFixtures' handling of a not-yet-decided knockout slot.
                     HomeTeam = homeTeam?.TeamName ?? m.HomeTeamTBC,
                     HomeTeamShortName = homeTeam?.ShortName ?? "TBC",
+                    HomeTeamAcronym = homeTeam?.Acronym,
                     HomeTeamImage = homeTeam?.ImageName,
                     AwayTeamID = m.AwayTeamID,
                     AwayTeam = awayTeam?.TeamName ?? m.AwayTeamTBC,
                     AwayTeamShortName = awayTeam?.ShortName ?? "TBC",
+                    AwayTeamAcronym = awayTeam?.Acronym,
                     AwayTeamImage = awayTeam?.ImageName,
                     HomeTeamGoals = homeGoals,
                     AwayTeamGoals = awayGoals,
@@ -283,10 +286,12 @@ public class TeamService : ITeamService
                     // not-yet-decided knockout slot.
                     HomeTeam = homeTeam?.TeamName ?? m.HomeTeamTBC,
                     HomeTeamShortName = homeTeam?.ShortName ?? "TBC",
+                    HomeTeamAcronym = homeTeam?.Acronym,
                     HomeTeamImage = homeTeam?.ImageName,
                     AwayTeamID = m.AwayTeamID,
                     AwayTeam = awayTeam?.TeamName ?? m.AwayTeamTBC,
                     AwayTeamShortName = awayTeam?.ShortName ?? "TBC",
+                    AwayTeamAcronym = awayTeam?.Acronym,
                     AwayTeamImage = awayTeam?.ImageName,
                     NeutralGround = m.NeutralGround,
                     Description = m.Description,
@@ -311,6 +316,7 @@ public class TeamService : ITeamService
                 TeamID = t.TeamID,
                 TeamName = t.TeamName,
                 ShortName = t.ShortName,
+                Acronym = t.Acronym,
                 ImageName = t.ImageName,
             });
 

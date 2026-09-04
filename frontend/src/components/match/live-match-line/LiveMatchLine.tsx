@@ -2,6 +2,7 @@ import { Box, HStack, Image, Text } from "@chakra-ui/react";
 import type { MatchPrediction } from "../../../services/prediction-service";
 import type { MatchStatusValue } from "../matchStatus";
 import { crestUrl } from "../../../utils/crestUrl";
+import { TeamLabel } from "../../team/TeamLabel";
 
 type LiveMatchLineProps = {
     match: MatchPrediction;
@@ -9,11 +10,6 @@ type LiveMatchLineProps = {
     /** Larger type and crests for the focused match on the Live page. */
     size?: "sm" | "lg";
 };
-
-// Undecided knockout placeholders ("Winner QF1") have no team record behind them - see MatchRow.
-function teamName(preferred: string | null, fallback: string | null): string {
-    return preferred || fallback || "TBC";
-}
 
 function kickoffTime(matchDateTime: string): string {
     return new Date(matchDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
@@ -44,8 +40,9 @@ export function LiveMatchLine({ match, status, size = "sm" }: LiveMatchLineProps
     return (
         <HStack gap={{ base: 1, md: 3 }} minW="0" flex="1">
             <HStack gap={2} minW="0" flex="1" justify="flex-end">
-                <Text fontSize={nameSize} truncate textAlign="right" hideFrom="md">{teamName(match.homeTeamShortName, match.homeTeam)}</Text>
-                <Text fontSize={nameSize} truncate textAlign="right" hideBelow="md">{teamName(match.homeTeam, match.homeTeamShortName)}</Text>
+                <Text fontSize={nameSize} truncate textAlign="right">
+                    <TeamLabel name={match.homeTeam} shortName={match.homeTeamShortName} acronym={match.homeTeamAcronym} />
+                </Text>
                 <Crest image={match.homeTeamImage} boxSize={crestSize} />
             </HStack>
 
@@ -64,8 +61,9 @@ export function LiveMatchLine({ match, status, size = "sm" }: LiveMatchLineProps
 
             <HStack gap={2} minW="0" flex="1">
                 <Crest image={match.awayTeamImage} boxSize={crestSize} />
-                <Text fontSize={nameSize} truncate hideFrom="md">{teamName(match.awayTeamShortName, match.awayTeam)}</Text>
-                <Text fontSize={nameSize} truncate hideBelow="md">{teamName(match.awayTeam, match.awayTeamShortName)}</Text>
+                <Text fontSize={nameSize} truncate>
+                    <TeamLabel name={match.awayTeam} shortName={match.awayTeamShortName} acronym={match.awayTeamAcronym} />
+                </Text>
             </HStack>
         </HStack>
     );

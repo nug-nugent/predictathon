@@ -9,6 +9,7 @@ public class CompetitionUserLeagueTableItem
     public int Lost { get; set; }
     public int Drawn { get; set; }
     public string ShortName { get; set; } = string.Empty;
+    public string? Acronym { get; set; }
     public int Points { get; set; }
     public int GoalsFor { get; set; }
     public int GoalsAgainst { get; set; }

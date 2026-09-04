@@ -18,6 +18,12 @@ public class TeamRecentResultItem
 
     public string HomeTeamShortName { get; set; } = "";
 
+    /// <summary>
+    /// The three-letter code shown in place of HomeTeamShortName at phone widths. Null where a team
+    /// has no acronym yet, and for a TBC knockout placeholder, which has no team behind it.
+    /// </summary>
+    public string? HomeTeamAcronym { get; set; }
+
     public string? HomeTeamImage { get; set; }
 
     public Guid? AwayTeamID { get; set; }
@@ -26,6 +32,12 @@ public class TeamRecentResultItem
     public string? AwayTeam { get; set; }
 
     public string AwayTeamShortName { get; set; } = "";
+
+    /// <summary>
+    /// The three-letter code shown in place of AwayTeamShortName at phone widths. Null where a team
+    /// has no acronym yet, and for a TBC knockout placeholder, which has no team behind it.
+    /// </summary>
+    public string? AwayTeamAcronym { get; set; }
 
     public string? AwayTeamImage { get; set; }
 

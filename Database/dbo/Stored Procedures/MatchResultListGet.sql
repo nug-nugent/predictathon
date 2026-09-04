@@ -20,10 +20,12 @@ BEGIN
 		, m.HomeTeamID
 		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
 		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+		, HomeTeamAcronym = HomeTeam.Acronym
 		, HomeTeamImage = HomeTeam.ImageName
 		, m.AwayTeamID
 		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
 		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+		, AwayTeamAcronym = AwayTeam.Acronym
 		, AwayTeamImage = AwayTeam.ImageName
 		, HomeTeamGoals = m.HomeTeamGoals
 		, AwayTeamGoals = m.AwayTeamGoals
@@ -53,11 +55,13 @@ BEGIN
 		, HomeTeam.TeamName
 		, m.HomeTeamTBC
 		, HomeTeam.ShortName
+		, HomeTeam.Acronym
 		, HomeTeam.ImageName
 		, m.AwayTeamID
 		, AwayTeam.TeamName
 		, m.AwayTeamTBC
 		, AwayTeam.ShortName
+		, AwayTeam.Acronym
 		, AwayTeam.ImageName
 		, m.HomeTeamGoals
 		, m.AwayTeamGoals
