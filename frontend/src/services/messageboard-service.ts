@@ -71,6 +71,15 @@ export type Message = {
     reactions: MessageReaction[];
 };
 
+// Matches Application/Models/MessageThreadPageModel.cs. The counts describe the slice in
+// `messages`, not whatever the caller already holds - see getMessages below.
+export type MessageThreadPage = {
+    messages: Message[];
+    messagesBefore: number;
+    messagesAfter: number;
+    firstUnreadMessageID: string | null;
+};
+
 export async function getThreads(page: number, pageSize: number): Promise<PagedResult<MessageThreadSummary>> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     return getJsonAuthenticated<PagedResult<MessageThreadSummary>>(`/Messageboard/Threads?${params.toString()}`);
@@ -80,15 +89,25 @@ export async function getThread(threadId: string): Promise<MessageThread> {
     return getJsonAuthenticated<MessageThread>(`/Messageboard/Thread/${threadId}`);
 }
 
-/// Gets a page of a thread's messages, oldest-first. Omit beforeMessageId for the latest page;
-/// pass the id of the oldest currently-loaded message to load older messages.
-export async function getMessages(threadId: string, beforeMessageId?: string, take = 30): Promise<Message[]> {
+/// Gets a window of a thread's messages, oldest-first. Pass no cursor for the initial load, which
+/// the server anchors on your first unread message; pass `before` (the oldest message you hold) to
+/// page backwards, or `after` (the newest) to page forwards. `messagesBefore`/`messagesAfter`
+/// describe the returned slice, so when extending a window take only the count for the end you
+/// extended.
+export async function getMessages(
+    threadId: string,
+    cursor: { before?: string; after?: string } = {},
+    take = 30,
+): Promise<MessageThreadPage> {
     const params = new URLSearchParams({ take: String(take) });
-    if (beforeMessageId) {
-        params.set("beforeMessageId", beforeMessageId);
+    if (cursor.before) {
+        params.set("beforeMessageId", cursor.before);
+    }
+    if (cursor.after) {
+        params.set("afterMessageId", cursor.after);
     }
 
-    return getJsonAuthenticated<Message[]>(`/Messageboard/Thread/${threadId}/Messages?${params}`);
+    return getJsonAuthenticated<MessageThreadPage>(`/Messageboard/Thread/${threadId}/Messages?${params}`);
 }
 
 export async function createThread(subject: string, firstMessageContent: string): Promise<MessageThread> {

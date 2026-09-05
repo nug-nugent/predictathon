@@ -59,16 +59,24 @@ public class MessageboardController : ApiControllerBase
     }
 
     /// <summary>
-    /// Gets a page of a thread's messages, oldest-first. With no cursor, returns the most recent
-    /// page; pass the id of the oldest message currently loaded as <paramref name="beforeMessageId"/>
-    /// to load older messages ("load more" / infinite scroll upward).
+    /// Gets a window of a thread's messages, oldest-first, with counts of what lies outside it
+    /// either way.
+    ///
+    /// With no cursor, the window is anchored on the caller's first unread message so the thread
+    /// opens where they left off (falling back to the newest page when they're up to date). Pass
+    /// the oldest message currently loaded as <paramref name="beforeMessageId"/> to page backwards,
+    /// or the newest as <paramref name="afterMessageId"/> to page forwards.
     /// </summary>
     [HttpGet("Thread/{threadId:guid}/Messages")]
-    public async Task<ActionResult<List<MessageModel>?>> GetMessages(
-        Guid threadId, [FromQuery] Guid? beforeMessageId, [FromQuery] int take, CancellationToken cancellationToken)
+    public async Task<ActionResult<MessageThreadPageModel?>> GetMessages(
+        Guid threadId,
+        [FromQuery] Guid? beforeMessageId,
+        [FromQuery] Guid? afterMessageId,
+        [FromQuery] int take,
+        CancellationToken cancellationToken)
     {
         var pageSize = take <= 0 ? DefaultMessagePageSize : Math.Min(take, 100);
-        var result = await _messageboardService.GetMessagesAsync(threadId, CurrentUserId, pageSize, beforeMessageId, cancellationToken);
+        var result = await _messageboardService.GetMessagesAsync(threadId, CurrentUserId, pageSize, beforeMessageId, afterMessageId, cancellationToken);
         return FromResult(result);
     }
 

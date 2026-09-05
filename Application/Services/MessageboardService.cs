@@ -115,33 +115,160 @@ public class MessageboardService : IMessageboardService
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<MessageModel>>> GetMessagesAsync(Guid threadId, Guid userId, int take, Guid? beforeMessageId, CancellationToken cancellationToken = default)
+    public async Task<Result<MessageThreadPageModel>> GetMessagesAsync(
+        Guid threadId,
+        Guid userId,
+        int take,
+        Guid? beforeMessageId,
+        Guid? afterMessageId,
+        CancellationToken cancellationToken = default)
     {
         var threadResult = await GetThreadAsync(threadId, userId, cancellationToken);
         if (threadResult.IsFailed)
         {
-            return Result.Fail<List<MessageModel>>(threadResult.Errors);
+            return Result.Fail<MessageThreadPageModel>(threadResult.Errors);
         }
 
-        var query = _dbContext.Message.Where(m => m.MessageThreadID == threadId);
-
-        if (beforeMessageId is Guid cursorId)
+        if (beforeMessageId.HasValue && afterMessageId.HasValue)
         {
-            var cursorMessage = await _dbContext.Message.FirstOrDefaultAsync(m => m.MessageID == cursorId, cancellationToken);
-            if (cursorMessage is not null)
-            {
-                query = query.Where(m => m.MessageDateTime < cursorMessage.MessageDateTime);
-            }
+            return Result.Fail<MessageThreadPageModel>(
+                new PropertyValidationError(nameof(beforeMessageId), "A page can be taken from one direction only."));
         }
 
-        var messages = await query
-            .Include(m => m.MessageReaction)
-            .OrderByDescending(m => m.MessageDateTime)
-            .Take(take)
-            .ToListAsync(cancellationToken);
+        var totalCount = await _dbContext.Message.CountAsync(m => m.MessageThreadID == threadId, cancellationToken);
 
-        messages.Reverse();
+        Guid? firstUnreadMessageId = null;
+        int skip;
+        var takeCount = take;
 
+        if (beforeMessageId is Guid olderThan)
+        {
+            // Fill backwards from the cursor: this window ends where the caller's existing one
+            // begins, so it's the LAST `take` messages older than the cursor, not the first. Near
+            // the start of the thread there may be fewer than a full page left, and the window has
+            // to stop at the cursor rather than running past it into messages they already hold.
+            var olderCount = await CountOlderThanAsync(threadId, olderThan, cancellationToken);
+            takeCount = Math.Min(take, olderCount);
+            skip = olderCount - takeCount;
+        }
+        else if (afterMessageId is Guid newerThan)
+        {
+            skip = await CountOlderThanAsync(threadId, newerThan, cancellationToken) + 1;
+        }
+        else
+        {
+            (skip, firstUnreadMessageId) = await GetInitialWindowStartAsync(threadId, userId, take, totalCount, cancellationToken);
+        }
+
+        List<Message> messages = takeCount == 0
+            ? []
+            : await _dbContext.Message
+                .Where(m => m.MessageThreadID == threadId)
+                .Include(m => m.MessageReaction)
+                // MessageID breaks ties so the ordering is total: without it, two messages sharing
+                // a timestamp could swap places between requests and be duplicated or skipped
+                // across a page boundary.
+                .OrderBy(m => m.MessageDateTime)
+                .ThenBy(m => m.MessageID)
+                .Skip(skip)
+                .Take(takeCount)
+                .ToListAsync(cancellationToken);
+
+        var models = await MapMessagesAsync(messages, cancellationToken);
+
+        return Result.Ok(new MessageThreadPageModel
+        {
+            Messages = models,
+            MessagesBefore = skip,
+            MessagesAfter = Math.Max(0, totalCount - skip - messages.Count),
+            FirstUnreadMessageID = firstUnreadMessageId,
+        });
+    }
+
+    /// <summary>
+    /// Works out where the initial window starts: at the caller's first unread message (backed up
+    /// by one, so the last thing they did read is still on screen for context), or at the newest
+    /// page when they are up to date. Returns that offset and the first unread message's id.
+    /// </summary>
+    /// <param name="threadId">The thread being read.</param>
+    /// <param name="userId">The reading user.</param>
+    /// <param name="take">Window size.</param>
+    /// <param name="totalCount">Total messages in the thread.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task<(int Skip, Guid? FirstUnreadMessageId)> GetInitialWindowStartAsync(
+        Guid threadId,
+        Guid userId,
+        int take,
+        int totalCount,
+        CancellationToken cancellationToken)
+    {
+        // The newest page, which is both the fallback and the furthest the window is ever allowed
+        // to start: anchoring only ever moves it earlier, never past the end of the thread.
+        var lastPageStart = Math.Max(0, totalCount - take);
+
+        var readRow = await _dbContext.MessageThreadRead
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.UserID == userId && r.MessageThreadID == threadId, cancellationToken);
+
+        // Never opened before, so there is no "since when" to resume from. Dropping a first-time
+        // reader at the top of a thread with years of history would be worse than useless, so they
+        // get the newest page like someone who is up to date.
+        if (readRow is null)
+        {
+            return (lastPageStart, null);
+        }
+
+        var firstUnread = await _dbContext.Message
+            .AsNoTracking()
+            .Where(m => m.MessageThreadID == threadId && m.MessageDateTime > readRow.LastReadDateTime)
+            .OrderBy(m => m.MessageDateTime)
+            .ThenBy(m => m.MessageID)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (firstUnread is null)
+        {
+            return (lastPageStart, null);
+        }
+
+        var indexOfFirstUnread = await CountOlderThanAsync(threadId, firstUnread.MessageID, cancellationToken);
+
+        return (Math.Clamp(indexOfFirstUnread - 1, 0, lastPageStart), firstUnread.MessageID);
+    }
+
+    /// <summary>
+    /// Counts the messages in a thread older than the given one, which is also that message's
+    /// zero-based position in the thread.
+    /// </summary>
+    /// <param name="threadId">The thread to count within.</param>
+    /// <param name="messageId">The message to count up to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <remarks>
+    /// Compares on timestamp alone, while the ordering it indexes into also breaks ties on
+    /// MessageID. Two messages in one thread would have to land in the same 3.33ms datetime tick
+    /// for that to diverge, and the worst it could then do is re-serve one message the client
+    /// already has - which the client discards by id anyway.
+    /// </remarks>
+    private async Task<int> CountOlderThanAsync(Guid threadId, Guid messageId, CancellationToken cancellationToken)
+    {
+        var message = await _dbContext.Message.AsNoTracking().FirstOrDefaultAsync(m => m.MessageID == messageId, cancellationToken);
+        if (message is null)
+        {
+            return 0;
+        }
+
+        return await _dbContext.Message.CountAsync(
+            m => m.MessageThreadID == threadId && m.MessageDateTime < message.MessageDateTime,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Turns a slice of message entities into their models, resolving reply parents, posters and
+    /// trophies for the whole slice in batches rather than per message.
+    /// </summary>
+    /// <param name="messages">The messages to map, in the order they should be returned.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task<List<MessageModel>> MapMessagesAsync(List<Message> messages, CancellationToken cancellationToken)
+    {
         // The parents of any replies on this page, fetched in one batch rather than through a
         // self-navigation. A parent is very often already on this page, but it doesn't have to be
         // (it can sit on an older one, or on none currently loaded), so it's looked up by id
@@ -155,7 +282,7 @@ public class MessageboardService : IMessageboardService
         var users = await GetUsersByIdAsync(userIds, cancellationToken);
         var trophies = await _trophyService.GetForUsersAsync(messages.Select(m => m.PostedByUserID), cancellationToken);
 
-        return Result.Ok(messages.Select(m => MapMessage(m, users, trophies, parents)).ToList());
+        return messages.Select(m => MapMessage(m, users, trophies, parents)).ToList();
     }
 
     /// <summary>

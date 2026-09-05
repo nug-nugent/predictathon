@@ -160,7 +160,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer();
 
-        var result = await MakeService().GetMessagesAsync(Guid.NewGuid(), user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(Guid.NewGuid(), user.Id, 20, null, null);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is NotFoundError);
@@ -176,10 +176,208 @@ public class MessageboardServiceTests
         _dbContext.Message.AddRange(older, newer);
         await _dbContext.SaveChangesAsync();
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Select(m => m.MessageContent).Should().Equal("older", "newer");
+        result.Value.Messages.Select(m => m.MessageContent).Should().Equal("older", "newer");
+    }
+
+    /// <summary>
+    /// Fills a thread with sequentially-timed messages named "Message 1".."Message n", oldest
+    /// first, so paging assertions can talk about positions rather than juggling ids.
+    /// </summary>
+    /// <param name="thread">The thread to fill.</param>
+    /// <param name="postedBy">The author of every message.</param>
+    /// <param name="count">How many messages to create.</param>
+    private List<DomainEntities.Message> AddMessages(DomainEntities.MessageThread thread, ApplicationUser postedBy, int count)
+    {
+        var start = DateTime.UtcNow.AddMinutes(-count);
+        var created = new List<DomainEntities.Message>();
+
+        for (var i = 1; i <= count; i++)
+        {
+            created.Add(AddMessage(thread, postedBy, $"Message {i}", start.AddMinutes(i)));
+        }
+
+        return created;
+    }
+
+    private void MarkRead(DomainEntities.MessageThread thread, ApplicationUser user, DateTime lastRead)
+    {
+        _dbContext.MessageThreadRead.Add(new DomainEntities.MessageThreadRead
+        {
+            UserID = user.Id,
+            MessageThreadID = thread.MessageThreadID,
+            LastReadDateTime = lastRead,
+        });
+        _dbContext.SaveChanges();
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_NoCursorAndNeverRead_ReturnsTheNewestPage()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        AddMessages(thread, user, 45);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages.Should().HaveCount(30);
+        result.Value.Messages[0].MessageContent.Should().Be("Message 16");
+        result.Value.Messages[^1].MessageContent.Should().Be("Message 45");
+        result.Value.MessagesBefore.Should().Be(15);
+        result.Value.MessagesAfter.Should().Be(0);
+        // Nothing to resume from, so no boundary is claimed - a first-time reader of a long thread
+        // gets the newest page, not the top of it.
+        result.Value.FirstUnreadMessageID.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_NoCursorAndFullyCaughtUp_ReturnsTheNewestPageWithNoUnreadBoundary()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+        MarkRead(thread, user, messages[^1].MessageDateTime);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages[^1].MessageContent.Should().Be("Message 45");
+        result.Value.MessagesAfter.Should().Be(0);
+        result.Value.FirstUnreadMessageID.Should().BeNull();
+    }
+
+    // The point of the whole thing: come back to a long thread and it opens where you stopped, not
+    // at the end - with the last message you did read still on screen above the boundary.
+    [Fact]
+    public async Task GetMessagesAsync_NoCursorWithUnreadMessages_AnchorsOneMessageBeforeTheFirstUnread()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+        // Read up to and including Message 10, so Message 11 is the first unread.
+        MarkRead(thread, user, messages[9].MessageDateTime);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.FirstUnreadMessageID.Should().Be(messages[10].MessageID);
+        result.Value.Messages[0].MessageContent.Should().Be("Message 10");
+        result.Value.Messages[1].MessageContent.Should().Be("Message 11");
+        result.Value.MessagesBefore.Should().Be(9);
+        // 45 total, 9 skipped, 30 returned - six still ahead of the reader.
+        result.Value.MessagesAfter.Should().Be(6);
+    }
+
+    // The anchor only ever moves the window earlier. With one unread message the boundary is deep
+    // in the last page already, so anchoring on it must not push the window off the end.
+    [Fact]
+    public async Task GetMessagesAsync_UnreadMessageInsideTheLastPage_StillReturnsTheNewestPage()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+        MarkRead(thread, user, messages[43].MessageDateTime);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.FirstUnreadMessageID.Should().Be(messages[44].MessageID);
+        result.Value.Messages[0].MessageContent.Should().Be("Message 16");
+        result.Value.MessagesBefore.Should().Be(15);
+        result.Value.MessagesAfter.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ShorterThanOnePage_ReturnsEverythingWithNoCountsEitherSide()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        AddMessages(thread, user, 5);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages.Should().HaveCount(5);
+        result.Value.MessagesBefore.Should().Be(0);
+        result.Value.MessagesAfter.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_BeforeCursor_FillsBackwardsFromIt()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+
+        // Paging back from Message 16, the start of the newest page.
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 10, messages[15].MessageID, null);
+
+        result.IsSuccess.Should().BeTrue();
+        // The ten immediately older, not the ten oldest.
+        result.Value.Messages[0].MessageContent.Should().Be("Message 6");
+        result.Value.Messages[^1].MessageContent.Should().Be("Message 15");
+        result.Value.MessagesBefore.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_BeforeCursorNearTheStart_ReturnsWhatIsLeftAndNothingBefore()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 10, messages[3].MessageID, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages.Select(m => m.MessageContent).Should().Equal("Message 1", "Message 2", "Message 3");
+        result.Value.MessagesBefore.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_AfterCursor_FillsForwardsFromIt()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 10, null, messages[9].MessageID);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages[0].MessageContent.Should().Be("Message 11");
+        result.Value.Messages[^1].MessageContent.Should().Be("Message 20");
+        result.Value.MessagesAfter.Should().Be(25);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_AfterCursorReachingTheEnd_ReportsNothingNewer()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 45);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 30, null, messages[39].MessageID);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Messages.Should().HaveCount(5);
+        result.Value.Messages[^1].MessageContent.Should().Be("Message 45");
+        result.Value.MessagesAfter.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_BothCursors_ReturnsValidationFailure()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var messages = AddMessages(thread, user, 5);
+
+        var result = await MakeService().GetMessagesAsync(
+            thread.MessageThreadID, user.Id, 10, messages[3].MessageID, messages[1].MessageID);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.OfType<PropertyValidationError>().Should().ContainSingle(e => e.PropertyName == "beforeMessageId");
     }
 
     [Fact]
@@ -356,14 +554,14 @@ public class MessageboardServiceTests
         var parent = AddMessage(thread, user, "The parent post", DateTime.UtcNow.AddMinutes(-5));
         AddMessage(thread, user, "The reply", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
-        result.Value[0].ReplyTo.Should().BeNull();
-        result.Value[1].ReplyTo.Should().NotBeNull();
-        result.Value[1].ReplyTo!.MessageID.Should().Be(parent.MessageID);
-        result.Value[1].ReplyTo!.Snippet.Should().Be("The parent post");
+        result.Value.Messages.Should().HaveCount(2);
+        result.Value.Messages[0].ReplyTo.Should().BeNull();
+        result.Value.Messages[1].ReplyTo.Should().NotBeNull();
+        result.Value.Messages[1].ReplyTo!.MessageID.Should().Be(parent.MessageID);
+        result.Value.Messages[1].ReplyTo!.Snippet.Should().Be("The parent post");
     }
 
     // The case the denormalised stub exists for: the parent is older than the window being
@@ -377,14 +575,14 @@ public class MessageboardServiceTests
         AddMessage(thread, user, "Filler", DateTime.UtcNow.AddMinutes(-20));
         AddMessage(thread, user, "The reply", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 1, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 1, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().ContainSingle();
-        result.Value[0].MessageContent.Should().Be("The reply");
-        result.Value[0].ReplyTo.Should().NotBeNull();
-        result.Value[0].ReplyTo!.MessageID.Should().Be(parent.MessageID);
-        result.Value[0].ReplyTo!.Snippet.Should().Be("Long ago");
+        result.Value.Messages.Should().ContainSingle();
+        result.Value.Messages[0].MessageContent.Should().Be("The reply");
+        result.Value.Messages[0].ReplyTo.Should().NotBeNull();
+        result.Value.Messages[0].ReplyTo!.MessageID.Should().Be(parent.MessageID);
+        result.Value.Messages[0].ReplyTo!.Snippet.Should().Be("Long ago");
     }
 
     [Fact]
@@ -396,12 +594,12 @@ public class MessageboardServiceTests
         _messageImageService.Setup(s => s.GetImageUrl(parent.MessageID, true)).Returns("parent.jpg");
         AddMessage(thread, user, "Look at that", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value[1].ReplyTo!.Snippet.Should().BeNull();
-        result.Value[1].ReplyTo!.ImageUrl.Should().Be("parent.jpg");
-        result.Value[1].ReplyTo!.HasYouTubeVideo.Should().BeFalse();
+        result.Value.Messages[1].ReplyTo!.Snippet.Should().BeNull();
+        result.Value.Messages[1].ReplyTo!.ImageUrl.Should().Be("parent.jpg");
+        result.Value.Messages[1].ReplyTo!.HasYouTubeVideo.Should().BeFalse();
     }
 
     [Fact]
@@ -412,11 +610,11 @@ public class MessageboardServiceTests
         var parent = AddMessage(thread, user, content: null, youTubeVideoId: "dQw4w9WgXcQ");
         AddMessage(thread, user, "Great tune", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value[1].ReplyTo!.HasYouTubeVideo.Should().BeTrue();
-        result.Value[1].ReplyTo!.Snippet.Should().BeNull();
+        result.Value.Messages[1].ReplyTo!.HasYouTubeVideo.Should().BeTrue();
+        result.Value.Messages[1].ReplyTo!.Snippet.Should().BeNull();
     }
 
     [Fact]
@@ -429,9 +627,9 @@ public class MessageboardServiceTests
         var parent = AddMessage(thread, user, string.Join(' ', Enumerable.Repeat("word", 40)));
         AddMessage(thread, user, "Shorter", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
-        var snippet = result.Value[1].ReplyTo!.Snippet!;
+        var snippet = result.Value.Messages[1].ReplyTo!.Snippet!;
         snippet.Should().EndWith("…");
         snippet.Should().StartWith("word word");
         snippet.TrimEnd('…').Should().EndWith("word");
@@ -446,9 +644,9 @@ public class MessageboardServiceTests
         var parent = AddMessage(thread, user, "First line\r\n\r\nSecond line");
         AddMessage(thread, user, "Reply", DateTime.UtcNow, replyTo: parent);
 
-        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null, null);
 
-        result.Value[1].ReplyTo!.Snippet.Should().Be("First line Second line");
+        result.Value.Messages[1].ReplyTo!.Snippet.Should().Be("First line Second line");
     }
 
     [Fact]
