@@ -40,6 +40,45 @@ test("a live match on the home page opens the live page focused on it", async ({
     // this test by confirming its result. Asserting on it here would pass or fail on test order.
 });
 
+test("a completed match on the home page opens that match's own page", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
+
+    // The Completed group's rows are the only /match/ hrefs on the page - live rows point at
+    // /live/ and coming-up rows open the quick-predict popover instead of linking anywhere.
+    const completedRow = page.locator('a[href^="/match/"]').first();
+    await expect(completedRow).toBeVisible();
+
+    const href = await completedRow.getAttribute("href");
+    await completedRow.click();
+
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Average score" })).toBeVisible();
+});
+
+test("the list of other live matches shows what each one is worth to you", async ({ page }) => {
+    await page.goto("/live");
+    await expect(page.getByRole("heading", { name: "All Predictions" })).toBeVisible();
+
+    // The panel only appears when more than one match is in play, and process-results.spec can take
+    // one of the seeded pair out from under this test by confirming its result - so skip rather
+    // than fail when the run order has left a single live match.
+    const allLive = page.getByRole("heading", { name: "All Live Matches" });
+    test.skip(await allLive.isHidden(), "Only one match is in play - re-run `docker compose up` to reseed.");
+
+    // The panel's rows are the only /live/ links on the page - the focused match at the top is the
+    // one match line that isn't itself wrapped in a link (see the nested-links test below).
+    const rows = page.locator('a[href^="/live/"]');
+
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeGreaterThan(1);
+
+    // Every row says where you stand on that match, whether or not you predicted it.
+    for (const row of await rows.all()) {
+        await expect(row.getByText(/^(You: \d+ - \d+|No prediction)$/)).toBeVisible();
+    }
+});
+
 test("the card's corner link opens the live page", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
 
@@ -73,6 +112,24 @@ test("the predictions list reads best-first", async ({ page }) => {
     const ranked = projected.map((text) => (/^\d+$/.test(text.trim()) ? Number(text.trim()) : -1));
 
     expect(ranked).toEqual([...ranked].sort((a, b) => b - a));
+});
+
+test("the predictions list folds away", async ({ page }) => {
+    await page.goto("/live");
+
+    // Open to start with - it's the greater part of why the page exists.
+    const predictions = page.getByRole("button", { name: "All Predictions" });
+    await expect(predictions).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
+
+    // ...and out of the way for anyone here for the scoreline alone, without taking the standings
+    // below it with it.
+    await predictions.click();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeHidden();
+    await expect(page.getByRole("columnheader", { name: "In play" })).toBeVisible();
+
+    await predictions.click();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
 });
 
 test("the live score section is hidden from players", async ({ page }) => {

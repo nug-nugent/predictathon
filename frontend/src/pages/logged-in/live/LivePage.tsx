@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Button, Center, Heading, HStack, Input, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Center, Collapsible, Heading, HStack, Input, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
+import { ChevronDown } from "lucide-react";
 import { Link as RouterLink, useParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { useUser } from "../../../hooks/useUser";
@@ -12,6 +13,7 @@ import { computeMatchStatus, type MatchStatusValue } from "../../../components/m
 import { groupLiveMatches, hasLiveDayMatches, type LiveMatchGroups } from "../../../utils/liveMatches";
 import { LiveMatchLine } from "../../../components/match/live-match-line/LiveMatchLine";
 import { LiveMatchRow } from "../../../components/match/live-match-row/LiveMatchRow";
+import { YourPrediction } from "../../../components/match/your-prediction/YourPrediction";
 import { LiveBadge } from "../../../components/match/live-badge/LiveBadge";
 import { LiveLeagueTable } from "../../../components/league/LiveLeagueTable";
 import { PredictionsSummary } from "../../../components/match/predictions-summary/PredictionsSummary";
@@ -144,9 +146,7 @@ function TodayGroup({ title, matches, status }: { title: string; matches: MatchP
                 {title}
             </Text>
             {matches.map((match) => (
-                // A finished match goes to its own page rather than the Results list: you arrived
-                // here looking at one match at a time, so that's what the next click should give you.
-                <LiveMatchRow key={match.matchID} match={match} status={status} completedTarget="match" />
+                <LiveMatchRow key={match.matchID} match={match} status={status} />
             ))}
         </Box>
     );
@@ -240,7 +240,7 @@ function AdminLiveScore({ match, status, onSaved }: { match: MatchPrediction; st
     };
 
     return (
-        <Panel>
+        <Panel accent>
             <HStack justify="space-between" wrap="wrap" gap={3}>
                 <VStack align="flex-start" gap={0}>
                     <Heading size="sm">Update the Live Score</Heading>
@@ -282,34 +282,59 @@ function ScoreInput({ value, onChange, label }: { value: string; onChange: (valu
 /// kick-off (PredictionService.GetMatchPredictionsAsync), which is exactly when a match becomes
 /// live - so the only way to reach that refusal here is by typing a URL for a match that hasn't
 /// started, and it is reported as the wait it is rather than as an error.
+///
+/// Folds away like the standings below it, and for the same reason: on a full competition this is
+/// fifty rows between the match you're watching and the table, and someone here for the scoreline
+/// alone should be able to put it out of the way. Open by default - it's the greater part of why
+/// the Live page exists.
 function MatchPredictions({ match, status }: { match: MatchPrediction; status: MatchStatusValue }) {
     const { user } = useUser();
     const { data: predictions, error, reload } = useAsyncData(() => getMatchPredictions(match.matchID), [match.matchID]);
 
     usePolling(reload, PREDICTIONS_REFRESH_MS);
 
-    if (status === "Pre") {
-        return (
-            <Panel>
-                <Text color="fg.muted">Everyone's predictions appear here once this match kicks off.</Text>
-            </Panel>
-        );
-    }
-
-    if (error) {
-        return <ErrorState error={error} onRetry={reload} />;
-    }
-
-    if (predictions === null) {
-        return <LoadingSpinner />;
-    }
-
     const isPost = status === "Post";
 
     return (
-        <Panel overflowX="auto">
-            <Heading size="sm" mb={2}>All Predictions</Heading>
+        <Panel accent p={3}>
+            <Collapsible.Root defaultOpen>
+                <Collapsible.Trigger width="full" cursor="pointer">
+                    <HStack justify="space-between" width="full">
+                        <Heading size="sm">All Predictions</Heading>
+                        {/* The chevron is the only affordance, so it turns to say which way this
+                            goes - "open" and "shut" shouldn't look identical. Selecting on an
+                            ancestor's state rather than _open, because data-state sits on the
+                            trigger button, not on this box inside it. */}
+                        <Box transition="transform 0.15s" color="fg.muted"
+                            css={{ "[data-state=open] &": { transform: "rotate(180deg)" } }}>
+                            <ChevronDown size={18} />
+                        </Box>
+                    </HStack>
+                </Collapsible.Trigger>
 
+                <Collapsible.Content>
+                    {/* The scrollbar belongs to the table, not to the card: the heading above stays
+                        put while a table too wide for a phone scrolls under it. */}
+                    <Box pt={3} overflowX="auto">
+                        {status === "Pre"
+                            ? <Text color="fg.muted">Everyone's predictions appear here once this match kicks off.</Text>
+                            : error ? <ErrorState error={error} onRetry={reload} />
+                                : predictions === null ? <LoadingSpinner />
+                                    : <PredictionsTable predictions={predictions} isPost={isPost} currentUserId={user?.id} />}
+                    </Box>
+                </Collapsible.Content>
+            </Collapsible.Root>
+        </Panel>
+    );
+}
+
+function PredictionsTable({ predictions, isPost, currentUserId }: {
+    predictions: MatchPredictionListItem[];
+    isPost: boolean;
+    currentUserId: string | undefined;
+}) {
+    return (
+        <>
             <PredictionsSummary predictions={predictions} isPost={isPost} />
 
             <Table.Root size="sm" variant="line" css={compactCellsOnSmallScreens}>
@@ -328,11 +353,11 @@ function MatchPredictions({ match, status }: { match: MatchPrediction; status: M
                             <Table.Cell colSpan={3}><Text color="fg.muted">No predictions found.</Text></Table.Cell>
                         </Table.Row>
                     ) : predictions.map((p) => (
-                        <PredictionRow key={p.userID} prediction={p} isPost={isPost} isMe={p.userID === user?.id} />
+                        <PredictionRow key={p.userID} prediction={p} isPost={isPost} isMe={p.userID === currentUserId} />
                     ))}
                 </Table.Body>
             </Table.Root>
-        </Panel>
+        </>
     );
 }
 
@@ -376,6 +401,7 @@ function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPredi
             <VStack align="stretch" gap={1}>
                 {matches.map((match) => {
                     const isSelected = match.matchID === selectedMatchId;
+                    const { status } = computeMatchStatus(match, now);
 
                     return (
                         <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
@@ -386,8 +412,22 @@ function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPredi
                                 for anyone who can't see the highlight. */}
                             <RouterLink to={`/live/${match.matchID}`} aria-current={isSelected ? "true" : undefined}>
                                 <VStack align="stretch" gap={0} px={2} py={2}>
-                                    <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
-                                    {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
+                                    <LiveMatchLine match={match} status={status} />
+
+                                    {/* What each match is worth to you, under the running score
+                                        rather than beside it: with several matches on at once your
+                                        prediction is the thing that makes one worth clicking into,
+                                        but this column is too narrow to give it a lane of its own
+                                        without squeezing the team names down to an initial. */}
+                                    <HStack gap={1.5} justify="center" wrap="wrap" fontSize="xs" color="fg.muted">
+                                        {match.description && (
+                                            <>
+                                                <Text>{match.description}</Text>
+                                                <Text aria-hidden="true">&middot;</Text>
+                                            </>
+                                        )}
+                                        <YourPrediction match={match} status={status} />
+                                    </HStack>
                                 </VStack>
                             </RouterLink>
                         </ChakraLink>
