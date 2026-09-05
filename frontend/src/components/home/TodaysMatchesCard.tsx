@@ -3,6 +3,7 @@ import { Radio } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getTodaysMatches } from "../../services/match-service";
 import type { MatchPrediction } from "../../services/prediction-service";
+import { computeMatchStatus } from "../match/matchStatus";
 import { groupLiveMatches, hasLiveDayMatches } from "../../utils/liveMatches";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { useMinuteTick } from "../../hooks/useMinuteTick";
@@ -75,9 +76,9 @@ export function TodaysMatchesCard({ competitionId }: { competitionId: string }) 
             {/* What's happening right now leads, then what's still to come, then what's done -
                 so the section is worth its place at the top of the page on a matchday. */}
             <VStack align="stretch" gap={4}>
-                <MatchGroup title="Live" matches={groups.live} status="During" />
-                <MatchGroup title="Coming up" matches={groups.comingUp} status="Pre" />
-                <MatchGroup title="Completed" matches={groups.completed} status="Post" />
+                <MatchGroup title="Live" matches={groups.live} status="During" now={now} onPredictionSaved={reload} />
+                <MatchGroup title="Coming up" matches={groups.comingUp} status="Pre" now={now} onPredictionSaved={reload} />
+                <MatchGroup title="Completed" matches={groups.completed} status="Post" now={now} onPredictionSaved={reload} />
             </VStack>
         </Panel>
     );
@@ -87,9 +88,12 @@ type MatchGroupProps = {
     title: string;
     matches: MatchPrediction[];
     status: "Pre" | "During" | "Post";
+    now: Date;
+    /** Refreshes the card once a quick prediction has been saved, so the row shows the new score. */
+    onPredictionSaved: () => void;
 };
 
-function MatchGroup({ title, matches, status }: MatchGroupProps) {
+function MatchGroup({ title, matches, status, now, onPredictionSaved }: MatchGroupProps) {
     if (matches.length === 0) {
         return null;
     }
@@ -107,7 +111,9 @@ function MatchGroup({ title, matches, status }: MatchGroupProps) {
             </HStack>
             <SimpleGrid columns={{ base: 1, xl: matches.length > 3 ? 2 : 1 }} gap={0}>
                 {matches.map((match) => (
-                    <LiveMatchRow key={match.matchID} match={match} status={status} />
+                    <LiveMatchRow key={match.matchID} match={match} status={status}
+                        quickPredict minutesToPredict={computeMatchStatus(match, now).minutesToPredict}
+                        onPredictionSaved={onPredictionSaved} />
                 ))}
             </SimpleGrid>
         </Box>
