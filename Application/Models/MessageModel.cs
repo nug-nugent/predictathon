@@ -34,5 +34,11 @@ public class MessageModel
     /// </summary>
     public List<UserTrophyModel> PosterTrophies { get; set; } = [];
 
+    /// <summary>
+    /// The message this one replies to, or null for an ordinary post. Always a message in the same
+    /// thread.
+    /// </summary>
+    public MessageReplyReferenceModel? ReplyTo { get; set; }
+
     public List<MessageReactionModel> Reactions { get; set; } = [];
 }

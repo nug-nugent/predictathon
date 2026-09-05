@@ -37,3 +37,43 @@ test("a reaction pill lists who reacted, and takes your own reaction back", asyn
     await page.getByRole("button", { name: "Remove me" }).click();
     await expect(pill).toBeHidden();
 });
+
+// Same self-seeding caveat as the test above - this creates a thread it doesn't clean up.
+test("replying to a post quotes it, and the quote jumps back to it", async ({ page }) => {
+    const subject = `E2E replies ${Date.now()}`;
+
+    await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
+    await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
+
+    await page.goto("/board");
+    await page.getByRole("button", { name: "New Thread" }).click();
+    await page.getByLabel("Subject").fill(subject);
+    await page.getByLabel("Message").fill("The first post, worth answering.");
+    await page.getByRole("button", { name: "Create Thread" }).click();
+
+    await expect(page.getByRole("heading", { name: subject })).toBeVisible();
+
+    // Picking a message to reply to names it in the composer, so you can see what you're answering
+    // before you've written anything.
+    await page.getByRole("button", { name: `Reply to ${DEMO_PREDICTOR.username}'s message` }).click();
+    await expect(page.getByText(`Replying to ${DEMO_PREDICTOR.username} — The first post, worth answering.`)).toBeVisible();
+
+    await page.getByPlaceholder("Write a reply...").fill("And here is the answer.");
+    await page.getByRole("button", { name: "Post", exact: true }).click();
+
+    // The posted reply carries the quote, and the quote is a control that goes back to the parent
+    // rather than decoration.
+    const quote = page.getByRole("button", { name: `Jump to ${DEMO_PREDICTOR.username}'s message: The first post, worth answering.` });
+    await expect(quote).toBeVisible();
+
+    // Picking a reply target clears once the reply is posted - the chip shouldn't outlive it.
+    await expect(page.getByPlaceholder("Write a message...")).toBeVisible();
+
+    // Jumping focuses the message being quoted, which is what makes the jump perceivable to a
+    // screen reader rather than only to someone who can see the highlight.
+    // .first() because the text now appears twice - in the original post, and again inside the
+    // quote on the reply below it. The original is the one earlier in the document.
+    await quote.click();
+    const parentRow = page.getByText("The first post, worth answering.").first().locator("xpath=ancestor::div[@tabindex='-1'][1]");
+    await expect(parentRow).toBeFocused();
+});

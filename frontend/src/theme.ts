@@ -87,6 +87,12 @@ export const predictTheme = createSystem(defaultConfig, {
           // Pale wash marking the one row a table is "about" (e.g. the current team in the Team
           // Detail page's league table) - the same accent tint the active nav item uses.
           highlightRow: { value: { _light: "{colors.nav.activeTint}", _dark: "{colors.nav.activeTint}" } },
+          // Inset wash behind a quoted message - the stub above a reply, and the composer's
+          // "replying to" chip. Defined explicitly rather than leaning on Chakra's bg.subtle,
+          // whose dark default is near-black and reads as a hole punched in the panel rather than
+          // an inset. In dark mode it steps *up* from the card, which is what an inset on a dark
+          // surface has to do to be seen at all.
+          quote: { value: { _light: "#F2F3F6", _dark: "#33353C" } },
           avatarCircle: { value: { _light: "#1E4FD1", _dark: "#0DE4EE" } },
           avatarCircleFg: { value: { _light: "#FFFFFF", _dark: "#1C1D21" } },
         },

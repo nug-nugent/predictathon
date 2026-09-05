@@ -17,6 +17,13 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class MessageboardService : IMessageboardService
 {
+    /// <summary>
+    /// How much of a parent message's text a reply's quoted stub carries. Sized for the single
+    /// line the stub renders on at a comfortable desktop width - it's truncated with an ellipsis
+    /// in CSS as well, since the line's actual capacity depends on the viewport.
+    /// </summary>
+    private const int SnippetMaxLength = 120;
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IAvatarService _avatarService;
     private readonly IMessageImageService _messageImageService;
@@ -135,13 +142,46 @@ public class MessageboardService : IMessageboardService
 
         messages.Reverse();
 
+        // The parents of any replies on this page, fetched in one batch rather than through a
+        // self-navigation. A parent is very often already on this page, but it doesn't have to be
+        // (it can sit on an older one, or on none currently loaded), so it's looked up by id
+        // regardless and the stub renders the same either way.
+        var parents = await GetReplyParentsAsync(messages, cancellationToken);
+
         var userIds = messages
             .Select(m => m.PostedByUserID)
-            .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)));
+            .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)))
+            .Concat(parents.Values.Select(p => p.PostedByUserID));
         var users = await GetUsersByIdAsync(userIds, cancellationToken);
         var trophies = await _trophyService.GetForUsersAsync(messages.Select(m => m.PostedByUserID), cancellationToken);
 
-        return Result.Ok(messages.Select(m => MapMessage(m, users, trophies)).ToList());
+        return Result.Ok(messages.Select(m => MapMessage(m, users, trophies, parents)).ToList());
+    }
+
+    /// <summary>
+    /// Loads the parent messages referenced by any replies among <paramref name="messages"/>,
+    /// keyed by id. Returns an empty dictionary when nothing on the page is a reply, so the common
+    /// case costs no query at all.
+    /// </summary>
+    private async Task<Dictionary<Guid, Message>> GetReplyParentsAsync(List<Message> messages, CancellationToken cancellationToken)
+    {
+        var parentIds = messages
+            .Where(m => m.ReplyToMessageID.HasValue)
+            .Select(m => m.ReplyToMessageID!.Value)
+            .Distinct()
+            .ToList();
+
+        if (parentIds.Count == 0)
+        {
+            return [];
+        }
+
+        var parents = await _dbContext.Message
+            .AsNoTracking()
+            .Where(m => parentIds.Contains(m.MessageID))
+            .ToListAsync(cancellationToken);
+
+        return parents.ToDictionary(m => m.MessageID);
     }
 
     /// <inheritdoc />
@@ -175,7 +215,8 @@ public class MessageboardService : IMessageboardService
         await _dbContext.AddAsync(thread, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var postResult = await PostMessageAsync(thread.MessageThreadID, userId, firstMessageContent, youTubeUrl: null, uploadedImage: null, imageUrl: null, cancellationToken);
+        var postResult = await PostMessageAsync(
+            thread.MessageThreadID, userId, firstMessageContent, youTubeUrl: null, uploadedImage: null, imageUrl: null, replyToMessageId: null, cancellationToken);
         if (postResult.IsFailed)
         {
             return Result.Fail<MessageThreadModel>(postResult.Errors);
@@ -197,6 +238,7 @@ public class MessageboardService : IMessageboardService
         string? youTubeUrl,
         Stream? uploadedImage,
         string? imageUrl,
+        Guid? replyToMessageId,
         CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -216,6 +258,26 @@ public class MessageboardService : IMessageboardService
         if (string.IsNullOrWhiteSpace(content) && uploadedImage is null && string.IsNullOrWhiteSpace(imageUrl) && string.IsNullOrWhiteSpace(youTubeUrl))
         {
             return Result.Fail<MessageModel>(new PropertyValidationError(nameof(content), "A message needs some content."));
+        }
+
+        Message? replyToMessage = null;
+        if (replyToMessageId is Guid parentId)
+        {
+            replyToMessage = await _dbContext.Message.AsNoTracking().FirstOrDefaultAsync(m => m.MessageID == parentId, cancellationToken);
+            if (replyToMessage is null)
+            {
+                return Result.Fail<MessageModel>(
+                    new PropertyValidationError(nameof(replyToMessageId), "The message being replied to could not be found."));
+            }
+
+            // Same-thread only. Beyond being the sane reading of "reply", this is what keeps a
+            // reply from quoting a message out of a thread the reader can't see: thread visibility
+            // is already checked above, and a stub can never reach past it.
+            if (replyToMessage.MessageThreadID != threadId)
+            {
+                return Result.Fail<MessageModel>(
+                    new PropertyValidationError(nameof(replyToMessageId), "You can only reply to a message in the same thread."));
+            }
         }
 
         var messageId = Guid.NewGuid();
@@ -255,6 +317,7 @@ public class MessageboardService : IMessageboardService
             YouTubeVideoID = youTubeVideoId,
             HasLinkedImage = hasLinkedImage,
             UserTotalMessageboardPosts = newTotalPosts,
+            ReplyToMessageID = replyToMessageId,
         };
 
         await _dbContext.AddAsync(message, cancellationToken);
@@ -263,6 +326,16 @@ public class MessageboardService : IMessageboardService
         _dbContext.Update(viewer);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // The stub is built here rather than left for the client to resolve, because this same
+        // model is what gets broadcast over SignalR - every viewer of the thread has to be able to
+        // draw the quote from the payload alone.
+        MessageReplyReferenceModel? replyTo = null;
+        if (replyToMessage is not null)
+        {
+            var parentAuthors = await GetUsersByIdAsync([replyToMessage.PostedByUserID], cancellationToken);
+            replyTo = MapReplyReference(replyToMessage, parentAuthors);
+        }
 
         var model = new MessageModel
         {
@@ -277,6 +350,7 @@ public class MessageboardService : IMessageboardService
             ImageUrl = _messageImageService.GetImageUrl(messageId, hasLinkedImage),
             PosterTotalMessageboardPosts = newTotalPosts,
             PosterTrophies = [.. await _trophyService.GetForUserAsync(userId, cancellationToken)],
+            ReplyTo = replyTo,
             Reactions = [],
         };
 
@@ -473,7 +547,60 @@ public class MessageboardService : IMessageboardService
         ImageFile = _reactionCatalogue.ResolveImageFile(reaction.ReactionId) ?? string.Empty,
     };
 
-    private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users, IReadOnlyDictionary<Guid, List<UserTrophyModel>> trophies)
+    /// <summary>
+    /// Builds the quoted stub for a reply's parent. Everything the client needs to draw it is
+    /// flattened in here, so a stub renders identically whether or not its parent is on screen.
+    /// </summary>
+    private MessageReplyReferenceModel MapReplyReference(Message parent, Dictionary<Guid, ApplicationUser> users) => new()
+    {
+        MessageID = parent.MessageID,
+        PostedByUserID = parent.PostedByUserID,
+        PostedByUsername = users.TryGetValue(parent.PostedByUserID, out var author) ? author.UserName ?? string.Empty : string.Empty,
+        Snippet = BuildSnippet(parent.MessageContent),
+        ImageUrl = _messageImageService.GetImageUrl(parent.MessageID, parent.HasLinkedImage),
+        HasYouTubeVideo = !string.IsNullOrEmpty(parent.YouTubeVideoID),
+    };
+
+    /// <summary>
+    /// Truncates a parent message's content down to what the one-line stub can show, breaking at a
+    /// word boundary where there is one nearby. Truncating here rather than in the client means a
+    /// wall-of-text parent doesn't travel over the wire once per reply to it.
+    /// </summary>
+    /// <param name="content">The parent message's content, which may be null or empty.</param>
+    private static string? BuildSnippet(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        // Newlines would otherwise turn a multi-line parent into a stub with a lot of blank space
+        // in it: the stub is a single line, so the whole excerpt is collapsed onto one.
+        var collapsed = string.Join(' ', content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+        if (collapsed.Length <= SnippetMaxLength)
+        {
+            return collapsed;
+        }
+
+        var truncated = collapsed[..SnippetMaxLength];
+        var lastSpace = truncated.LastIndexOf(' ');
+
+        // Only break at a space if one falls reasonably late, otherwise a long unbroken run (a URL,
+        // say) would cut the snippet down to almost nothing.
+        if (lastSpace >= SnippetMaxLength / 2)
+        {
+            truncated = truncated[..lastSpace];
+        }
+
+        return truncated.TrimEnd() + "…";
+    }
+
+    private MessageModel MapMessage(
+        Message message,
+        Dictionary<Guid, ApplicationUser> users,
+        IReadOnlyDictionary<Guid, List<UserTrophyModel>> trophies,
+        IReadOnlyDictionary<Guid, Message> replyParents)
     {
         var poster = users.GetValueOrDefault(message.PostedByUserID);
 
@@ -490,6 +617,12 @@ public class MessageboardService : IMessageboardService
             ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
             PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
             PosterTrophies = trophies.GetValueOrDefault(message.PostedByUserID) ?? [],
+            // A reply whose parent has gone missing degrades to an ordinary post rather than an
+            // empty quote. The FK makes that unreachable today, but the mapping shouldn't be the
+            // thing that breaks if it ever becomes reachable.
+            ReplyTo = message.ReplyToMessageID is Guid parentId && replyParents.TryGetValue(parentId, out var parent)
+                ? MapReplyReference(parent, users)
+                : null,
             // Ordered to match GetReactionsAsync: the client groups by identity and keeps the
             // first row's details, so both paths must agree on which row that is.
             Reactions = message.MessageReaction

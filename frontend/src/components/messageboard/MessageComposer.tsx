@@ -1,13 +1,30 @@
-import { useRef, useState } from "react";
-import { Button, HStack, Input, Text, Textarea, VStack } from "@chakra-ui/react";
-import { Image as ImageIcon, Link2, Video, X } from "lucide-react";
-import { postMessage, postMessageWithImage } from "../../services/messageboard-service";
+import { useEffect, useRef, useState } from "react";
+import { Box, Button, HStack, Input, Text, Textarea, VStack } from "@chakra-ui/react";
+import { CornerUpLeft, Image as ImageIcon, Link2, Video, X } from "lucide-react";
+import { postMessage, postMessageWithImage, type Message } from "../../services/messageboard-service";
 import { ApiError } from "../../services/api";
 
 type AttachmentType = "none" | "file" | "url" | "youtube";
 
-export function MessageComposer({ threadId, onPosted }: { threadId: string; onPosted: () => void }) {
+/// Shows the first line of what is being replied to, so the chip says which message without
+/// needing the server's snippet (which only exists once the reply has been posted).
+function replyPreview(message: Message): string {
+    if (message.messageContent) {
+        return message.messageContent.replace(/\s+/g, " ").trim();
+    }
+
+    return message.imageUrl ? "Photo" : message.youTubeVideoID ? "YouTube video" : "Message";
+}
+
+export function MessageComposer({ threadId, replyTo, onClearReply, onPosted }: {
+    threadId: string;
+    /// The message being replied to, or null for an ordinary post.
+    replyTo: Message | null;
+    onClearReply: () => void;
+    onPosted: () => void;
+}) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [content, setContent] = useState("");
     const [attachmentType, setAttachmentType] = useState<AttachmentType>("none");
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -16,6 +33,15 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
     const [posting, setPosting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Picking a message to reply to brings the composer to the caller: on a phone the message
+    // tapped is usually well above the composer, so without this the Reply button appears to do
+    // nothing at all.
+    useEffect(() => {
+        if (!replyTo) return;
+        textareaRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+        textareaRef.current?.focus();
+    }, [replyTo]);
+
     const reset = () => {
         setContent("");
         setAttachmentType("none");
@@ -23,6 +49,7 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
         setImageUrl("");
         setYouTubeUrl("");
         if (fileInputRef.current) fileInputRef.current.value = "";
+        onClearReply();
     };
 
     const chooseAttachment = (type: AttachmentType) => {
@@ -51,13 +78,14 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
         setError(null);
         try {
             if (attachmentType === "file" && imageFile) {
-                await postMessageWithImage(threadId, imageFile, content.trim() || null);
+                await postMessageWithImage(threadId, imageFile, content.trim() || null, replyTo?.messageID);
             } else {
                 await postMessage(
                     threadId,
                     content.trim() || null,
                     attachmentType === "youtube" ? youTubeUrl.trim() : undefined,
                     attachmentType === "url" ? imageUrl.trim() : undefined,
+                    replyTo?.messageID,
                 );
             }
             reset();
@@ -71,8 +99,39 @@ export function MessageComposer({ threadId, onPosted }: { threadId: string; onPo
 
     return (
         <VStack align="stretch" gap={2} borderTopWidth="1px" pt={3} mt={2}>
+            {replyTo && (
+                <HStack
+                    gap={2}
+                    px={2}
+                    py={1}
+                    rounded="sm"
+                    bg="surface.quote"
+                    borderLeftWidth="2px"
+                    borderColor="border.divider"
+                    minW={0}
+                >
+                    <Box color="fg.muted" flexShrink={0} aria-hidden="true">
+                        <CornerUpLeft size={12} />
+                    </Box>
+                    <Text fontSize="xs" color="fg.muted" truncate minW={0}>
+                        Replying to <Text as="span" fontWeight="bold">{replyTo.postedByUsername}</Text> &mdash; {replyPreview(replyTo)}
+                    </Text>
+                    <Button
+                        size="2xs"
+                        variant="ghost"
+                        ml="auto"
+                        flexShrink={0}
+                        onClick={onClearReply}
+                        aria-label="Stop replying to this message"
+                    >
+                        <X size={12} />
+                    </Button>
+                </HStack>
+            )}
+
             <Textarea
-                placeholder="Write a message..."
+                ref={textareaRef}
+                placeholder={replyTo ? "Write a reply..." : "Write a message..."}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={3}

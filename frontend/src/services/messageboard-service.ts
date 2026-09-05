@@ -42,6 +42,18 @@ export type CustomReaction = {
     imageFile: string;
 };
 
+// Matches Application/Models/MessageReplyReferenceModel.cs. Everything needed to draw the quoted
+// stub is denormalised onto the reply, so it renders correctly even when the parent sits on an
+// older page that hasn't been loaded.
+export type MessageReplyReference = {
+    messageID: string;
+    postedByUserID: string;
+    postedByUsername: string;
+    snippet: string | null;
+    imageUrl: string | null;
+    hasYouTubeVideo: boolean;
+};
+
 // Matches Application/Models/MessageModel.cs.
 export type Message = {
     messageID: string;
@@ -55,6 +67,7 @@ export type Message = {
     imageUrl: string | null;
     posterTotalMessageboardPosts: number;
     posterTrophies: UserTrophy[];
+    replyTo: MessageReplyReference | null;
     reactions: MessageReaction[];
 };
 
@@ -82,15 +95,25 @@ export async function createThread(subject: string, firstMessageContent: string)
     return postJsonAuthenticated<MessageThread>("/Messageboard/Thread", { subject, firstMessageContent });
 }
 
-export async function postMessage(threadId: string, content: string | null, youTubeUrl?: string, imageUrl?: string): Promise<Message> {
-    return postJsonAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages`, { content, youTubeUrl, imageUrl });
+/// `replyToMessageID` quotes an existing message in the same thread; omit it for an ordinary post.
+export async function postMessage(
+    threadId: string,
+    content: string | null,
+    youTubeUrl?: string,
+    imageUrl?: string,
+    replyToMessageID?: string,
+): Promise<Message> {
+    return postJsonAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages`, { content, youTubeUrl, imageUrl, replyToMessageID });
 }
 
-export async function postMessageWithImage(threadId: string, image: File, content: string | null): Promise<Message> {
+export async function postMessageWithImage(threadId: string, image: File, content: string | null, replyToMessageID?: string): Promise<Message> {
     const form = new FormData();
     form.append("image", image);
     if (content) {
         form.append("content", content);
+    }
+    if (replyToMessageID) {
+        form.append("replyToMessageID", replyToMessageID);
     }
 
     return postFormAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages/Image`, form);

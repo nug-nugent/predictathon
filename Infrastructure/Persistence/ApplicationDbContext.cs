@@ -235,6 +235,13 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .IsUnicode(false)
                 .IsFixedLength();
 
+            // Mapped as a plain scalar, with no self-navigation on either side: the only thing that
+            // reads it resolves a whole page's parents in one batched query (see
+            // MessageboardService.GetMessagesAsync), which a navigation wouldn't improve on and
+            // which keeps the InMemory test double free of another relationship to configure.
+            entity.HasIndex(e => e.ReplyToMessageID, "IX_Message_ReplyToMessageID")
+                .HasFilter("[ReplyToMessageID] IS NOT NULL");
+
             entity.HasOne(d => d.MessageThread).WithMany(p => p.Message)
                 .HasForeignKey(d => d.MessageThreadID)
                 .OnDelete(DeleteBehavior.ClientSetNull)

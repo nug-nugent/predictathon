@@ -62,6 +62,31 @@ public class MessageboardServiceTests
         return thread;
     }
 
+    private DomainEntities.Message AddMessage(
+        DomainEntities.MessageThread thread,
+        ApplicationUser postedBy,
+        string? content,
+        DateTime? postedAt = null,
+        DomainEntities.Message? replyTo = null,
+        bool hasLinkedImage = false,
+        string? youTubeVideoId = null)
+    {
+        var message = new DomainEntities.Message
+        {
+            MessageID = Guid.NewGuid(),
+            MessageThreadID = thread.MessageThreadID,
+            PostedByUserID = postedBy.Id,
+            MessageDateTime = postedAt ?? DateTime.UtcNow.AddMinutes(-1),
+            MessageContent = content,
+            HasLinkedImage = hasLinkedImage,
+            YouTubeVideoID = youTubeVideoId,
+            ReplyToMessageID = replyTo?.MessageID,
+        };
+        _dbContext.Message.Add(message);
+        _dbContext.SaveChanges();
+        return message;
+    }
+
     [Fact]
     public async Task GetThreadsAsync_UserCannotViewMessageboard_ReturnsForbidden()
     {
@@ -198,7 +223,7 @@ public class MessageboardServiceTests
         var user = AddViewer(canViewMessageboard: false);
         var thread = AddThread();
 
-        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, "hi", null, null, null);
+        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, "hi", null, null, null, replyToMessageId: null);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ForbiddenError);
@@ -209,7 +234,7 @@ public class MessageboardServiceTests
     {
         var user = AddViewer();
 
-        var result = await MakeService().PostMessageAsync(Guid.NewGuid(), user.Id, "hi", null, null, null);
+        var result = await MakeService().PostMessageAsync(Guid.NewGuid(), user.Id, "hi", null, null, null, replyToMessageId: null);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is NotFoundError);
@@ -221,7 +246,7 @@ public class MessageboardServiceTests
         var user = AddViewer();
         var thread = AddThread();
 
-        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, null, null, null, null);
+        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, null, null, null, null, replyToMessageId: null);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.OfType<PropertyValidationError>().Should().ContainSingle(e => e.PropertyName == "content");
@@ -234,7 +259,7 @@ public class MessageboardServiceTests
         var thread = AddThread();
         _avatarService.Setup(a => a.GetAvatarUrl(user.Id, user.ImageUploaded)).Returns("avatar.png");
 
-        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, "Hello", null, null, null);
+        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, "Hello", null, null, null, replyToMessageId: null);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.PosterTotalMessageboardPosts.Should().Be(5);
@@ -252,10 +277,178 @@ public class MessageboardServiceTests
         var user = AddViewer();
         var thread = AddThread();
 
-        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, null, input, null, null);
+        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, null, input, null, null, replyToMessageId: null);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.YouTubeVideoID.Should().Be(expectedVideoId);
+    }
+
+    [Fact]
+    public async Task PostMessageAsync_ReplyToMessageInSameThread_StoresParentAndReturnsStub()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, "The parent post");
+
+        var result = await MakeService().PostMessageAsync(
+            thread.MessageThreadID, user.Id, "Replying to that", null, null, null, replyToMessageId: parent.MessageID);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ReplyTo.Should().NotBeNull();
+        result.Value.ReplyTo!.MessageID.Should().Be(parent.MessageID);
+        result.Value.ReplyTo.PostedByUsername.Should().Be("viewer");
+        result.Value.ReplyTo.Snippet.Should().Be("The parent post");
+        _dbContext.Message.Single(m => m.MessageContent == "Replying to that").ReplyToMessageID.Should().Be(parent.MessageID);
+    }
+
+    [Fact]
+    public async Task PostMessageAsync_ReplyToUnknownMessage_ReturnsValidationFailure()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+
+        var result = await MakeService().PostMessageAsync(
+            thread.MessageThreadID, user.Id, "hi", null, null, null, replyToMessageId: Guid.NewGuid());
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.OfType<PropertyValidationError>().Should().ContainSingle(e => e.PropertyName == "replyToMessageId");
+        _dbContext.Message.Should().BeEmpty();
+    }
+
+    // The constraint that actually matters for visibility: thread access is checked per thread, so
+    // a reply that could quote a message from a different (possibly hidden) thread would carry
+    // content past that check.
+    [Fact]
+    public async Task PostMessageAsync_ReplyToMessageInAnotherThread_ReturnsValidationFailure()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var otherThread = AddThread();
+        var parent = AddMessage(otherThread, user, "Somewhere else entirely");
+
+        var result = await MakeService().PostMessageAsync(
+            thread.MessageThreadID, user.Id, "hi", null, null, null, replyToMessageId: parent.MessageID);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.OfType<PropertyValidationError>().Should().ContainSingle(e => e.PropertyName == "replyToMessageId");
+        _dbContext.Message.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task PostMessageAsync_NoReplyTo_LeavesStubNull()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+
+        var result = await MakeService().PostMessageAsync(
+            thread.MessageThreadID, user.Id, "Just a post", null, null, null, replyToMessageId: null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ReplyTo.Should().BeNull();
+        _dbContext.Message.Single().ReplyToMessageID.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ReplyWithParentOnThePage_PopulatesStub()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, "The parent post", DateTime.UtcNow.AddMinutes(-5));
+        AddMessage(thread, user, "The reply", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
+        result.Value[0].ReplyTo.Should().BeNull();
+        result.Value[1].ReplyTo.Should().NotBeNull();
+        result.Value[1].ReplyTo!.MessageID.Should().Be(parent.MessageID);
+        result.Value[1].ReplyTo!.Snippet.Should().Be("The parent post");
+    }
+
+    // The case the denormalised stub exists for: the parent is older than the window being
+    // returned, so nothing the client receives could resolve it from the page itself.
+    [Fact]
+    public async Task GetMessagesAsync_ReplyWithParentOutsideThePage_StillPopulatesStub()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, "Long ago", DateTime.UtcNow.AddMinutes(-30));
+        AddMessage(thread, user, "Filler", DateTime.UtcNow.AddMinutes(-20));
+        AddMessage(thread, user, "The reply", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 1, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle();
+        result.Value[0].MessageContent.Should().Be("The reply");
+        result.Value[0].ReplyTo.Should().NotBeNull();
+        result.Value[0].ReplyTo!.MessageID.Should().Be(parent.MessageID);
+        result.Value[0].ReplyTo!.Snippet.Should().Be("Long ago");
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ReplyToImageOnlyParent_StubCarriesTheImageAndNoSnippet()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, content: null, hasLinkedImage: true);
+        _messageImageService.Setup(s => s.GetImageUrl(parent.MessageID, true)).Returns("parent.jpg");
+        AddMessage(thread, user, "Look at that", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value[1].ReplyTo!.Snippet.Should().BeNull();
+        result.Value[1].ReplyTo!.ImageUrl.Should().Be("parent.jpg");
+        result.Value[1].ReplyTo!.HasYouTubeVideo.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ReplyToYouTubeOnlyParent_StubFlagsTheVideo()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, content: null, youTubeVideoId: "dQw4w9WgXcQ");
+        AddMessage(thread, user, "Great tune", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value[1].ReplyTo!.HasYouTubeVideo.Should().BeTrue();
+        result.Value[1].ReplyTo!.Snippet.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ReplyToLongParent_TruncatesSnippetAtAWordBoundary()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        // 40 four-character words - comfortably past the 120-character snippet limit, with spaces
+        // falling regularly enough that the break must land on one.
+        var parent = AddMessage(thread, user, string.Join(' ', Enumerable.Repeat("word", 40)));
+        AddMessage(thread, user, "Shorter", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+
+        var snippet = result.Value[1].ReplyTo!.Snippet!;
+        snippet.Should().EndWith("…");
+        snippet.Should().StartWith("word word");
+        snippet.TrimEnd('…').Should().EndWith("word");
+        snippet.Length.Should().BeLessThanOrEqualTo(121);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_ReplyToMultiLineParent_CollapsesSnippetOntoOneLine()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+        var parent = AddMessage(thread, user, "First line\r\n\r\nSecond line");
+        AddMessage(thread, user, "Reply", DateTime.UtcNow, replyTo: parent);
+
+        var result = await MakeService().GetMessagesAsync(thread.MessageThreadID, user.Id, 20, null);
+
+        result.Value[1].ReplyTo!.Snippet.Should().Be("First line Second line");
     }
 
     [Fact]

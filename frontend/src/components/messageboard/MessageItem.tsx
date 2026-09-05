@@ -1,8 +1,11 @@
-import { Avatar, Box, HStack, Image, Link, Stack, Text, VStack } from "@chakra-ui/react";
+import { forwardRef } from "react";
+import { Avatar, Box, Button, HStack, Image, Link, Stack, Text, VStack } from "@chakra-ui/react";
+import { Reply } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Message, MessageReaction } from "../../services/messageboard-service";
 import { ReactionBar } from "./ReactionBar";
+import { ReplyQuote } from "./ReplyQuote";
 import { TrophyStamp } from "../trophies/TrophyStamp";
 import { formatDateTime } from "../../utils/formatDateTime";
 
@@ -13,12 +16,35 @@ const markdownComponents = {
     ),
 };
 
-export function MessageItem({ message, onReactionsChanged }: {
+/// Forwards a ref onto the message's outer row so the thread can scroll to it and move focus there
+/// when a reply's quoted stub is used to jump back to it.
+export const MessageItem = forwardRef<HTMLDivElement, {
     message: Message;
     onReactionsChanged: (reactions: MessageReaction[]) => void;
-}) {
+    onReply: (message: Message) => void;
+    onJumpToReplyParent: (messageId: string) => void;
+    /// Briefly true after being jumped to, to wash the row in the highlight tint.
+    highlighted?: boolean;
+}>(function MessageItem({ message, onReactionsChanged, onReply, onJumpToReplyParent, highlighted }, ref) {
     return (
-        <HStack align="start" gap={3} py={4} borderTopWidth="1px" borderColor="border.divider" _first={{ borderTopWidth: 0 }}>
+        <HStack
+            ref={ref}
+            // Focusable only programmatically: jumping to a message moves focus here so the jump is
+            // announced, rather than the highlight tint being the only cue that anything happened.
+            tabIndex={-1}
+            align="start"
+            gap={3}
+            py={4}
+            px={2}
+            mx={-2}
+            rounded="md"
+            borderTopWidth="1px"
+            borderColor="border.divider"
+            _first={{ borderTopWidth: 0 }}
+            bg={highlighted ? "surface.highlightRow" : undefined}
+            transition="background-color 0.6s ease-out"
+            _focusVisible={{ outline: "2px solid", outlineColor: "input.borderFocus", outlineOffset: "-2px" }}
+        >
             <Avatar.Root size="sm">
                 <Avatar.Image src={message.postedByAvatarUrl ?? undefined} />
                 <Avatar.Fallback name={message.postedByUsername} />
@@ -44,6 +70,10 @@ export function MessageItem({ message, onReactionsChanged }: {
                         <Text whiteSpace="nowrap">&middot; post #{message.posterTotalMessageboardPosts}</Text>
                     </HStack>
                 </Stack>
+
+                {message.replyTo && (
+                    <ReplyQuote replyTo={message.replyTo} onJump={() => onJumpToReplyParent(message.replyTo!.messageID)} />
+                )}
 
                 {message.messageContent && (
                     <Box fontSize="sm">
@@ -71,8 +101,19 @@ export function MessageItem({ message, onReactionsChanged }: {
                     </Box>
                 )}
 
-                <ReactionBar messageId={message.messageID} reactions={message.reactions} onChanged={onReactionsChanged} />
+                <HStack gap={1} wrap="wrap">
+                    <ReactionBar messageId={message.messageID} reactions={message.reactions} onChanged={onReactionsChanged} />
+                    <Button
+                        size="2xs"
+                        variant="ghost"
+                        color="fg.muted"
+                        onClick={() => onReply(message)}
+                        aria-label={`Reply to ${message.postedByUsername}'s message`}
+                    >
+                        <Reply size={12} /> Reply
+                    </Button>
+                </HStack>
             </VStack>
         </HStack>
     );
-}
+});

@@ -99,7 +99,7 @@ public class MessageboardController : ApiControllerBase
     public async Task<ActionResult<MessageModel?>> PostMessage(Guid threadId, PostMessageRequest request, CancellationToken cancellationToken)
     {
         var result = await _messageboardService.PostMessageAsync(
-            threadId, CurrentUserId, request.Content, request.YouTubeUrl, uploadedImage: null, request.ImageUrl, cancellationToken);
+            threadId, CurrentUserId, request.Content, request.YouTubeUrl, uploadedImage: null, request.ImageUrl, request.ReplyToMessageID, cancellationToken);
 
         return FromResult(result);
     }
@@ -123,7 +123,7 @@ public class MessageboardController : ApiControllerBase
 
         await using var stream = request.Image.OpenReadStream();
         var result = await _messageboardService.PostMessageAsync(
-            threadId, CurrentUserId, request.Content, youTubeUrl: null, stream, imageUrl: null, cancellationToken);
+            threadId, CurrentUserId, request.Content, youTubeUrl: null, stream, imageUrl: null, request.ReplyToMessageID, cancellationToken);
 
         return FromResult(result);
     }
