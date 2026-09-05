@@ -36,7 +36,7 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                             <Table.ColumnHeader>Match</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center"><ShortLabel short="Pred" full="Prediction" /></Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Score" /></Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Average score</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Average</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Difference</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
