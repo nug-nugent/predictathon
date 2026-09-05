@@ -15,6 +15,11 @@ const DEFAULT_PAGE_SIZE = 5;
 // of columns that stands down on a phone, where the table would otherwise run off the screen.
 const COMPARISON_DISPLAY = { base: "none", md: "table-cell" };
 
+/**
+ * A list of played matches with the result, your prediction and what it scored. The result is part
+ * of the match itself - "Ipswich Town 0 - 2 Liverpool" - rather than a column of its own, so the
+ * scoreline reads as the match's name and the row spends its width on the comparison instead.
+ */
 export function PredictableMatchesTable({ title, matches, onRowClick, pageSize = DEFAULT_PAGE_SIZE }: { title: string; matches: MatchListItem[]; onRowClick?: (matchId: string) => void; pageSize?: number }) {
     const [page, setPage] = useState(1);
     const pageMatches = matches.slice((page - 1) * pageSize, page * pageSize);
@@ -23,18 +28,17 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
         <Panel overflowX="auto" accent hoverLift>
             <VStack align="stretch" gap={1}>
                 <Heading size="sm" mb={2}>{title}</Heading>
-                {/* Seven columns of dates, scores and averages are about 180px more than a phone
-                    has: below `md` the kick-off time, the field average and the icon comparing the
-                    two step aside, leaving what the row is actually about - the match, the result,
-                    your prediction and what it scored. The full set is a tap away on the match. */}
+                {/* Columns of dates, scores and averages are more than a phone has room for: below
+                    `md` the kick-off time, the field average and the icon comparing the two step
+                    aside, leaving what the row is actually about - the match and its score, your
+                    prediction and what it scored. The full set is a tap away on the match. */}
                 <Table.Root size="sm" variant="line"
                     css={compactCellsOnSmallScreens}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader><ShortLabel short="Date" full="Date / time" /></Table.ColumnHeader>
                             <Table.ColumnHeader>Match</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Result</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center"><ShortLabel short="Yours" full="Your prediction" /></Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center"><ShortLabel short="You" full="Your prediction" /></Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Your score" /></Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center" display={COMPARISON_DISPLAY}>Average score</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center" display={COMPARISON_DISPLAY}></Table.ColumnHeader>
@@ -43,7 +47,7 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
                     <Table.Body>
                         {pageMatches.length === 0 ? (
                             <Table.Row>
-                                <Table.Cell colSpan={7}>
+                                <Table.Cell colSpan={6}>
                                     <Text color="fg.muted">No matches found</Text>
                                 </Table.Cell>
                             </Table.Row>
@@ -58,10 +62,9 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
                                     </Table.Cell>
                                     <Table.Cell whiteSpace="nowrap">
                                         <TeamLabel name={m.homeTeam} shortName={m.homeTeamShortName} acronym={m.homeTeamAcronym} />
-                                        {" vs "}
+                                        {` ${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"} `}
                                         <TeamLabel name={m.awayTeam} shortName={m.awayTeamShortName} acronym={m.awayTeamAcronym} />
                                     </Table.Cell>
-                                    <Table.Cell textAlign="center">{m.homeTeamGoals ?? "?"}-{m.awayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center">{m.predictionHomeTeamGoals ?? "?"}-{m.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center" color={`points.${m.yourPredictionScore}`} fontWeight="bold">{m.yourPredictionScore}</Table.Cell>
                                     <Table.Cell textAlign="center" display={COMPARISON_DISPLAY}>{m.averagePredictionScore.toFixed(2)}</Table.Cell>

@@ -15,6 +15,11 @@ const PAGE_SIZE = 10;
 // table off the side of the screen.
 const WORKINGS_DISPLAY = { base: "none", md: "table-cell" };
 
+/**
+ * The competition's sharpest predictions, best margin over the field first. As on
+ * `PredictableMatchesTable`, the result is part of the match itself - "Ipswich Town 0 - 2
+ * Liverpool" - rather than a column of its own.
+ */
 export function BestPredictionsTable({ predictions }: { predictions: BestPrediction[] }) {
     const [page, setPage] = useState(1);
     const pagePredictions = predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -29,17 +34,16 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                         <Table.Row>
                             <Table.ColumnHeader>User</Table.ColumnHeader>
                             <Table.ColumnHeader>Match</Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center">Result</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center"><ShortLabel short="Pred" full="Prediction" /></Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center"><ShortLabel short="Pts" full="Score" /></Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Average score</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Average</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center" display={WORKINGS_DISPLAY}>Difference</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {pagePredictions.length === 0 ? (
                             <Table.Row>
-                                <Table.Cell colSpan={7}>
+                                <Table.Cell colSpan={6}>
                                     <Text color="fg.muted">No matches found</Text>
                                 </Table.Cell>
                             </Table.Row>
@@ -50,10 +54,9 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                                 </Table.Cell>
                                 <Table.Cell whiteSpace="nowrap">
                                     <TeamLabel name={p.homeTeam} shortName={p.homeTeamShortName} acronym={p.homeTeamAcronym} />
-                                    {" vs "}
+                                    {` ${p.homeTeamGoals ?? "?"} - ${p.awayTeamGoals ?? "?"} `}
                                     <TeamLabel name={p.awayTeam} shortName={p.awayTeamShortName} acronym={p.awayTeamAcronym} />
                                 </Table.Cell>
-                                <Table.Cell textAlign="center">{p.homeTeamGoals ?? "?"}-{p.awayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center">{p.predictionHomeTeamGoals ?? "?"}-{p.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center" color={`points.${p.predictionScore}`} fontWeight="bold">{p.predictionScore}</Table.Cell>
                                 <Table.Cell textAlign="center" display={WORKINGS_DISPLAY}>{p.averagePredictionScore.toFixed(2)}</Table.Cell>
