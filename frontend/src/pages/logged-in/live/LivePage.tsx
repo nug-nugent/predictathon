@@ -240,7 +240,7 @@ function AdminLiveScore({ match, status, onSaved }: { match: MatchPrediction; st
     };
 
     return (
-        <Panel>
+        <Panel accent>
             <HStack justify="space-between" wrap="wrap" gap={3}>
                 <VStack align="flex-start" gap={0}>
                     <Heading size="sm">Update the Live Score</Heading>
