@@ -114,6 +114,24 @@ test("the predictions list reads best-first", async ({ page }) => {
     expect(ranked).toEqual([...ranked].sort((a, b) => b - a));
 });
 
+test("the predictions list folds away", async ({ page }) => {
+    await page.goto("/live");
+
+    // Open to start with - it's the greater part of why the page exists.
+    const predictions = page.getByRole("button", { name: "All Predictions" });
+    await expect(predictions).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
+
+    // ...and out of the way for anyone here for the scoreline alone, without taking the standings
+    // below it with it.
+    await predictions.click();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeHidden();
+    await expect(page.getByRole("columnheader", { name: "In play" })).toBeVisible();
+
+    await predictions.click();
+    await expect(page.getByRole("columnheader", { name: "Predictor" })).toBeVisible();
+});
+
 test("the live score section is hidden from players", async ({ page }) => {
     await page.goto("/live");
 
