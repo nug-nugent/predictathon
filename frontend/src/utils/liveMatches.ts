@@ -7,7 +7,7 @@ export type LiveMatchGroups = {
     comingUp: MatchPrediction[];
     /** Past the prediction cutoff with no confirmed result yet - links to /live. */
     live: MatchPrediction[];
-    /** Result confirmed - links to /results. */
+    /** Result confirmed - links to the match's own page. */
     completed: MatchPrediction[];
 };
 
@@ -40,19 +40,11 @@ export function hasLiveDayMatches(groups: LiveMatchGroups): boolean {
     return groups.comingUp.length > 0 || groups.live.length > 0 || groups.completed.length > 0;
 }
 
-/// Where a finished match's row leads. The Home card sends you to the Results list, since it's a
-/// summary of the day and the list is the natural next thing to scan; the Live page sends you to
-/// the one match, since you were already looking at matches one at a time.
-export type CompletedMatchTarget = "results" | "match";
-
 /// Where a match row takes you depends on what you can still do about it: predict it, watch it, or
-/// read how it went. Shared so every list of matches agrees on the first two, and is explicit about
-/// the third rather than each caller inventing its own.
-export function liveMatchHref(
-    match: MatchPrediction,
-    status: MatchStatusValue,
-    completedTarget: CompletedMatchTarget = "results",
-): string {
+/// read how it went. Shared so every list of matches agrees. A finished match goes to its own page
+/// rather than the Results list: you clicked one match, so one match is what the click should give
+/// you - the Results list is a click away from there and doesn't know which row you came from.
+export function liveMatchHref(match: MatchPrediction, status: MatchStatusValue): string {
     if (status === "Pre") {
         return `/predictions?week=${encodeURIComponent(matchWeekStart(match.matchDateTime))}`;
     }
@@ -61,5 +53,5 @@ export function liveMatchHref(
         return `/live/${match.matchID}`;
     }
 
-    return completedTarget === "match" ? `/match/${match.matchID}` : "/results";
+    return `/match/${match.matchID}`;
 }

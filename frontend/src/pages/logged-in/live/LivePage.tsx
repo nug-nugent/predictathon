@@ -12,6 +12,7 @@ import { computeMatchStatus, type MatchStatusValue } from "../../../components/m
 import { groupLiveMatches, hasLiveDayMatches, type LiveMatchGroups } from "../../../utils/liveMatches";
 import { LiveMatchLine } from "../../../components/match/live-match-line/LiveMatchLine";
 import { LiveMatchRow } from "../../../components/match/live-match-row/LiveMatchRow";
+import { YourPrediction } from "../../../components/match/your-prediction/YourPrediction";
 import { LiveBadge } from "../../../components/match/live-badge/LiveBadge";
 import { LiveLeagueTable } from "../../../components/league/LiveLeagueTable";
 import { PredictionsSummary } from "../../../components/match/predictions-summary/PredictionsSummary";
@@ -144,9 +145,7 @@ function TodayGroup({ title, matches, status }: { title: string; matches: MatchP
                 {title}
             </Text>
             {matches.map((match) => (
-                // A finished match goes to its own page rather than the Results list: you arrived
-                // here looking at one match at a time, so that's what the next click should give you.
-                <LiveMatchRow key={match.matchID} match={match} status={status} completedTarget="match" />
+                <LiveMatchRow key={match.matchID} match={match} status={status} />
             ))}
         </Box>
     );
@@ -376,6 +375,7 @@ function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPredi
             <VStack align="stretch" gap={1}>
                 {matches.map((match) => {
                     const isSelected = match.matchID === selectedMatchId;
+                    const { status } = computeMatchStatus(match, now);
 
                     return (
                         <ChakraLink key={match.matchID} asChild variant="plain" display="block" borderRadius="8px"
@@ -386,8 +386,22 @@ function AllLiveMatches({ matches, selectedMatchId, now }: { matches: MatchPredi
                                 for anyone who can't see the highlight. */}
                             <RouterLink to={`/live/${match.matchID}`} aria-current={isSelected ? "true" : undefined}>
                                 <VStack align="stretch" gap={0} px={2} py={2}>
-                                    <LiveMatchLine match={match} status={computeMatchStatus(match, now).status} />
-                                    {match.description && <Text fontSize="xs" color="fg.muted" textAlign="center">{match.description}</Text>}
+                                    <LiveMatchLine match={match} status={status} />
+
+                                    {/* What each match is worth to you, under the running score
+                                        rather than beside it: with several matches on at once your
+                                        prediction is the thing that makes one worth clicking into,
+                                        but this column is too narrow to give it a lane of its own
+                                        without squeezing the team names down to an initial. */}
+                                    <HStack gap={1.5} justify="center" wrap="wrap" fontSize="xs" color="fg.muted">
+                                        {match.description && (
+                                            <>
+                                                <Text>{match.description}</Text>
+                                                <Text aria-hidden="true">&middot;</Text>
+                                            </>
+                                        )}
+                                        <YourPrediction match={match} status={status} />
+                                    </HStack>
                                 </VStack>
                             </RouterLink>
                         </ChakraLink>
