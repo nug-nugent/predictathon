@@ -30,7 +30,11 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
     }
 
     const topRows = table.slice(0, TOP_ROWS);
-    const ownRow = user && !topRows.some((r) => r.userID === user.id) ? table.find((r) => r.userID === user.id) : undefined;
+    const ownIndex = user ? table.findIndex((r) => r.userID === user.id) : -1;
+    const ownRow = ownIndex >= TOP_ROWS ? table[ownIndex] : undefined;
+    // Only show the ellipsis when rows are actually being skipped - the player immediately after the
+    // top five follows on directly, so there's no gap to denote.
+    const hasGap = ownIndex > TOP_ROWS;
 
     return (
         <Panel p={3} accent hoverLift>
@@ -50,9 +54,11 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
                     ))}
                     {ownRow && (
                         <>
-                            <Table.Row>
-                                <Table.Cell colSpan={4} borderBottomWidth="0" py={0}>&hellip;</Table.Cell>
-                            </Table.Row>
+                            {hasGap && (
+                                <Table.Row>
+                                    <Table.Cell colSpan={4} borderBottomWidth="0" py={0}>&hellip;</Table.Cell>
+                                </Table.Row>
+                            )}
                             <MiniLeagueRow row={ownRow} isCurrentUser />
                         </>
                     )}
@@ -62,8 +68,8 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
     );
 }
 
-// One row of the mini table. The top-five rows and the current user's own row (shown below the
-// ellipsis when they're outside the top five) are identical bar the emphasis, so they share this.
+// One row of the mini table. The top-five rows and the current user's own row (appended below when
+// they're outside the top five) are identical bar the emphasis, so they share this.
 function MiniLeagueRow({ row, isCurrentUser }: { row: LeagueTableItem; isCurrentUser: boolean }) {
     return (
         <Table.Row fontWeight={isCurrentUser ? "bold" : undefined}>
