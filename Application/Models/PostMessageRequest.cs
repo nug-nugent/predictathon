@@ -12,4 +12,9 @@ public class PostMessageRequest
     public string? YouTubeUrl { get; set; }
 
     public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// The message being replied to, or null for an ordinary post. Must be in the same thread.
+    /// </summary>
+    public Guid? ReplyToMessageID { get; set; }
 }

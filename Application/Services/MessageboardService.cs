@@ -17,6 +17,13 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class MessageboardService : IMessageboardService
 {
+    /// <summary>
+    /// How much of a parent message's text a reply's quoted stub carries. Sized for the single
+    /// line the stub renders on at a comfortable desktop width - it's truncated with an ellipsis
+    /// in CSS as well, since the line's actual capacity depends on the viewport.
+    /// </summary>
+    private const int SnippetMaxLength = 120;
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IAvatarService _avatarService;
     private readonly IMessageImageService _messageImageService;
@@ -108,40 +115,200 @@ public class MessageboardService : IMessageboardService
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<MessageModel>>> GetMessagesAsync(Guid threadId, Guid userId, int take, Guid? beforeMessageId, CancellationToken cancellationToken = default)
+    public async Task<Result<MessageThreadPageModel>> GetMessagesAsync(
+        Guid threadId,
+        Guid userId,
+        int take,
+        Guid? beforeMessageId,
+        Guid? afterMessageId,
+        CancellationToken cancellationToken = default)
     {
         var threadResult = await GetThreadAsync(threadId, userId, cancellationToken);
         if (threadResult.IsFailed)
         {
-            return Result.Fail<List<MessageModel>>(threadResult.Errors);
+            return Result.Fail<MessageThreadPageModel>(threadResult.Errors);
         }
 
-        var query = _dbContext.Message.Where(m => m.MessageThreadID == threadId);
-
-        if (beforeMessageId is Guid cursorId)
+        if (beforeMessageId.HasValue && afterMessageId.HasValue)
         {
-            var cursorMessage = await _dbContext.Message.FirstOrDefaultAsync(m => m.MessageID == cursorId, cancellationToken);
-            if (cursorMessage is not null)
-            {
-                query = query.Where(m => m.MessageDateTime < cursorMessage.MessageDateTime);
-            }
+            return Result.Fail<MessageThreadPageModel>(
+                new PropertyValidationError(nameof(beforeMessageId), "A page can be taken from one direction only."));
         }
 
-        var messages = await query
-            .Include(m => m.MessageReaction)
-            .OrderByDescending(m => m.MessageDateTime)
-            .Take(take)
-            .ToListAsync(cancellationToken);
+        var totalCount = await _dbContext.Message.CountAsync(m => m.MessageThreadID == threadId, cancellationToken);
 
-        messages.Reverse();
+        Guid? firstUnreadMessageId = null;
+        int skip;
+        var takeCount = take;
+
+        if (beforeMessageId is Guid olderThan)
+        {
+            // Fill backwards from the cursor: this window ends where the caller's existing one
+            // begins, so it's the LAST `take` messages older than the cursor, not the first. Near
+            // the start of the thread there may be fewer than a full page left, and the window has
+            // to stop at the cursor rather than running past it into messages they already hold.
+            var olderCount = await CountOlderThanAsync(threadId, olderThan, cancellationToken);
+            takeCount = Math.Min(take, olderCount);
+            skip = olderCount - takeCount;
+        }
+        else if (afterMessageId is Guid newerThan)
+        {
+            skip = await CountOlderThanAsync(threadId, newerThan, cancellationToken) + 1;
+        }
+        else
+        {
+            (skip, firstUnreadMessageId) = await GetInitialWindowStartAsync(threadId, userId, take, totalCount, cancellationToken);
+        }
+
+        List<Message> messages = takeCount == 0
+            ? []
+            : await _dbContext.Message
+                .Where(m => m.MessageThreadID == threadId)
+                .Include(m => m.MessageReaction)
+                // MessageID breaks ties so the ordering is total: without it, two messages sharing
+                // a timestamp could swap places between requests and be duplicated or skipped
+                // across a page boundary.
+                .OrderBy(m => m.MessageDateTime)
+                .ThenBy(m => m.MessageID)
+                .Skip(skip)
+                .Take(takeCount)
+                .ToListAsync(cancellationToken);
+
+        var models = await MapMessagesAsync(messages, cancellationToken);
+
+        return Result.Ok(new MessageThreadPageModel
+        {
+            Messages = models,
+            MessagesBefore = skip,
+            MessagesAfter = Math.Max(0, totalCount - skip - messages.Count),
+            FirstUnreadMessageID = firstUnreadMessageId,
+        });
+    }
+
+    /// <summary>
+    /// Works out where the initial window starts: at the caller's first unread message (backed up
+    /// by one, so the last thing they did read is still on screen for context), or at the newest
+    /// page when they are up to date. Returns that offset and the first unread message's id.
+    /// </summary>
+    /// <param name="threadId">The thread being read.</param>
+    /// <param name="userId">The reading user.</param>
+    /// <param name="take">Window size.</param>
+    /// <param name="totalCount">Total messages in the thread.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task<(int Skip, Guid? FirstUnreadMessageId)> GetInitialWindowStartAsync(
+        Guid threadId,
+        Guid userId,
+        int take,
+        int totalCount,
+        CancellationToken cancellationToken)
+    {
+        // The newest page, which is both the fallback and the furthest the window is ever allowed
+        // to start: anchoring only ever moves it earlier, never past the end of the thread.
+        var lastPageStart = Math.Max(0, totalCount - take);
+
+        var readRow = await _dbContext.MessageThreadRead
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.UserID == userId && r.MessageThreadID == threadId, cancellationToken);
+
+        // Never opened before, so there is no "since when" to resume from. Dropping a first-time
+        // reader at the top of a thread with years of history would be worse than useless, so they
+        // get the newest page like someone who is up to date.
+        if (readRow is null)
+        {
+            return (lastPageStart, null);
+        }
+
+        var firstUnread = await _dbContext.Message
+            .AsNoTracking()
+            .Where(m => m.MessageThreadID == threadId && m.MessageDateTime > readRow.LastReadDateTime)
+            .OrderBy(m => m.MessageDateTime)
+            .ThenBy(m => m.MessageID)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (firstUnread is null)
+        {
+            return (lastPageStart, null);
+        }
+
+        var indexOfFirstUnread = await CountOlderThanAsync(threadId, firstUnread.MessageID, cancellationToken);
+
+        return (Math.Clamp(indexOfFirstUnread - 1, 0, lastPageStart), firstUnread.MessageID);
+    }
+
+    /// <summary>
+    /// Counts the messages in a thread older than the given one, which is also that message's
+    /// zero-based position in the thread.
+    /// </summary>
+    /// <param name="threadId">The thread to count within.</param>
+    /// <param name="messageId">The message to count up to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <remarks>
+    /// Compares on timestamp alone, while the ordering it indexes into also breaks ties on
+    /// MessageID. Two messages in one thread would have to land in the same 3.33ms datetime tick
+    /// for that to diverge, and the worst it could then do is re-serve one message the client
+    /// already has - which the client discards by id anyway.
+    /// </remarks>
+    private async Task<int> CountOlderThanAsync(Guid threadId, Guid messageId, CancellationToken cancellationToken)
+    {
+        var message = await _dbContext.Message.AsNoTracking().FirstOrDefaultAsync(m => m.MessageID == messageId, cancellationToken);
+        if (message is null)
+        {
+            return 0;
+        }
+
+        return await _dbContext.Message.CountAsync(
+            m => m.MessageThreadID == threadId && m.MessageDateTime < message.MessageDateTime,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Turns a slice of message entities into their models, resolving reply parents, posters and
+    /// trophies for the whole slice in batches rather than per message.
+    /// </summary>
+    /// <param name="messages">The messages to map, in the order they should be returned.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task<List<MessageModel>> MapMessagesAsync(List<Message> messages, CancellationToken cancellationToken)
+    {
+        // The parents of any replies on this page, fetched in one batch rather than through a
+        // self-navigation. A parent is very often already on this page, but it doesn't have to be
+        // (it can sit on an older one, or on none currently loaded), so it's looked up by id
+        // regardless and the stub renders the same either way.
+        var parents = await GetReplyParentsAsync(messages, cancellationToken);
 
         var userIds = messages
             .Select(m => m.PostedByUserID)
-            .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)));
+            .Concat(messages.SelectMany(m => m.MessageReaction.Select(r => r.UserID)))
+            .Concat(parents.Values.Select(p => p.PostedByUserID));
         var users = await GetUsersByIdAsync(userIds, cancellationToken);
         var trophies = await _trophyService.GetForUsersAsync(messages.Select(m => m.PostedByUserID), cancellationToken);
 
-        return Result.Ok(messages.Select(m => MapMessage(m, users, trophies)).ToList());
+        return messages.Select(m => MapMessage(m, users, trophies, parents)).ToList();
+    }
+
+    /// <summary>
+    /// Loads the parent messages referenced by any replies among <paramref name="messages"/>,
+    /// keyed by id. Returns an empty dictionary when nothing on the page is a reply, so the common
+    /// case costs no query at all.
+    /// </summary>
+    private async Task<Dictionary<Guid, Message>> GetReplyParentsAsync(List<Message> messages, CancellationToken cancellationToken)
+    {
+        var parentIds = messages
+            .Where(m => m.ReplyToMessageID.HasValue)
+            .Select(m => m.ReplyToMessageID!.Value)
+            .Distinct()
+            .ToList();
+
+        if (parentIds.Count == 0)
+        {
+            return [];
+        }
+
+        var parents = await _dbContext.Message
+            .AsNoTracking()
+            .Where(m => parentIds.Contains(m.MessageID))
+            .ToListAsync(cancellationToken);
+
+        return parents.ToDictionary(m => m.MessageID);
     }
 
     /// <inheritdoc />
@@ -175,7 +342,8 @@ public class MessageboardService : IMessageboardService
         await _dbContext.AddAsync(thread, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var postResult = await PostMessageAsync(thread.MessageThreadID, userId, firstMessageContent, youTubeUrl: null, uploadedImage: null, imageUrl: null, cancellationToken);
+        var postResult = await PostMessageAsync(
+            thread.MessageThreadID, userId, firstMessageContent, youTubeUrl: null, uploadedImage: null, imageUrl: null, replyToMessageId: null, cancellationToken);
         if (postResult.IsFailed)
         {
             return Result.Fail<MessageThreadModel>(postResult.Errors);
@@ -197,6 +365,7 @@ public class MessageboardService : IMessageboardService
         string? youTubeUrl,
         Stream? uploadedImage,
         string? imageUrl,
+        Guid? replyToMessageId,
         CancellationToken cancellationToken = default)
     {
         var viewerResult = await GetViewerAsync(userId, cancellationToken);
@@ -216,6 +385,26 @@ public class MessageboardService : IMessageboardService
         if (string.IsNullOrWhiteSpace(content) && uploadedImage is null && string.IsNullOrWhiteSpace(imageUrl) && string.IsNullOrWhiteSpace(youTubeUrl))
         {
             return Result.Fail<MessageModel>(new PropertyValidationError(nameof(content), "A message needs some content."));
+        }
+
+        Message? replyToMessage = null;
+        if (replyToMessageId is Guid parentId)
+        {
+            replyToMessage = await _dbContext.Message.AsNoTracking().FirstOrDefaultAsync(m => m.MessageID == parentId, cancellationToken);
+            if (replyToMessage is null)
+            {
+                return Result.Fail<MessageModel>(
+                    new PropertyValidationError(nameof(replyToMessageId), "The message being replied to could not be found."));
+            }
+
+            // Same-thread only. Beyond being the sane reading of "reply", this is what keeps a
+            // reply from quoting a message out of a thread the reader can't see: thread visibility
+            // is already checked above, and a stub can never reach past it.
+            if (replyToMessage.MessageThreadID != threadId)
+            {
+                return Result.Fail<MessageModel>(
+                    new PropertyValidationError(nameof(replyToMessageId), "You can only reply to a message in the same thread."));
+            }
         }
 
         var messageId = Guid.NewGuid();
@@ -255,6 +444,7 @@ public class MessageboardService : IMessageboardService
             YouTubeVideoID = youTubeVideoId,
             HasLinkedImage = hasLinkedImage,
             UserTotalMessageboardPosts = newTotalPosts,
+            ReplyToMessageID = replyToMessageId,
         };
 
         await _dbContext.AddAsync(message, cancellationToken);
@@ -263,6 +453,16 @@ public class MessageboardService : IMessageboardService
         _dbContext.Update(viewer);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // The stub is built here rather than left for the client to resolve, because this same
+        // model is what gets broadcast over SignalR - every viewer of the thread has to be able to
+        // draw the quote from the payload alone.
+        MessageReplyReferenceModel? replyTo = null;
+        if (replyToMessage is not null)
+        {
+            var parentAuthors = await GetUsersByIdAsync([replyToMessage.PostedByUserID], cancellationToken);
+            replyTo = MapReplyReference(replyToMessage, parentAuthors);
+        }
 
         var model = new MessageModel
         {
@@ -277,6 +477,7 @@ public class MessageboardService : IMessageboardService
             ImageUrl = _messageImageService.GetImageUrl(messageId, hasLinkedImage),
             PosterTotalMessageboardPosts = newTotalPosts,
             PosterTrophies = [.. await _trophyService.GetForUserAsync(userId, cancellationToken)],
+            ReplyTo = replyTo,
             Reactions = [],
         };
 
@@ -473,7 +674,60 @@ public class MessageboardService : IMessageboardService
         ImageFile = _reactionCatalogue.ResolveImageFile(reaction.ReactionId) ?? string.Empty,
     };
 
-    private MessageModel MapMessage(Message message, Dictionary<Guid, ApplicationUser> users, IReadOnlyDictionary<Guid, List<UserTrophyModel>> trophies)
+    /// <summary>
+    /// Builds the quoted stub for a reply's parent. Everything the client needs to draw it is
+    /// flattened in here, so a stub renders identically whether or not its parent is on screen.
+    /// </summary>
+    private MessageReplyReferenceModel MapReplyReference(Message parent, Dictionary<Guid, ApplicationUser> users) => new()
+    {
+        MessageID = parent.MessageID,
+        PostedByUserID = parent.PostedByUserID,
+        PostedByUsername = users.TryGetValue(parent.PostedByUserID, out var author) ? author.UserName ?? string.Empty : string.Empty,
+        Snippet = BuildSnippet(parent.MessageContent),
+        ImageUrl = _messageImageService.GetImageUrl(parent.MessageID, parent.HasLinkedImage),
+        HasYouTubeVideo = !string.IsNullOrEmpty(parent.YouTubeVideoID),
+    };
+
+    /// <summary>
+    /// Truncates a parent message's content down to what the one-line stub can show, breaking at a
+    /// word boundary where there is one nearby. Truncating here rather than in the client means a
+    /// wall-of-text parent doesn't travel over the wire once per reply to it.
+    /// </summary>
+    /// <param name="content">The parent message's content, which may be null or empty.</param>
+    private static string? BuildSnippet(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        // Newlines would otherwise turn a multi-line parent into a stub with a lot of blank space
+        // in it: the stub is a single line, so the whole excerpt is collapsed onto one.
+        var collapsed = string.Join(' ', content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+        if (collapsed.Length <= SnippetMaxLength)
+        {
+            return collapsed;
+        }
+
+        var truncated = collapsed[..SnippetMaxLength];
+        var lastSpace = truncated.LastIndexOf(' ');
+
+        // Only break at a space if one falls reasonably late, otherwise a long unbroken run (a URL,
+        // say) would cut the snippet down to almost nothing.
+        if (lastSpace >= SnippetMaxLength / 2)
+        {
+            truncated = truncated[..lastSpace];
+        }
+
+        return truncated.TrimEnd() + "…";
+    }
+
+    private MessageModel MapMessage(
+        Message message,
+        Dictionary<Guid, ApplicationUser> users,
+        IReadOnlyDictionary<Guid, List<UserTrophyModel>> trophies,
+        IReadOnlyDictionary<Guid, Message> replyParents)
     {
         var poster = users.GetValueOrDefault(message.PostedByUserID);
 
@@ -490,6 +744,12 @@ public class MessageboardService : IMessageboardService
             ImageUrl = _messageImageService.GetImageUrl(message.MessageID, message.HasLinkedImage),
             PosterTotalMessageboardPosts = message.UserTotalMessageboardPosts,
             PosterTrophies = trophies.GetValueOrDefault(message.PostedByUserID) ?? [],
+            // A reply whose parent has gone missing degrades to an ordinary post rather than an
+            // empty quote. The FK makes that unreachable today, but the mapping shouldn't be the
+            // thing that breaks if it ever becomes reachable.
+            ReplyTo = message.ReplyToMessageID is Guid parentId && replyParents.TryGetValue(parentId, out var parent)
+                ? MapReplyReference(parent, users)
+                : null,
             // Ordered to match GetReactionsAsync: the client groups by identity and keeps the
             // first row's details, so both paths must agree on which row that is.
             Reactions = message.MessageReaction

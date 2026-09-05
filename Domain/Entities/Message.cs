@@ -24,6 +24,8 @@ public partial class Message
 
     public int UserTotalMessageboardPosts { get; set; }
 
+    public Guid? ReplyToMessageID { get; set; }
+
     public virtual ICollection<MessageReaction> MessageReaction { get; set; } = new List<MessageReaction>();
 
     public virtual MessageThread MessageThread { get; set; } = null!;

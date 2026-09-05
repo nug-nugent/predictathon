@@ -42,6 +42,18 @@ export type CustomReaction = {
     imageFile: string;
 };
 
+// Matches Application/Models/MessageReplyReferenceModel.cs. Everything needed to draw the quoted
+// stub is denormalised onto the reply, so it renders correctly even when the parent sits on an
+// older page that hasn't been loaded.
+export type MessageReplyReference = {
+    messageID: string;
+    postedByUserID: string;
+    postedByUsername: string;
+    snippet: string | null;
+    imageUrl: string | null;
+    hasYouTubeVideo: boolean;
+};
+
 // Matches Application/Models/MessageModel.cs.
 export type Message = {
     messageID: string;
@@ -55,7 +67,17 @@ export type Message = {
     imageUrl: string | null;
     posterTotalMessageboardPosts: number;
     posterTrophies: UserTrophy[];
+    replyTo: MessageReplyReference | null;
     reactions: MessageReaction[];
+};
+
+// Matches Application/Models/MessageThreadPageModel.cs. The counts describe the slice in
+// `messages`, not whatever the caller already holds - see getMessages below.
+export type MessageThreadPage = {
+    messages: Message[];
+    messagesBefore: number;
+    messagesAfter: number;
+    firstUnreadMessageID: string | null;
 };
 
 export async function getThreads(page: number, pageSize: number): Promise<PagedResult<MessageThreadSummary>> {
@@ -67,30 +89,50 @@ export async function getThread(threadId: string): Promise<MessageThread> {
     return getJsonAuthenticated<MessageThread>(`/Messageboard/Thread/${threadId}`);
 }
 
-/// Gets a page of a thread's messages, oldest-first. Omit beforeMessageId for the latest page;
-/// pass the id of the oldest currently-loaded message to load older messages.
-export async function getMessages(threadId: string, beforeMessageId?: string, take = 30): Promise<Message[]> {
+/// Gets a window of a thread's messages, oldest-first. Pass no cursor for the initial load, which
+/// the server anchors on your first unread message; pass `before` (the oldest message you hold) to
+/// page backwards, or `after` (the newest) to page forwards. `messagesBefore`/`messagesAfter`
+/// describe the returned slice, so when extending a window take only the count for the end you
+/// extended.
+export async function getMessages(
+    threadId: string,
+    cursor: { before?: string; after?: string } = {},
+    take = 30,
+): Promise<MessageThreadPage> {
     const params = new URLSearchParams({ take: String(take) });
-    if (beforeMessageId) {
-        params.set("beforeMessageId", beforeMessageId);
+    if (cursor.before) {
+        params.set("beforeMessageId", cursor.before);
+    }
+    if (cursor.after) {
+        params.set("afterMessageId", cursor.after);
     }
 
-    return getJsonAuthenticated<Message[]>(`/Messageboard/Thread/${threadId}/Messages?${params}`);
+    return getJsonAuthenticated<MessageThreadPage>(`/Messageboard/Thread/${threadId}/Messages?${params}`);
 }
 
 export async function createThread(subject: string, firstMessageContent: string): Promise<MessageThread> {
     return postJsonAuthenticated<MessageThread>("/Messageboard/Thread", { subject, firstMessageContent });
 }
 
-export async function postMessage(threadId: string, content: string | null, youTubeUrl?: string, imageUrl?: string): Promise<Message> {
-    return postJsonAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages`, { content, youTubeUrl, imageUrl });
+/// `replyToMessageID` quotes an existing message in the same thread; omit it for an ordinary post.
+export async function postMessage(
+    threadId: string,
+    content: string | null,
+    youTubeUrl?: string,
+    imageUrl?: string,
+    replyToMessageID?: string,
+): Promise<Message> {
+    return postJsonAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages`, { content, youTubeUrl, imageUrl, replyToMessageID });
 }
 
-export async function postMessageWithImage(threadId: string, image: File, content: string | null): Promise<Message> {
+export async function postMessageWithImage(threadId: string, image: File, content: string | null, replyToMessageID?: string): Promise<Message> {
     const form = new FormData();
     form.append("image", image);
     if (content) {
         form.append("content", content);
+    }
+    if (replyToMessageID) {
+        form.append("replyToMessageID", replyToMessageID);
     }
 
     return postFormAuthenticated<Message>(`/Messageboard/Thread/${threadId}/Messages/Image`, form);
