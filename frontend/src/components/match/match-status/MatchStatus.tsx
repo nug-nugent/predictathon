@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Button, HStack, Popover, Portal, Spinner, Stack, Table, Text, VStack } from "@chakra-ui/react";
 import { ChevronDown } from "lucide-react";
-import type { MatchStatusValue, SaveState } from "../matchStatus";
+import { predictionStatusColor, predictionStatusText, type MatchStatusValue, type SaveState } from "../matchStatus";
 import { getMatchPredictions, type MatchPredictionListItem } from "../../../services/prediction-service";
 import { PredictionsSummary } from "../predictions-summary/PredictionsSummary";
 import { TablePagination } from "../../ui/table-pagination";
@@ -18,44 +18,6 @@ type MatchStatusProps = {
     actualAwayGoals: number | null;
     score: number | null;
 };
-
-// Just the duration - the caller supplies the "closes in" framing. Naming the deadline matters now
-// that MatchList bands each match under its kick-off time: a bare "5h" next to a 15:00 heading
-// invites reading it as the time to kick-off rather than to the (two minutes earlier) save cutoff.
-function formatCountdown(minutes: number): string {
-    if (minutes < 60) {
-        return `${minutes}m`;
-    }
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        const remainingMinutes = minutes % 60;
-        return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ""}`;
-    }
-
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
-    return `${days}d${remainingHours ? ` ${remainingHours}h` : ""}`;
-}
-
-function getColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
-    if (status !== "Pre") return "fg.muted";
-    if (saveState === "cutoff" || saveState === "error") return "fg.error";
-    if (saveState === "saving") return "fg.info";
-    if (saveState === "saved") return "fg.success";
-
-    return minutesToPredict < 1440 ? "status.urgent" : "status.relaxed";
-}
-
-function getText(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
-    if (status !== "Pre") return "Awaiting result";
-    if (saveState === "cutoff") return "Predictions are closed for this match";
-    if (saveState === "error") return "Failed to save prediction!";
-    if (saveState === "saving") return "Saving...";
-    if (saveState === "saved") return "Prediction saved!";
-
-    return `Closes in ${formatCountdown(minutesToPredict)}`;
-}
 
 export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
     const [open, setOpen] = useState(false);
@@ -93,8 +55,8 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                     <Text textAlign={{ base: "center", md: "right" }} width="full" color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
-                <Text fontSize="0.85em" color={getColor(status, saveState, minutesToPredict)} width={{ base: isDuring ? "auto" : "full", md: "full" }} textAlign={{ base: "center", md: "right" }}>
-                    {getText(status, saveState, minutesToPredict)}
+                <Text fontSize="0.85em" color={predictionStatusColor(status, saveState, minutesToPredict)} width={{ base: isDuring ? "auto" : "full", md: "full" }} textAlign={{ base: "center", md: "right" }}>
+                    {predictionStatusText(status, saveState, minutesToPredict)}
                 </Text>
             )}
 

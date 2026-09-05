@@ -1,8 +1,8 @@
 import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { ApiError } from "../../../services/api";
-import { savePrediction, type MatchPrediction } from "../../../services/prediction-service";
-import { computeMatchStatus, type SaveState } from "../matchStatus";
+import { type MatchPrediction } from "../../../services/prediction-service";
+import { computeMatchStatus } from "../matchStatus";
+import { usePredictionSave } from "../usePredictionSave";
 import { MatchStatus } from "../match-status/MatchStatus";
 import { TeamName } from "../team-name/TeamName";
 import { useUser } from "../../../hooks/useUser";
@@ -25,17 +25,10 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
     const [homeInput, setHomeInput] = useState(match.homeTeamGoals !== null ? String(match.homeTeamGoals) : "");
     const [awayInput, setAwayInput] = useState(match.awayTeamGoals !== null ? String(match.awayTeamGoals) : "");
-    const [saveState, setSaveState] = useState<SaveState>("idle");
+    const { saveState, save: savePredictionFor } = usePredictionSave(match.matchID);
 
     const homeInputRef = useRef<HTMLInputElement>(null);
     const awayInputRef = useRef<HTMLInputElement>(null);
-
-    // Editing an existing prediction fires a save per digit change (home, then away), so two POSTs
-    // can overlap. Chaining them guarantees the server processes them in entry order (last write
-    // wins with the *latest* values), and the sequence number keeps a superseded save's outcome
-    // from clobbering the UI state of the one that matters.
-    const saveChain = useRef<Promise<void>>(Promise.resolve());
-    const saveSeq = useRef(0);
 
     useEffect(() => {
         if (hasFocus && document.activeElement !== awayInputRef.current) {
@@ -46,25 +39,11 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     const locked = status !== "Pre" || saveState === "cutoff";
 
     const save = (homeValue: string, awayValue: string, focusNext: boolean) => {
-        if (homeValue === "" || awayValue === "") return;
+        savePredictionFor(homeValue, awayValue, () => {
+            onSaved(match.matchID);
 
-        const seq = ++saveSeq.current;
-        setSaveState("saving");
-
-        saveChain.current = saveChain.current.then(async () => {
-            try {
-                await savePrediction(match.matchID, Number(homeValue), Number(awayValue));
-                if (saveSeq.current !== seq) return;
-
-                setSaveState("saved");
-                onSaved(match.matchID);
-
-                if (focusNext) {
-                    awayInputRef.current?.blur();
-                }
-            } catch (error) {
-                if (saveSeq.current !== seq) return;
-                setSaveState(error instanceof ApiError && error.status === 409 ? "cutoff" : "error");
+            if (focusNext) {
+                awayInputRef.current?.blur();
             }
         });
     };
