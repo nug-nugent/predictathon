@@ -19,20 +19,23 @@ type MatchStatusProps = {
     score: number | null;
 };
 
+// Just the duration - the caller supplies the "closes in" framing. Naming the deadline matters now
+// that MatchList bands each match under its kick-off time: a bare "5h" next to a 15:00 heading
+// invites reading it as the time to kick-off rather than to the (two minutes earlier) save cutoff.
 function formatCountdown(minutes: number): string {
     if (minutes < 60) {
-        return `${minutes}m left`;
+        return `${minutes}m`;
     }
 
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
         const remainingMinutes = minutes % 60;
-        return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ""} left`;
+        return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ""}`;
     }
 
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
-    return `${days}d${remainingHours ? ` ${remainingHours}h` : ""} left`;
+    return `${days}d${remainingHours ? ` ${remainingHours}h` : ""}`;
 }
 
 function getColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
@@ -51,7 +54,7 @@ function getText(status: MatchStatusValue, saveState: SaveState, minutesToPredic
     if (saveState === "saving") return "Saving...";
     if (saveState === "saved") return "Prediction saved!";
 
-    return formatCountdown(minutesToPredict);
+    return `Closes in ${formatCountdown(minutesToPredict)}`;
 }
 
 export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
