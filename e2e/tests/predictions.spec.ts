@@ -40,3 +40,15 @@ test("a prediction can be entered for an upcoming match and is saved", async ({ 
     await expect(homeInput).toHaveValue("2");
     await expect(awayInput).toHaveValue("1");
 });
+
+test("matches are grouped under a kick-off time heading", async ({ page }) => {
+    await page.goto("/predictions");
+    await expect(page.getByRole("combobox")).toBeVisible();
+
+    // MatchList bands each run of matches sharing a kick-off under one time heading, so a match's
+    // kick-off is only ever on screen as one of these - nothing on the row itself carries it. The
+    // regex allows both a 24-hour and an AM/PM rendering, since the heading follows the browser
+    // locale like every other time in the app.
+    const kickoffHeadings = page.getByText(/^\d{1,2}:\d{2}(\s?[AP]M)?$/);
+    await expect(kickoffHeadings.first()).toBeVisible();
+});

@@ -3,6 +3,7 @@ import { Link as RouterLink } from "react-router";
 import type { MatchPrediction } from "../../../services/prediction-service";
 import type { MatchStatusValue } from "../matchStatus";
 import { crestUrl } from "../../../utils/crestUrl";
+import { formatKickoffTime } from "../../../utils/formatKickoffTime";
 import { TeamLabel, type TeamNames } from "../../team/TeamLabel";
 
 type LiveMatchLineProps = {
@@ -17,10 +18,6 @@ type LiveMatchLineProps = {
      */
     linkTeams?: boolean;
 };
-
-function kickoffTime(matchDateTime: string): string {
-    return new Date(matchDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
 
 // Both sides or neither: a half-populated scoreline would be worse than none.
 function liveScore(match: MatchPrediction): string | null {
@@ -56,7 +53,7 @@ export function LiveMatchLine({ match, status, size = "sm", linkTeams = false }:
             >
                 {status === "Post" ? `${match.actualHomeTeamGoals} - ${match.actualAwayTeamGoals}`
                     : status === "During" ? liveScore(match) ?? "v"
-                        : kickoffTime(match.matchDateTime)}
+                        : formatKickoffTime(match.matchDateTime)}
             </Box>
 
             <TeamSide teamId={match.awayTeamID} name={match.awayTeam} shortName={match.awayTeamShortName}
