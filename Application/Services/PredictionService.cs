@@ -1,7 +1,8 @@
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
@@ -14,8 +15,6 @@ namespace Predictathon.Application.Services;
 [ScopedService]
 public class PredictionService : IPredictionService
 {
-    private static readonly TimeZoneInfo UkTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
-
     private readonly IApplicationDbContext _appDbContext;
 
     public PredictionService(IApplicationDbContext appDbContext)
@@ -37,7 +36,7 @@ public class PredictionService : IPredictionService
             return Result.Fail(new NotFoundError("The match could not be found."));
         }
 
-        var nowUk = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, UkTimeZone);
+        var nowUk = UkClock.Now;
         if (nowUk >= match.MatchDateTime.AddMinutes(-2))
         {
             return Result.Fail(new ConflictError("Predictions can no longer be submitted for this match."));
@@ -65,12 +64,17 @@ public class PredictionService : IPredictionService
         // audit trail is what the (separate, not-yet-built) results-processing scoring procedure
         // uses to reconcile late edits - it must be written even though scoring itself is out of
         // scope here, or that feature will silently break later.
+        //
+        // PredictionDateTime is UK wall-clock (no "Utc" suffix on the column - see CLAUDE.md), which
+        // is what MatchPredictionScoreSet's "PredictionHistory.PredictionDateTime <= MatchDateTime"
+        // reconciliation compares it against. Writing UtcNow here made every row look an hour early
+        // through BST, quietly widening that window.
         var history = new PredictionHistory
         {
             PredictionID = prediction.PredictionID,
             HomeTeamGoals = homeTeamGoals,
             AwayTeamGoals = awayTeamGoals,
-            PredictionDateTime = DateTime.UtcNow,
+            PredictionDateTime = UkClock.Now,
         };
         await _appDbContext.AddAsync(history, cancellationToken);
         await _appDbContext.SaveChangesAsync(cancellationToken);
@@ -95,7 +99,7 @@ public class PredictionService : IPredictionService
         // Mirror image of the save cutoff: other users' predictions only become visible once it's
         // no longer possible to submit or change your own, so nobody can use the reveal to copy or
         // second-guess a prediction still in play.
-        var nowUk = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, UkTimeZone);
+        var nowUk = UkClock.Now;
         if (nowUk < match.MatchDateTime.AddMinutes(-2))
         {
             return Result.Fail(new ConflictError("Other users' predictions aren't visible until 2 minutes before kick-off."));

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces;
@@ -335,7 +336,7 @@ public class MessageboardService : IMessageboardService
             MessageThreadID = Guid.NewGuid(),
             ThreadSubject = subject,
             StartedByUserID = userId,
-            StartedDateTime = DateTime.UtcNow,
+            StartedDateTime = UkClock.Now,
             HiddenFromPublic = false,
         };
 
@@ -439,7 +440,7 @@ public class MessageboardService : IMessageboardService
             MessageID = messageId,
             MessageThreadID = threadId,
             PostedByUserID = userId,
-            MessageDateTime = DateTime.UtcNow,
+            MessageDateTime = UkClock.Now,
             MessageContent = content,
             YouTubeVideoID = youTubeVideoId,
             HasLinkedImage = hasLinkedImage,
@@ -524,7 +525,7 @@ public class MessageboardService : IMessageboardService
                 UserID = userId,
                 ReactionId = canonicalId,
                 ReactionName = reactionName,
-                CreationDate = DateTime.UtcNow,
+                CreationDate = UkClock.Now,
             }, cancellationToken);
 
             try
@@ -604,7 +605,7 @@ public class MessageboardService : IMessageboardService
             {
                 UserID = userId,
                 MessageThreadID = threadId,
-                LastReadDateTime = DateTime.UtcNow,
+                LastReadDateTime = UkClock.Now,
             }, cancellationToken);
 
             try
@@ -619,7 +620,7 @@ public class MessageboardService : IMessageboardService
         }
         else
         {
-            readRow.LastReadDateTime = DateTime.UtcNow;
+            readRow.LastReadDateTime = UkClock.Now;
             _dbContext.Update(readRow);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
