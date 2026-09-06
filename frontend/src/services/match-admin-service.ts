@@ -44,6 +44,19 @@ export async function updateMatch(matchId: string, model: MatchAdmin): Promise<M
     return putJsonAuthenticated<MatchAdmin>(`/Match/${matchId}`, model);
 }
 
+// Matches Application/Models/BracketNumberingSummary.cs.
+export type BracketNumberingSummary = {
+    matchesNumbered: number;
+    roundsNumbered: number;
+};
+
+/// Numbers every bracket slot in a competition from its kick-off times, round by round, replacing
+/// any already set. Only touches matches that already have a knockout round. A starting point for
+/// numbering a draw rather than a substitute for it - a competition's schedule is not its draw.
+export async function numberBracketByKickOff(competitionId: string): Promise<BracketNumberingSummary> {
+    return postJsonAuthenticated<BracketNumberingSummary>(`/Match/${competitionId}/NumberBracket`, {});
+}
+
 export async function deleteMatch(matchId: string): Promise<void> {
     return deleteAuthenticated(`/Match/${matchId}`);
 }

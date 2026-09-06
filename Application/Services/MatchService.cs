@@ -96,6 +96,38 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
     }
 
     /// <inheritdoc />
+    public async Task<BracketNumberingSummary> NumberBracketByKickOffAsync(Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        var bracketMatches = await _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId && m.KnockoutRound != null)
+            .ToListAsync(cancellationToken);
+
+        var rounds = bracketMatches.GroupBy(m => m.KnockoutRound!.Value).ToList();
+
+        foreach (var round in rounds)
+        {
+            // MatchID breaks ties so two fixtures kicking off together still get distinct, stable
+            // slots - re-running this on unchanged fixtures has to produce the same numbering, or
+            // an admin's corrections would be shuffled by a second press of the button.
+            var inKickOffOrder = round.OrderBy(m => m.MatchDateTime).ThenBy(m => m.MatchID).ToList();
+
+            for (var index = 0; index < inKickOffOrder.Count; index++)
+            {
+                inKickOffOrder[index].BracketSlot = index + 1;
+                _appDbContext.Update(inKickOffOrder[index]);
+            }
+        }
+
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        return new BracketNumberingSummary
+        {
+            MatchesNumbered = bracketMatches.Count,
+            RoundsNumbered = rounds.Count,
+        };
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<UserMatchPredictionListItem>> GetUserPredictionHistoryAsync(
         Guid userId,
         Guid competitionId,

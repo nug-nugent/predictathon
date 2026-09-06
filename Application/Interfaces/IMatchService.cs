@@ -35,6 +35,17 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Numbers every bracket slot in a competition from its kick-off times, one round at a time,
+    /// replacing any slots already set. Only touches matches that already have a KnockoutRound:
+    /// which round a match belongs to is the part no schedule can imply.
+    ///
+    /// This is a starting point, not an answer. Competitions number their fixtures by schedule, and
+    /// the schedule is not the draw - so the result has to be checked against the actual bracket and
+    /// corrected, particularly for which half of the draw each tie falls in.
+    /// </summary>
+    Task<BracketNumberingSummary> NumberBracketByKickOffAsync(Guid competitionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a user's prediction history for a competition, most recent first. Future matches are
     /// only included when <paramref name="includeFuture"/> is true (i.e. the viewer is the user
     /// themselves) - other users only see predictions for matches that have already kicked off.
