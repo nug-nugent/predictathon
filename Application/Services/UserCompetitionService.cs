@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
@@ -176,7 +177,7 @@ public class UserCompetitionService : IUserCompetitionService
             ActualPaymentAmount = capture.AmountCaptured,
             TransactionStatus = capture.Status,
             PayPalTransactionID = capture.CaptureId,
-            TransactionDateTime = DateTime.UtcNow,
+            TransactionDateTime = UkClock.Now,
             Failed = false
         });
         await _appDbContext.SaveChangesAsync(cancellationToken);

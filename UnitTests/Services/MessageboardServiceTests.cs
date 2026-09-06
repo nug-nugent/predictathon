@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
@@ -464,6 +465,22 @@ public class MessageboardServiceTests
         result.Value.PostedByAvatarUrl.Should().Be("avatar.png");
         _dbContext.Users.Single(u => u.Id == user.Id).TotalMessageboardPosts.Should().Be(5);
         _notifier.Verify(n => n.NotifyNewMessageAsync(thread.MessageThreadID, It.IsAny<MessageModel>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task PostMessageAsync_StampsMessageInUkWallClockTime()
+    {
+        var user = AddViewer();
+        var thread = AddThread();
+
+        var result = await MakeService().PostMessageAsync(thread.MessageThreadID, user.Id, "Hello", null, null, null, replyToMessageId: null);
+
+        result.IsSuccess.Should().BeTrue();
+
+        // MessageDateTime has no "Utc" suffix, so it holds UK wall-clock time - matching the
+        // column's own getdate() default, and matching what the board displays verbatim. Writing
+        // UtcNow here showed every summer post an hour early. Nothing to catch in GMT.
+        _dbContext.Message.Single().MessageDateTime.Should().BeCloseTo(UkClock.Now, TimeSpan.FromMinutes(1));
     }
 
     [Theory]

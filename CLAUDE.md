@@ -15,6 +15,7 @@ Predictathon is a football score-prediction competition site for a private group
 - Always wrap single-line `if`/`else if`/`else` bodies and loop bodies (`for`, `foreach`, `while`, `do/while`) in curly braces, even for a single statement.
 - Document methods with XML doc comments (summary + parameter descriptions).
 - Use British English spelling.
+- A datetime column stores UTC **only** if its name ends in `Utc` (`CreatedAtUtc`, `ExpiryDateTimeUtc`). Every other datetime column holds UK local wall-clock time, the same as `MatchDateTime`. Write wall-clock values with `UkClock.Now` (`Application/Common/UkClock.cs`) rather than `DateTime.Now` — shared IIS hosting doesn't guarantee a UK server timezone — and reserve `DateTime.UtcNow` for `Utc`-suffixed columns. Name new columns to match, and default them accordingly (`getdate()` for wall-clock, `sysutcdatetime()` for `Utc`).
 - Applies to all C# source in this repo.
 
 ## UI text conventions

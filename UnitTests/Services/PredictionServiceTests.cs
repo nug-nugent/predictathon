@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Services;
@@ -106,6 +106,30 @@ public class PredictionServiceTests
         updated.PredictionID.Should().Be(existing.PredictionID);
         updated.HomeTeamGoals.Should().Be(3);
         updated.AwayTeamGoals.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task SavePredictionAsync_WritesHistoryRowInUkWallClockTime()
+    {
+        await using var dbContext = new InMemoryApplicationDbContext();
+        var match = MakeMatch(UkClock.Now.AddHours(1));
+        dbContext.Match.Add(match);
+        await dbContext.SaveChangesAsync();
+
+        var service = new PredictionService(dbContext);
+
+        var result = await service.SavePredictionAsync(match.MatchID, Guid.NewGuid(), 2, 1);
+
+        result.IsSuccess.Should().BeTrue();
+
+        // PredictionDateTime has no "Utc" suffix, so it holds UK wall-clock time - the same clock
+        // MatchDateTime is in, because MatchPredictionScoreSet compares the two directly. Writing
+        // UtcNow here instead put every row an hour early through BST. Nothing to catch in GMT,
+        // where the two clocks agree.
+        var history = dbContext.PredictionHistory.Single();
+        history.PredictionDateTime.Should().BeCloseTo(UkClock.Now, TimeSpan.FromMinutes(1));
+        history.HomeTeamGoals.Should().Be(2);
+        history.AwayTeamGoals.Should().Be(1);
     }
 
     [Fact]
