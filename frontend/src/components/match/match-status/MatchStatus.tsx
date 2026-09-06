@@ -74,7 +74,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
             )}
 
             {status !== "Pre" && (
-                <Popover.Root open={open} onOpenChange={(e) => handleOpenChange(e.open)} positioning={{ placement: "bottom-end" }}>
+                <Popover.Root lazyMount unmountOnExit open={open} onOpenChange={(e) => handleOpenChange(e.open)} positioning={{ placement: "bottom-end" }}>
                     <Popover.Trigger asChild>
                         <Button size="2xs" variant="ghost">
                             All Predictions <ChevronDown size={12} />

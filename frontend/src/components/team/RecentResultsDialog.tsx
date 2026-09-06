@@ -27,7 +27,10 @@ export function RecentResultsDialog({ open, onClose, teamId, teamName }: {
     teamName: string;
 }) {
     return (
-        <Dialog.Root open={open} onOpenChange={(e) => { if (!e.open) onClose(); }} size="md">
+        // lazyMount/unmountOnExit for the same reason as the popover that opens this - one of these
+        // hangs off every team name, so a page listing a week's matches mounts dozens of them. The
+        // fetch below was already deferred; this defers the dialog's own markup too.
+        <Dialog.Root lazyMount unmountOnExit open={open} onOpenChange={(e) => { if (!e.open) onClose(); }} size="md">
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>

@@ -1,7 +1,7 @@
 import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
-import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { memo, useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { type MatchPrediction } from "../../../services/prediction-service";
-import { computeMatchStatus, isPartialScoreline } from "../matchStatus";
+import { computeMatchStatus, formatCountdown, isPartialScoreline } from "../matchStatus";
 import { usePredictionSave } from "../usePredictionSave";
 import { MatchStatus } from "../match-status/MatchStatus";
 import { TeamName } from "../team-name/TeamName";
@@ -25,7 +25,27 @@ type MatchRowProps = {
     onSaved: (matchId: string) => void;
 };
 
-export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onPairEntered, onSaved }: MatchRowProps) {
+/// Everything this row shows that comes from `now`: its status, and - only while it is still open -
+/// the countdown text. Two different clock readings that produce the same answer are
+/// indistinguishable on screen, so the row can sit the render out. Deliberately built from
+/// computeMatchStatus and formatCountdown rather than a threshold of its own, so it can't drift out
+/// of step with what actually gets rendered.
+function visibleFromNow(match: MatchPrediction, now: Date): string {
+    const { status, minutesToPredict } = computeMatchStatus(match, now);
+    return status === "Pre" ? `Pre ${formatCountdown(minutesToPredict)}` : status;
+}
+
+/// Memoised because a week's card can hold thirty-odd of these, and each one carries a Chakra
+/// popover per team name plus another for the predictions list - enough that re-rendering the whole
+/// list on every keystroke, focus change and save made entering a week's scores visibly lag the
+/// typing. Only the row whose props actually changed re-renders now; MatchList keeps its callbacks
+/// stable so that holds.
+///
+/// The comparator is written out rather than left to the default because of `now`: it's a new Date
+/// every minute, which would fail a shallow compare on every row and undo the whole thing - a
+/// visible stutter once a minute even with nobody typing. Every other prop is compared by identity
+/// as usual, so a new prop added above must be added here too.
+const MatchRowComponent = function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onPairEntered, onSaved }: MatchRowProps) {
     const { user } = useUser();
     const { status, minutesToPredict } = computeMatchStatus(match, now);
 
@@ -181,4 +201,13 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onPair
             </Flex>
         </Flex>
     );
-}
+};
+
+export const MatchRow = memo(MatchRowComponent, (previous, next) =>
+    previous.match === next.match
+    && previous.hasFocus === next.hasFocus
+    && previous.isFirstInGroup === next.isFirstInGroup
+    && previous.onFocus === next.onFocus
+    && previous.onPairEntered === next.onPairEntered
+    && previous.onSaved === next.onSaved
+    && visibleFromNow(previous.match, previous.now) === visibleFromNow(next.match, next.now));

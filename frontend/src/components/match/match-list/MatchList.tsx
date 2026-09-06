@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Stack, Text } from "@chakra-ui/react";
 import { useMinuteTick } from "../../../hooks/useMinuteTick";
 import { computeMatchStatus } from "../matchStatus";
@@ -60,6 +60,10 @@ function groupByDayAndKickoff(matches: MatchPrediction[]): DayGroup[] {
 export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
     const now = useMinuteTick();
 
+    // Same reason as `latest` below - the page passes a fresh closure each render, and reading it
+    // through a ref keeps handleSaved's identity stable.
+    const onPredictionSavedRef = useRef(onPredictionSaved);
+
     const [predictedIds, setPredictedIds] = useState<Set<string>>(
         () => new Set(matches.filter(isPredicted).map((m) => m.matchID))
     );
@@ -67,22 +71,39 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
         () => findFocusTarget(matches, predictedIds, now)
     );
 
+    // The row callbacks below are handed to a memoised MatchRow, so they have to keep the same
+    // identity across renders or every row re-renders anyway and the memo buys nothing. They read
+    // what they need through this ref rather than closing over it, which keeps them stable without
+    // going stale - a plain useCallback would have to list matches/now/predictedIds and so change
+    // identity on the minute tick and on every save.
+    const latest = useRef({ matches, now, predictedIds });
+
+    // Written after commit rather than during render: a render can be thrown away, and a ref updated
+    // from one that was would leave these callbacks reading state that never reached the screen. The
+    // callbacks only ever run from an event, which is after the commit, so they still see current
+    // values - and the initialisers above cover the first render, before this has had a chance to run.
+    useEffect(() => {
+        latest.current = { matches, now, predictedIds };
+        onPredictionSavedRef.current = onPredictionSaved;
+    });
+
     // Deliberately driven by the second digit going in rather than by the save landing: the two are
     // different events, and only one of them is the user finishing with this match. Keeping them
     // apart is also what stops an edit to a row's home digit - a save, but not a finished scoreline
     // - from pulling focus off the away box the user is heading for.
-    const handlePairEntered = (matchId: string) => {
-        const index = matches.findIndex((m) => m.matchID === matchId);
-        const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !predictedIds.has(m.matchID));
+    const handlePairEntered = useCallback((matchId: string) => {
+        const { matches: current, now: at, predictedIds: predicted } = latest.current;
+        const index = current.findIndex((m) => m.matchID === matchId);
+        const next = current.slice(index + 1).find((m) => computeMatchStatus(m, at).status === "Pre" && !predicted.has(m.matchID));
         setFocusedMatchId(next?.matchID ?? null);
-    };
+    }, []);
 
     // Whether a match still counts as outstanding is a claim about what the server holds, so unlike
     // the focus move above this waits for the save to actually land.
-    const handleSaved = (matchId: string) => {
+    const handleSaved = useCallback((matchId: string) => {
         setPredictedIds((previous) => new Set(previous).add(matchId));
-        onPredictionSaved?.(matchId);
-    };
+        onPredictionSavedRef.current?.(matchId);
+    }, []);
 
     if (matches.length === 0) {
         return <Text textAlign="center" py={4}>No matches found.</Text>;
