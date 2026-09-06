@@ -1,6 +1,22 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { DEMO_PREDICTOR, login } from "./helpers";
 
+/// The score boxes of the LAST match still open for predictions, deliberately not the first. Score
+/// inputs have no accessible label (MatchRow.tsx) and which match is still open shifts over time, so
+/// they're found by not being readOnly rather than by hardcoding a fixture - and taken from the end
+/// of the list because the first open match is the next one to kick off, which is exactly the one
+/// the Home card offers for quick predict. quick-predict.spec.ts drives that one in parallel against
+/// the same database, so sharing it would let each spec's saved score surface in the other's
+/// assertions. Once it kicks off there is only one open match left and this falls back to it, which
+/// is safe: quick-predict.spec.ts skips itself in exactly that state.
+async function lastOpenScoreInputs(page: Page): Promise<{ home: Locator; away: Locator }> {
+    const open = page.locator('input[data-role="score-input"]:not([readonly])');
+    const count = await open.count();
+
+    test.skip(count < 2, "No match is still open for predictions - re-seed the sample data.");
+
+    return { home: open.nth(count - 2), away: open.nth(count - 1) };
+}
 
 test.beforeEach(async ({ page }) => {
     await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
@@ -18,19 +34,8 @@ test("a prediction can be entered for an upcoming match and is saved", async ({ 
     await page.goto("/predictions");
     await expect(page.getByRole("combobox")).toBeVisible();
 
-    // Score inputs have no accessible label (MatchRow.tsx), and which specific match is still
-    // open for predictions shifts over time - so find whichever rows aren't locked yet, rather
-    // than hardcoding a match. Already-started/finished matches render their inputs readOnly.
-    //
-    // The LAST open match, deliberately not the first: the first is the next fixture to kick off,
-    // which is exactly the one the Home card offers for quick predict, and quick-predict.spec.ts
-    // drives it in parallel against the same database.
-    const open = page.locator('input[data-role="score-input"]:not([readonly])');
-    await expect(open.first()).toBeVisible();
-
-    const count = await open.count();
-    const homeInput = open.nth(count - 2);
-    const awayInput = open.nth(count - 1);
+    const { home: homeInput, away: awayInput } = await lastOpenScoreInputs(page);
+    await expect(homeInput).toBeVisible();
 
     // MatchRow pre-fills these from any existing saved prediction for this match, so a re-run
     // against a database that already has one (predictions aren't reset by re-seeding, unlike
@@ -58,21 +63,6 @@ test("matches are grouped under a kick-off time heading", async ({ page }) => {
     const kickoffHeadings = page.getByText(/^\d{1,2}:\d{2}(\s?[AP]M)?$/);
     await expect(kickoffHeadings.first()).toBeVisible();
 });
-
-/// The score boxes of the LAST match still open for predictions, deliberately not the first:
-/// quick-predict.spec.ts drives the first one (the seeded fixture pinned half an hour out), and
-/// both specs run in parallel against one shared database - so sharing a match would let each
-/// spec's saved score surface in the other's assertions. Once that fixture kicks off there's only
-/// one open match left and this falls back to it, which is safe: quick-predict.spec.ts skips itself
-/// in exactly that state.
-async function lastOpenScoreInputs(page: Page): Promise<{ home: Locator; away: Locator }> {
-    const open = page.locator('input[data-role="score-input"]:not([readonly])');
-    const count = await open.count();
-
-    test.skip(count < 2, "No match is still open for predictions - re-seed the sample data.");
-
-    return { home: open.nth(count - 2), away: open.nth(count - 1) };
-}
 
 test("half a scoreline is called out rather than looking like an untouched row", async ({ page }) => {
     await page.goto("/predictions");
