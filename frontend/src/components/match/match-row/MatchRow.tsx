@@ -1,7 +1,7 @@
 import { Box, Flex, HStack, Input, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { type MatchPrediction } from "../../../services/prediction-service";
-import { computeMatchStatus } from "../matchStatus";
+import { computeMatchStatus, isPartialScoreline } from "../matchStatus";
 import { usePredictionSave } from "../usePredictionSave";
 import { MatchStatus } from "../match-status/MatchStatus";
 import { TeamName } from "../team-name/TeamName";
@@ -25,10 +25,13 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
     const [homeInput, setHomeInput] = useState(match.homeTeamGoals !== null ? String(match.homeTeamGoals) : "");
     const [awayInput, setAwayInput] = useState(match.awayTeamGoals !== null ? String(match.awayTeamGoals) : "");
-    const { saveState, save: savePredictionFor } = usePredictionSave(match.matchID);
+    const { saveState, save: savePredictionFor, flush, retry } = usePredictionSave(match.matchID);
 
+    const rowRef = useRef<HTMLDivElement>(null);
     const homeInputRef = useRef<HTMLInputElement>(null);
     const awayInputRef = useRef<HTMLInputElement>(null);
+
+    const isPartial = isPartialScoreline(homeInput, awayInput);
 
     useEffect(() => {
         if (hasFocus && document.activeElement !== awayInputRef.current) {
@@ -51,6 +54,16 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
         event.target.select();
         onFocus(match.matchID);
+    };
+
+    // Deliberately on the row rather than on each input: tabbing from the home box to the away box
+    // blurs the home box, and flushing there would send the half-old pair the debounce exists to
+    // suppress. Focus leaving the row entirely is the point at which the edit is finished.
+    // A null relatedTarget (clicking onto nothing) counts as leaving.
+    const onRowBlur = (event: FocusEvent<HTMLDivElement>) => {
+        if (!rowRef.current?.contains(event.relatedTarget)) {
+            flush();
+        }
     };
 
     // Without this, the mouse-click's own mouseup handler runs after onFocus and collapses the
@@ -104,7 +117,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
     const awayCrest = crestUrl(match.awayTeamImage);
 
     return (
-        <Flex direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} borderTopColor="border.hairline" py={2} px={{ base: 2, md: 4 }} gap={2}>
+        <Flex ref={rowRef} onBlur={onRowBlur} direction="column" borderTopWidth={isFirstInGroup ? "0" : "1px"} borderTopColor="border.hairline" py={2} px={{ base: 2, md: 4 }} gap={2}>
             <Flex align="center" gap={{ base: 2, md: 4 }} wrap="wrap">
                 <Flex flex="1" minW="0" direction="column" gap={1}>
                     <Flex align="center" gap={{ base: 2, md: 4 }}>
@@ -144,6 +157,7 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
                 <Box flexBasis={{ base: "100%", md: "auto" }}>
                     <MatchStatus matchId={match.matchID} myUserId={user?.id} status={status} minutesToPredict={minutesToPredict} saveState={saveState}
+                        isPartial={isPartial} onRetry={retry}
                         actualHomeGoals={match.actualHomeTeamGoals} actualAwayGoals={match.actualAwayTeamGoals} score={match.score} />
                 </Box>
             </Flex>

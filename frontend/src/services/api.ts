@@ -206,11 +206,17 @@ export async function getJsonAuthenticated<TResponse>(path: string): Promise<TRe
     return handleJsonResponse<TResponse>(response);
 }
 
-export async function postJsonAuthenticated<TResponse>(path: string, body: unknown): Promise<TResponse> {
+/// `keepalive` lets a POST outlive the page that started it, for the one case that needs it: a
+/// pending prediction flushed as the tab is hidden or closed. A normal fetch is cancelled at that
+/// point and the edit would be lost. Not a general-purpose option - keepalive bodies are capped at
+/// 64KB and a keepalive request can't be retried after a 401, so the silent token refresh above is
+/// effectively one-shot for it.
+export async function postJsonAuthenticated<TResponse>(path: string, body: unknown, options?: { keepalive?: boolean }): Promise<TResponse> {
     const response = await authenticatedFetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        keepalive: options?.keepalive,
     });
 
     return handleJsonResponse<TResponse>(response);

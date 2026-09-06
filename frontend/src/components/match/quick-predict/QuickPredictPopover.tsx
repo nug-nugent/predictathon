@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent, type FocusEvent, type MouseEvent, t
 import { Button, HStack, Image, Input, Popover, Portal, Stack, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router";
 import { matchWeekStart, type MatchPrediction } from "../../../services/prediction-service";
-import { predictionStatusColor, predictionStatusText } from "../matchStatus";
+import { isPartialScoreline, predictionStatusColor, predictionStatusText } from "../matchStatus";
 import { usePredictionSave } from "../usePredictionSave";
 import { crestUrl } from "../../../utils/crestUrl";
 import { parseDigit } from "../../../utils/parseDigit";
@@ -37,7 +37,9 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, children
     const [open, setOpen] = useState(false);
     const [homeInput, setHomeInput] = useState(match.homeTeamGoals !== null ? String(match.homeTeamGoals) : "");
     const [awayInput, setAwayInput] = useState(match.awayTeamGoals !== null ? String(match.awayTeamGoals) : "");
-    const { saveState, save } = usePredictionSave(match.matchID);
+    const { saveState, save, flush, retry } = usePredictionSave(match.matchID);
+
+    const isPartial = isPartialScoreline(homeInput, awayInput);
 
     const homeInputRef = useRef<HTMLInputElement>(null);
     const awayInputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,16 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, children
     return (
         <Popover.Root
             open={open}
-            onOpenChange={(e) => setOpen(e.open)}
+            onOpenChange={(e) => {
+                setOpen(e.open);
+
+                // Dismissing the popover is this entry point's equivalent of focus leaving a
+                // Predictions row - the last way out of the debounce window that isn't the page
+                // itself going away.
+                if (!e.open) {
+                    flush();
+                }
+            }}
             positioning={{ placement: "bottom" }}
             initialFocusEl={() => homeInputRef.current}
         >
@@ -127,9 +138,13 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, children
                                 {/* aria-live so a save that lands or fails is announced - entering a score gives
                                     no other feedback, here or on the Predictions page. */}
                                 <Text fontSize="xs" textAlign="center" aria-live="polite"
-                                    color={predictionStatusColor("Pre", saveState, minutesToPredict)}>
-                                    {predictionStatusText("Pre", saveState, minutesToPredict)}
+                                    color={predictionStatusColor("Pre", saveState, minutesToPredict, isPartial)}>
+                                    {predictionStatusText("Pre", saveState, minutesToPredict, isPartial)}
                                 </Text>
+
+                                {saveState === "error" && !isPartial && (
+                                    <Button size="xs" variant="outline" onClick={retry}>Retry</Button>
+                                )}
 
                                 <Button asChild size="xs" variant="ghost">
                                     <RouterLink to={`/predictions?week=${encodeURIComponent(matchWeekStart(match.matchDateTime))}`}>

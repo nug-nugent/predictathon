@@ -14,12 +14,16 @@ type MatchStatusProps = {
     status: MatchStatusValue;
     minutesToPredict: number;
     saveState: SaveState;
+    /** One score box filled in and the other empty - see predictionStatusText. */
+    isPartial: boolean;
+    /** Re-sends the last failed save, so a failure doesn't have to be recovered by retyping. */
+    onRetry: () => void;
     actualHomeGoals: number | null;
     actualAwayGoals: number | null;
     score: number | null;
 };
 
-export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveState, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
+export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveState, isPartial, onRetry, actualHomeGoals, actualAwayGoals, score }: MatchStatusProps) {
     const [open, setOpen] = useState(false);
     const [predictions, setPredictions] = useState<MatchPredictionListItem[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
@@ -55,9 +59,18 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                     <Text textAlign={{ base: "center", md: "right" }} width="full" color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
-                <Text fontSize="0.85em" color={predictionStatusColor(status, saveState, minutesToPredict)} width={{ base: isDuring ? "auto" : "full", md: "full" }} textAlign={{ base: "center", md: "right" }}>
-                    {predictionStatusText(status, saveState, minutesToPredict)}
-                </Text>
+                <>
+                    {/* aria-live so a save that lands or fails is announced - entering a score gives
+                        no other feedback, and the quick-predict popover does the same. */}
+                    <Text fontSize="0.85em" aria-live="polite" color={predictionStatusColor(status, saveState, minutesToPredict, isPartial)}
+                        width={{ base: isDuring ? "auto" : "full", md: "full" }} textAlign={{ base: "center", md: "right" }}>
+                        {predictionStatusText(status, saveState, minutesToPredict, isPartial)}
+                    </Text>
+
+                    {status === "Pre" && saveState === "error" && !isPartial && (
+                        <Button size="2xs" variant="outline" onClick={onRetry}>Retry</Button>
+                    )}
+                </>
             )}
 
             {status !== "Pre" && (

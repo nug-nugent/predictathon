@@ -48,9 +48,9 @@ export function formatCountdown(minutes: number): string {
 /// The colour the deadline/save line reads in. Shared so every place a prediction can be entered -
 /// the Predictions page's rows and the Home card's quick-predict popover - reports a save, a
 /// failure and a closing deadline the same way.
-export function predictionStatusColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
+export function predictionStatusColor(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number, isPartial = false): string {
     if (status !== "Pre") return "fg.muted";
-    if (saveState === "cutoff" || saveState === "error") return "fg.error";
+    if (saveState === "cutoff" || isPartial || saveState === "error") return "fg.error";
     if (saveState === "saving") return "fg.info";
     if (saveState === "saved") return "fg.success";
 
@@ -58,12 +58,23 @@ export function predictionStatusColor(status: MatchStatusValue, saveState: SaveS
 }
 
 /// The wording that goes with predictionStatusColor - see that function for why it's shared.
-export function predictionStatusText(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number): string {
+///
+/// `isPartial` (one box filled in, the other empty) outranks everything but the cutoff, because it
+/// is the only state where the row looks started but nothing has been - or will be - sent. Half a
+/// scoreline is never saved, so without this the row reads as an ordinary unpredicted one and the
+/// deadline passes on a prediction the user believes they made.
+export function predictionStatusText(status: MatchStatusValue, saveState: SaveState, minutesToPredict: number, isPartial = false): string {
     if (status !== "Pre") return "Awaiting result";
     if (saveState === "cutoff") return "Predictions are closed for this match";
+    if (isPartial) return "Enter both scores";
     if (saveState === "error") return "Failed to save prediction!";
     if (saveState === "saving") return "Saving...";
     if (saveState === "saved") return "Prediction saved!";
 
     return `Closes in ${formatCountdown(minutesToPredict)}`;
+}
+
+/// Whether exactly one of the two score boxes has a value - see predictionStatusText.
+export function isPartialScoreline(homeValue: string, awayValue: string): boolean {
+    return (homeValue === "") !== (awayValue === "");
 }
