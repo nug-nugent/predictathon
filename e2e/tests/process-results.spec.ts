@@ -11,10 +11,11 @@ test("an admin can enter a result for a match that's due", async ({ page }) => {
     const noneDue = page.getByText("No matches due for results right now.");
     const scoreInputs = page.locator("input:not([readonly])");
 
-    // Whether a match is "due" depends on real time versus the seeded fixture dates - this stays
-    // true for the foreseeable future (Sample Cup's Quarter Finals kick off from 2026-07-21), but
-    // once this test has processed the one due match, re-running it against the same database
-    // (without restarting db-seed, which resets MatchPlayed via its MERGE) will find nothing left.
+    // Whether a match is "due" depends on real time versus the seeded fixture dates. Sample Cup
+    // always pins one of today's group matches to 95 minutes ago with no result, which clears
+    // MatchService's 90-minute rule - but once this test has processed it, re-running against the
+    // same database (without restarting db-seed, which resets MatchPlayed via its MERGE) will find
+    // nothing left.
     await Promise.race([
         noneDue.waitFor(),
         scoreInputs.first().waitFor(),

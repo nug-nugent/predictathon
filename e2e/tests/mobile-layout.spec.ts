@@ -8,7 +8,10 @@ test.use({ viewport: { width: 390, height: 844 } });
 // Every page that carries a table, plus the ones whose cards hold a wide header row. Several of
 // these tables are wider than a phone at their full column set, and each fits by standing some
 // columns down below `md` - so this is the check that says the standing-down is still enough.
-const MATCH_ID = "fa000000-0000-0000-0000-000000000056";
+// A match Scripts/Sample/04_Match.sql pins to earlier today, so it is past the two-minute reveal
+// cutoff and the page actually renders the predictions table this test is here to measure. A future
+// fixture would leave everyone else's predictions hidden and the "All Predictions" card absent.
+const MATCH_ID = "fa000000-0000-0000-0000-000000000003";
 const PAGES: { path: string; readyHeading: string }[] = [
     { path: "/", readyHeading: "League Table" },
     { path: "/league", readyHeading: "League Table" },

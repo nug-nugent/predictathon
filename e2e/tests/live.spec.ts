@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { DEMO_PREDICTOR, login } from "./helpers";
 
-// Scripts/Sample/04_Match.sql pins three of Sample Cup's fixtures to today's clock at seed time:
-// two quarter-finals that kicked off in the last couple of hours with no result yet, and a Round of
-// 16 match played earlier today. So a freshly seeded stack always has something in the Live and
-// Completed groups. "Coming up" holds Quarter Final 1, seeded 30 minutes out - it moves into Live
-// once that half-hour is up, so this suite deliberately doesn't depend on it still being there.
+// Scripts/Sample/04_Match.sql pins all eight of today's group matches to today's clock at seed
+// time: two completed earlier today, two that kicked off in the last couple of hours with no result
+// yet, and four still to come. So a freshly seeded stack always has something in the Live and
+// Completed groups. The four upcoming ones move into Live as their kick-offs pass, so this suite
+// deliberately doesn't depend on any of them still being ahead.
 test.beforeEach(async ({ page }) => {
     await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
     await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
