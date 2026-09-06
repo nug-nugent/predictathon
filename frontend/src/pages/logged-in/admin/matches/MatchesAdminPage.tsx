@@ -30,8 +30,22 @@ const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
     awayTeamGoals: null,
     neutralGround: false,
     knockout: false,
+    knockoutRound: null,
+    bracketSlot: null,
     matchPlayed: false,
 });
+
+// The rounds a match can be placed in, valued as dbo.Match.KnockoutRound expects - the number of
+// teams contesting the round, and the sentinel 3 for the third-place play-off, which isn't part of
+// the bracket tree. Mirrors Application/Common/KnockoutRounds.cs.
+const BRACKET_ROUNDS = [
+    { value: 32, label: "Round of 32" },
+    { value: 16, label: "Round of 16" },
+    { value: 8, label: "Quarter final" },
+    { value: 4, label: "Semi final" },
+    { value: 3, label: "Third place play-off" },
+    { value: 2, label: "Final" },
+];
 
 // datetime-local inputs need "YYYY-MM-DDTHH:mm" with no timezone/seconds.
 function toDateTimeLocal(isoString: string): string {
@@ -361,6 +375,36 @@ function MatchEditDialog({ competitionId, match, teams, onClose, onSaved }: {
                                         <Checkbox.Label>Knockout</Checkbox.Label>
                                     </Checkbox.Root>
                                 </HStack>
+
+                                {/* Only a knockout match can sit in the bracket, so the two fields
+                                    that place it there stay out of the way until it is one. */}
+                                {form.knockout && (
+                                    <HStack alignItems="flex-start">
+                                        <Field.Root>
+                                            <Field.Label>Bracket round</Field.Label>
+                                            <NativeSelect.Root size="sm">
+                                                <NativeSelect.Field
+                                                    value={form.knockoutRound === null ? "" : String(form.knockoutRound)}
+                                                    onChange={(e) => setForm({ ...form, knockoutRound: e.target.value === "" ? null : Number(e.target.value) })}
+                                                >
+                                                    <option value="">-- not in the bracket --</option>
+                                                    {BRACKET_ROUNDS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                            <Field.HelperText>Leave unset to keep this match out of the knockout view.</Field.HelperText>
+                                        </Field.Root>
+                                        <Field.Root>
+                                            <Field.Label>Bracket slot</Field.Label>
+                                            <Input
+                                                size="sm" type="number" min={1}
+                                                value={form.bracketSlot === null ? "" : String(form.bracketSlot)}
+                                                onChange={(e) => setForm({ ...form, bracketSlot: e.target.value === "" ? null : Number(e.target.value) })}
+                                            />
+                                            <Field.HelperText>Position in the draw, top to bottom: 1 and 2 feed slot 1 of the next round.</Field.HelperText>
+                                        </Field.Root>
+                                    </HStack>
+                                )}
 
                                 {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
                             </VStack>

@@ -49,4 +49,12 @@ public class ExternalFixture
     /// "Quarter final"), or null where the provider reports nothing useful.
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Which knockout round this fixture is in - see <c>dbo.Match.KnockoutRound</c> and
+    /// <see cref="Common.KnockoutRounds"/> - or null where it isn't a knockout fixture. The bracket
+    /// position within the round isn't derivable from what providers report, so it stays null and an
+    /// admin numbers the draw by hand.
+    /// </summary>
+    public int? KnockoutRound { get; set; }
 }

@@ -24,6 +24,17 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a competition's knockout bracket - its rounds in order, plus the third-place play-off -
+    /// each match joined with the current user's own prediction for it. Rounds come back empty for a
+    /// competition whose matches carry no bracket positions, which is how a caller tells that there
+    /// is no bracket to offer.
+    /// </summary>
+    Task<KnockoutBracketModel> GetKnockoutBracketAsync(
+        Guid userId,
+        Guid competitionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a user's prediction history for a competition, most recent first. Future matches are
     /// only included when <paramref name="includeFuture"/> is true (i.e. the viewer is the user
     /// themselves) - other users only see predictions for matches that have already kicked off.

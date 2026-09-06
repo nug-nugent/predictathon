@@ -145,6 +145,7 @@ public class FixtureImportService : IFixtureImportService
                 ExternalMatchID = fixture.ExternalMatchID,
                 Description = fixture.Description,
                 Knockout = fixture.IsKnockout,
+                KnockoutRound = fixture.KnockoutRound,
             }, cancellationToken);
 
             matchesImported++;

@@ -93,4 +93,14 @@ public class UserMatchPredictionListItem
     public string? Description { get; set; }
 
     public bool Knockout { get; set; }
+
+    /// <summary>
+    /// Which knockout round this match is in, or null where it isn't part of a bracket. See
+    /// dbo.Match.KnockoutRound - an ordering key valued as the number of teams contesting the
+    /// round, with 3 reserved for the third-place play-off.
+    /// </summary>
+    public int? KnockoutRound { get; set; }
+
+    /// <summary>1-based position within <see cref="KnockoutRound"/>, read top to bottom.</summary>
+    public int? BracketSlot { get; set; }
 }

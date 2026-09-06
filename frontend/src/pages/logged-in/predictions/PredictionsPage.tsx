@@ -1,8 +1,9 @@
-import { Center, Text } from "@chakra-ui/react";
+import { Button, Center, HStack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCompetition } from "../../../hooks/useCompetition";
-import { getCompetitionWeekSummaries, getMatchesForWeek, computePredictionsLandingWeek, type CompetitionWeekSummary, type MatchPrediction } from "../../../services/prediction-service";
+import { getCompetitionWeekSummaries, getMatchesForWeek, getKnockoutBracket, computePredictionsLandingWeek, type CompetitionWeekSummary, type KnockoutBracket as KnockoutBracketData, type MatchPrediction } from "../../../services/prediction-service";
+import { KnockoutBracket } from "../../../components/match/knockout-bracket/KnockoutBracket";
 import { WeekPicker } from "../../../components/match/week-picker/WeekPicker";
 import { MatchList } from "../../../components/match/match-list/MatchList";
 import { ApiError } from "../../../services/api";
@@ -43,7 +44,13 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
   const [error, setError] = useState<ApiError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [savedMatchIds, setSavedMatchIds] = useState<Set<string>>(new Set());
+  // Null until it has been asked for; a bracket with no rounds means this competition hasn't got
+  // one, which is what keeps the toggle off a league season's page.
+  const [bracket, setBracket] = useState<KnockoutBracketData | null>(null);
   const now = useMinuteTick();
+
+  const showingBracket = searchParams.get("view") === "knockout";
+  const hasBracket = (bracket?.rounds.length ?? 0) > 0;
 
   // Read once, on arrival - lazy initial state rather than a ref, because a ref's current value
   // can't be read during render. The selected week gets stamped back into ?week= below, so reading
@@ -86,6 +93,20 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
 
     return () => { cancelled = true; };
   }, [competitionId, retryCount, requestedWeek]);
+
+  // The bracket is a handful of rows and it decides whether the toggle appears at all, so it is
+  // fetched up front rather than on first use - which also means switching to it is instant. A
+  // failure here leaves the toggle hidden rather than failing the week list behind it: the
+  // predictions themselves are the point of the page.
+  useEffect(() => {
+    let cancelled = false;
+
+    getKnockoutBracket(competitionId)
+      .then((fetched) => { if (!cancelled) setBracket(fetched); })
+      .catch(() => { if (!cancelled) setBracket(null); });
+
+    return () => { cancelled = true; };
+  }, [competitionId]);
 
   // Keep ?week= pointing at whatever's on screen, so a refresh or a back-navigation returns to the
   // same week rather than silently re-resolving to a different one once a deadline passes.
@@ -167,18 +188,64 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
 
   const weeks = summaries.map((s) => s.weekStart);
 
+  // Which view is on screen rides in the URL alongside ?week=, so a refresh or a shared link comes
+  // back to the same place. The week is kept even while the bracket is showing: the bracket isn't a
+  // week, and switching back shouldn't land somewhere else.
+  const setView = (view: "list" | "knockout") => {
+    const updated = new URLSearchParams(searchParams);
+
+    if (view === "knockout") {
+      updated.set("view", "knockout");
+    } else {
+      updated.delete("view");
+    }
+
+    setSearchParams(updated);
+  };
+
+  // A bracket the API says is incomplete - a round half-numbered, a match missing - is shown as the
+  // ordinary list rather than as a tree with holes in it.
+  const bracketIsDrawable = hasBracket && bracket !== null && bracket.isWellFormed;
+
   return (
     <>
       <PageHeading mb={4}>Predictions</PageHeading>
-      <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} outstanding={outstanding} />
 
-      {error ? (
-        <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />
-      ) : matches === null ? (
-        <LoadingSpinner />
+      {hasBracket && (
+        <HStack justify="flex-end" mb={2}>
+          <Button size="sm" variant="outline" onClick={() => setView(showingBracket ? "list" : "knockout")}>
+            {showingBracket ? "Show Match List" : "Show Knockout View"}
+          </Button>
+        </HStack>
+      )}
+
+      {showingBracket && bracketIsDrawable && bracket !== null ? (
+        <KnockoutBracket
+          bracket={bracket}
+          now={now}
+          onPredictionSaved={() => { void refreshBracket(); }}
+        />
       ) : (
-        <MatchList key={selectedWeek} matches={matches} onPredictionSaved={(matchId) => setSavedMatchIds((prev) => new Set(prev).add(matchId))} />
+        <>
+          <WeekPicker weeks={weeks} selectedWeek={selectedWeek ?? weeks[0]} onWeekChange={changeWeek} outstanding={outstanding} />
+
+          {error ? (
+            <ErrorState error={error} onRetry={() => selectedWeek && changeWeek(selectedWeek)} />
+          ) : matches === null ? (
+            <LoadingSpinner />
+          ) : (
+            <MatchList key={selectedWeek} matches={matches} onPredictionSaved={(matchId) => setSavedMatchIds((prev) => new Set(prev).add(matchId))} />
+          )}
+        </>
       )}
     </>
   );
+
+  function refreshBracket() {
+    return getKnockoutBracket(competitionId)
+      .then(setBracket)
+      .catch(() => {
+        // Keep showing what's already on screen - the save itself succeeded.
+      });
+  }
 }

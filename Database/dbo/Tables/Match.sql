@@ -13,6 +13,18 @@
     [Description]   VARCHAR (50)     NULL,
     [Knockout]      BIT              CONSTRAINT [DF_Match_Knockout] DEFAULT ((0)) NOT NULL,
     [ExternalMatchID] INT            NULL,
+    -- Which knockout round this match belongs to, NULL for a group or league match. Valued as the
+    -- number of teams contesting the round (16, 8, 4, 2) so it sorts from the first round through to
+    -- the final on its own. The third-place play-off isn't a round of the bracket tree at all and
+    -- takes 3: not a power of two, so it can never collide with a real round, and it sorts between
+    -- the semi-finals and the final, which is when it's played. Treat this as an ordering key that
+    -- happens to use the team count, not as a team count to do arithmetic on.
+    [KnockoutRound] INT              NULL,
+    -- 1-based position in the drawn bracket, read top to bottom: slots 1..n/2 are the top half of
+    -- the draw and n/2+1..n the bottom, which is what puts a match on the left or right of the view.
+    -- Deliberately our own numbering rather than the official match number, which competitions
+    -- assign by schedule and which therefore says nothing about bracket position.
+    [BracketSlot]   INT              NULL,
     CONSTRAINT [PK_Match] PRIMARY KEY CLUSTERED ([MatchID] ASC),
     CONSTRAINT [FK_Match_AwayTeam] FOREIGN KEY ([AwayTeamID]) REFERENCES [dbo].[Team] ([TeamID]),
     CONSTRAINT [FK_Match_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),

@@ -54,6 +54,48 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
     }
 
     /// <inheritdoc />
+    public async Task<KnockoutBracketModel> GetKnockoutBracketAsync(
+        Guid userId,
+        Guid competitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<SqlParameter>
+        {
+            new SqlParameter("@UserID", SqlDbType.UniqueIdentifier) { Value = userId },
+            new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
+            new SqlParameter("@BracketOnly", SqlDbType.Bit) { Value = true },
+        };
+
+        var matches = await _dbContext.CallStoredProcedureAsync<UserMatchPredictionListItem>("UserMatchPredictionListGet", parameters, cancellationToken);
+
+        // The play-off is a knockout match with a round of its own, but it hangs off the semi-finals
+        // rather than feeding anything, so it never belongs to a round of the tree.
+        var thirdPlacePlayOff = matches.FirstOrDefault(m => m.KnockoutRound == KnockoutRounds.ThirdPlacePlayOffRound);
+
+        var rounds = matches
+            .Where(m => m.KnockoutRound.HasValue && m.KnockoutRound != KnockoutRounds.ThirdPlacePlayOffRound)
+            .GroupBy(m => m.KnockoutRound!.Value)
+            // Descending, so the biggest round - the one the bracket opens with - comes first.
+            .OrderByDescending(round => round.Key)
+            .Select(round => new KnockoutRoundModel
+            {
+                KnockoutRound = round.Key,
+                RoundName = KnockoutRounds.NameOf(round.Key),
+                Matches = round.OrderBy(m => m.BracketSlot ?? int.MaxValue).ThenBy(m => m.MatchDateTime).ToList(),
+            })
+            .ToList();
+
+        return new KnockoutBracketModel
+        {
+            Rounds = rounds,
+            ThirdPlacePlayOff = thirdPlacePlayOff,
+            IsWellFormed = rounds.Count > 0
+                && rounds.All(r => r.Matches.All(m => m.BracketSlot.HasValue))
+                && KnockoutRounds.IsWellFormedTree([.. rounds.Select(r => (r.KnockoutRound, r.Matches.Count))]),
+        };
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<UserMatchPredictionListItem>> GetUserPredictionHistoryAsync(
         Guid userId,
         Guid competitionId,

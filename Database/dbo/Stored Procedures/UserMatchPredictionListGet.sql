@@ -9,11 +9,16 @@ CREATE PROCEDURE [dbo].[UserMatchPredictionListGet]
 	, @DateFrom DATETIME = NULL
 	, @DateTo DATETIME = NULL
 	, @HidePastUnpredictedMatches BIT = NULL
+	-- Restricts the result to the competition's knockout bracket - the matches carrying a
+	-- KnockoutRound - for the bracket view, which wants the whole tree at once rather than one
+	-- week of it. Ignores the date range when set.
+	, @BracketOnly BIT = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
 
 	SET @HidePastUnpredictedMatches = ISNULL(@HidePastUnpredictedMatches, 0);
+	SET @BracketOnly = ISNULL(@BracketOnly, 0);
 
 	SELECT
 		m.MatchID
@@ -47,6 +52,8 @@ BEGIN
 		, Score = CASE WHEN m.MatchPlayed = 1 AND Prediction.PredictionID IS NULL THEN 0 ELSE Prediction.Score END
 		, m.Description
 		, m.Knockout
+		, m.KnockoutRound
+		, m.BracketSlot
 	FROM
 		[dbo].[Match] AS m
 		LEFT JOIN [dbo].[Team] AS HomeTeam ON m.HomeTeamID = HomeTeam.TeamID
@@ -55,10 +62,16 @@ BEGIN
 		LEFT JOIN (SELECT p.PredictionID, p.MatchID, p.UserID, p.HomeTeamGoals, p.AwayTeamGoals, p.Score, p.GoalDifference, p.PredictionHistoryID, p.Invalid, p.AutoUpdatedDueToLatePrediction FROM [dbo].[Prediction] AS p WHERE p.UserID = @UserID) Prediction ON m.MatchID = Prediction.MatchID
 	WHERE
 		m.CompetitionID = @CompetitionID
-		AND (@DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
-		AND (@DateTo IS NULL OR m.MatchDateTime <= @DateTo)
+		AND (@BracketOnly = 0 OR m.KnockoutRound IS NOT NULL)
+		-- A bracket is a whole tree, not a slice of the calendar, so the date range is deliberately
+		-- skipped when @BracketOnly is set rather than intersected with it.
+		AND (@BracketOnly = 1 OR @DateFrom IS NULL OR m.MatchDateTime >= @DateFrom)
+		AND (@BracketOnly = 1 OR @DateTo IS NULL OR m.MatchDateTime <= @DateTo)
 		AND (@HidePastUnpredictedMatches = 0 OR Prediction.PredictionID IS NOT NULL OR m.MatchDateTime < GETDATE())
 	ORDER BY
-		m.MatchDateTime ASC
+		-- Bracket callers want the tree in round then draw order; everyone else wants the calendar.
+		CASE WHEN @BracketOnly = 1 THEN -m.KnockoutRound END
+		, CASE WHEN @BracketOnly = 1 THEN m.BracketSlot END
+		, m.MatchDateTime ASC
 		, HomeTeam.TeamName;
 END;

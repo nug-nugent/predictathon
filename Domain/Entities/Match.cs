@@ -34,6 +34,10 @@ public partial class Match
 
     public bool Knockout { get; set; }
 
+    public int? KnockoutRound { get; set; }
+
+    public int? BracketSlot { get; set; }
+
     public int? ExternalMatchID { get; set; }
 
     public virtual Team? AwayTeam { get; set; }

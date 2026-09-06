@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Exceptions;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Models;
@@ -50,6 +51,7 @@ public class FootballDataApiClient : IExternalMatchDataService
                 GroupName = ToGroupName(m.Group),
                 IsKnockout = KnockoutStageNames.ContainsKey(m.Stage ?? ""),
                 Description = ToStageDescription(m.Stage, m.Group),
+                KnockoutRound = ToKnockoutRound(m.Stage),
             })
             .ToList();
     }
@@ -146,6 +148,37 @@ public class FootballDataApiClient : IExternalMatchDataService
 
         return ToGroupName(group);
     }
+
+    /// <summary>
+    /// Translates the provider's stage identifier into the site's KnockoutRound value, or null for a
+    /// stage that isn't a knockout round.
+    /// </summary>
+    /// <param name="stage">The provider's stage identifier, or null.</param>
+    private static int? ToKnockoutRound(string? stage)
+    {
+        if (stage is not null && KnockoutStageRounds.TryGetValue(stage, out var knockoutRound))
+        {
+            return knockoutRound;
+        }
+
+        return null;
+    }
+
+    // Each knockout stage's KnockoutRound value - the number of teams contesting it, except for the
+    // third-place play-off, which takes the sentinel. See Application/Common/KnockoutRounds.cs.
+    // A play-off round deciding entry to the tournament proper is left out deliberately: it happens
+    // before the group stage and is no part of the bracket.
+    private static readonly Dictionary<string, int> KnockoutStageRounds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["ROUND_OF_32"] = 32,
+        ["LAST_32"] = 32,
+        ["ROUND_OF_16"] = 16,
+        ["LAST_16"] = 16,
+        ["QUARTER_FINALS"] = 8,
+        ["SEMI_FINALS"] = 4,
+        ["THIRD_PLACE"] = KnockoutRounds.ThirdPlacePlayOffRound,
+        ["FINAL"] = 2,
+    };
 
     // The provider's knockout stage identifiers, mapped to the round names this site shows. A stage
     // absent from here is treated as non-knockout, which is the right default: it covers a league

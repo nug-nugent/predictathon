@@ -15,6 +15,14 @@ export type CreateMatchAdmin = {
     awayTeamGoals: number | null;
     neutralGround: boolean;
     knockout: boolean;
+    /**
+     * Where this match sits in the knockout bracket, for the bracket view - the round as the number
+     * of teams contesting it (16, 8, 4, 2, with 3 reserved for the third-place play-off), and the
+     * 1-based position within that round reading the draw top to bottom. Null for a match that
+     * isn't part of a bracket.
+     */
+    knockoutRound: number | null;
+    bracketSlot: number | null;
     matchPlayed: boolean;
 };
 

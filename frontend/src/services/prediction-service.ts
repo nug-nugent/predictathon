@@ -41,6 +41,14 @@ export type MatchPrediction = {
     score: number | null;
     description: string | null;
     knockout: boolean;
+    /**
+     * Which knockout round this match is in, or null where it isn't part of a bracket. An ordering
+     * key valued as the number of teams contesting the round, with 3 reserved for the third-place
+     * play-off - see Application/Common/KnockoutRounds.cs. Never do arithmetic on it.
+     */
+    knockoutRound: number | null;
+    /** 1-based position within the round, reading the draw top to bottom. */
+    bracketSlot: number | null;
 };
 
 /// The Friday-starting weeks a competition has matches in, earliest first.
@@ -66,6 +74,31 @@ export async function getCompetitionWeekSummaries(competitionId: string): Promis
 
 export async function getMatchesForWeek(competitionId: string, dateFrom: string): Promise<MatchPrediction[]> {
     return getJsonAuthenticated<MatchPrediction[]>(`/Match/${competitionId}?dateFrom=${encodeURIComponent(dateFrom)}`);
+}
+
+// Matches Application/Models/KnockoutBracketModel.cs.
+export type KnockoutRound = {
+    knockoutRound: number;
+    roundName: string;
+    /// The round's matches in draw order.
+    matches: MatchPrediction[];
+};
+
+export type KnockoutBracket = {
+    /// The rounds of the tree, first round first. Empty where the competition has no bracket.
+    rounds: KnockoutRound[];
+    /// Separate from the rounds: a knockout match, but no part of the tree.
+    thirdPlacePlayOff: MatchPrediction | null;
+    /// False where the bracket is incomplete - the view falls back to the plain list rather than
+    /// drawing a tree with holes in it.
+    isWellFormed: boolean;
+};
+
+/// A competition's knockout bracket with the current user's predictions. Comes back with no rounds
+/// for a competition that has no bracket, which is how the Predictions page decides whether to offer
+/// the knockout view at all.
+export async function getKnockoutBracket(competitionId: string): Promise<KnockoutBracket> {
+    return getJsonAuthenticated<KnockoutBracket>(`/Match/${competitionId}/Bracket`);
 }
 
 export async function savePrediction(matchId: string, homeTeamGoals: number, awayTeamGoals: number, options?: { keepalive?: boolean }): Promise<void> {
