@@ -17,13 +17,15 @@ type MatchRowProps = {
     isFirstInGroup: boolean;
     onFocus: (matchId: string) => void;
     /**
-     * A prediction for this match has landed. `completedPair` says whether that was the away box
-     * finishing the scoreline - the only case that should move focus on to the next match.
+     * Both boxes now hold a digit - the scoreline is finished, whatever the server has made of it
+     * yet. Moves the list on to the next match.
      */
-    onSaved: (matchId: string, completedPair: boolean) => void;
+    onPairEntered: (matchId: string) => void;
+    /** A prediction for this match has actually reached the server. */
+    onSaved: (matchId: string) => void;
 };
 
-export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSaved }: MatchRowProps) {
+export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onPairEntered, onSaved }: MatchRowProps) {
     const { user } = useUser();
     const { status, minutesToPredict } = computeMatchStatus(match, now);
 
@@ -45,14 +47,8 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
     const locked = status !== "Pre" || saveState === "cutoff";
 
-    const save = (homeValue: string, awayValue: string, completedPair: boolean) => {
-        savePredictionFor(homeValue, awayValue, () => {
-            onSaved(match.matchID, completedPair);
-
-            if (completedPair) {
-                awayInputRef.current?.blur();
-            }
-        });
+    const save = (homeValue: string, awayValue: string) => {
+        savePredictionFor(homeValue, awayValue, () => onSaved(match.matchID));
     };
 
     const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
@@ -100,12 +96,11 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         if (value === null) return;
 
         setHomeInput(value);
+        save(value, awayInput);
 
-        // Changing the home digit of a prediction that already has an away digit is still a save,
-        // but it isn't finishing with this match - the away box is where you're going next, and it
-        // selects its contents on focus so the old digit types straight over. Passing false keeps
-        // that save from advancing focus to the next match out from under you.
-        save(value, awayInput, false);
+        // The away box is where you're going next, even when this row already had a full scoreline
+        // and the change above was an edit. It selects its contents on focus, so the digit already
+        // there types straight over.
         if (value !== "") {
             awayInputRef.current?.focus();
         }
@@ -116,7 +111,21 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         if (value === null) return;
 
         setAwayInput(value);
-        save(homeInput, value, true);
+        save(homeInput, value);
+
+        // Moving on doesn't wait for the round trip. The scoreline is finished the moment the second
+        // digit is in, and this row keeps reporting its own save either way - "Prediction saved!",
+        // or a failure with a Retry beside it - so holding the cursor here until the server answers
+        // only makes entering a week's predictions feel like it is lagging behind the typing.
+        if (homeInput !== "" && value !== "") {
+            onPairEntered(match.matchID);
+
+            // Dropping focus here rather than letting the next row simply take it: when this was the
+            // last match still to predict there is no next row, and a phone is better off with the
+            // keyboard down than left open over a finished list. It also puts focus outside the row,
+            // which flushes the pending save straight away instead of waiting out the debounce.
+            awayInputRef.current?.blur();
+        }
     };
 
     const displayHome = homeInput !== "" ? homeInput : (status !== "Pre" ? "L" : "");

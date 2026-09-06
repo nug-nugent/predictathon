@@ -67,27 +67,21 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
         () => findFocusTarget(matches, predictedIds, now)
     );
 
-    const handleSaved = (matchId: string, completedPair: boolean) => {
-        const updated = new Set(predictedIds);
-        updated.add(matchId);
-        setPredictedIds(updated);
-        onPredictionSaved?.(matchId);
-
-        // Only a save that finished the scoreline moves on. Editing the home digit of an existing
-        // prediction saves too, but the user is on their way to the away box - advancing here would
-        // take focus off them mid-edit (and, with saves debounced, do it a beat after they'd started
-        // typing into it).
-        // Only a save that finished the scoreline moves on. Editing the home digit of an existing
-        // prediction saves too, but the user is on their way to the away box - advancing here would
-        // take focus off them mid-edit (and, with saves debounced, do it a beat after they'd started
-        // typing into it).
-        if (!completedPair) {
-            return;
-        }
-
+    // Deliberately driven by the second digit going in rather than by the save landing: the two are
+    // different events, and only one of them is the user finishing with this match. Keeping them
+    // apart is also what stops an edit to a row's home digit - a save, but not a finished scoreline
+    // - from pulling focus off the away box the user is heading for.
+    const handlePairEntered = (matchId: string) => {
         const index = matches.findIndex((m) => m.matchID === matchId);
-        const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !updated.has(m.matchID));
+        const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !predictedIds.has(m.matchID));
         setFocusedMatchId(next?.matchID ?? null);
+    };
+
+    // Whether a match still counts as outstanding is a claim about what the server holds, so unlike
+    // the focus move above this waits for the save to actually land.
+    const handleSaved = (matchId: string) => {
+        setPredictedIds((previous) => new Set(previous).add(matchId));
+        onPredictionSaved?.(matchId);
     };
 
     if (matches.length === 0) {
@@ -120,7 +114,8 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
 
                                 {kickoff.matches.map((match, index) => (
                                     <MatchRow key={match.matchID} match={match} now={now} hasFocus={match.matchID === focusedMatchId}
-                                        isFirstInGroup={index === 0} onFocus={setFocusedMatchId} onSaved={handleSaved} />
+                                        isFirstInGroup={index === 0} onFocus={setFocusedMatchId}
+                                        onPairEntered={handlePairEntered} onSaved={handleSaved} />
                                 ))}
                             </Box>
                         ))}

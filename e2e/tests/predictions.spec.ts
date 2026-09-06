@@ -223,3 +223,36 @@ test("changing the home score of an existing prediction moves to the away box, n
     await page.waitForTimeout(1500);
     await expect(away).toBeFocused();
 });
+
+test("finishing a scoreline moves to the next match without waiting for the save", async ({ page }) => {
+    await page.goto("/predictions");
+    await expect(page.getByRole("combobox")).toBeVisible();
+
+    const { home, away } = await openMatchBeforeAnUnpredictedOne(page);
+
+    // Where this row's away box sits among the open score boxes. They're in document order, one
+    // pair per match, and the helper picked the match immediately before an unpredicted one - so
+    // the very next box is the home box of the match focus should land on.
+    const awayIndex = await away.evaluate((input) => {
+        const open = ([...document.querySelectorAll('input[data-role="score-input"]')] as HTMLInputElement[]).filter((i) => !i.readOnly);
+        return open.indexOf(input as HTMLInputElement);
+    });
+
+    await home.fill("");
+    await home.fill("2");
+    await away.fill("");
+    await away.fill("1");
+
+    // Read once, straight away, rather than with an auto-retrying matcher: focus moves on eventually
+    // either way, so a retrying assertion would pass just as happily against the old behaviour of
+    // waiting for the server to answer first. The point is that it has already moved.
+    const activeIndex = await page.evaluate(() => {
+        const open = ([...document.querySelectorAll('input[data-role="score-input"]')] as HTMLInputElement[]).filter((i) => !i.readOnly);
+        return open.indexOf(document.activeElement as HTMLInputElement);
+    });
+
+    expect(activeIndex).toBe(awayIndex + 1);
+
+    // The save still happens and still reports itself - it just isn't what the cursor waits for.
+    await expect(page.getByText("Prediction saved!").first()).toBeVisible();
+});
