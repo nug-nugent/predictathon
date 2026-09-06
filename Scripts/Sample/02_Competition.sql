@@ -32,7 +32,7 @@ USING (VALUES (
     1,                                          -- ShowInHallOfFame
     0.00,                                       -- EntranceFee
     0,                                          -- PayPalPaymentAvailable
-    'A sample tournament seeded for local Docker development. 32 teams, 8 groups - the group stage and Round of 16 are already played, the Quarter-finals onward are still to be predicted.',
+    'A sample tournament seeded for local Docker development. 32 teams, 8 groups - the first two group matchdays are already played, and everything from matchday 3 onward is still to be predicted.',
     NULL,                                       -- ImageFilename
     1                                           -- DefaultToNeutralGround
 ), (

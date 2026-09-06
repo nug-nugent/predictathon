@@ -19,13 +19,18 @@ test("a prediction can be entered for an upcoming match and is saved", async ({ 
     await expect(page.getByRole("combobox")).toBeVisible();
 
     // Score inputs have no accessible label (MatchRow.tsx), and which specific match is still
-    // open for predictions shifts over time - so find whichever row isn't locked yet, rather
+    // open for predictions shifts over time - so find whichever rows aren't locked yet, rather
     // than hardcoding a match. Already-started/finished matches render their inputs readOnly.
-    const openMatch = page.locator("input:not([readonly])").first();
-    await expect(openMatch).toBeVisible();
+    //
+    // The LAST open match, deliberately not the first: the first is the next fixture to kick off,
+    // which is exactly the one the Home card offers for quick predict, and quick-predict.spec.ts
+    // drives it in parallel against the same database.
+    const open = page.locator('input[data-role="score-input"]:not([readonly])');
+    await expect(open.first()).toBeVisible();
 
-    const homeInput = page.locator("input:not([readonly])").nth(0);
-    const awayInput = page.locator("input:not([readonly])").nth(1);
+    const count = await open.count();
+    const homeInput = open.nth(count - 2);
+    const awayInput = open.nth(count - 1);
 
     // MatchRow pre-fills these from any existing saved prediction for this match, so a re-run
     // against a database that already has one (predictions aren't reset by re-seeding, unlike
