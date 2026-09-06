@@ -22,6 +22,16 @@ public class TeamServiceTests
     /// played yet.
     /// </summary>
     private static void Register(InMemoryApplicationDbContext dbContext, Guid competitionId, params DomainEntities.Team[] teams)
+        => RegisterInGroup(dbContext, competitionId, null, teams);
+
+    /// <summary>
+    /// Registers teams for a competition and places them in one of its groups.
+    /// </summary>
+    /// <param name="dbContext">The in-memory context to add rows to.</param>
+    /// <param name="competitionId">The competition to register the teams for.</param>
+    /// <param name="groupName">The group to place them in, or null to leave them ungrouped.</param>
+    /// <param name="teams">The teams to register.</param>
+    private static void RegisterInGroup(InMemoryApplicationDbContext dbContext, Guid competitionId, string? groupName, params DomainEntities.Team[] teams)
     {
         dbContext.Team.AddRange(teams);
         dbContext.TeamCompetition.AddRange(teams.Select(t => new DomainEntities.TeamCompetition
@@ -29,7 +39,53 @@ public class TeamServiceTests
             TeamCompetitionID = Guid.NewGuid(),
             CompetitionID = competitionId,
             TeamID = t.TeamID,
+            GroupName = groupName,
         }));
+    }
+
+    /// <summary>
+    /// Adds the competition row itself, which the group tables read their tie-break rule from.
+    /// </summary>
+    /// <param name="dbContext">The in-memory context to add the row to.</param>
+    /// <param name="competitionId">The competition's identifier.</param>
+    /// <param name="headToHeadTieBreaks">Whether its group tables break ties head-to-head.</param>
+    private static void AddCompetition(InMemoryApplicationDbContext dbContext, Guid competitionId, bool headToHeadTieBreaks)
+    {
+        dbContext.Competition.Add(new DomainEntities.Competition
+        {
+            CompetitionID = competitionId,
+            CompetitionName = "Sample Cup",
+            GroupHeadToHeadTieBreaks = headToHeadTieBreaks,
+        });
+    }
+
+    /// <summary>
+    /// Builds the group described in the head-to-head tie-break tests: England and France both
+    /// finish on six points, England having beaten France, while France has much the better overall
+    /// goal difference - so the two tie-break rules disagree about who tops the group.
+    /// </summary>
+    /// <param name="dbContext">The in-memory context to add rows to.</param>
+    /// <param name="competitionId">The competition to build the group in.</param>
+    /// <param name="headToHeadTieBreaks">Whether the competition breaks group ties head-to-head.</param>
+    private static DomainEntities.Team AddTiedGroup(InMemoryApplicationDbContext dbContext, Guid competitionId, bool headToHeadTieBreaks)
+    {
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks);
+
+        var england = MakeTeam("England", "ENG");
+        var france = MakeTeam("France", "FRA");
+        var denmark = MakeTeam("Denmark", "DEN");
+        var slovenia = MakeTeam("Slovenia", "SVN");
+        RegisterInGroup(dbContext, competitionId, "Group C", england, france, denmark, slovenia);
+
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, england, france, 1, 0),
+            MakePlayedMatch(competitionId, england, denmark, 1, 0),
+            MakePlayedMatch(competitionId, slovenia, england, 1, 0),
+            MakePlayedMatch(competitionId, france, denmark, 4, 0),
+            MakePlayedMatch(competitionId, france, slovenia, 3, 0),
+            MakePlayedMatch(competitionId, denmark, slovenia, 0, 0));
+
+        return england;
     }
 
     private static DomainEntities.Match MakePlayedMatch(Guid competitionId, DomainEntities.Team home, DomainEntities.Team away, int homeGoals, int awayGoals)
@@ -432,5 +488,266 @@ public class TeamServiceTests
         var results = await service.GetRecentResultsAsync(competitionId, arsenal.TeamID, 6);
 
         results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAssignedForCompetitionAsync_CarriesEachTeamsGroup()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = MakeTeam("England", "ENG");
+        var spain = MakeTeam("Spain", "ESP");
+        RegisterInGroup(dbContext, competitionId, "Group A", england);
+        RegisterInGroup(dbContext, competitionId, "Group B", spain);
+        await dbContext.SaveChangesAsync();
+
+        var assigned = await service.GetAssignedForCompetitionAsync(competitionId);
+
+        assigned.Single(t => t.TeamName == "England").GroupName.Should().Be("Group A");
+        assigned.Single(t => t.TeamName == "Spain").GroupName.Should().Be("Group B");
+    }
+
+    [Fact]
+    public async Task SetGroupAsync_PlacesTheTeamInTheGroup()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = MakeTeam("England", "ENG");
+        Register(dbContext, competitionId, england);
+        await dbContext.SaveChangesAsync();
+
+        var teamCompetitionId = dbContext.TeamCompetition.Single().TeamCompetitionID;
+
+        var result = await service.SetGroupAsync(teamCompetitionId, "  Group A  ");
+
+        result.IsSuccess.Should().BeTrue();
+        dbContext.TeamCompetition.Single().GroupName.Should().Be("Group A");
+    }
+
+    [Fact]
+    public async Task SetGroupAsync_StoresBlankAsNoGroupAtAll()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = MakeTeam("England", "ENG");
+        RegisterInGroup(dbContext, competitionId, "Group A", england);
+        await dbContext.SaveChangesAsync();
+
+        var teamCompetitionId = dbContext.TeamCompetition.Single().TeamCompetitionID;
+
+        var result = await service.SetGroupAsync(teamCompetitionId, "   ");
+
+        result.IsSuccess.Should().BeTrue();
+        dbContext.TeamCompetition.Single().GroupName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetGroupAsync_RejectsAGroupNameTooLongForTheColumn()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = MakeTeam("England", "ENG");
+        Register(dbContext, competitionId, england);
+        await dbContext.SaveChangesAsync();
+
+        var teamCompetitionId = dbContext.TeamCompetition.Single().TeamCompetitionID;
+
+        var result = await service.SetGroupAsync(teamCompetitionId, new string('A', 21));
+
+        result.IsFailed.Should().BeTrue();
+        dbContext.TeamCompetition.Single().GroupName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetGroupAsync_FailsWhenTheTeamIsNotAssignedToAnyCompetition()
+    {
+        var (_, service) = MakeService();
+
+        var result = await service.SetGroupAsync(Guid.NewGuid(), "Group A");
+
+        result.IsFailed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_ReportsTheTeamsGroup()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = MakeTeam("England", "ENG");
+        RegisterInGroup(dbContext, competitionId, "Group B", england);
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        detail!.GroupName.Should().Be("Group B");
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_HoldsOnlyTheTeamsOwnGroup()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks: true);
+
+        var england = MakeTeam("England", "ENG");
+        var wales = MakeTeam("Wales", "WAL");
+        var spain = MakeTeam("Spain", "ESP");
+        var italy = MakeTeam("Italy", "ITA");
+        RegisterInGroup(dbContext, competitionId, "Group A", england, wales);
+        RegisterInGroup(dbContext, competitionId, "Group B", spain, italy);
+
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, england, wales, 2, 0),
+            MakePlayedMatch(competitionId, spain, italy, 1, 0));
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        detail!.GroupName.Should().Be("Group A");
+        detail.LeagueTable!.Select(r => r.TeamName).Should().Equal("England", "Wales");
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_IsStillShownWhenTheCompetitionHasAKnockoutStage()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks: true);
+
+        var england = MakeTeam("England", "ENG");
+        var wales = MakeTeam("Wales", "WAL");
+        RegisterInGroup(dbContext, competitionId, "Group A", england, wales);
+
+        var lastSixteen = MakePlayedMatch(competitionId, wales, england, 0, 1);
+        lastSixteen.Knockout = true;
+        dbContext.Match.AddRange(MakePlayedMatch(competitionId, england, wales, 2, 0), lastSixteen);
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        // The knockout rematch is no part of how the group finished, so England's group row shows
+        // the one group game rather than both meetings.
+        detail!.LeagueTable!.Single(r => r.TeamName == "England").Played.Should().Be(1);
+        detail.LeagueTable!.Single(r => r.TeamName == "England").Points.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_SeparatesTeamsLevelOnPointsByTheirHeadToHeadResult()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = AddTiedGroup(dbContext, competitionId, headToHeadTieBreaks: true);
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        // England and France both finish on six; England beat them, so England top the group despite
+        // France's far better goal difference.
+        detail!.LeagueTable!.Select(r => r.TeamName).Should().Equal("England", "France", "Slovenia", "Denmark");
+        detail.LeagueTable![0].Position.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_SeparatesTeamsLevelOnPointsByGoalDifferenceWhenHeadToHeadIsOff()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        var england = AddTiedGroup(dbContext, competitionId, headToHeadTieBreaks: false);
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        // Same six matches, the other rule: France's +6 now beats England's +1.
+        detail!.LeagueTable!.Select(r => r.TeamName).Should().Equal("France", "England", "Slovenia", "Denmark");
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_FallsBackToGoalDifferenceWhenTiedTeamsHaveNotMet()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks: true);
+
+        var england = MakeTeam("England", "ENG");
+        var france = MakeTeam("France", "FRA");
+        var denmark = MakeTeam("Denmark", "DEN");
+        RegisterInGroup(dbContext, competitionId, "Group C", england, france, denmark);
+
+        // England and France are both on three points but have yet to play each other, so there is
+        // no head-to-head record to separate them and goal difference decides.
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, england, denmark, 1, 0),
+            MakePlayedMatch(competitionId, france, denmark, 4, 0));
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        detail!.LeagueTable!.Select(r => r.TeamName).Should().Equal("France", "England", "Denmark");
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_FallsBackToGoalDifferenceWhenHeadToHeadRecordsAreIdentical()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks: true);
+
+        var england = MakeTeam("England", "ENG");
+        var france = MakeTeam("France", "FRA");
+        var spain = MakeTeam("Spain", "ESP");
+        var denmark = MakeTeam("Denmark", "DEN");
+        RegisterInGroup(dbContext, competitionId, "Group D", england, france, spain, denmark);
+
+        // A three-way cycle: each of England, France and Spain beat one of the others 1-0, so their
+        // head-to-head records are identical and cannot separate them however often they are
+        // reapplied. Overall goal difference - here their wins over Denmark - decides instead.
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, england, france, 1, 0),
+            MakePlayedMatch(competitionId, france, spain, 1, 0),
+            MakePlayedMatch(competitionId, spain, england, 1, 0),
+            MakePlayedMatch(competitionId, england, denmark, 1, 0),
+            MakePlayedMatch(competitionId, france, denmark, 3, 0),
+            MakePlayedMatch(competitionId, spain, denmark, 2, 0));
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        detail!.LeagueTable!.Select(r => r.TeamName).Should().Equal("France", "Spain", "England", "Denmark");
+    }
+
+    [Fact]
+    public async Task GetTeamDetailAsync_GroupTable_ReappliesHeadToHeadToTheTeamsStillLevel()
+    {
+        var (dbContext, service) = MakeService();
+        var competitionId = Guid.NewGuid();
+        AddCompetition(dbContext, competitionId, headToHeadTieBreaks: true);
+
+        var england = MakeTeam("England", "ENG");
+        var france = MakeTeam("France", "FRA");
+        var spain = MakeTeam("Spain", "ESP");
+        var denmark = MakeTeam("Denmark", "DEN");
+        var wales = MakeTeam("Wales", "WAL");
+        RegisterInGroup(dbContext, competitionId, "Group E", england, france, spain, denmark, wales);
+
+        // England, France and Spain all finish on seven points. Among themselves England beat both
+        // and top that mini-table outright, leaving France and Spain still level on one point - and
+        // their 0-0 cannot separate them however often it is reapplied, so overall goal difference
+        // settles those two.
+        dbContext.Match.AddRange(
+            MakePlayedMatch(competitionId, england, france, 1, 0),
+            MakePlayedMatch(competitionId, england, spain, 1, 0),
+            MakePlayedMatch(competitionId, france, spain, 0, 0),
+            MakePlayedMatch(competitionId, england, denmark, 0, 0),
+            MakePlayedMatch(competitionId, england, wales, 0, 1),
+            MakePlayedMatch(competitionId, france, denmark, 2, 0),
+            MakePlayedMatch(competitionId, france, wales, 1, 0),
+            MakePlayedMatch(competitionId, spain, denmark, 1, 0),
+            MakePlayedMatch(competitionId, spain, wales, 3, 0),
+            MakePlayedMatch(competitionId, denmark, wales, 0, 0));
+        await dbContext.SaveChangesAsync();
+
+        var detail = await service.GetTeamDetailAsync(competitionId, england.TeamID, Guid.NewGuid());
+
+        detail!.LeagueTable!.Select(r => r.TeamName).Should().Equal("England", "Spain", "France", "Wales", "Denmark");
     }
 }

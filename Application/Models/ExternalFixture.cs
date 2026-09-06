@@ -31,4 +31,22 @@ public class ExternalFixture
 
     /// <summary>The away team's name, as reported by the provider.</summary>
     public string AwayTeamName { get; set; } = "";
+
+    /// <summary>
+    /// The group this fixture belongs to (e.g. "Group A"), for a tournament with a group stage.
+    /// Null for a fixture with no group - every fixture in a league season, and the knockout rounds
+    /// of a tournament.
+    /// </summary>
+    public string? GroupName { get; set; }
+
+    /// <summary>
+    /// Whether this fixture is part of a knockout round rather than a group stage or league season.
+    /// </summary>
+    public bool IsKnockout { get; set; }
+
+    /// <summary>
+    /// The round or stage this fixture belongs to, in the form the site shows it (e.g. "Group A",
+    /// "Quarter final"), or null where the provider reports nothing useful.
+    /// </summary>
+    public string? Description { get; set; }
 }

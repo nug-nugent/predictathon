@@ -16,6 +16,11 @@
     [AllowTwoPointers]                 BIT              CONSTRAINT [DF_Competition_AllowTwoPointers] DEFAULT ((1)) NOT NULL,
     [ExternalApiCompetitionCode]       VARCHAR (10)     NULL,
     [CompetitionSeriesID]              UNIQUEIDENTIFIER NULL,
+    -- Whether this competition's group tables separate teams level on points by their record
+    -- against each other (UEFA's rule, used at the Euros and now the World Cup) rather than by
+    -- overall goal difference. Defaults on, since every tournament this site is likely to run
+    -- works that way; clear it for a competition that ranks on overall goal difference first.
+    [GroupHeadToHeadTieBreaks]         BIT              CONSTRAINT [DF_Competition_GroupHeadToHeadTieBreaks] DEFAULT ((1)) NOT NULL,
     CONSTRAINT [PK_Competition] PRIMARY KEY CLUSTERED ([CompetitionID] ASC),
     CONSTRAINT [FK_Competition_CompetitionSeries_CompetitionSeriesID] FOREIGN KEY ([CompetitionSeriesID]) REFERENCES [dbo].[CompetitionSeries] ([CompetitionSeriesID])
 );

@@ -14,6 +14,8 @@ public partial class TeamCompetition
 
     public Guid CompetitionID { get; set; }
 
+    public string? GroupName { get; set; }
+
     public virtual Competition Competition { get; set; } = null!;
 
     public virtual Team Team { get; set; } = null!;

@@ -48,7 +48,10 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
                 <Panel overflowX="auto" accent hoverLift>
                     <HStack mb={2} gap={3}>
                         {crest && <Image src={crest} boxSize="64px" objectFit="contain" alt="" />}
-                        <Heading size="md">{team.teamName}</Heading>
+                        <Stack gap={0}>
+                            <Heading size="md">{team.teamName}</Heading>
+                            {team.groupName && <Text fontSize="sm" color="fg.muted">{team.groupName}</Text>}
+                        </Stack>
                     </HStack>
                     <Text fontWeight="bold">Goals for: {team.goalsFor}</Text>
                     <Text fontWeight="bold" mb={2}>Goals against: {team.goalsAgainst}</Text>
@@ -100,7 +103,13 @@ function TeamDetailLoader({ competitionId, teamId }: { competitionId: string; te
 
             <PredictableMatchesTable title="Results" matches={team.results} />
 
-            {team.leagueTable && <LeagueStandingsTable standings={team.leagueTable} highlightTeamId={team.teamID} />}
+            {team.leagueTable && (
+                <LeagueStandingsTable
+                    standings={team.leagueTable}
+                    highlightTeamId={team.teamID}
+                    heading={team.groupName ?? "League Table"}
+                />
+            )}
         </Stack>
     );
 }

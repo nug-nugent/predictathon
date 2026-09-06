@@ -129,6 +129,7 @@ function AddCompetitionDialog({ onClose, onCreated }: { onClose: () => void; onC
                 imageFilename: null,
                 defaultToNeutralGround: false,
                 allowTwoPointers: true,
+                groupHeadToHeadTieBreaks: true,
                 externalApiCompetitionCode: null,
                 competitionSeriesID: null,
             });

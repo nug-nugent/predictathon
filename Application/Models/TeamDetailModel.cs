@@ -22,6 +22,13 @@ public class TeamDetailModel
 
     public string? ImageName { get; set; }
 
+    /// <summary>
+    /// The group this team is in for this competition (e.g. "Group A"), or null where the
+    /// competition has no group stage. Doubles as the heading for <see cref="LeagueTable"/>, which
+    /// is the group's table rather than the whole competition's whenever this is set.
+    /// </summary>
+    public string? GroupName { get; set; }
+
     public int GoalsFor { get; set; }
 
     public int GoalsAgainst { get; set; }
@@ -48,8 +55,9 @@ public class TeamDetailModel
     public IReadOnlyList<TeamFixtureItem> Fixtures { get; set; } = [];
 
     /// <summary>
-    /// The competition's actual league table, best-placed team first. Null for competitions that
-    /// contain knockout matches (a World Cup, say), where a single table is meaningless.
+    /// The table this team sits in, best-placed team first: its group's table where the team has a
+    /// <see cref="GroupName"/>, otherwise the whole competition's. Null where neither applies -
+    /// a competition with knockout matches but no groups, where no single table is meaningful.
     /// </summary>
     public IReadOnlyList<TeamStandingItem>? LeagueTable { get; set; }
 }

@@ -16,6 +16,9 @@ export type CreateCompetitionAdmin = {
     imageFilename: string | null;
     defaultToNeutralGround: boolean;
     allowTwoPointers: boolean;
+    /// Whether group tables separate teams level on points by their record against each other
+    /// (UEFA's rule) rather than by overall goal difference. Only matters where teams are grouped.
+    groupHeadToHeadTieBreaks: boolean;
     externalApiCompetitionCode: string | null;
     competitionSeriesID: string | null;
 };
@@ -45,6 +48,9 @@ export async function getCompetitionSeries(): Promise<CompetitionSeries[]> {
 export type FixtureImportSummary = {
     matchesImported: number;
     teamsAdded: number;
+    /// Already-assigned teams whose group was filled in from the imported fixtures; teams added by
+    /// the same import are counted under teamsAdded instead.
+    groupsAssigned: number;
     startDate: string;
     endDate: string;
 };

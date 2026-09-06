@@ -34,6 +34,13 @@ public class CreateCompetitionModel
     public bool AllowTwoPointers { get; set; }
 
     /// <summary>
+    /// Whether group tables separate teams level on points by their record against each other
+    /// (UEFA's rule, used at the Euros and the World Cup) rather than by overall goal difference.
+    /// Only has an effect on a competition whose teams are placed in groups.
+    /// </summary>
+    public bool GroupHeadToHeadTieBreaks { get; set; } = true;
+
+    /// <summary>
     /// The competition series this competition belongs to, if any - what groups repeated wins in
     /// the same competition into a single counted trophy on a profile. Null for a one-off, which
     /// still earns its own trophy, just an ungrouped one.

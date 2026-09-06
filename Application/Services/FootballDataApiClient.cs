@@ -47,6 +47,9 @@ public class FootballDataApiClient : IExternalMatchDataService
                 AwayTeamExternalCode = m.AwayTeam.Id.ToString(),
                 HomeTeamName = m.HomeTeam.Name,
                 AwayTeamName = m.AwayTeam.Name,
+                GroupName = ToGroupName(m.Group),
+                IsKnockout = KnockoutStageNames.ContainsKey(m.Stage ?? ""),
+                Description = ToStageDescription(m.Stage, m.Group),
             })
             .ToList();
     }
@@ -106,6 +109,64 @@ public class FootballDataApiClient : IExternalMatchDataService
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Translates the provider's group identifier ("GROUP_A") into the form the site stores and
+    /// displays ("Group A"). Returns null where the fixture has no group - a league season's
+    /// fixtures, and a tournament's knockout rounds.
+    /// </summary>
+    /// <param name="group">The provider's group identifier, or null.</param>
+    private static string? ToGroupName(string? group)
+    {
+        if (string.IsNullOrWhiteSpace(group))
+        {
+            return null;
+        }
+
+        // "GROUP_A" -> "Group A". Anything else the provider sends through this field is passed on
+        // title-cased rather than dropped, so an unfamiliar format still lands somewhere visible.
+        var words = group.Split('_', StringSplitOptions.RemoveEmptyEntries)
+            .Select(word => word.Length == 1 ? word.ToUpperInvariant() : char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant());
+
+        return string.Join(' ', words);
+    }
+
+    /// <summary>
+    /// Works out the free-text round description to store against a fixture - the group name for a
+    /// group-stage fixture, or the round's own name for a knockout one. Null for a league season,
+    /// where every fixture is the same kind of fixture and a description adds nothing.
+    /// </summary>
+    /// <param name="stage">The provider's stage identifier, or null.</param>
+    /// <param name="group">The provider's group identifier, or null.</param>
+    private static string? ToStageDescription(string? stage, string? group)
+    {
+        if (stage is not null && KnockoutStageNames.TryGetValue(stage, out var knockoutRound))
+        {
+            return knockoutRound;
+        }
+
+        return ToGroupName(group);
+    }
+
+    // The provider's knockout stage identifiers, mapped to the round names this site shows. A stage
+    // absent from here is treated as non-knockout, which is the right default: it covers a league
+    // season's REGULAR_SEASON as well as GROUP_STAGE, and a knockout round wrongly imported as a
+    // group fixture is a description an admin can correct, where the reverse would quietly drop
+    // real fixtures out of the group tables.
+    private static readonly Dictionary<string, string> KnockoutStageNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["PLAY_OFF_ROUND"] = "Play-off",
+        ["PLAYOFFS"] = "Play-off",
+        ["PLAYOFF_ROUND"] = "Play-off",
+        ["ROUND_OF_32"] = "Round of 32",
+        ["LAST_32"] = "Round of 32",
+        ["ROUND_OF_16"] = "Round of 16",
+        ["LAST_16"] = "Round of 16",
+        ["QUARTER_FINALS"] = "Quarter final",
+        ["SEMI_FINALS"] = "Semi final",
+        ["THIRD_PLACE"] = "Third place play-off",
+        ["FINAL"] = "Final",
+    };
+
     // football-data.org reports "SCHEDULED" for fixtures whose broadcaster slot isn't confirmed yet -
     // utcDate is a midnight-UTC placeholder in that case, not a real kickoff time. Every other status
     // (TIMED, IN_PLAY, FINISHED, POSTPONED, etc.) carries a real timestamp.
@@ -127,6 +188,15 @@ public class FootballDataApiClient : IExternalMatchDataService
 
         [JsonPropertyName("status")]
         public string Status { get; set; } = "";
+
+        // "stage" and "group" describe where a fixture sits in a tournament - "GROUP_STAGE"/"GROUP_A"
+        // for the group phase, "QUARTER_FINALS" and the like once it turns knockout. A league season
+        // reports "REGULAR_SEASON" and a null group.
+        [JsonPropertyName("stage")]
+        public string? Stage { get; set; }
+
+        [JsonPropertyName("group")]
+        public string? Group { get; set; }
 
         [JsonPropertyName("homeTeam")]
         public TeamDto HomeTeam { get; set; } = new();

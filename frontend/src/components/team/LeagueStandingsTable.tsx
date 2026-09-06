@@ -5,13 +5,14 @@ import { crestUrl } from "../../utils/crestUrl";
 import { Panel } from "../ui/panel";
 import { TeamLabel } from "./TeamLabel";
 
-/// The competition's actual football league table (not the users' prediction league - see
-/// LeagueTableView), with the team whose page this is picked out.
-export function LeagueStandingsTable({ standings, highlightTeamId }: { standings: TeamStanding[]; highlightTeamId: string }) {
+/// A real football league table (not the users' prediction league - see LeagueTableView), with the
+/// team whose page this is picked out. Shows one group of a tournament or a whole league season,
+/// depending on the heading it's given.
+export function LeagueStandingsTable({ standings, highlightTeamId, heading = "League Table" }: { standings: TeamStanding[]; highlightTeamId: string; heading?: string }) {
     return (
         <Panel overflowX="auto" accent>
             <VStack align="stretch" gap={1}>
-                <Heading size="sm" mb={2}>League Table</Heading>
+                <Heading size="sm" mb={2}>{heading}</Heading>
                 <Table.Root size="sm" variant="line" showColumnBorder stickyHeader>
                     <Table.Header>
                         <Table.Row>

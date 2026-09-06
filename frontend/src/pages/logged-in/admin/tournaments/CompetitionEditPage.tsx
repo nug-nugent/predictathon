@@ -12,7 +12,7 @@ import {
 } from "../../../../services/competition-admin-service";
 import {
     getAssignedTeamsForCompetition, getUnassignedTeamsForCompetition,
-    addTeamToCompetition, removeTeamFromCompetition,
+    addTeamToCompetition, removeTeamFromCompetition, setTeamGroup,
     type AssignedTeam, type Team,
 } from "../../../../services/team-service";
 import {
@@ -199,6 +199,11 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                             <Checkbox.Control />
                             <Checkbox.Label>Allow two-pointers</Checkbox.Label>
                         </Checkbox.Root>
+                        <Checkbox.Root checked={form.groupHeadToHeadTieBreaks} onCheckedChange={(e) => update({ groupHeadToHeadTieBreaks: !!e.checked })}>
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Break group ties on head-to-head record</Checkbox.Label>
+                        </Checkbox.Root>
                     </VStack>
 
                     {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
@@ -249,6 +254,59 @@ function SeriesField({ value, onChange }: { value: string | null; onChange: (val
                     : "Groups this competition's winners with other years of the same competition, so repeated wins show as one trophy. Leave as none for a one-off."}
             </Field.HelperText>
         </Field.Root>
+    );
+}
+
+/// One team's group, edited in place. Saves on blur rather than per keystroke - a group name is a
+/// handful of characters typed straight through, and a request per keystroke would be 24 of them
+/// for a Euros draw.
+function GroupNameInput({
+    teamCompetitionId, teamName, groupName, onError,
+}: {
+    teamCompetitionId: string;
+    teamName: string;
+    groupName: string | null;
+    onError: (message: string | null) => void;
+}) {
+    const [value, setValue] = useState(groupName ?? "");
+    // What the server currently holds. Tracked separately from the prop, which doesn't change as
+    // this saves - comparing against the prop would treat editing a group back to its original
+    // value as a no-op and quietly leave the earlier edit standing on the server.
+    const [savedValue, setSavedValue] = useState(groupName ?? "");
+    const [saving, setSaving] = useState(false);
+
+    const save = async () => {
+        const trimmed = value.trim();
+
+        if (trimmed === savedValue) {
+            return;
+        }
+
+        onError(null);
+        setSaving(true);
+
+        try {
+            await setTeamGroup(teamCompetitionId, trimmed === "" ? null : trimmed);
+            setValue(trimmed);
+            setSavedValue(trimmed);
+        } catch (e) {
+            onError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong.");
+            setValue(savedValue);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Input
+            size="sm"
+            placeholder="None"
+            aria-label={`Group for ${teamName}`}
+            value={value}
+            disabled={saving}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={() => { void save(); }}
+        />
     );
 }
 
@@ -326,10 +384,25 @@ function TeamsSection({ competitionId }: { competitionId: string }) {
                         <Text color="fg.muted">No teams assigned yet.</Text>
                     ) : (
                         <Table.Root size="sm" variant="line">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Team</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Group</Table.ColumnHeader>
+                                    <Table.ColumnHeader />
+                                </Table.Row>
+                            </Table.Header>
                             <Table.Body>
                                 {assigned.map((t) => (
                                     <Table.Row key={t.teamCompetitionID}>
                                         <Table.Cell>{t.teamName}</Table.Cell>
+                                        <Table.Cell width="180px">
+                                            <GroupNameInput
+                                                teamCompetitionId={t.teamCompetitionID}
+                                                teamName={t.teamName}
+                                                groupName={t.groupName}
+                                                onError={setError}
+                                            />
+                                        </Table.Cell>
                                         <Table.Cell textAlign="right" width="1">
                                             <IconButton size="xs" variant="ghost" colorPalette="red" aria-label="Remove team" onClick={() => setRemoving(t)}>
                                                 <X size={14} />
@@ -413,8 +486,9 @@ function FixtureImportSection({
                     {summary && (
                         <Text fontSize="sm" color="fg.success">
                             Imported {summary.matchesImported} match{summary.matchesImported === 1 ? "" : "es"} and added{" "}
-                            {summary.teamsAdded} team{summary.teamsAdded === 1 ? "" : "s"}. Competition now runs{" "}
-                            {formatDateOnly(summary.startDate)} to {formatDateOnly(summary.endDate)}.
+                            {summary.teamsAdded} team{summary.teamsAdded === 1 ? "" : "s"}
+                            {summary.groupsAssigned > 0 && `, and put ${summary.groupsAssigned} existing team${summary.groupsAssigned === 1 ? "" : "s"} into groups`}.
+                            {" "}Competition now runs {formatDateOnly(summary.startDate)} to {formatDateOnly(summary.endDate)}.
                         </Text>
                     )}
 

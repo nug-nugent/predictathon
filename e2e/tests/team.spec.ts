@@ -20,15 +20,22 @@ test("team detail page lists the team's upcoming fixtures alongside its results"
     await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
 });
 
-test("team detail page hides the league table for a competition with knockout matches", async ({ page }) => {
+test("team detail page shows the team's group and its group table", async ({ page }) => {
     await page.goto(`/team/${BRAZIL_TEAM_ID}`);
 
-    await expect(page.getByRole("heading", { name: "Fixtures" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Brazil" })).toBeVisible();
 
-    // Sample Cup has a knockout stage (Scripts/Sample/04_Match.sql), so a single table would be
-    // meaningless - the API returns no league table and the page leaves the panel out entirely.
+    // Sample Cup runs a group stage (Scripts/Sample/03_TeamCompetition.sql), so the page names the
+    // team's group beside its crest and heads its table with the group rather than "League Table" -
+    // a single whole-competition table would be meaningless once the knockout rounds are in there.
+    await expect(page.getByRole("heading", { name: "Group G" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "League Table" })).toHaveCount(0);
-    await expect(page.getByRole("columnheader", { name: "PTS" })).toHaveCount(0);
+    await expect(page.getByRole("columnheader", { name: "PTS" })).toBeVisible();
+
+    // Only Group G's own four teams, not all 32 in the competition.
+    const table = page.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "PTS" }) });
+    await expect(table.locator("tbody tr")).toHaveCount(4);
+    await expect(table.getByRole("link", { name: "Serbia" })).toBeVisible();
 });
 
 test("recent results for a team open from its name on the predictions page", async ({ page }) => {

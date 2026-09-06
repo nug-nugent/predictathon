@@ -32,9 +32,16 @@ public interface ITeamService
     Task<Result> RemoveFromCompetitionAsync(Guid teamCompetitionId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Places a team already assigned to a competition into one of its groups, or takes it out of a
+    /// group again when <paramref name="groupName"/> is null or blank.
+    /// </summary>
+    Task<Result> SetGroupAsync(Guid teamCompetitionId, string? groupName, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a team's played-match stats, results and upcoming fixtures within a competition - plus
-    /// the competition's own league table where it has no knockout matches - or null if no such team
-    /// exists. <paramref name="userId"/> is used to populate each result's "your prediction" and
+    /// the table it sits in, which is its group's where it has a group and the whole competition's
+    /// where the competition has no knockout stage - or null if no such team exists.
+    /// <paramref name="userId"/> is used to populate each result's "your prediction" and
     /// "your score" columns.
     /// </summary>
     Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default);
