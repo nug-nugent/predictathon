@@ -1,10 +1,10 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { DEMO_PREDICTOR, login } from "./helpers";
 
-// Scripts/Sample/04_Match.sql seeds Quarter Final 1 half an hour out, so a freshly seeded stack has
-// exactly one match in the Home card's "Coming up" group - the only state in which a row offers
-// quick predict. That half-hour runs out, and it's the only thing on the seeded card that can, so
-// every test here skips itself rather than failing once the match has kicked off.
+// Scripts/Sample/04_Match.sql pins four of today's group matches ahead of "now" - 30 minutes, 2, 4
+// and 7 hours out - so a freshly seeded stack has several matches in the Home card's "Coming up"
+// group, the only state in which a row offers quick predict. They run out over the course of a day,
+// so every test here still skips itself rather than failing once they have all kicked off.
 test.beforeEach(async ({ page }) => {
     await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
     await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();

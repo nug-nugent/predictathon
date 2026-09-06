@@ -1,4 +1,4 @@
-/*
+﻿/*
 Predictions for every Sample Cup competitor, so the standings mean something.
 
 Until this ran, nobody had predicted anything: the league table showed every player on nought
@@ -7,7 +7,8 @@ the Live page's projected positions moved everyone at once because the table was
 
 Two sets are seeded, and deliberately no more:
 
-  - The 56 already-played matches, so there are standings to stand in. These are generated from the
+  - The already-played matches (the first two group matchdays, plus whatever of matchday 3 has
+    finished today), so there are standings to stand in. These are generated from the
     real result so the spread is believable rather than random noise - roughly a fifth are spot on,
     a third get the result right, and one in ten didn't predict at all. Scores are then computed by
     MatchPredictionScoreSet, the same procedure the app uses when an admin enters a result, so the
