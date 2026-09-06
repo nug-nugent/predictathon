@@ -68,8 +68,8 @@ export async function getMatchesForWeek(competitionId: string, dateFrom: string)
     return getJsonAuthenticated<MatchPrediction[]>(`/Match/${competitionId}?dateFrom=${encodeURIComponent(dateFrom)}`);
 }
 
-export async function savePrediction(matchId: string, homeTeamGoals: number, awayTeamGoals: number): Promise<void> {
-    return postJsonAuthenticated<void>("/Prediction", { matchID: matchId, homeTeamGoals, awayTeamGoals });
+export async function savePrediction(matchId: string, homeTeamGoals: number, awayTeamGoals: number, options?: { keepalive?: boolean }): Promise<void> {
+    return postJsonAuthenticated<void>("/Prediction", { matchID: matchId, homeTeamGoals, awayTeamGoals }, options);
 }
 
 // Matches Application/Models/MatchPredictionListItem.cs.

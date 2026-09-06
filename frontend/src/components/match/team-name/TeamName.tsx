@@ -16,6 +16,13 @@ export function TeamName({ teamId, name, shortName, acronym, crest, crestPositio
     // The popover is controlled so picking "Recent Results" can close it as the dialog opens -
     // leaving it open behind a modal traps focus in a menu nobody can see.
     const [popoverOpen, setPopoverOpen] = useState(false);
+
+    // The dialog doesn't exist until someone actually picks "Recent Results". A week's fixture list
+    // renders two team names per match, so mounting a Dialog behind every one of them built sixty-odd
+    // overlay state machines that no one had asked for and that every render of the row had to carry.
+    // The popover itself stays mounted: it is what makes the name announce itself as a menu button,
+    // so deferring that would trade a little speed for the affordance.
+    const [resultsMounted, setResultsMounted] = useState(false);
     const [resultsOpen, setResultsOpen] = useState(false);
     const textAlign = crestPosition === "after" ? "right" : "left";
 
@@ -35,7 +42,10 @@ export function TeamName({ teamId, name, shortName, acronym, crest, crestPositio
 
     return (
         <>
-            <Popover.Root open={popoverOpen} onOpenChange={(e) => setPopoverOpen(e.open)} positioning={{ placement: "bottom" }}>
+            {/* lazyMount/unmountOnExit because this renders twice per match row: a list of a week's
+                fixtures would otherwise build the whole popover - portal, positioner, content, both
+                buttons - for every team on screen, and re-render the lot on any list-level change. */}
+            <Popover.Root lazyMount unmountOnExit open={popoverOpen} onOpenChange={(e) => setPopoverOpen(e.open)} positioning={{ placement: "bottom" }}>
                 <Popover.Trigger asChild>
                     <Button variant="plain" size="sm" p={0} h="auto" minW="0" fontWeight="normal">
                         <HStack gap={2} minW="0">{label}</HStack>
@@ -48,7 +58,7 @@ export function TeamName({ teamId, name, shortName, acronym, crest, crestPositio
                             <Popover.Body p={2}>
                                 <Stack gap={1} align="stretch">
                                     <Button size="xs" variant="ghost" justifyContent="flex-start"
-                                        onClick={() => { setPopoverOpen(false); setResultsOpen(true); }}>
+                                        onClick={() => { setPopoverOpen(false); setResultsMounted(true); setResultsOpen(true); }}>
                                         Recent Results
                                     </Button>
                                     <Button asChild size="xs" variant="ghost" justifyContent="flex-start">
@@ -61,7 +71,9 @@ export function TeamName({ teamId, name, shortName, acronym, crest, crestPositio
                 </Portal>
             </Popover.Root>
 
-            <RecentResultsDialog open={resultsOpen} onClose={() => setResultsOpen(false)} teamId={teamId} teamName={name || shortName || "TBC"} />
+            {resultsMounted && (
+                <RecentResultsDialog open={resultsOpen} onClose={() => setResultsOpen(false)} teamId={teamId} teamName={name || shortName || "TBC"} />
+            )}
         </>
     );
 }
