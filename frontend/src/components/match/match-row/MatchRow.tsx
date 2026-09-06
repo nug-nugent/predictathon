@@ -16,7 +16,11 @@ type MatchRowProps = {
     /** True for the first match in a date group, to add a bit of visual separation. */
     isFirstInGroup: boolean;
     onFocus: (matchId: string) => void;
-    onSaved: (matchId: string) => void;
+    /**
+     * A prediction for this match has landed. `completedPair` says whether that was the away box
+     * finishing the scoreline - the only case that should move focus on to the next match.
+     */
+    onSaved: (matchId: string, completedPair: boolean) => void;
 };
 
 export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSaved }: MatchRowProps) {
@@ -41,11 +45,11 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
 
     const locked = status !== "Pre" || saveState === "cutoff";
 
-    const save = (homeValue: string, awayValue: string, focusNext: boolean) => {
+    const save = (homeValue: string, awayValue: string, completedPair: boolean) => {
         savePredictionFor(homeValue, awayValue, () => {
-            onSaved(match.matchID);
+            onSaved(match.matchID, completedPair);
 
-            if (focusNext) {
+            if (completedPair) {
                 awayInputRef.current?.blur();
             }
         });
@@ -96,6 +100,11 @@ export function MatchRow({ match, now, hasFocus, isFirstInGroup, onFocus, onSave
         if (value === null) return;
 
         setHomeInput(value);
+
+        // Changing the home digit of a prediction that already has an away digit is still a save,
+        // but it isn't finishing with this match - the away box is where you're going next, and it
+        // selects its contents on focus so the old digit types straight over. Passing false keeps
+        // that save from advancing focus to the next match out from under you.
         save(value, awayInput, false);
         if (value !== "") {
             awayInputRef.current?.focus();

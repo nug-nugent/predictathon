@@ -67,11 +67,23 @@ export function MatchList({ matches, onPredictionSaved }: MatchListProps) {
         () => findFocusTarget(matches, predictedIds, now)
     );
 
-    const handleSaved = (matchId: string) => {
+    const handleSaved = (matchId: string, completedPair: boolean) => {
         const updated = new Set(predictedIds);
         updated.add(matchId);
         setPredictedIds(updated);
         onPredictionSaved?.(matchId);
+
+        // Only a save that finished the scoreline moves on. Editing the home digit of an existing
+        // prediction saves too, but the user is on their way to the away box - advancing here would
+        // take focus off them mid-edit (and, with saves debounced, do it a beat after they'd started
+        // typing into it).
+        // Only a save that finished the scoreline moves on. Editing the home digit of an existing
+        // prediction saves too, but the user is on their way to the away box - advancing here would
+        // take focus off them mid-edit (and, with saves debounced, do it a beat after they'd started
+        // typing into it).
+        if (!completedPair) {
+            return;
+        }
 
         const index = matches.findIndex((m) => m.matchID === matchId);
         const next = matches.slice(index + 1).find((m) => computeMatchStatus(m, now).status === "Pre" && !updated.has(m.matchID));

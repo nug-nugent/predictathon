@@ -10,12 +10,48 @@ import { DEMO_PREDICTOR, login } from "./helpers";
 /// assertions. Once it kicks off there is only one open match left and this falls back to it, which
 /// is safe: quick-predict.spec.ts skips itself in exactly that state.
 async function lastOpenScoreInputs(page: Page): Promise<{ home: Locator; away: Locator }> {
+    // The week picker renders as soon as the week summaries land, a beat before the matches
+    // themselves - so wait for the list to actually be on screen before counting, or an empty
+    // count reads as "nothing open" and skips the test for no reason.
+    await expect(page.locator('input[data-role="score-input"]').first()).toBeVisible();
+
     const open = page.locator('input[data-role="score-input"]:not([readonly])');
     const count = await open.count();
 
     test.skip(count < 2, "No match is still open for predictions - re-seed the sample data.");
 
     return { home: open.nth(count - 2), away: open.nth(count - 1) };
+}
+
+/// The score boxes of an open match that still has an *unpredicted* open match after it. That is
+/// the arrangement the focus-advance rule depends on - MatchList only ever moves on to a match
+/// nobody has predicted yet, so with everything after it already predicted there is nowhere for
+/// focus to go and a regression here would pass unnoticed. Taken from the end of the list for the
+/// same reason lastOpenScoreInputs is: quick-predict.spec.ts drives the first open match.
+///
+/// The very last open match is skipped over when looking for that unpredicted follower, because
+/// that is the one every other test in this file writes to - it would otherwise be predicted out
+/// from under this test by a sibling running alongside it.
+async function openMatchBeforeAnUnpredictedOne(page: Page): Promise<{ home: Locator; away: Locator }> {
+    // The week picker renders as soon as the week summaries land, a beat before the matches
+    // themselves - so wait for the list to actually be on screen before counting, or an empty
+    // count reads as "nothing open" and skips the test for no reason.
+    await expect(page.locator('input[data-role="score-input"]').first()).toBeVisible();
+
+    const open = page.locator('input[data-role="score-input"]:not([readonly])');
+    const values = await open.evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+
+    // The inputs are home/away pairs in document order, one pair per open match.
+    let lastUnpredicted = -1;
+    for (let pair = 0; pair * 2 + 1 < values.length - 2; pair++) {
+        if (values[pair * 2] === "" && values[pair * 2 + 1] === "") {
+            lastUnpredicted = pair;
+        }
+    }
+
+    test.skip(lastUnpredicted < 1, "No open match has an unpredicted one after it - re-seed the sample data.");
+
+    return { home: open.nth((lastUnpredicted - 1) * 2), away: open.nth((lastUnpredicted - 1) * 2 + 1) };
 }
 
 test.beforeEach(async ({ page }) => {
@@ -156,4 +192,34 @@ test("a failed save can be retried without retyping the score", async ({ page })
 
     await expect(page.getByText("Prediction saved!")).toBeVisible();
     await expect(retry).toBeHidden();
+});
+
+test("changing the home score of an existing prediction moves to the away box, not the next match", async ({ page }) => {
+    await page.goto("/predictions");
+    await expect(page.getByRole("combobox")).toBeVisible();
+
+    const { home, away } = await openMatchBeforeAnUnpredictedOne(page);
+
+    // Establish a complete prediction first, so changing the home digit below is an edit rather
+    // than a first entry - and let its own save settle, since finishing a scoreline is exactly what
+    // legitimately moves focus on to the next match.
+    await home.fill("");
+    await home.fill("2");
+    await away.fill("");
+    await away.fill("1");
+    await expect(page.getByText("Prediction saved!").first()).toBeVisible();
+
+    await home.fill("4");
+
+    // Straight to the away box, with its digit selected so the replacement types over the top.
+    await expect(away).toBeFocused();
+    const selected = await away.evaluate((input: HTMLInputElement) => input.selectionStart === 0 && input.selectionEnd === input.value.length);
+    expect(selected).toBe(true);
+
+    // ...and still there once the debounced save has landed. Every successful save used to advance
+    // to the next match, so editing the home digit of an existing prediction put focus on the away
+    // box and then snatched it away again a beat later. A fixed wait rather than a state to wait
+    // for: the assertion is that nothing steals focus during the window, so the window is the test.
+    await page.waitForTimeout(1500);
+    await expect(away).toBeFocused();
 });

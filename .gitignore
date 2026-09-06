@@ -411,7 +411,8 @@ Keys/
 # Docker local dev secrets
 .env.docker
 
-# Playwright
-/e2e/test-results/
-/e2e/playwright-report/
-/e2e/playwright/.cache/
+# Playwright. The paths aren't anchored to /e2e/ because running the suite from another working
+# directory (e.g. the frontend, while checking a UI change) drops the same folders there instead.
+test-results/
+playwright-report/
+playwright/.cache/
