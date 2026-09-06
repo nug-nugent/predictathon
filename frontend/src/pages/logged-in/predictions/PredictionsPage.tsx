@@ -209,15 +209,18 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
 
   return (
     <>
-      <PageHeading mb={4}>Predictions</PageHeading>
-
-      {hasBracket && (
-        <HStack justify="flex-end" mb={2}>
-          <Button size="sm" variant="outline" onClick={() => setView(showingBracket ? "list" : "knockout")}>
+      {/* The heading and the view toggle share a line. PageHeading is hidden from lg up (the side
+          nav already says which page this is), so on desktop the toggle keeps the right-hand edge
+          to itself, and on mobile the two sit level instead of stacking. */}
+      <HStack justify="space-between" align="center" mb={4} gap={3}>
+        <PageHeading mb={0}>Predictions</PageHeading>
+        {hasBracket && (
+          <Button size="sm" variant="outline" flexShrink={0} ml="auto"
+            onClick={() => setView(showingBracket ? "list" : "knockout")}>
             {showingBracket ? "Show Match List" : "Show Knockout View"}
           </Button>
-        </HStack>
-      )}
+        )}
+      </HStack>
 
       {showingBracket && bracketIsDrawable && bracket !== null ? (
         <KnockoutBracket

@@ -19,8 +19,14 @@ test("the knockout view is offered on the predictions page and draws the whole b
     await expect(page.getByRole("button", { name: "Show Match List" })).toBeVisible();
     await expect(page.locator('button[data-role="quick-predict"]')).toHaveCount(16);
 
-    // The play-off is a knockout match but no part of the tree, so it gets its own heading.
-    await expect(page.getByRole("heading", { name: "Third place play-off" })).toBeVisible();
+    // The play-off is a knockout match but no part of the tree, so it sits on its own under the
+    // final with its own label.
+    await expect(page.getByText("Third Place Play-off")).toBeVisible();
+
+    // Every round of the tree names itself across the top of the bracket.
+    await expect(page.getByText("Round of 16", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Quarter Final", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Final", { exact: true }).first()).toBeVisible();
 
     // Which view you are on rides in the URL, so a refresh comes back to the same place.
     await expect(page).toHaveURL(/view=knockout/);

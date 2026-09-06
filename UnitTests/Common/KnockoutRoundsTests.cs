@@ -14,8 +14,8 @@ public class KnockoutRoundsTests
     [Theory]
     [InlineData(32, "Round of 32")]
     [InlineData(16, "Round of 16")]
-    [InlineData(8, "Quarter final")]
-    [InlineData(4, "Semi final")]
+    [InlineData(8, "Quarter Final")]
+    [InlineData(4, "Semi Final")]
     [InlineData(2, "Final")]
     public void NameOf_NamesEachRoundOfTheTree(int knockoutRound, string expected)
     {
@@ -25,7 +25,7 @@ public class KnockoutRoundsTests
     [Fact]
     public void NameOf_NamesTheSentinelAsTheThirdPlacePlayOff()
     {
-        KnockoutRounds.NameOf(KnockoutRounds.ThirdPlacePlayOffRound).Should().Be("Third place play-off");
+        KnockoutRounds.NameOf(KnockoutRounds.ThirdPlacePlayOffRound).Should().Be("Third Place Play-off");
     }
 
     [Fact]

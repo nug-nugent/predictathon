@@ -26,9 +26,9 @@ public static class KnockoutRounds
         [64] = "Round of 64",
         [32] = "Round of 32",
         [16] = "Round of 16",
-        [8] = "Quarter final",
-        [4] = "Semi final",
-        [ThirdPlacePlayOffRound] = "Third place play-off",
+        [8] = "Quarter Final",
+        [4] = "Semi Final",
+        [ThirdPlacePlayOffRound] = "Third Place Play-off",
         [2] = "Final",
     };
 

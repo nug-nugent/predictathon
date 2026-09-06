@@ -42,7 +42,7 @@ public class KnockoutBracketTests
             var bracket = await MakeService(dbContext).GetKnockoutBracketAsync(world.UserId, world.CompetitionId);
 
             bracket.Rounds.Select(r => r.KnockoutRound).Should().Equal(8, 4, 2);
-            bracket.Rounds.Select(r => r.RoundName).Should().Equal("Quarter final", "Semi final", "Final");
+            bracket.Rounds.Select(r => r.RoundName).Should().Equal("Quarter Final", "Semi Final", "Final");
             bracket.Rounds.Select(r => r.Matches.Count).Should().Equal(4, 2, 1);
             bracket.IsWellFormed.Should().BeTrue();
 
