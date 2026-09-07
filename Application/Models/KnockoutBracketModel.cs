@@ -36,7 +36,7 @@ public class KnockoutRoundModel
     /// </summary>
     public int KnockoutRound { get; set; }
 
-    /// <summary>The round's display name, e.g. "Quarter final".</summary>
+    /// <summary>The round's display name, e.g. "Quarter-final".</summary>
     public string RoundName { get; set; } = "";
 
     /// <summary>The round's matches in draw order, by BracketSlot.</summary>

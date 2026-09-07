@@ -1,6 +1,6 @@
 ﻿/*
 64 matches for "Sample Cup" - full 32-team World Cup format (8 groups of 4, round-robin group stage,
-then Round of 16, Quarter-finals, Semi-finals, 3rd Place Play-off, Final). Scores are
+then Round of 16, quarter-finals, semi-finals, 3rd place playoff, Final). Scores are
 deterministically generated (not random), and the schedule sits part-way through the group stage:
 matchdays 1 and 2 are complete (MatchPlayed = 1), and matchday 3 is in progress - its first day is
 today, its second tomorrow. Everything from the Round of 16 on uses HomeTeamTBC/AwayTeamTBC
@@ -27,7 +27,7 @@ KnockoutRound, BracketSlot.
 
 The knockout matches carry their bracket position (KnockoutRound/BracketSlot) so the Predictions
 page's knockout view has a tree to draw. The slots follow the placeholders already written above:
-'Quarter Final 1' takes the winners of 'Round of 16 1' and 'Round of 16 2', so R16 slots 1 and 2
+'Quarter-final 1' takes the winners of 'Round of 16 1' and 'Round of 16 2', so R16 slots 1 and 2
 feed quarter-final slot 1, and so on down to the final. The play-off takes round 3 - see
 Application/Common/KnockoutRounds.cs for why that value.
 */
@@ -166,13 +166,13 @@ USING (
 ,('FA000000-0000-0000-0000-000000000054','CA000000-0000-0000-0000-000000000001','2026-07-13 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner Group D','Runner-up Group C','Round of 16 6',1,16,6)
 ,('FA000000-0000-0000-0000-000000000055','CA000000-0000-0000-0000-000000000001','2026-07-13 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner Group F','Runner-up Group E','Round of 16 7',1,16,7)
 ,('FA000000-0000-0000-0000-000000000056','CA000000-0000-0000-0000-000000000001','2026-07-13 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner Group H','Runner-up Group G','Round of 16 8',1,16,8)
-,('FA000000-0000-0000-0000-000000000057','CA000000-0000-0000-0000-000000000001','2026-07-16 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 1','Winner R16 2','Quarter Final 1',1,8,1)
-,('FA000000-0000-0000-0000-000000000058','CA000000-0000-0000-0000-000000000001','2026-07-16 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 3','Winner R16 4','Quarter Final 2',1,8,2)
-,('FA000000-0000-0000-0000-000000000059','CA000000-0000-0000-0000-000000000001','2026-07-17 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 5','Winner R16 6','Quarter Final 3',1,8,3)
-,('FA000000-0000-0000-0000-000000000060','CA000000-0000-0000-0000-000000000001','2026-07-17 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 7','Winner R16 8','Quarter Final 4',1,8,4)
-,('FA000000-0000-0000-0000-000000000061','CA000000-0000-0000-0000-000000000001','2026-07-20 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF1','Winner QF2','Semi Final 1',1,4,1)
-,('FA000000-0000-0000-0000-000000000062','CA000000-0000-0000-0000-000000000001','2026-07-20 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF3','Winner QF4','Semi Final 2',1,4,2)
-,('FA000000-0000-0000-0000-000000000063','CA000000-0000-0000-0000-000000000001','2026-07-23 15:00:00',NULL,NULL,0,NULL,NULL,1,'Loser SF1','Loser SF2','3rd Place Play-off',1,3,1)
+,('FA000000-0000-0000-0000-000000000057','CA000000-0000-0000-0000-000000000001','2026-07-16 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 1','Winner R16 2','Quarter-final 1',1,8,1)
+,('FA000000-0000-0000-0000-000000000058','CA000000-0000-0000-0000-000000000001','2026-07-16 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 3','Winner R16 4','Quarter-final 2',1,8,2)
+,('FA000000-0000-0000-0000-000000000059','CA000000-0000-0000-0000-000000000001','2026-07-17 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 5','Winner R16 6','Quarter-final 3',1,8,3)
+,('FA000000-0000-0000-0000-000000000060','CA000000-0000-0000-0000-000000000001','2026-07-17 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner R16 7','Winner R16 8','Quarter-final 4',1,8,4)
+,('FA000000-0000-0000-0000-000000000061','CA000000-0000-0000-0000-000000000001','2026-07-20 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF1','Winner QF2','Semi-final 1',1,4,1)
+,('FA000000-0000-0000-0000-000000000062','CA000000-0000-0000-0000-000000000001','2026-07-20 19:00:00',NULL,NULL,0,NULL,NULL,1,'Winner QF3','Winner QF4','Semi-final 2',1,4,2)
+,('FA000000-0000-0000-0000-000000000063','CA000000-0000-0000-0000-000000000001','2026-07-23 15:00:00',NULL,NULL,0,NULL,NULL,1,'Loser SF1','Loser SF2','3rd place playoff',1,3,1)
 ,('FA000000-0000-0000-0000-000000000064','CA000000-0000-0000-0000-000000000001','2026-07-24 15:00:00',NULL,NULL,0,NULL,NULL,1,'Winner SF1','Winner SF2','Final',1,2,1)
     ) AS [Raw] ([MatchID],[CompetitionID],[MatchDateTime],[LegacyHomeTeamID],[LegacyAwayTeamID],[MatchPlayed],
         [HomeTeamGoals],[AwayTeamGoals],[NeutralGround],[HomeTeamTBC],[AwayTeamTBC],[Description],[Knockout],

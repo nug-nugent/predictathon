@@ -41,9 +41,9 @@ const emptyMatch = (competitionId: string): CreateMatchAdmin => ({
 const BRACKET_ROUNDS = [
     { value: 32, label: "Round of 32" },
     { value: 16, label: "Round of 16" },
-    { value: 8, label: "Quarter final" },
-    { value: 4, label: "Semi final" },
-    { value: 3, label: "Third place play-off" },
+    { value: 8, label: "Quarter-final" },
+    { value: 4, label: "Semi-final" },
+    { value: 3, label: "3rd place playoff" },
     { value: 2, label: "Final" },
 ];
 

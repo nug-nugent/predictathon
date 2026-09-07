@@ -194,9 +194,9 @@ public class FootballDataApiClient : IExternalMatchDataService
         ["LAST_32"] = "Round of 32",
         ["ROUND_OF_16"] = "Round of 16",
         ["LAST_16"] = "Round of 16",
-        ["QUARTER_FINALS"] = "Quarter final",
-        ["SEMI_FINALS"] = "Semi final",
-        ["THIRD_PLACE"] = "Third place play-off",
+        ["QUARTER_FINALS"] = "Quarter-final",
+        ["SEMI_FINALS"] = "Semi-final",
+        ["THIRD_PLACE"] = "3rd place playoff",
         ["FINAL"] = "Final",
     };
 

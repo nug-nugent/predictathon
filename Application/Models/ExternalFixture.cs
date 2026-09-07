@@ -46,7 +46,7 @@ public class ExternalFixture
 
     /// <summary>
     /// The round or stage this fixture belongs to, in the form the site shows it (e.g. "Group A",
-    /// "Quarter final"), or null where the provider reports nothing useful.
+    /// "Quarter-final"), or null where the provider reports nothing useful.
     /// </summary>
     public string? Description { get; set; }
 

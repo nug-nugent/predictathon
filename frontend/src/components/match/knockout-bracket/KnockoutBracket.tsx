@@ -157,7 +157,7 @@ export function KnockoutBracket({ bracket, now, onPredictionSaved }: {
                         >
                             <Text mb={2} textAlign="center" fontSize="10px" fontWeight="bold" letterSpacing="0.4px"
                                 textTransform="uppercase" color="fg.muted">
-                                Third Place Play-off
+                                3rd place playoff
                             </Text>
                             <BracketMatchCard match={thirdPlacePlayOff} now={now} onPredictionSaved={onPredictionSaved} />
                         </Box>

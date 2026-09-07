@@ -21,11 +21,11 @@ test("the knockout view is offered on the predictions page and draws the whole b
 
     // The play-off is a knockout match but no part of the tree, so it sits on its own under the
     // final with its own label.
-    await expect(page.getByText("Third Place Play-off")).toBeVisible();
+    await expect(page.getByText("3rd place playoff")).toBeVisible();
 
     // Every round of the tree names itself across the top of the bracket.
     await expect(page.getByText("Round of 16", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Quarter Final", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Quarter-final", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Final", { exact: true }).first()).toBeVisible();
 
     // Which view you are on rides in the URL, so a refresh comes back to the same place.
