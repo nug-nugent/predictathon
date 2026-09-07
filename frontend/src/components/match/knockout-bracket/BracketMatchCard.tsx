@@ -83,6 +83,11 @@ export function BracketMatchCard({ match, now, isFinal = false, onPredictionSave
 }
 
 /// The strip along the bottom of a card: what you predicted, or that you still can.
+///
+/// Stacked rather than in a row. The scoreline and the points side by side made this the widest
+/// line on the card and so set the width of every column in the bracket - and width is the one
+/// thing a seven-column tree hasn't got. On its own line the points cost a few pixels of height
+/// nobody was using.
 function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
     match: MatchPrediction;
     predicted: boolean;
@@ -91,7 +96,7 @@ function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
 }) {
     return (
         <Box borderTopWidth="1px" borderTopColor="border.hairline" px={3} py={1.5}
-            display="flex" justifyContent={predicted ? "flex-start" : "flex-end"} alignItems="baseline" gap={2}>
+            display="flex" flexDirection="column" alignItems={predicted ? "flex-start" : "flex-end"}>
             {!predicted && (
                 isOpen
                     ? <Text fontSize="xs" fontWeight="bold" color="status.urgent">Predict</Text>

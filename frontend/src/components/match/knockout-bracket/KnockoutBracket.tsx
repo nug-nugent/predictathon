@@ -6,14 +6,17 @@ import { BracketMatchCard } from "./BracketMatchCard";
 /// round's column and the next - which is also where the connector elbows live, so the two have to
 /// agree.
 ///
-/// The design draws 200px cards with 50px gaps, which is 1700px for a sixteen-team bracket and wider
-/// than this site's content column on anything but a large monitor. It wraps the bracket in
-/// `overflow-x: auto` and accepts that, and the roomier cards are the point - at the width this used
-/// to be, every placeholder wrapped onto three lines. So these are the design's proportions with a
-/// lower floor: columns stretch towards the design's width when there is room, and the tree scrolls
-/// sideways rather than shrinking past the point where a card reads.
-const COLUMN_MINIMUM_WIDTH = 150;
-const BRACKET_GAP = 30;
+/// A bracket is seven columns wide and only ever as tall as its first round, so horizontal space is
+/// the scarce one and vertical space is going spare. The cards are therefore narrow, and anything
+/// that would widen one is stacked onto another line instead - see BracketCardFooter. The design
+/// draws 200px cards, which is 1700px across for a sixteen-team bracket and wider than this site's
+/// content column on anything short of a large monitor.
+const COLUMN_MINIMUM_WIDTH = 118;
+const BRACKET_GAP = 26;
+
+/// Breathing room between one tie and the next down a column. Each tie is a `flex: 1` box with its
+/// card centred, so without this the cards in a busy first round end up all but touching.
+const MATCH_GAP = 10;
 
 /// The width below which a tree is not worth drawing at all - phones and small tablets, where the
 /// stacked list is the only readable form. Deliberately far narrower than the tree's own minimum, so
@@ -72,6 +75,7 @@ export function KnockoutBracket({ bracket, now, onPredictionSaved }: {
             <Box
                 css={{
                     "--bracket-gap": `${BRACKET_GAP}px`,
+                    "--bracket-match-gap": `${MATCH_GAP}px`,
                     containerType: "inline-size",
                     containerName: "bracket",
                     overflowX: "auto",
@@ -264,6 +268,7 @@ function BracketHalf({ matches, side, isFirstRound, isFinalRound, collapsed, rou
                 gridRow: "1 / -1",
                 display: "flex",
                 flexDirection: "column",
+                rowGap: "var(--bracket-match-gap)",
                 minWidth: 0,
 
                 [collapsed]: {
@@ -307,13 +312,16 @@ function BracketHalf({ matches, side, isFirstRound, isFinalRound, collapsed, rou
                         }),
 
                         // The vertical joining this tie to the one below it, drawn once per pair.
+                        // Its height is one tie box plus the gap between them, because that gap is
+                        // exactly what the row gap added to the distance between the two centres it
+                        // has to span - at a plain 100% it stops short of the tie below.
                         ...(isFinalRound || index % 2 !== 0 || index + 1 >= matches.length ? {} : {
                             "&::before": {
                                 content: '""',
                                 position: "absolute",
                                 [towards]: `calc(${halfGap} * -1)`,
                                 top: "50%",
-                                height: "100%",
+                                height: "calc(100% + var(--bracket-match-gap))",
                                 borderLeftWidth: CONNECTOR_WIDTH,
                                 borderLeftStyle: "solid",
                                 borderLeftColor: lineColour,
