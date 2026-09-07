@@ -11,8 +11,14 @@ import { BracketMatchCard } from "./BracketMatchCard";
 /// that would widen one is stacked onto another line instead - see BracketCardFooter. The design
 /// draws 200px cards, which is 1700px across for a sixteen-team bracket and wider than this site's
 /// content column on anything short of a large monitor.
-const COLUMN_MINIMUM_WIDTH = 118;
-const BRACKET_GAP = 26;
+///
+/// This is a floor, not a width: the columns are `1fr` above it and take whatever room there is. It
+/// only has to fit the widest thing that cannot wrap - a crest, a three-letter acronym and a goal
+/// tally on one line, or "You: 2 - 2" in the footer. The longest text on a card is a placeholder
+/// like "Runner-up Group B", and those wrap onto a second line quite happily, so there is no reason
+/// to reserve a line's worth of width for them.
+const COLUMN_MINIMUM_WIDTH = 100;
+const BRACKET_GAP = 24;
 
 /// Breathing room between one tie and the next down a column. Each tie is a `flex: 1` box with its
 /// card centred, so without this the cards in a busy first round end up all but touching.
