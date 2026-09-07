@@ -87,24 +87,46 @@ export function BracketMatchCard({ match, now, isFinal = false, onPredictionSave
 /// The strip along the bottom of a card: what you predicted or that you still can, and - while the
 /// tie is still to come - when it kicks off.
 ///
-/// Stacked rather than in a row. The scoreline and the points side by side made this the widest
-/// line on the card and so set the width of every column in the bracket - and width is the one
-/// thing a seven-column tree hasn't got. On its own line the points cost a few pixels of height
-/// nobody was using, and the same goes for splitting the day from the time.
+/// A settled tie stacks its scoreline over its points rather than putting them in a row. Side by
+/// side they made this the widest line on the card and so set the width of every column in the
+/// bracket - and width is the one thing a seven-column tree hasn't got, where height it has going
+/// spare.
 function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
     match: MatchPrediction;
     predicted: boolean;
     isOpen: boolean;
     isSettled: boolean;
 }) {
+    // A tie still to come reads across: what you can do about it on the left, when it is on the
+    // right. It wraps rather than being pinned to one line - the two together are about 100px and a
+    // column at its narrowest has around 77px to give, so on a laptop this becomes the two stacked
+    // lines it would otherwise have been, and on a wider screen it is the single row it wants to be.
+    if (isOpen) {
+        return (
+            <Box borderTopWidth="1px" borderTopColor="border.hairline" px={3} py={1.5}
+                display="flex" flexWrap="wrap" alignItems="baseline" justifyContent="space-between"
+                columnGap={2} rowGap={0.5}>
+                {predicted
+                    ? (
+                        <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                            You: {match.homeTeamGoals} - {match.awayTeamGoals}
+                        </Text>
+                    )
+                    : <Text fontSize="xs" fontWeight="bold" color="status.urgent">Predict</Text>}
+
+                {/* nowrap so the kick-off breaks away as a whole rather than splitting the time off
+                    the day it belongs to. */}
+                <Text fontSize="10px" color="fg.muted" whiteSpace="nowrap">
+                    {formatShortDate(match.matchDateTime)} {formatKickoffTime(match.matchDateTime)}
+                </Text>
+            </Box>
+        );
+    }
+
     return (
         <Box borderTopWidth="1px" borderTopColor="border.hairline" px={3} py={1.5}
             display="flex" flexDirection="column" alignItems={predicted ? "flex-start" : "flex-end"}>
-            {!predicted && (
-                isOpen
-                    ? <Text fontSize="xs" fontWeight="bold" color="status.urgent">Predict</Text>
-                    : <Text fontSize="xs" color="fg.muted">No prediction</Text>
-            )}
+            {!predicted && <Text fontSize="xs" color="fg.muted">No prediction</Text>}
 
             {predicted && (
                 <>
@@ -124,22 +146,6 @@ function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
                         </Text>
                     )}
                 </>
-            )}
-
-            {/* When the tie is, which nothing else on a bracket says: ties are placed by round rather
-                than by date, so unlike every other match list there is no heading above them carrying
-                the day. Only while it is still to come - once a tie has kicked off, its score is the
-                thing worth reading and the date is chrome on top of it, and a bracket carries sixteen
-                of these. */}
-            {isOpen && (
-                <Box mt={1}>
-                    <Text fontSize="10px" color="fg.muted" lineHeight="1.3">
-                        {formatShortDate(match.matchDateTime)}
-                    </Text>
-                    <Text fontSize="10px" color="fg.muted" lineHeight="1.3">
-                        {formatKickoffTime(match.matchDateTime)}
-                    </Text>
-                </Box>
             )}
         </Box>
     );
