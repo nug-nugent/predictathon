@@ -5,6 +5,7 @@ import { computeMatchStatus } from "../matchStatus";
 import { QuickPredictPopover } from "../quick-predict/QuickPredictPopover";
 import { liveMatchHref } from "../../../utils/liveMatches";
 import { crestUrl } from "../../../utils/crestUrl";
+import { formatShortKickoff } from "../../../utils/formatShortKickoff";
 
 /// The stripe along the top of a card. Every tie gets the same one the rest of the site puts on a
 /// card - green in light, the standard turquoise in dark - rather than a colour of its own per
@@ -50,7 +51,19 @@ export function BracketMatchCard({ match, now, isFinal = false, onPredictionSave
                 </Box>
             )}
 
-            <Box px={3} pt={2.5} pb={2}>
+            <Box px={3} pt={2} pb={2}>
+                {/* When the tie is, which nothing else on a bracket says: ties are placed by round
+                    rather than by date, so unlike every other match list there is no heading above
+                    them carrying the day.
+                    Only while it is still to come. Once a tie has been played its score is the thing
+                    worth reading and the date is just chrome on top of it - and a bracket carries
+                    sixteen of these, so chrome adds up fast. */}
+                {!match.matchPlayed && (
+                    <Text fontSize="10px" color="fg.muted" lineHeight="1.4" mb={0.5}>
+                        {formatShortKickoff(match.matchDateTime)}
+                    </Text>
+                )}
+
                 <BracketTeamLine
                     teamId={match.homeTeamID} name={match.homeTeam} shortName={match.homeTeamShortName}
                     acronym={match.homeTeamAcronym} image={match.homeTeamImage}

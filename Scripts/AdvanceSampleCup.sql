@@ -24,8 +24,9 @@ this script has advanced is not that state.
 Each run also moves the calendar on. A match's status is worked out from its kick-off time, not from
 MatchPlayed - see computeMatchStatus - so a fixture given a result while its kick-off is still in the
 future comes out of this as a tie that has a score and is somehow still open for prediction. Every
-match in the competition is therefore shifted back far enough to put the round just played two hours
-in the past, which keeps the fixture list's shape and leaves the next round genuinely upcoming.
+match in the competition is therefore shifted back - by whole days, so kick-off times survive it -
+far enough to put the round just played in the past, which keeps the fixture list's shape and leaves
+the next round genuinely upcoming.
 Prediction timestamps shift with it, by the same amount, so nothing that was entered in time becomes
 a late prediction and gets invalidated by the scoring below.
 
@@ -120,25 +121,28 @@ DECLARE @LatestKickOff DATETIME = (
       AND ((@Stage = 'Groups' AND [KnockoutRound] IS NULL)
            OR (@Stage = 'Knockout' AND [KnockoutRound] IS NOT NULL AND ([KnockoutRound] = @Round OR @Round <= 3))));
 
-DECLARE @ShiftMinutes INT = DATEDIFF(MINUTE, @LatestKickOff, DATEADD(HOUR, -2, @UkNow));
+-- Whole days, so kick-offs keep the time of day they were written with. Shifting by an exact
+-- number of minutes would land the last tie precisely two hours ago and turn every 15:00 in the
+-- competition into something like 06:14.
+DECLARE @ShiftDays INT = DATEDIFF(DAY, @LatestKickOff, @UkNow) - 1;
 
-IF @ShiftMinutes < 0
+IF @ShiftDays < 0
 BEGIN
     UPDATE [dbo].[Match]
-    SET [MatchDateTime] = DATEADD(MINUTE, @ShiftMinutes, [MatchDateTime])
+    SET [MatchDateTime] = DATEADD(DAY, @ShiftDays, [MatchDateTime])
     WHERE [CompetitionID] = @CompetitionID;
 
     -- Predictions move with the fixtures they were made against. Without this, shifting kick-offs
     -- earlier would leave every seeded prediction looking like it arrived after its match had
     -- started, and MatchPredictionScoreSet would dutifully invalidate the lot.
     UPDATE ph
-    SET [PredictionDateTime] = DATEADD(MINUTE, @ShiftMinutes, ph.[PredictionDateTime])
+    SET [PredictionDateTime] = DATEADD(DAY, @ShiftDays, ph.[PredictionDateTime])
     FROM [dbo].[PredictionHistory] AS ph
     INNER JOIN [dbo].[Prediction] AS p ON p.[PredictionID] = ph.[PredictionID]
     INNER JOIN [dbo].[Match] AS m ON m.[MatchID] = p.[MatchID]
     WHERE m.[CompetitionID] = @CompetitionID;
 
-    PRINT CONCAT('Moved the competition back ', -@ShiftMinutes / 60, ' hour(s) so the round just played has finished.');
+    PRINT CONCAT('Moved the competition back ', -@ShiftDays, ' day(s) so the round just played has finished.');
 END
 
 ;WITH ToPlay AS (
