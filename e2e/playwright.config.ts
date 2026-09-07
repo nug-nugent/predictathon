@@ -7,15 +7,15 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5174";
 
 export default defineConfig({
     testDir: "./tests",
-    // One worker, deliberately. Every spec drives the same seeded Sample Cup in the same database and
-    // several of them change it - predictions get entered, reactions get added, and process-results
-    // confirms a result, which consumes one of the in-play matches that live.spec asserts are in
-    // play. Run four-wide those collide, and the suite fails a different two or three specs each time
-    // depending on who got there first; CI's two retries were quietly papering over it.
+    // Files run in parallel; the tests inside one file do not. That matches how the suite is
+    // isolated - a spec file is the unit that owns a player account, so two tests in the same file
+    // genuinely do share prediction rows, while two files no longer share anything.
     //
-    // The alternative is giving each spec its own competition and users to play with, which is a far
-    // bigger change than this suite is worth. Serial costs a few minutes and is honest.
-    workers: 1,
+    // This used to be fullyParallel with everything on one seeded competition and one player, which
+    // failed a different two or three specs on each run depending on who got to the fixtures first
+    // (CI's two retries were quietly papering over it). The fix was to remove the sharing rather
+    // than to serialise around it: the admin specs enter results against a competition of their own
+    // and the prediction specs have a player each. See tests/helpers.ts and Scripts/Sample.
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,

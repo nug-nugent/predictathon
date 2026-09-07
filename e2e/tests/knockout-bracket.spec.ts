@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { DEMO_PREDICTOR, login } from "./helpers";
+import { DEMO_BRACKET, login } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-    await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
-    await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
+    await login(page, DEMO_BRACKET.username, DEMO_BRACKET.password);
+    await expect(page.getByRole("button", { name: DEMO_BRACKET.username })).toBeVisible();
 });
 
 test("the knockout view is offered on the predictions page and draws the whole bracket", async ({ page }) => {

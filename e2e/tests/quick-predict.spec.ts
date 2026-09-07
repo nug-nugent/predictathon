@@ -1,13 +1,13 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { DEMO_PREDICTOR, login } from "./helpers";
+import { DEMO_QUICK_PREDICT, login } from "./helpers";
 
 // Scripts/Sample/04_Match.sql pins four of today's group matches ahead of "now" - 30 minutes, 2, 4
 // and 7 hours out - so a freshly seeded stack has several matches in the Home card's "Coming up"
 // group, the only state in which a row offers quick predict. They run out over the course of a day,
 // so every test here still skips itself rather than failing once they have all kicked off.
 test.beforeEach(async ({ page }) => {
-    await login(page, DEMO_PREDICTOR.username, DEMO_PREDICTOR.password);
-    await expect(page.getByRole("button", { name: DEMO_PREDICTOR.username })).toBeVisible();
+    await login(page, DEMO_QUICK_PREDICT.username, DEMO_QUICK_PREDICT.password);
+    await expect(page.getByRole("button", { name: DEMO_QUICK_PREDICT.username })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Today's Matches" })).toBeVisible();
 });
 
