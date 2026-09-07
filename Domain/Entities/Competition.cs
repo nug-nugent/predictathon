@@ -42,6 +42,8 @@ public partial class Competition
 
     public Guid? CompetitionSeriesID { get; set; }
 
+    public bool GroupHeadToHeadTieBreaks { get; set; }
+
     public virtual CompetitionSeries? CompetitionSeries { get; set; }
 
     public virtual ICollection<HallOfFame> HallOfFame { get; set; } = new List<HallOfFame>();

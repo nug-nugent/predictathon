@@ -53,8 +53,8 @@ public class TeamController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get a team's played-match stats, results, upcoming fixtures and (for competitions without
-    /// knockout matches) the competition's league table, for the Team Detail page.
+    /// Get a team's played-match stats, results, upcoming fixtures and the table it sits in - its
+    /// group's where it has a group, the whole competition's otherwise - for the Team Detail page.
     /// </summary>
     [HttpGet("{competitionId:guid}/{teamId:guid}/Detail")]
     public async Task<ActionResult<TeamDetailModel?>> GetDetail(Guid competitionId, Guid teamId, CancellationToken cancellationToken)
@@ -84,6 +84,19 @@ public class TeamController : ApiControllerBase
     public async Task<ActionResult> AddToCompetition(Guid competitionId, Guid teamId, CancellationToken cancellationToken)
     {
         var result = await _teamService.AddToCompetitionAsync(competitionId, teamId, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Place a team already assigned to a competition into one of its groups, or take it out of a
+    /// group again by sending a null or blank group name.
+    /// </summary>
+    [HttpPut("{teamCompetitionId:guid}/Group")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult> SetGroup(Guid teamCompetitionId, [FromBody] SetTeamGroupModel model, CancellationToken cancellationToken)
+    {
+        var result = await _teamService.SetGroupAsync(teamCompetitionId, model.GroupName, cancellationToken);
 
         return FromResult(result);
     }

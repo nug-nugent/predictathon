@@ -1,14 +1,14 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { DEMO_PREDICTOR, login } from "./helpers";
 
-/// The score boxes of the LAST match still open for predictions, deliberately not the first. Score
-/// inputs have no accessible label (MatchRow.tsx) and which match is still open shifts over time, so
-/// they're found by not being readOnly rather than by hardcoding a fixture - and taken from the end
-/// of the list because the first open match is the next one to kick off, which is exactly the one
-/// the Home card offers for quick predict. quick-predict.spec.ts drives that one in parallel against
-/// the same database, so sharing it would let each spec's saved score surface in the other's
-/// assertions. Once it kicks off there is only one open match left and this falls back to it, which
-/// is safe: quick-predict.spec.ts skips itself in exactly that state.
+/// The score boxes of the LAST match still open for predictions. Score inputs have no accessible
+/// label (MatchRow.tsx) and which match is still open shifts over time, so they're found by not
+/// being readOnly rather than by hardcoding a fixture.
+///
+/// Taken from the end of the list so that the tests below, which run in file order, leave the
+/// earlier open fixtures alone for openMatchBeforeAnUnpredictedOne to work with. Which spec touches
+/// which fixture no longer matters - this file signs in as DemoPredictor and no other does - but
+/// which test within it still does.
 async function lastOpenScoreInputs(page: Page): Promise<{ home: Locator; away: Locator }> {
     // The week picker renders as soon as the week summaries land, a beat before the matches
     // themselves - so wait for the list to actually be on screen before counting, or an empty
@@ -30,8 +30,7 @@ async function lastOpenScoreInputs(page: Page): Promise<{ home: Locator; away: L
 /// same reason lastOpenScoreInputs is: quick-predict.spec.ts drives the first open match.
 ///
 /// The very last open match is skipped over when looking for that unpredicted follower, because
-/// that is the one every other test in this file writes to - it would otherwise be predicted out
-/// from under this test by a sibling running alongside it.
+/// that is the one every other test in this file writes to.
 async function openMatchBeforeAnUnpredictedOne(page: Page): Promise<{ home: Locator; away: Locator }> {
     // The week picker renders as soon as the week summaries land, a beat before the matches
     // themselves - so wait for the list to actually be on screen before counting, or an empty

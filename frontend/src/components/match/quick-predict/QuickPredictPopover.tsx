@@ -13,6 +13,13 @@ type QuickPredictPopoverProps = {
     minutesToPredict: number;
     /** Called after a successful save, so the list behind the popover can catch up. */
     onSaved?: () => void;
+    /**
+     * Whether to offer the link through to the match's week on the Predictions page. On by default,
+     * since the popover usually opens somewhere else entirely - the Home page's card, the Live page
+     * - and getting to the rest of the week from there is the point of it. The knockout view turns
+     * it off: it is already the Predictions page, and a bracket isn't a week.
+     */
+    showWeekLink?: boolean;
     /** The match row that opens the popover - rendered as the trigger button's content. */
     children: ReactNode;
 };
@@ -26,7 +33,7 @@ type QuickPredictPopoverProps = {
 /// Score entry deliberately behaves exactly like the Predictions page's rows: a digit in the home
 /// box moves to the away box, and each completed pair saves itself. There's no Save button because
 /// there'd be nothing for it to do.
-export function QuickPredictPopover({ match, minutesToPredict, onSaved, children }: QuickPredictPopoverProps) {
+export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeekLink = true, children }: QuickPredictPopoverProps) {
     // Shown as the acronym, announced in full: "BEL goals" is no use to a screen reader, which has
     // all the room in the world for "Belgium goals".
     const homeName = teamName(match.homeTeamAcronym, match.homeTeamShortName, match.homeTeam);
@@ -146,11 +153,13 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, children
                                     <Button size="xs" variant="outline" onClick={retry}>Retry</Button>
                                 )}
 
-                                <Button asChild size="xs" variant="ghost">
-                                    <RouterLink to={`/predictions?week=${encodeURIComponent(matchWeekStart(match.matchDateTime))}`}>
-                                        All Matches This Week
-                                    </RouterLink>
-                                </Button>
+                                {showWeekLink && (
+                                    <Button asChild size="xs" variant="ghost">
+                                        <RouterLink to={`/predictions?week=${encodeURIComponent(matchWeekStart(match.matchDateTime))}`}>
+                                            All Matches This Week
+                                        </RouterLink>
+                                    </Button>
+                                )}
                             </Stack>
                         </Popover.Body>
                     </Popover.Content>

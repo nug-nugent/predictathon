@@ -29,6 +29,12 @@ public class CreateMatchModel
 
     public bool Knockout { get; set; }
 
+    // Where this match sits in the knockout bracket, for the bracket view. Null for a group or
+    // league match. See dbo.Match.KnockoutRound/BracketSlot for what the values mean.
+    public int? KnockoutRound { get; set; }
+
+    public int? BracketSlot { get; set; }
+
     public bool MatchPlayed { get; set; }
 }
 

@@ -19,13 +19,56 @@ Two sets are seeded, and deliberately no more:
     so they're just plausible scorelines.
 
 Matches still to kick off are left unpredicted on purpose: the Predictions page, the Home page's
-deadline card and the e2e prediction test all need something outstanding to act on.
+deadline card and the e2e prediction test all need something outstanding to act on. Which is why
+this script starts by clearing predictions against those - see the comment above that block.
 */
 
 SET NOCOUNT ON
 
 DECLARE @SampleCupID UNIQUEIDENTIFIER = 'CA000000-0000-0000-0000-000000000001';
 DECLARE @UkNow DATETIME = CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'GMT Standard Time' AS DATETIME);
+
+/*
+Clear out predictions left against matches that have not kicked off yet.
+
+Nothing below ever seeds one: the two sets this script writes are the already-played matches and the
+ones in play at seed time, and fixtures still to come are deliberately left alone. So a prediction
+against a future match is, by construction, something the e2e suite (or a hand-click in the dev UI)
+put there - and because the insert below is a WHERE NOT EXISTS top-up rather than a replace, nothing
+would ever have taken it away again.
+
+Left alone that ratchets. Every suite run predicts a few more of the open fixtures, re-seeding cannot
+give them back, and eventually predictions.spec's "an open match with an unpredicted one after it"
+precondition can no longer be met and two of its tests skip themselves for good. That had already
+happened: a database a few weeks old had 19 open fixtures in the current week and not one of them
+unpredicted.
+
+Predictions on played and in-play matches are untouched - those are this script's own seeded data,
+and the league table is built on them.
+*/
+DECLARE @PredictionsToClear TABLE (PredictionID UNIQUEIDENTIFIER PRIMARY KEY);
+
+INSERT INTO @PredictionsToClear (PredictionID)
+SELECT p.[PredictionID]
+FROM [dbo].[Prediction] AS p
+INNER JOIN [dbo].[Match] AS m ON m.[MatchID] = p.[MatchID]
+WHERE m.[CompetitionID] = @SampleCupID
+    AND m.[MatchDateTime] > @UkNow;
+
+-- Prediction and PredictionHistory reference each other, so the link has to be broken from the
+-- Prediction side before either row can go.
+UPDATE p
+SET p.[PredictionHistoryID] = NULL
+FROM [dbo].[Prediction] AS p
+INNER JOIN @PredictionsToClear AS c ON c.[PredictionID] = p.[PredictionID];
+
+DELETE h
+FROM [dbo].[PredictionHistory] AS h
+INNER JOIN @PredictionsToClear AS c ON c.[PredictionID] = h.[PredictionID];
+
+DELETE p
+FROM [dbo].[Prediction] AS p
+INNER JOIN @PredictionsToClear AS c ON c.[PredictionID] = p.[PredictionID];
 
 -- A stable number per (user, match) pair: the same competitor always makes the same prediction for
 -- the same fixture, so re-seeding doesn't reshuffle the league table.

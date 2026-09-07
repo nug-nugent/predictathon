@@ -8,6 +8,10 @@ no teams/matches of its own. It exists purely so e2e tests can reach the "accoun
 never completed a paid registration" state (see e2e/tests/no-competitions.spec.ts) without any
 external payment dependency: the registration flow's "redeem code" step is left unsubmitted
 rather than paid. ShowInHallOfFame = 0 keeps it out of that page's listing.
+
+A third competition, "Admin Cup", is seeded by 11_AdminCup.sql rather than here. It is scaffolding
+for the e2e suite rather than a shape the product has, and it owns DemoAdmin's registration and
+default-competition flag as well as its own fixtures, so it reads better as one self-contained file.
 */
 
 SET NOCOUNT ON

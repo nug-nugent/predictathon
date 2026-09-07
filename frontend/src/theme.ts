@@ -127,6 +127,15 @@ export const predictTheme = createSystem(defaultConfig, {
         trophy: {
           DEFAULT: { value: { _light: "#B8860B", _dark: "#E8C15A" } },
         },
+        // Marks out the one tie a knockout bracket runs towards - the stripe and banner on the
+        // final's card. Functional, like the points scale: it says "this is the final", so don't
+        // reuse it as a decorative accent. It can't lean on brand.headerBg, which is the site
+        // header's fill and deliberately collapses to the page background in dark mode - as that
+        // it made the banner a near-invisible dark strip on a dark card.
+        bracket: {
+          finalAccent: { value: { _light: "#1E4FD1", _dark: "#0DE4EE" } },
+          finalAccentFg: { value: { _light: "#FFFFFF", _dark: "#0B2A2C" } },
+        },
         status: {
           urgent: { value: { _light: "#D69A1F", _dark: "#E0A93A" } },
           relaxed: { value: { _light: "#2E9B4A", _dark: "#3FCB4A" } },

@@ -35,9 +35,44 @@ Other useful scripts:
 
 ## Test accounts
 
-Tests log in using the accounts seeded by `Scripts/Sample/00_RunAll.sql` (`DemoPredictor` /
-`DemoAdmin` - see the root `README.md`). These only exist in the Docker/sample dataset, so don't
-point `PLAYWRIGHT_BASE_URL` at a real deployment with these tests.
+Tests log in using the accounts seeded by `Scripts/Sample/00_RunAll.sql` (see the root
+`README.md`). These only exist in the Docker/sample dataset, so don't point `PLAYWRIGHT_BASE_URL`
+at a real deployment with these tests.
+
+| Account | Used by | Competition |
+| --- | --- | --- |
+| `DemoPredictor` | `predictions.spec.ts`, and every read-only player spec | Sample Cup |
+| `DemoQuickPredict` | `quick-predict.spec.ts` | Sample Cup |
+| `DemoBracket` | `knockout-bracket.spec.ts` | Sample Cup |
+| `DemoAdmin` | `process-results.spec.ts`, `live-score.spec.ts`, `error-log.spec.ts` | **Admin Cup** |
+
+All four share the passwords in the root `README.md`; the two extra players use `DemoPredictor`'s.
+
+They're named for the spec that owns them rather than numbered, because Playwright matches an
+accessible name by substring: `DemoPredictor2` answered to a locator asking for `DemoPredictor`,
+which made `league.spec.ts`'s search for its own row in the table ambiguous.
+
+The split is what lets the suite run its files in parallel. Two things get contended for, and each
+is isolated on the axis it's keyed by:
+
+- **Predictions** are keyed on `(UserID, MatchID)`, so the three specs that enter them have a player
+  each. Sharing one account meant each spec's saved score surfaced in another's assertions.
+- **Match state** is keyed on `CompetitionID`, so the admin specs - which confirm results and set
+  live scores - work in `Admin Cup`, seeded by `Scripts/Sample/11_AdminCup.sql`. Confirming a result
+  takes a match out of play permanently, and `live.spec.ts` asserts matches *are* in play.
+
+No spec selects a competition; `CompetitionProvider` resolves it from the signed-in account's own
+registrations, so being defaulted into `Admin Cup` is all it takes. `DemoAdmin` is still registered
+in Sample Cup, so you can switch to it by hand in the browser.
+
+## Re-seeding
+
+`docker compose --env-file .env.docker up db-seed` (about 20 seconds) puts the sample data back.
+It genuinely restores rather than tops up: predictions against fixtures that haven't kicked off are
+cleared, `Admin Cup`'s matches are rewritten, and the accounts `registration.spec.ts` and
+`no-competitions.spec.ts` create are deleted. Before that it only ever inserted what was missing,
+so the suite steadily ate the unpredicted fixtures it needed and two tests in `predictions.spec.ts`
+had skipped themselves permanently.
 
 ## Notes
 

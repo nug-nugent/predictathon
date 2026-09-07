@@ -1,4 +1,4 @@
-import { deleteAuthenticated, getJsonAuthenticated, postJsonAuthenticated } from "./api";
+import { deleteAuthenticated, getJsonAuthenticated, postJsonAuthenticated, putJsonAuthenticated } from "./api";
 import type { MatchListItem } from "./statistics-service";
 
 // Matches Application/Models/TeamModel.cs.
@@ -20,6 +20,9 @@ export type AssignedTeam = {
     teamCompetitionID: string;
     teamID: string;
     teamName: string;
+    /// The group the team is drawn into (e.g. "Group A"), or null where the competition has no
+    /// group stage or the team hasn't been placed in one yet.
+    groupName: string | null;
 };
 
 /// Teams assigned to a competition including their TeamCompetitionID, ordered by name.
@@ -38,6 +41,12 @@ export async function addTeamToCompetition(competitionId: string, teamId: string
 
 export async function removeTeamFromCompetition(teamCompetitionId: string): Promise<void> {
     return deleteAuthenticated(`/Team/${teamCompetitionId}`);
+}
+
+/// Places a team already assigned to a competition into one of its groups. Pass null to take it
+/// out of a group again.
+export async function setTeamGroup(teamCompetitionId: string, groupName: string | null): Promise<void> {
+    return putJsonAuthenticated<void>(`/Team/${teamCompetitionId}/Group`, { groupName });
 }
 
 // Matches Application/Models/TeamDetailModel.cs (TeamFixtureItem).
@@ -85,6 +94,9 @@ export type TeamDetail = {
     shortName: string;
     acronym: string | null;
     imageName: string | null;
+    /// The group this team is in for the competition (e.g. "Group A"), or null where the
+    /// competition has no group stage. Doubles as leagueTable's heading when set.
+    groupName: string | null;
     goalsFor: number;
     goalsAgainst: number;
     averageGoalsForHome: number | null;
@@ -95,12 +107,13 @@ export type TeamDetail = {
     averageGoalsAgainstTotal: number | null;
     results: MatchListItem[];
     fixtures: TeamFixture[];
-    /// Null for competitions containing knockout matches, where a single table is meaningless.
+    /// The table this team sits in: its group's where it has a groupName, the whole competition's
+    /// otherwise. Null where neither applies - knockout matches but no groups.
     leagueTable: TeamStanding[] | null;
 };
 
-/// A team's played-match stats, results, upcoming fixtures and (for competitions without knockout
-/// matches) the competition's league table, for the Team Detail page.
+/// A team's played-match stats, results, upcoming fixtures and the table it sits in - its group's
+/// where it has a group, the whole competition's otherwise - for the Team Detail page.
 export async function getTeamDetail(competitionId: string, teamId: string): Promise<TeamDetail> {
     return getJsonAuthenticated<TeamDetail>(`/Team/${competitionId}/${teamId}/Detail`);
 }

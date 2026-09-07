@@ -3,11 +3,17 @@ Master script for the Docker dev stack's sample reference data. Run via:
 
   sqlcmd -S <server> -d Predictathon -U sa -P <password> -i 00_RunAll.sql
 
-All sub-scripts are idempotent MERGEs (safe to re-run against an already-seeded database). Order
+All sub-scripts are idempotent (safe to re-run against an already-seeded database). Order
 matters for FK dependencies: Competition before TeamCompetition/Match/UserCompetition, Users before
-UserRoles/UserCompetition, and both Match and UserCompetition before Predictions. Teams themselves are no longer seeded here - they're real reference data,
-seeded by Database/Post-Deployment/Script.PostDeployment.sql as part of db-migrate's dacpac publish,
-which always completes before this script runs.
+UserRoles/UserCompetition, and both Match and UserCompetition before Predictions.
+
+Mostly MERGEs, but not purely: 09 clears predictions against fixtures that have not kicked off and 12
+deletes leftover test accounts, because a seed that only ever tops up cannot put back what the e2e
+suite consumes. Both are scoped to data the suite creates - see the headers of those two files.
+
+Teams themselves are no longer seeded here - they're real reference data, seeded by
+Database/Post-Deployment/Script.PostDeployment.sql as part of db-migrate's dacpac publish, which
+always completes before this script runs.
 */
 
 -- Identity.Users has a filtered unique index (UserNameIndex), which requires QUOTED_IDENTIFIER ON
@@ -25,6 +31,8 @@ GO
 :r 08_SampleCompetitors.sql
 :r 09_Predictions.sql
 :r 10_HallOfFame.sql
+:r 11_AdminCup.sql
+:r 12_PurgeTestAccounts.sql
 
 PRINT 'Sample data seeded.';
 GO

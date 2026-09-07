@@ -85,6 +85,7 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
             entity.Property(e => e.Information).IsUnicode(false);
             entity.Property(e => e.PayPalPaymentAvailable).HasDefaultValue(true, "DF_Competition_PayPalPaymentAvailable");
             entity.Property(e => e.AllowTwoPointers).HasDefaultValue(true, "DF_Competition_AllowTwoPointers");
+            entity.Property(e => e.GroupHeadToHeadTieBreaks).HasDefaultValue(true, "DF_Competition_GroupHeadToHeadTieBreaks");
 
             entity.HasOne(d => d.CompetitionSeries).WithMany(p => p.Competition)
                 .HasForeignKey(d => d.CompetitionSeriesID)
@@ -355,6 +356,9 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
         modelBuilder.Entity<TeamCompetition>(entity =>
         {
             entity.Property(e => e.TeamCompetitionID).ValueGeneratedNever();
+            entity.Property(e => e.GroupName)
+                .HasMaxLength(20)
+                .IsUnicode(false);
 
             entity.HasOne(d => d.Competition).WithMany(p => p.TeamCompetition)
                 .HasForeignKey(d => d.CompetitionID)

@@ -73,10 +73,13 @@ public class FixtureImportService : IFixtureImportService
                 $"These teams have no matching Team.ExternalApiCode - map them before importing: {string.Join(", ", unmappedTeamNames)}"));
         }
 
-        var existingTeamCompetitionTeamIds = await _dbContext.TeamCompetition
+        var groupNameByTeamId = BuildGroupNameByTeamId(fixtures, teamsByExternalCode);
+
+        var existingTeamCompetitions = await _dbContext.TeamCompetition
             .Where(tc => tc.CompetitionID == competitionId)
-            .Select(tc => tc.TeamID)
             .ToListAsync(cancellationToken);
+
+        var existingTeamCompetitionTeamIds = existingTeamCompetitions.Select(tc => tc.TeamID).ToHashSet();
 
         var teamsAdded = 0;
         foreach (var team in teamsByExternalCode.Values.DistinctBy(t => t.TeamID))
@@ -91,9 +94,32 @@ public class FixtureImportService : IFixtureImportService
                 TeamCompetitionID = Guid.NewGuid(),
                 TeamID = team.TeamID,
                 CompetitionID = competitionId,
+                GroupName = groupNameByTeamId.GetValueOrDefault(team.TeamID),
             }, cancellationToken);
 
             teamsAdded++;
+        }
+
+        // Teams already assigned - added by hand before the import, or by an earlier run - get their
+        // group filled in too, since the draw is usually published after the teams are known. An
+        // existing group is left alone: it may be an admin's correction, and the provider shouldn't
+        // overwrite that on every sync.
+        var groupsAssigned = 0;
+        foreach (var teamCompetition in existingTeamCompetitions)
+        {
+            if (!string.IsNullOrWhiteSpace(teamCompetition.GroupName))
+            {
+                continue;
+            }
+
+            if (!groupNameByTeamId.TryGetValue(teamCompetition.TeamID, out var groupName))
+            {
+                continue;
+            }
+
+            teamCompetition.GroupName = groupName;
+            _dbContext.Update(teamCompetition);
+            groupsAssigned++;
         }
 
         var existingExternalMatchIds = await _dbContext.Match
@@ -117,6 +143,9 @@ public class FixtureImportService : IFixtureImportService
                 HomeTeamID = teamsByExternalCode[fixture.HomeTeamExternalCode].TeamID,
                 AwayTeamID = teamsByExternalCode[fixture.AwayTeamExternalCode].TeamID,
                 ExternalMatchID = fixture.ExternalMatchID,
+                Description = fixture.Description,
+                Knockout = fixture.IsKnockout,
+                KnockoutRound = fixture.KnockoutRound,
             }, cancellationToken);
 
             matchesImported++;
@@ -138,8 +167,46 @@ public class FixtureImportService : IFixtureImportService
         {
             MatchesImported = matchesImported,
             TeamsAdded = teamsAdded,
+            GroupsAssigned = groupsAssigned,
             StartDate = competition.StartDate,
             EndDate = competition.EndDate,
         });
+    }
+
+    /// <summary>
+    /// Works out which group each team is drawn into, from the groups its fixtures are played in.
+    /// A team with fixtures in more than one group - which shouldn't happen, but would leave the
+    /// group tables incoherent if it did - is left ungrouped rather than arbitrarily assigned.
+    /// </summary>
+    /// <param name="fixtures">The fixtures reported by the external data source.</param>
+    /// <param name="teamsByExternalCode">The site's teams, keyed by the provider's team code.</param>
+    private static Dictionary<Guid, string> BuildGroupNameByTeamId(
+        IReadOnlyList<ExternalFixture> fixtures,
+        Dictionary<string, Team> teamsByExternalCode)
+    {
+        var groupNamesByTeamId = new Dictionary<Guid, HashSet<string>>();
+
+        foreach (var fixture in fixtures.Where(f => !string.IsNullOrWhiteSpace(f.GroupName)))
+        {
+            foreach (var externalCode in new[] { fixture.HomeTeamExternalCode, fixture.AwayTeamExternalCode })
+            {
+                if (!teamsByExternalCode.TryGetValue(externalCode, out var team))
+                {
+                    continue;
+                }
+
+                if (!groupNamesByTeamId.TryGetValue(team.TeamID, out var groupNames))
+                {
+                    groupNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    groupNamesByTeamId[team.TeamID] = groupNames;
+                }
+
+                groupNames.Add(fixture.GroupName!.Trim());
+            }
+        }
+
+        return groupNamesByTeamId
+            .Where(pair => pair.Value.Count == 1)
+            .ToDictionary(pair => pair.Key, pair => pair.Value.First());
     }
 }

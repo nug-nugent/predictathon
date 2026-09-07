@@ -49,8 +49,9 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
 
     // Navigations kept out of the blanket-strip below because specific service tests query through
     // them - PaymentCreditService.GetAllAsync (ForCompetition), MessageboardService.GetMessagesAsync
-    // (.Include(m => m.MessageReaction)), MatchService.GetForAdminAsync (.HomeTeam.TeamName) and
-    // LiveScoreService (.Competition.ExternalApiCompetitionCode, .MatchLiveScore).
+    // (.Include(m => m.MessageReaction)), MatchService.GetForAdminAsync (.HomeTeam.TeamName),
+    // LiveScoreService (.Competition.ExternalApiCompetitionCode, .MatchLiveScore) and
+    // TeamService.GetAssignedForCompetitionAsync (.Team.TeamName).
     private static readonly HashSet<(Type EntityType, string PropertyName)> PreservedNavigations =
     [
         (typeof(Entities.PaymentCredit), nameof(Entities.PaymentCredit.ForCompetition)),
@@ -59,6 +60,7 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
         (typeof(Entities.Match), nameof(Entities.Match.Competition)),
         (typeof(Entities.Match), nameof(Entities.Match.MatchLiveScore)),
         (typeof(Entities.MatchLiveScore), nameof(Entities.MatchLiveScore.Match)),
+        (typeof(Entities.TeamCompetition), nameof(Entities.TeamCompetition.Team)),
     ];
 
     /// <summary>
@@ -93,6 +95,11 @@ public class InMemoryApplicationDbContext : DbContext, IApplicationDbContext
             .HasOne(p => p.ForCompetition)
             .WithMany()
             .HasForeignKey(p => p.ForCompetitionID);
+
+        modelBuilder.Entity<Entities.TeamCompetition>()
+            .HasOne(tc => tc.Team)
+            .WithMany()
+            .HasForeignKey(tc => tc.TeamID);
 
         modelBuilder.Entity<Entities.Message>()
             .HasMany(m => m.MessageReaction)

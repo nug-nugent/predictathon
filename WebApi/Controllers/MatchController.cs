@@ -38,6 +38,37 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
+    /// Get a competition's knockout bracket - its rounds in order plus the third-place play-off,
+    /// each match joined with the current user's own prediction for it. Comes back with no rounds
+    /// for a competition that has no bracket.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket is wanted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Bracket")]
+    public async Task<ActionResult<KnockoutBracketModel>> GetKnockoutBracket(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var bracket = await _matchService.GetKnockoutBracketAsync(CurrentUserId, competitionId, cancellationToken);
+
+        return Ok(bracket);
+    }
+
+    /// <summary>
+    /// Number a competition's bracket slots from its kick-off times, round by round, replacing any
+    /// already set. A starting point for numbering a draw by hand, not a substitute for it - see
+    /// IMatchService.NumberBracketByKickOffAsync.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket should be numbered.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/NumberBracket")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<BracketNumberingSummary>> NumberBracket(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var summary = await _matchService.NumberBracketByKickOffAsync(competitionId, cancellationToken);
+
+        return Ok(summary);
+    }
+
+    /// <summary>
     /// Get a user's prediction history for a competition, most recent first. Future matches are
     /// only included when the caller is viewing their own history.
     /// </summary>

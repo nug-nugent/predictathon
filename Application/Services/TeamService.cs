@@ -3,6 +3,7 @@ using Mapster;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Predictathon.Application.Attributes;
+using Predictathon.Application.Common;
 using Predictathon.Application.Errors;
 using Predictathon.Application.Interfaces;
 using Predictathon.Application.Interfaces.Persistence;
@@ -17,6 +18,9 @@ public class TeamService : ITeamService
 {
     /// <summary>The most recent results any one caller can ask for in a single request.</summary>
     private const int MaximumRecentResults = 20;
+
+    /// <summary>Matches TeamCompetition.GroupName's column width.</summary>
+    private const int MaximumGroupNameLength = 20;
 
     private readonly IApplicationDbContext _dbContext;
 
@@ -49,6 +53,7 @@ public class TeamService : ITeamService
                 TeamCompetitionID = tc.TeamCompetitionID,
                 TeamID = tc.TeamID,
                 TeamName = tc.Team.TeamName,
+                GroupName = tc.GroupName,
             })
             .ToListAsync(cancellationToken);
 
@@ -104,6 +109,34 @@ public class TeamService : ITeamService
     }
 
     /// <inheritdoc />
+    public async Task<Result> SetGroupAsync(Guid teamCompetitionId, string? groupName, CancellationToken cancellationToken = default)
+    {
+        var trimmed = groupName?.Trim();
+
+        if (trimmed?.Length > MaximumGroupNameLength)
+        {
+            return Result.Fail(new PropertyValidationError(
+                nameof(SetTeamGroupModel.GroupName),
+                $"A group name can be at most {MaximumGroupNameLength} characters."));
+        }
+
+        var entity = await _dbContext.TeamCompetition.FirstOrDefaultAsync(tc => tc.TeamCompetitionID == teamCompetitionId, cancellationToken);
+
+        if (entity is null)
+        {
+            return Result.Fail(new NotFoundError());
+        }
+
+        // Blank and null both mean "not in a group", and only one of them can be stored without
+        // group tables having to treat "" as a group of its own.
+        entity.GroupName = string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+        _dbContext.Update(entity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return Result.Ok();
+    }
+
+    /// <inheritdoc />
     public async Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default)
     {
         var team = await _dbContext.Team.AsNoTracking().FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);
@@ -136,14 +169,25 @@ public class TeamService : ITeamService
         var goalsAgainst = homeGoalsAgainst + awayGoalsAgainst + neutralGoalsAgainst;
         var totalMatches = playedMatches.Count;
 
-        var teamsById = await GetCompetitionTeamsAsync(competitionId, competitionMatches, cancellationToken);
+        var teamCompetitions = await _dbContext.TeamCompetition
+            .AsNoTracking()
+            .Where(tc => tc.CompetitionID == competitionId)
+            .ToListAsync(cancellationToken);
+
+        var teamsById = await GetCompetitionTeamsAsync(teamCompetitions, competitionMatches, cancellationToken);
         var fixtures = BuildFixtures(competitionMatches, teamId, teamsById);
 
-        // A competition containing any knockout match (a World Cup's group stage plus last 16, say)
-        // has no single meaningful table, so the page hides it rather than showing a misleading one.
-        var leagueTable = competitionMatches.Any(m => m.Knockout)
-            ? null
-            : BuildLeagueTable(competitionMatches, teamsById);
+        var competition = await _dbContext.Competition
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CompetitionID == competitionId, cancellationToken);
+
+        var groupName = GroupNameFor(teamCompetitions, teamId);
+        var leagueTable = BuildTableForTeam(
+            competitionMatches,
+            teamsById,
+            teamCompetitions,
+            groupName,
+            competition?.GroupHeadToHeadTieBreaks ?? true);
 
         var results = await _dbContext.CallStoredProcedureAsync<MatchListItem>(
             "MatchResultListGet",
@@ -161,6 +205,7 @@ public class TeamService : ITeamService
             ShortName = team.ShortName,
             Acronym = team.Acronym,
             ImageName = team.ImageName,
+            GroupName = groupName,
             GoalsFor = goalsFor,
             GoalsAgainst = goalsAgainst,
             AverageGoalsForHome = homeMatches.Count > 0 ? (decimal)homeGoalsFor / homeMatches.Count : null,
@@ -241,17 +286,16 @@ public class TeamService : ITeamService
     /// Loads every team involved in a competition - those assigned to it plus any appearing in one of
     /// its matches - keyed by team id, so fixtures and the league table can be projected in memory.
     /// </summary>
-    /// <param name="competitionId">The competition to load teams for.</param>
+    /// <param name="teamCompetitions">The competition's team assignments, already loaded.</param>
     /// <param name="competitionMatches">The competition's matches, already loaded.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    private async Task<Dictionary<Guid, Team>> GetCompetitionTeamsAsync(Guid competitionId, IReadOnlyList<Match> competitionMatches, CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, Team>> GetCompetitionTeamsAsync(
+        IReadOnlyList<TeamCompetition> teamCompetitions,
+        IReadOnlyList<Match> competitionMatches,
+        CancellationToken cancellationToken)
     {
-        var assignedTeamIds = await _dbContext.TeamCompetition
-            .Where(tc => tc.CompetitionID == competitionId)
+        var teamIds = teamCompetitions
             .Select(tc => tc.TeamID)
-            .ToListAsync(cancellationToken);
-
-        var teamIds = assignedTeamIds
             .Concat(competitionMatches.SelectMany(m => new[] { m.HomeTeamID, m.AwayTeamID }).Where(id => id.HasValue).Select(id => id!.Value))
             .Distinct()
             .ToList();
@@ -259,6 +303,69 @@ public class TeamService : ITeamService
         return await _dbContext.Team
             .Where(t => teamIds.Contains(t.TeamID))
             .ToDictionaryAsync(t => t.TeamID, cancellationToken);
+    }
+
+    /// <summary>
+    /// Finds the group a team is placed in for a competition, or null where it has no group.
+    /// </summary>
+    /// <param name="teamCompetitions">The competition's team assignments, already loaded.</param>
+    /// <param name="teamId">The team whose group is wanted.</param>
+    private static string? GroupNameFor(IReadOnlyList<TeamCompetition> teamCompetitions, Guid teamId)
+    {
+        // FirstOrDefault rather than Single: nothing in the schema stops a team being assigned to
+        // the same competition twice, and a duplicate row shouldn't take the whole page down.
+        var groupName = teamCompetitions.FirstOrDefault(tc => tc.TeamID == teamId)?.GroupName;
+
+        return string.IsNullOrWhiteSpace(groupName) ? null : groupName.Trim();
+    }
+
+    /// <summary>
+    /// Builds the table a team's page should show: its group's table where it has a group, the whole
+    /// competition's where the competition has no knockout stage, and none at all otherwise.
+    /// </summary>
+    /// <param name="competitionMatches">The competition's matches, already loaded.</param>
+    /// <param name="teamsById">The competition's teams, keyed by team id.</param>
+    /// <param name="teamCompetitions">The competition's team assignments, already loaded.</param>
+    /// <param name="groupName">The group the team is in, or null where it has none.</param>
+    /// <param name="headToHeadTieBreaks">Whether group tables break ties on head-to-head record.</param>
+    private static List<TeamStandingItem>? BuildTableForTeam(
+        IReadOnlyList<Match> competitionMatches,
+        Dictionary<Guid, Team> teamsById,
+        IReadOnlyList<TeamCompetition> teamCompetitions,
+        string? groupName,
+        bool headToHeadTieBreaks)
+    {
+        if (groupName is not null)
+        {
+            var groupTeamIds = teamCompetitions
+                .Where(tc => string.Equals(tc.GroupName?.Trim(), groupName, StringComparison.OrdinalIgnoreCase))
+                .Select(tc => tc.TeamID)
+                .ToHashSet();
+
+            var groupTeams = teamsById.Values.Where(t => groupTeamIds.Contains(t.TeamID)).ToList();
+
+            // Group-stage matches only. Two teams from the same group can meet again in the knockout
+            // rounds, and that tie is no part of how the group itself finished.
+            var groupMatches = competitionMatches
+                .Where(m => !m.Knockout
+                    && m.HomeTeamID.HasValue && groupTeamIds.Contains(m.HomeTeamID.Value)
+                    && m.AwayTeamID.HasValue && groupTeamIds.Contains(m.AwayTeamID.Value))
+                .ToList();
+
+            return BuildLeagueTable(groupMatches, groupTeams, headToHeadTieBreaks);
+        }
+
+        // No groups to fall back on, so a competition containing any knockout match (a World Cup's
+        // group stage plus last 16, say) has no single meaningful table - the page hides it rather
+        // than showing a misleading one.
+        if (competitionMatches.Any(m => m.Knockout))
+        {
+            return null;
+        }
+
+        // A league season ranks on overall goal difference however the group flag is set: the flag
+        // is about group tables, and this competition has no groups.
+        return BuildLeagueTable(competitionMatches, teamsById.Values, headToHeadTieBreaks: false);
     }
 
     /// <summary>
@@ -302,14 +409,15 @@ public class TeamService : ITeamService
     }
 
     /// <summary>
-    /// Builds a competition's actual league table from its played matches - three points for a win,
-    /// one for a draw - ordered by points, then goal difference, then goals scored, then team name.
+    /// Builds an actual league table from a set of played matches - three points for a win, one for
+    /// a draw - ordered by points and then by whichever tie-break rule applies.
     /// </summary>
-    /// <param name="competitionMatches">The competition's matches, already loaded.</param>
-    /// <param name="teamsById">The competition's teams, keyed by team id.</param>
-    private static List<TeamStandingItem> BuildLeagueTable(IReadOnlyList<Match> competitionMatches, Dictionary<Guid, Team> teamsById)
+    /// <param name="matches">The matches the table is built from; unplayed ones are ignored.</param>
+    /// <param name="teams">The teams the table has a row for, played or not.</param>
+    /// <param name="headToHeadTieBreaks">Whether teams level on points are separated head-to-head.</param>
+    private static List<TeamStandingItem> BuildLeagueTable(IReadOnlyList<Match> matches, IReadOnlyCollection<Team> teams, bool headToHeadTieBreaks)
     {
-        var standings = teamsById.Values.ToDictionary(
+        var standings = teams.ToDictionary(
             t => t.TeamID,
             t => new TeamStandingItem
             {
@@ -320,7 +428,7 @@ public class TeamService : ITeamService
                 ImageName = t.ImageName,
             });
 
-        var playedMatches = competitionMatches.Where(m => m.MatchPlayed && m.HomeTeamID.HasValue && m.AwayTeamID.HasValue);
+        var playedMatches = matches.Where(m => m.MatchPlayed && m.HomeTeamID.HasValue && m.AwayTeamID.HasValue).ToList();
 
         foreach (var match in playedMatches)
         {
@@ -336,19 +444,7 @@ public class TeamService : ITeamService
             ApplyResult(away, awayGoals, homeGoals);
         }
 
-        var ordered = standings.Values
-            .OrderByDescending(s => s.Points)
-            .ThenByDescending(s => s.GoalDifference)
-            .ThenByDescending(s => s.GoalsFor)
-            .ThenBy(s => s.TeamName)
-            .ToList();
-
-        for (var index = 0; index < ordered.Count; index++)
-        {
-            ordered[index].Position = index + 1;
-        }
-
-        return ordered;
+        return GroupStandingsOrdering.Order([.. standings.Values], playedMatches, headToHeadTieBreaks);
     }
 
     /// <summary>
