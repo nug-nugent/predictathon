@@ -69,7 +69,7 @@ export function BracketMatchCard({ match, now, isFinal = false, onPredictionSave
 
     if (isOpen) {
         return (
-            <QuickPredictPopover match={match} minutesToPredict={minutesToPredict} onSaved={onPredictionSaved}>
+            <QuickPredictPopover match={match} minutesToPredict={minutesToPredict} onSaved={onPredictionSaved} showWeekLink={false}>
                 {card}
             </QuickPredictPopover>
         );
