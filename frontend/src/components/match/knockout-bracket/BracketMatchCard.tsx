@@ -158,6 +158,11 @@ function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
 /// better than a name that has to wrap to fit. An undecided slot has neither, so it keeps its
 /// placeholder in full: "Winner Group A" is the only thing that distinguishes it from fifteen
 /// otherwise identical cards.
+///
+/// That slot still gets something in the crest's place - an outlined circle, sized like a crest -
+/// for two reasons. It keeps every line of every card starting at the same x, so a column of cards
+/// half decided and half not doesn't come out with a ragged left edge. And it makes an undecided
+/// slot read as a slot waiting to be filled, rather than as a team whose badge failed to load.
 function BracketTeamLine({ teamId, name, shortName, acronym, image, goals }: {
     teamId: string | null;
     name: string | null;
@@ -171,13 +176,19 @@ function BracketTeamLine({ teamId, name, shortName, acronym, image, goals }: {
 
     return (
         <HStack gap={1.5} minW="0" py="1px">
-            {decided && (crest
-                ? <Image src={crest} boxSize="16px" objectFit="contain" alt="" flexShrink={0} />
-                : <Box boxSize="16px" flexShrink={0} />)}
+            {decided
+                ? (crest
+                    ? <Image src={crest} boxSize="16px" objectFit="contain" alt="" flexShrink={0} />
+                    : <Box boxSize="16px" flexShrink={0} />)
+                : (
+                    <Box aria-hidden="true" boxSize="16px" flexShrink={0} borderRadius="full"
+                        borderWidth="1px" borderStyle="dashed" borderColor="border.divider" />
+                )}
             {/* whiteSpace is explicit because a tie that can still be predicted sits inside
                 QuickPredictPopover's trigger, and Chakra's Button recipe sets white-space: nowrap on
                 that, which would push a placeholder straight out of the card. */}
-            <Box flex="1" minW="0" fontSize="13px" lineHeight="1.35" whiteSpace="normal" wordBreak="break-word"
+            <Box flex="1" minW="0" whiteSpace="normal" wordBreak="break-word"
+                fontSize={decided ? "13px" : "11px"} lineHeight={decided ? "1.35" : "1.3"}
                 fontWeight={decided ? "medium" : "normal"} color={decided ? undefined : "fg.muted"}>
                 {decided ? (
                     <>
