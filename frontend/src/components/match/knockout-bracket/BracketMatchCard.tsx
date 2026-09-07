@@ -181,8 +181,17 @@ function BracketTeamLine({ teamId, name, shortName, acronym, image, goals }: {
                     ? <Image src={crest} boxSize="16px" objectFit="contain" alt="" flexShrink={0} />
                     : <Box boxSize="16px" flexShrink={0} />)
                 : (
-                    <Box aria-hidden="true" boxSize="16px" flexShrink={0} borderRadius="full"
-                        borderWidth="1px" borderStyle="dashed" borderColor="border.divider" />
+                    // A filled disc with a question mark, not an outline. Two outlines were tried
+                    // here first - a dashed ring and an empty shield - and both read as absence
+                    // rather than as anticipation: at 16px across, a 1px dashed border falls below
+                    // the size its dashes can be drawn at on a curve and comes out as a faint solid
+                    // ring, and an empty crest just looks like a badge that failed to load. Something
+                    // with a mark in it says the slot is waiting for a team rather than missing one.
+                    <Box aria-hidden="true" flexShrink={0} display="flex" alignItems="center"
+                        justifyContent="center" boxSize="16px" borderRadius="full"
+                        bg="bg.muted" color="fg.muted" fontSize="10px" fontWeight="bold" lineHeight="1">
+                        ?
+                    </Box>
                 )}
             {/* whiteSpace is explicit because a tie that can still be predicted sits inside
                 QuickPredictPopover's trigger, and Chakra's Button recipe sets white-space: nowrap on
