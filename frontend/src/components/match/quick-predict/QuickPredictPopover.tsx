@@ -118,7 +118,7 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
             </Popover.Trigger>
             <Portal>
                 <Popover.Positioner>
-                    <Popover.Content width="auto" minW="260px" maxW="340px">
+                    <Popover.Content width="auto" minW="300px" maxW="340px">
                         <Popover.Arrow />
                         <Popover.Body p={3}>
                             <Stack gap={2}>
@@ -191,7 +191,14 @@ function TeamSide({ name, image, crestPosition }: {
     return (
         <HStack gap={1.5} minW="0" flex="1" justify={justify}>
             {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
-            <Text fontSize="sm" truncate minW="0" textAlign={crestPosition === "after" ? "right" : "left"}>{name}</Text>
+            {/* Wraps rather than truncating. A truncated name is only ever a guess at which team is
+                meant, and here it was a bad one: "Winner SF1" and "Winner SF2" both cut to
+                "Winner S...", naming the two halves of the draw identically. The popover is a box
+                and can afford a second line; the row it opened from could not, which is why the
+                bracket card itself still trims. Decided teams show a three-letter acronym and never
+                reach either behaviour. */}
+            <Text fontSize="sm" minW="0" whiteSpace="normal" wordBreak="break-word"
+                textAlign={crestPosition === "after" ? "right" : "left"}>{name}</Text>
             {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
         </HStack>
     );

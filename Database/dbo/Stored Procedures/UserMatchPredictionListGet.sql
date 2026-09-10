@@ -26,12 +26,18 @@ BEGIN
 		, m.MatchDateTime
 		, m.HomeTeamID
 		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
-		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+		-- An undecided knockout slot has no team row behind it, so the placeholder standing in for
+		-- it ("Winner SF1") is the name to show - the same fallback the full name above already
+		-- takes. Without it every caller reading a short name got the literal 'TBC', which is how
+		-- the quick-predict popover came to offer "TBC v TBC" for a final whose feeders are
+		-- perfectly well known. The literal stays as the last resort, for a match with neither a
+		-- team nor a placeholder.
+		, HomeTeamShortName = COALESCE(HomeTeam.ShortName, m.HomeTeamTBC, 'TBC')
 		, HomeTeamAcronym = HomeTeam.Acronym
 		, HomeTeamImage = HomeTeam.ImageName
 		, m.AwayTeamID
 		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
-		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+		, AwayTeamShortName = COALESCE(AwayTeam.ShortName, m.AwayTeamTBC, 'TBC')
 		, AwayTeamAcronym = AwayTeam.Acronym
 		, AwayTeamImage = AwayTeam.ImageName
 		, Prediction.HomeTeamGoals
