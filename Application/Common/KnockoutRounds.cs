@@ -48,39 +48,104 @@ public static class KnockoutRounds
         => knockoutRound == ThirdPlacePlayOffRound;
 
     /// <summary>
-    /// Whether a sequence of tree rounds, largest first, is a well-formed single-elimination
-    /// bracket: each round exactly half the size of the one before it, ending at the final, and
-    /// every round holding the number of matches its size implies.
+    /// Everything wrong with a bracket, said plainly enough for an admin to act on, or an empty
+    /// list where there is nothing wrong.
     ///
-    /// The bracket view's geometry assumes all of that, so a competition whose rounds don't line up
-    /// - a half-numbered bracket, a round nobody finished filling in - is better shown as a plain
-    /// list than as a tree with holes in it.
+    /// A single-elimination bracket has to hold together in two ways at once. Its rounds have to
+    /// halve - each one exactly half the size of the one before it, ending at the final, every
+    /// round holding the number of matches its size implies. And within a round the draw positions
+    /// have to be a complete set: 1 to n, each used once. The view's geometry assumes both, and
+    /// neither is something a competition arrives with - an importer can work out a match's round
+    /// from the provider's stage but nothing reports its position in the draw, so the slots are
+    /// numbered by an admin and are exactly the sort of thing that ends up with two 4s and no 5.
+    ///
+    /// Reported rather than merely detected because both failures look plausible from the outside.
+    /// A bracket numbered wrongly still draws as a tree - just with the wrong ties in the wrong
+    /// halves - and nothing downstream can tell. Left to a boolean, the only symptom an admin ever
+    /// saw was the knockout view quietly declining to appear.
     /// </summary>
-    /// <param name="rounds">The tree rounds, largest first, paired with how many matches each holds.</param>
-    public static bool IsWellFormedTree(IReadOnlyList<(int KnockoutRound, int MatchCount)> rounds)
+    /// <param name="rounds">
+    /// The rounds of the bracket tree, largest first, with the slot each of their matches carries.
+    /// The third-place play-off is no part of the tree and must not be included.
+    /// </param>
+    public static IReadOnlyList<string> DescribeProblems(IReadOnlyList<BracketRoundShape> rounds)
     {
-        if (rounds.Count == 0 || rounds[^1].KnockoutRound != 2)
+        var problems = new List<string>();
+
+        if (rounds.Count == 0)
         {
-            return false;
+            problems.Add("No match has been given a bracket round yet.");
+            return problems;
+        }
+
+        if (rounds[^1].KnockoutRound != 2)
+        {
+            problems.Add($"The bracket has no final - it stops at the {NameOf(rounds[^1].KnockoutRound)}.");
         }
 
         for (var index = 0; index < rounds.Count; index++)
         {
-            var (knockoutRound, matchCount) = rounds[index];
+            var (knockoutRound, slots) = rounds[index];
+            var name = NameOf(knockoutRound);
 
-            // A round of n teams is n/2 matches, all of which have to be there.
-            if (knockoutRound != matchCount * 2)
-            {
-                return false;
-            }
+            // A round contested by n teams is n/2 matches. Safe as arithmetic here only because the
+            // play-off's sentinel round is excluded by contract - see the parameter's remarks.
+            var expectedMatches = knockoutRound / 2;
 
-            // And each round halves the one before it - no gaps, no repeats.
+            // Each round halves the one before it, so a round whose predecessor is not twice its
+            // size has one missing between them.
             if (index > 0 && rounds[index - 1].KnockoutRound != knockoutRound * 2)
             {
-                return false;
+                problems.Add($"{NameOf(knockoutRound * 2)} is missing - {NameOf(rounds[index - 1].KnockoutRound)} is followed straight by {name}.");
+            }
+
+            if (slots.Count != expectedMatches)
+            {
+                problems.Add($"{name}: {slots.Count} {Matches(slots.Count)}, where this round needs {expectedMatches}.");
+            }
+
+            var unnumbered = slots.Count(slot => slot is null);
+            if (unnumbered > 0)
+            {
+                problems.Add($"{name}: {unnumbered} {Matches(unnumbered)} with no bracket slot.");
+            }
+
+            var numbered = slots.Where(slot => slot.HasValue).Select(slot => slot!.Value).ToList();
+
+            foreach (var duplicate in numbered.GroupBy(slot => slot).Where(group => group.Count() > 1).OrderBy(group => group.Key))
+            {
+                problems.Add($"{name}: slot {duplicate.Key} is used by {duplicate.Count()} matches.");
+            }
+
+            foreach (var outOfRange in numbered.Where(slot => slot < 1 || slot > expectedMatches).Distinct().Order())
+            {
+                problems.Add($"{name}: slot {outOfRange} is outside the range 1 to {expectedMatches}.");
+            }
+
+            // Which slots are absent is only worth naming once the round is the right size and every
+            // match in it has been numbered. Before that it restates a count already reported above,
+            // and a half-filled round would list every slot nobody has reached yet as a fault.
+            if (unnumbered == 0 && slots.Count == expectedMatches)
+            {
+                foreach (var absent in Enumerable.Range(1, expectedMatches).Where(slot => !numbered.Contains(slot)))
+                {
+                    problems.Add($"{name}: no match is in slot {absent}.");
+                }
             }
         }
 
-        return true;
+        return problems;
     }
+
+    private static string Matches(int count) => count == 1 ? "match" : "matches";
 }
+
+/// <summary>
+/// One round of a bracket as <see cref="KnockoutRounds.DescribeProblems"/> reads it.
+/// </summary>
+/// <param name="KnockoutRound">The round's <c>KnockoutRound</c> value.</param>
+/// <param name="Slots">
+/// Each of the round's matches by its <c>BracketSlot</c>, in any order, null where a match has not
+/// been given one.
+/// </param>
+public readonly record struct BracketRoundShape(int KnockoutRound, IReadOnlyList<int?> Slots);

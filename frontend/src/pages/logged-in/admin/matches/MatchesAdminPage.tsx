@@ -9,6 +9,7 @@ import {
     type MatchAdmin, type CreateMatchAdmin,
 } from "../../../../services/match-admin-service";
 import { getTeamsForCompetition, type Team } from "../../../../services/team-service";
+import { getKnockoutBracket } from "../../../../services/prediction-service";
 import { ApiError } from "../../../../services/api";
 import { useAsyncData } from "../../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../../components/ui/async-state";
@@ -47,6 +48,8 @@ const BRACKET_ROUNDS = [
     { value: 2, label: "Final" },
 ];
 
+const ROUND_LABELS = new Map(BRACKET_ROUNDS.map((r) => [r.value, r.label]));
+
 // datetime-local inputs need "YYYY-MM-DDTHH:mm" with no timezone/seconds.
 function toDateTimeLocal(isoString: string): string {
     if (!isoString) return "";
@@ -75,6 +78,10 @@ export function MatchesAdminPage() {
 // the date already identify the match, and the description is on the edit dialog a tap away.
 const DESCRIPTION_DISPLAY = { base: "none", md: "table-cell" };
 
+// Round and slot go the same way, and for the same reason: they matter when an admin is checking a
+// draw at a desk, and a phone has room for the teams and the date or for these, not both.
+const BRACKET_DISPLAY = { base: "none", md: "table-cell" };
+
 const PAGE_SIZE = 20;
 
 function MatchesAdminTable({ competitionId }: { competitionId: string }) {
@@ -90,11 +97,16 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
     const [eitherTeamFilter, setEitherTeamFilter] = useState("");
 
     const { data, error, reload } = useAsyncData(async () => {
-        const [matches, teams] = await Promise.all([
+        // The bracket comes from the same endpoint the Predictions page draws from, rather than
+        // being worked out again from the matches below, so an admin is told exactly what the view
+        // itself objects to. It carries this admin's own predictions too, which are ignored here -
+        // a wasted column or two against having one answer to "is this bracket sound?".
+        const [matches, teams, bracket] = await Promise.all([
             getMatchesForAdmin(competitionId, includePlayed),
             getTeamsForCompetition(competitionId),
+            getKnockoutBracket(competitionId).catch(() => null),
         ]);
-        return { matches, teams };
+        return { matches, teams, bracket };
     }, [competitionId, includePlayed]);
 
     if (error) {
@@ -243,6 +255,33 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                 </Field.Root>
             </HStack>
 
+            {hasBracketMatches && data.bracket !== null && (
+                <Panel>
+                    <VStack align="stretch" gap={2}>
+                        <Text fontWeight="bold">Knockout bracket</Text>
+                        {data.bracket.problems.length === 0 ? (
+                            <Text fontSize="sm" color="fg.muted">
+                                Complete - the knockout view is on offer to players.
+                            </Text>
+                        ) : (
+                            <>
+                                {/* Said here rather than left to be inferred from the knockout view not
+                                    appearing, which is all an admin used to get. A bracket numbered
+                                    wrongly still draws as a tree, so the eye is no check on it. */}
+                                <Text fontSize="sm" color="fg.muted">
+                                    The knockout view stays hidden from players until these are fixed.
+                                </Text>
+                                <VStack as="ul" align="stretch" gap={1} pl={4}>
+                                    {data.bracket.problems.map((problem) => (
+                                        <Text as="li" key={problem} fontSize="sm">{problem}</Text>
+                                    ))}
+                                </VStack>
+                            </>
+                        )}
+                    </VStack>
+                </Panel>
+            )}
+
             <Panel overflowX="auto">
                 <Table.Root size="sm" variant="line" striped showColumnBorder css={compactCellsOnSmallScreens}>
                     <Table.Header>
@@ -251,6 +290,8 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                             <Table.ColumnHeader>Away</Table.ColumnHeader>
                             <Table.ColumnHeader>Date</Table.ColumnHeader>
                             <Table.ColumnHeader display={DESCRIPTION_DISPLAY}>Description</Table.ColumnHeader>
+                            {hasBracketMatches && <Table.ColumnHeader display={BRACKET_DISPLAY}>Round</Table.ColumnHeader>}
+                            {hasBracketMatches && <Table.ColumnHeader display={BRACKET_DISPLAY} textAlign="center">Slot</Table.ColumnHeader>}
                             <Table.ColumnHeader textAlign="center">Score</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -263,6 +304,19 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                                     whether the user's locale orders day/month as DD/MM or MM/DD. */}
                                 <Table.Cell>{new Date(m.matchDateTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</Table.Cell>
                                 <Table.Cell display={DESCRIPTION_DISPLAY}>{m.description}</Table.Cell>
+                                {/* The draw, readable down the column. Checking the numbering used to
+                                    mean opening every knockout match in turn and holding the tree in
+                                    your head; a bracket is wrong in ways only the whole shape shows. */}
+                                {hasBracketMatches && (
+                                    <Table.Cell display={BRACKET_DISPLAY} color={m.knockoutRound === null ? "fg.muted" : undefined}>
+                                        {m.knockoutRound === null ? "-" : ROUND_LABELS.get(m.knockoutRound) ?? m.knockoutRound}
+                                    </Table.Cell>
+                                )}
+                                {hasBracketMatches && (
+                                    <Table.Cell display={BRACKET_DISPLAY} textAlign="center" color={m.bracketSlot === null ? "fg.muted" : undefined}>
+                                        {m.bracketSlot ?? "-"}
+                                    </Table.Cell>
+                                )}
                                 <Table.Cell textAlign="center">
                                     {m.matchPlayed ? `${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"}` : ""}
                                 </Table.Cell>

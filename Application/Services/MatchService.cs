@@ -85,13 +85,15 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
             })
             .ToList();
 
+        var problems = KnockoutRounds.DescribeProblems(
+            [.. rounds.Select(r => new BracketRoundShape(r.KnockoutRound, [.. r.Matches.Select(m => m.BracketSlot)]))]);
+
         return new KnockoutBracketModel
         {
             Rounds = rounds,
             ThirdPlacePlayOff = thirdPlacePlayOff,
-            IsWellFormed = rounds.Count > 0
-                && rounds.All(r => r.Matches.All(m => m.BracketSlot.HasValue))
-                && KnockoutRounds.IsWellFormedTree([.. rounds.Select(r => (r.KnockoutRound, r.Matches.Count))]),
+            IsWellFormed = problems.Count == 0,
+            Problems = problems,
         };
     }
 

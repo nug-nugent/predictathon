@@ -17,12 +17,20 @@ public class KnockoutBracketModel
     public UserMatchPredictionListItem? ThirdPlacePlayOff { get; set; }
 
     /// <summary>
-    /// Whether <see cref="Rounds"/> forms a complete single-elimination tree - each round half the
-    /// size of the one before it, every match present, ending at the final. False where a bracket
-    /// is half-numbered or otherwise incomplete, which is the view's cue to fall back to the plain
-    /// match list rather than draw a tree full of holes.
+    /// Whether <see cref="Rounds"/> forms a complete single-elimination tree that can be drawn -
+    /// each round half the size of the one before it, every match present and in a draw slot of
+    /// its own, ending at the final. False where a bracket is half-numbered or otherwise
+    /// incomplete, which is the view's cue to leave the knockout view out of reach rather than
+    /// offer a tree full of holes. Always the inverse of <see cref="Problems"/> being empty.
     /// </summary>
     public bool IsWellFormed { get; set; }
+
+    /// <summary>
+    /// What is wrong with the bracket, one plainly-worded problem at a time, for the admin screens
+    /// to show. Empty where the bracket is sound. See <see cref="Common.KnockoutRounds.DescribeProblems"/>
+    /// for why these are reported rather than merely counted.
+    /// </summary>
+    public IReadOnlyList<string> Problems { get; set; } = [];
 }
 
 /// <summary>
