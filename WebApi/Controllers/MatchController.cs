@@ -222,7 +222,8 @@ public class MatchController : ApiControllerBase
     [Authorize(Roles = RoleConstants.MatchAdministrator)]
     public async Task<ActionResult<MatchModel?>> SaveResult(SaveMatchResultRequest request, CancellationToken cancellationToken)
     {
-        var result = await _matchService.SaveResultAsync(request.MatchID, request.HomeTeamGoals, request.AwayTeamGoals, cancellationToken);
+        var result = await _matchService.SaveResultAsync(
+            request.MatchID, request.HomeTeamGoals, request.AwayTeamGoals, CurrentUserId, cancellationToken);
 
         return FromResult(result);
     }

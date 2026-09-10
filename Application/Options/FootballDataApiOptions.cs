@@ -38,6 +38,15 @@ public sealed class FootballDataApiOptions
     public int LiveScorePollSeconds { get; init; } = 60;
 
     /// <summary>
+    /// Whether a match the provider has called finished has its result confirmed automatically from
+    /// that final score, scoring everyone's predictions without an admin visiting the Process
+    /// Results page. On by default, since a confirmed final score is the same number an admin would
+    /// have copied off the Live page anyway; configuration rather than a constant so a misbehaving
+    /// feed can be taken out of the loop without a release, leaving the page as the only route in.
+    /// </summary>
+    public bool AutoProcessFinishedResults { get; init; } = true;
+
+    /// <summary>
     /// Swaps the real provider for a simulated one that invents plausible in-play scores from the
     /// fixtures already in the database. For the Docker dev stack, which has no API key and whose
     /// sample fixtures don't exist at football-data.org - without it the live-score feature can't be

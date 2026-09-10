@@ -188,7 +188,11 @@ WHEN MATCHED THEN
         [Target].[MatchPlayed] = [Source].[MatchPlayed],
         [Target].[HomeTeamGoals] = [Source].[HomeTeamGoals],
         [Target].[AwayTeamGoals] = [Source].[AwayTeamGoals],
-        [Target].[Description] = [Source].[Description];
+        [Target].[Description] = [Source].[Description],
+        -- Cleared with the result: process-results.spec confirms a result and so stamps these, and
+        -- a rewound match still carrying them would say an admin had already dealt with it.
+        [Target].[ProcessedDateTime] = NULL,
+        [Target].[ProcessedByUserID] = NULL;
 
 -- Any live score left over from a previous run of live-score.spec. The match itself is reset above,
 -- so leaving the score behind would show yesterday's 4 - 2 against a fixture yet to kick off.

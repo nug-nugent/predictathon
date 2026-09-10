@@ -91,7 +91,7 @@ public class LeagueDataCacheInvalidationTests
             var before = await leagueTableService.GetLeagueTableAsync(competition.CompetitionID);
             before.Single(r => r.UserID == predictor.Id).Score.Should().Be(0);
 
-            var result = await matchService.SaveResultAsync(match.MatchID, homeTeamGoals: 2, awayTeamGoals: 1);
+            var result = await matchService.SaveResultAsync(match.MatchID, homeTeamGoals: 2, awayTeamGoals: 1, processedByUserId: null);
             result.IsSuccess.Should().BeTrue();
 
             var after = await leagueTableService.GetLeagueTableAsync(competition.CompetitionID);

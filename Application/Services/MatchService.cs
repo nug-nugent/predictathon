@@ -191,18 +191,16 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
         return matches.Adapt<List<MatchModel>>();
     }
 
-    private const int ResultEligibleMinutesAfterKickoff = 90;
-
     /// <inheritdoc />
     public async Task<IReadOnlyList<MatchModel>> GetForProcessingAsync(
         Guid competitionId,
         CancellationToken cancellationToken = default)
     {
-        // The same 90 minutes SaveResultAsync enforces: a match that kicked off twenty minutes ago
+        // The same window SaveResultAsync enforces: a match that kicked off twenty minutes ago
         // can't have a result saved for it, so offering it here only invites a rejected save. That
         // gap went unnoticed while no sample fixture was ever mid-match; the Today's Matches section
         // put one there.
-        var eligibleFrom = UkClock.Now.AddMinutes(-ResultEligibleMinutesAfterKickoff);
+        var eligibleFrom = MatchResultWindow.EligibleFrom(UkClock.Now);
 
         var matches = await _appDbContext.Match
             .Where(m => m.CompetitionID == competitionId && !m.MatchPlayed && m.MatchDateTime <= eligibleFrom)
@@ -218,6 +216,7 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
         Guid matchId,
         int homeTeamGoals,
         int awayTeamGoals,
+        Guid? processedByUserId,
         CancellationToken cancellationToken = default)
     {
         var match = await _appDbContext.Match.FirstOrDefaultAsync(m => m.MatchID == matchId, cancellationToken);
@@ -226,14 +225,21 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
             return Result.Fail<MatchModel>(new NotFoundError("The match could not be found."));
         }
 
-        if (UkClock.Now < match.MatchDateTime.AddMinutes(ResultEligibleMinutesAfterKickoff))
+        if (!MatchResultWindow.IsEligible(match.MatchDateTime, UkClock.Now))
         {
-            return Result.Fail<MatchModel>(new ConflictError("This match's result can't be entered until 90 minutes after kickoff."));
+            return Result.Fail<MatchModel>(new ConflictError(
+                $"This match's result can't be entered until {MatchResultWindow.EligibleMinutesAfterKickoff} minutes after kickoff."));
         }
 
         match.HomeTeamGoals = homeTeamGoals;
         match.AwayTeamGoals = awayTeamGoals;
         match.MatchPlayed = true;
+
+        // Stamped only here, where a result first gets confirmed - a later correction goes through
+        // Update and deliberately leaves these alone, so they keep saying how the result arrived
+        // rather than who last edited it.
+        match.ProcessedDateTime = UkClock.Now;
+        match.ProcessedByUserID = processedByUserId;
 
         _appDbContext.Update(match);
         await _appDbContext.SaveChangesAsync(cancellationToken);

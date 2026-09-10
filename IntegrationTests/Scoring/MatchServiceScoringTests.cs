@@ -62,7 +62,7 @@ public class MatchServiceScoringTests
         {
             var service = MakeService(dbContext);
 
-            var result = await service.SaveResultAsync(match.MatchID, homeTeamGoals: 2, awayTeamGoals: 1);
+            var result = await service.SaveResultAsync(match.MatchID, homeTeamGoals: 2, awayTeamGoals: 1, processedByUserId: perfectUser.Id);
 
             result.IsSuccess.Should().BeTrue();
 

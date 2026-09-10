@@ -25,10 +25,30 @@
     -- Deliberately our own numbering rather than the official match number, which competitions
     -- assign by schedule and which therefore says nothing about bracket position.
     [BracketSlot]   INT              NULL,
+    -- When this match's result was confirmed, and by whom. Read together, since NULL means two
+    -- different things in the two columns:
+    --
+    --   ProcessedDateTime NULL                        - never processed, or processed before these
+    --                                                   columns existed (nothing was recorded, and
+    --                                                   there's no way to work it out after the fact).
+    --   ProcessedDateTime set, ProcessedByUserID NULL - confirmed automatically from the external
+    --                                                   provider's final score, with no admin involved.
+    --   both set                                      - an admin confirmed it on the Process Results page.
+    --
+    -- Records who first confirmed the result, not who last touched it: correcting a score afterwards
+    -- (MatchService.Update) leaves these alone, so "processed automatically" stays a true statement
+    -- about how the result got here. Deliberately not surfaced anywhere in the UI - it's an audit
+    -- trail for reading in the database, not something a predictor or an admin needs to see.
+    --
+    -- No default on ProcessedDateTime, unlike the other wall-clock columns: a match is inserted
+    -- unplayed, so getdate() would date the result of a match nobody has scored yet.
+    [ProcessedDateTime] DATETIME     NULL,
+    [ProcessedByUserID] UNIQUEIDENTIFIER NULL,
     CONSTRAINT [PK_Match] PRIMARY KEY CLUSTERED ([MatchID] ASC),
     CONSTRAINT [FK_Match_AwayTeam] FOREIGN KEY ([AwayTeamID]) REFERENCES [dbo].[Team] ([TeamID]),
     CONSTRAINT [FK_Match_Competition] FOREIGN KEY ([CompetitionID]) REFERENCES [dbo].[Competition] ([CompetitionID]),
-    CONSTRAINT [FK_Match_HomeTeam] FOREIGN KEY ([HomeTeamID]) REFERENCES [dbo].[Team] ([TeamID])
+    CONSTRAINT [FK_Match_HomeTeam] FOREIGN KEY ([HomeTeamID]) REFERENCES [dbo].[Team] ([TeamID]),
+    CONSTRAINT [FK_Match_Users_ProcessedByUserID] FOREIGN KEY ([ProcessedByUserID]) REFERENCES [Identity].[Users] ([Id])
 );
 
 
@@ -55,6 +75,12 @@ GO
 CREATE NONCLUSTERED INDEX [IX_Match_AwayTeamID] ON [dbo].[Match]
 (
 	[AwayTeamID] ASC
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Match_ProcessedByUserID] ON [dbo].[Match]
+(
+	[ProcessedByUserID] ASC
 );
 GO
 
