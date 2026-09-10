@@ -4,9 +4,11 @@ namespace Predictathon.WebApi.HostedServices;
 
 /// <summary>
 /// Drives <see cref="ILiveScoreService"/> on a schedule the service itself decides: fast while
-/// matches are in play, otherwise asleep until the next kick-off. Deliberately nothing more than a
-/// loop - all the logic lives in the Application layer, so this can be tested without a host and
-/// replaced with an external trigger if the hosting ever demands it.
+/// matches are in play, otherwise asleep until the next kick-off. Each pass then hands over to
+/// <see cref="IMatchResultAutoProcessService"/>, which confirms the result of anything the provider
+/// has just called finished. Deliberately nothing more than a loop - all the logic lives in the
+/// Application layer, so this can be tested without a host and replaced with an external trigger if
+/// the hosting ever demands it.
 ///
 /// An in-process timer is normally the wrong shape on this app's shared IIS hosting, which is why
 /// the daily maintenance jobs are external pings against TasksController instead. Live scores are
@@ -66,9 +68,10 @@ public class LiveScorePollingService : BackgroundService
     }
 
     /// <summary>
-    /// Runs one refresh and works out how long to wait before the next, returning the error backoff
-    /// instead if the pass failed. Never throws: an exception escaping here would end the loop for
-    /// the lifetime of the process, and the next worker wouldn't start until someone made a request.
+    /// Runs one refresh, auto-processes anything the provider has called finished, and works out how
+    /// long to wait before the next pass, returning the error backoff instead if the pass failed.
+    /// Never throws: an exception escaping here would end the loop for the lifetime of the process,
+    /// and the next worker wouldn't start until someone made a request.
     /// </summary>
     /// <param name="stoppingToken">Cancellation token.</param>
     private async Task<TimeSpan> RunPassAsync(CancellationToken stoppingToken)
@@ -85,6 +88,20 @@ public class LiveScorePollingService : BackgroundService
                 _logger.LogInformation(
                     "Live scores updated for {ScoresChanged} of {MatchesInPlay} matches in play.",
                     summary.ScoresChanged, summary.MatchesInPlay);
+            }
+
+            // After the refresh, so a match that has just been called finished is confirmed in the
+            // same pass rather than waiting for the next one. Runs whether or not anything was in
+            // play: it reads only the scores already stored, so it costs a query and no provider
+            // call, and that's what picks up a match left behind by an earlier failed attempt.
+            var autoProcessService = scope.ServiceProvider.GetRequiredService<IMatchResultAutoProcessService>();
+            var autoProcessSummary = await autoProcessService.ProcessFinishedMatchesAsync(stoppingToken);
+
+            if (autoProcessSummary.ResultsProcessed > 0)
+            {
+                _logger.LogInformation(
+                    "Auto-processed {ResultsProcessed} finished results.",
+                    autoProcessSummary.ResultsProcessed);
             }
 
             return await liveScoreService.GetNextRefreshDelayAsync(stoppingToken);

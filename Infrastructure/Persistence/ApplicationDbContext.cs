@@ -183,6 +183,17 @@ public partial class ApplicationDbContext : GenericDbContext<ApplicationDbContex
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.MatchDateTime).HasColumnType("datetime");
+            entity.Property(e => e.ProcessedDateTime).HasColumnType("datetime");
+
+            // ProcessedByUserID's foreign key, declared with no navigation on either side: nothing
+            // reads the audit trail back through the object graph, so a navigation would only be
+            // something else for the InMemory test double to strip. It does have to be declared,
+            // though - without it EF doesn't know a Match depends on its user and will order a
+            // delete of the two the wrong way round, which the real FK then refuses.
+            entity.HasOne<Predictathon.Domain.Identity.ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.ProcessedByUserID)
+                .HasConstraintName("FK_Match_Users_ProcessedByUserID");
 
             entity.HasOne(d => d.AwayTeam).WithMany(p => p.MatchAwayTeam)
                 .HasForeignKey(d => d.AwayTeamID)

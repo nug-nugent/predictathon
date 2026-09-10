@@ -7,11 +7,14 @@ Cup's league table on nought points. Harmless one at a time, and steadily less s
 
 Scoped to the two prefixes those specs use, which nothing else in the sample data goes near.
 
-Only the tables a self-registered account can actually reach are cleared. The other ten that
-reference Identity.Users need either an admin role or message-board activity that neither spec
-performs, so a test account should never appear in one - and if that ever changes, the delete below
-fails on the foreign key and says so, which is what we want. Quietly removing a real live score or a
-Hall of Fame row to get a test account out of the way would be far worse than a noisy seed.
+Only the tables a self-registered account can actually reach are cleared. The others that reference
+Identity.Users need either an admin role or message-board activity that neither spec performs, so a
+test account should never appear in one - and if that ever changes, the delete below fails on the
+foreign key and says so, which is what we want. Quietly removing a real live score or a Hall of Fame
+row to get a test account out of the way would be far worse than a noisy seed.
+
+Left uncounted deliberately - that list grows (dbo.Match's ProcessedByUserID audit column is the
+newest to join it) and a number written down here only goes stale.
 */
 
 SET NOCOUNT ON

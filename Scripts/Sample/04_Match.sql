@@ -55,10 +55,15 @@ DECLARE @DateShiftDays INT = DATEDIFF(DAY, '2026-07-09', @UkNow);
 --
 --   Two completed earlier today, so "Completed" has rows and the day has results to read.
 --   Three in play. Two of them kicked off far enough back (110 and 95 minutes) that the Process
---     Results page will accept a result for them - MatchService's 90-minute rule, which the e2e
---     process-results spec drives. Deliberately two rather than one: that spec confirms a result
---     and so consumes one, and live.spec.ts needs more than a single match still in play. The
---     third is 35 minutes in - genuinely mid-match, and too recent to process.
+--     Results page will accept a result for them - MatchService's 90-minute rule. Deliberately two
+--     rather than one, so processing one by hand still leaves live.spec.ts more than a single match
+--     in play. The third is 35 minutes in - genuinely mid-match, and too recent to process.
+--
+--     Expect these two to confirm themselves shortly after the stack comes up: the simulated
+--     provider calls a match finished 105 minutes in, and the auto-processor turns a finished score
+--     into a result without an admin, which is the whole point of it. That's the feature working,
+--     not the seed going stale - Admin Cup (11_AdminCup.sql), whose matches carry no external id
+--     and so are never polled, is where the e2e process-results spec gets a match that waits.
 --   Three still to come, from 30 minutes out to 5 hours. The half-hour one covers the near-deadline
 --     states (and the e2e quick-predict spec); the rest keep "Coming up" populated across a working
 --     session rather than the half hour a single pinned fixture used to give.
@@ -207,7 +212,13 @@ WHEN MATCHED THEN
         [Target].[Description] = [Source].[Description],
         [Target].[Knockout] = [Source].[Knockout],
         [Target].[KnockoutRound] = [Source].[KnockoutRound],
-        [Target].[BracketSlot] = [Source].[BracketSlot];
+        [Target].[BracketSlot] = [Source].[BracketSlot],
+        -- Cleared with the result itself. A re-seed rewinds today's matches to unplayed, and an
+        -- audit trail left behind would claim a fixture yet to finish had already been processed.
+        -- NULL is also the honest value for the sample data's own played matches: their results are
+        -- fabricated history, not something anybody confirmed.
+        [Target].[ProcessedDateTime] = NULL,
+        [Target].[ProcessedByUserID] = NULL;
 GO
 
 -- Every sample match carries an external id, without which the live-score poller ignores it (it has

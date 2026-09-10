@@ -40,6 +40,10 @@ public partial class Match
 
     public int? ExternalMatchID { get; set; }
 
+    public DateTime? ProcessedDateTime { get; set; }
+
+    public Guid? ProcessedByUserID { get; set; }
+
     public virtual Team? AwayTeam { get; set; }
 
     public virtual Competition Competition { get; set; } = null!;

@@ -92,10 +92,20 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
     /// Records a match's final score and marks it played. Fails with a <see cref="Errors.ConflictError"/>
     /// if the match hasn't been over long enough yet.
     /// </summary>
+    /// <param name="matchId">The match to record a result for.</param>
+    /// <param name="homeTeamGoals">The final home score.</param>
+    /// <param name="awayTeamGoals">The final away score.</param>
+    /// <param name="processedByUserId">
+    /// The administrator confirming the result, or null when it was confirmed automatically from the
+    /// external provider's final score. Stored as an audit trail only - see dbo.Match's own comment
+    /// on ProcessedDateTime/ProcessedByUserID - and never shown in the UI.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<Result<MatchModel>> SaveResultAsync(
         Guid matchId,
         int homeTeamGoals,
         int awayTeamGoals,
+        Guid? processedByUserId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
