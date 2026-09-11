@@ -1,5 +1,5 @@
 import { Box, List, Text } from "@chakra-ui/react";
-import { CalendarPlus, ChartColumn, Dices, Home, Info, ListChecks, Medal, Megaphone, MessagesSquare, ScrollText, TableProperties, Ticket, TriangleAlert, Trophy, Users, Wrench } from "lucide-react";
+import { CalendarPlus, ChartColumn, Dices, Home, Info, ListChecks, Medal, Megaphone, MessagesSquare, Network, ScrollText, TableProperties, Ticket, TriangleAlert, Trophy, Users, Wrench } from "lucide-react";
 import { NavItem } from "./nav-item/NavItem";
 import { useUser } from "../../hooks/useUser";
 import { useCompetition } from "../../hooks/useCompetition";
@@ -40,6 +40,9 @@ export function SideNavigation({ onClick }: { onClick?: () => void }) {
                         )}
                         {roles.includes(Role.MatchAdministrator) && (
                             <NavItem to="/admin/matches" icon={<CalendarPlus size={20} />} label="Matches" />
+                        )}
+                        {roles.includes(Role.MatchAdministrator) && (
+                            <NavItem to="/admin/bracket" icon={<Network size={20} />} label="Knockout Bracket" />
                         )}
                         {roles.includes(Role.MatchAdministrator) && (
                             <NavItem to="/admin/process" icon={<Wrench size={20} />} label="Process Results" />

@@ -137,6 +137,64 @@ public class TeamService : ITeamService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<GroupStandingsModel>> GetGroupStandingsAsync(Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        var competitionMatches = await _dbContext.Match
+            .AsNoTracking()
+            .Where(m => m.CompetitionID == competitionId)
+            .ToListAsync(cancellationToken);
+
+        var teamCompetitions = await _dbContext.TeamCompetition
+            .AsNoTracking()
+            .Where(tc => tc.CompetitionID == competitionId)
+            .ToListAsync(cancellationToken);
+
+        var competition = await _dbContext.Competition
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CompetitionID == competitionId, cancellationToken);
+
+        var headToHeadTieBreaks = competition?.GroupHeadToHeadTieBreaks ?? true;
+        var teamsById = await GetCompetitionTeamsAsync(teamCompetitions, competitionMatches, cancellationToken);
+
+        var groupNames = teamCompetitions
+            .Where(tc => !string.IsNullOrWhiteSpace(tc.GroupName))
+            .Select(tc => tc.GroupName!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var standings = new List<GroupStandingsModel>();
+
+        foreach (var groupName in groupNames)
+        {
+            var groupTeamIds = teamCompetitions
+                .Where(tc => string.Equals(tc.GroupName?.Trim(), groupName, StringComparison.OrdinalIgnoreCase))
+                .Select(tc => tc.TeamID)
+                .ToHashSet();
+
+            var groupTeams = teamsById.Values.Where(t => groupTeamIds.Contains(t.TeamID)).ToList();
+
+            // Group-stage matches only, for the reason BuildTableForTeam gives: two teams from one
+            // group can meet again in the knockout rounds, and that tie is no part of how the group
+            // finished. It also keeps a knockout tie from counting against "matches remaining".
+            var groupMatches = competitionMatches
+                .Where(m => !m.Knockout
+                    && m.HomeTeamID.HasValue && groupTeamIds.Contains(m.HomeTeamID.Value)
+                    && m.AwayTeamID.HasValue && groupTeamIds.Contains(m.AwayTeamID.Value))
+                .ToList();
+
+            standings.Add(new GroupStandingsModel
+            {
+                GroupName = groupName,
+                Standings = BuildLeagueTable(groupMatches, groupTeams, headToHeadTieBreaks),
+                MatchesRemaining = groupMatches.Count(m => !m.MatchPlayed),
+            });
+        }
+
+        return standings;
+    }
+
+    /// <inheritdoc />
     public async Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default)
     {
         var team = await _dbContext.Team.AsNoTracking().FirstOrDefaultAsync(t => t.TeamID == teamId, cancellationToken);

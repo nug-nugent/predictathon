@@ -12,11 +12,16 @@ public class MatchController : ApiControllerBase
 {
     private readonly IMatchService _matchService;
     private readonly ILiveScoreService _liveScoreService;
+    private readonly IBracketResolutionService _bracketResolutionService;
 
-    public MatchController(IMatchService matchService, ILiveScoreService liveScoreService)
+    public MatchController(
+        IMatchService matchService,
+        ILiveScoreService liveScoreService,
+        IBracketResolutionService bracketResolutionService)
     {
         _matchService = matchService;
         _liveScoreService = liveScoreService;
+        _bracketResolutionService = bracketResolutionService;
     }
 
     /// <summary>
@@ -50,6 +55,40 @@ public class MatchController : ApiControllerBase
         var bracket = await _matchService.GetKnockoutBracketAsync(CurrentUserId, competitionId, cancellationToken);
 
         return Ok(bracket);
+    }
+
+    /// <summary>
+    /// Every slot in a competition's bracket, with what it is waiting on and the team its
+    /// placeholder now resolves to. Read-only - see <see cref="ResolveBracket"/> to act on it.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket is wanted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Bracket/Resolution")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<BracketResolutionModel>> GetBracketResolution(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var resolution = await _bracketResolutionService.GetAsync(competitionId, cancellationToken);
+
+        return Ok(resolution);
+    }
+
+    /// <summary>
+    /// Fill in the bracket slots an admin has picked, from the proposals in
+    /// <see cref="GetBracketResolution"/>. Slots that already hold a team are left alone.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket is being filled in.</param>
+    /// <param name="assignments">The slots to fill, and the team for each.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/Resolution")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<BracketResolutionSummary>> ResolveBracket(
+        Guid competitionId,
+        [FromBody] IReadOnlyList<BracketSlotAssignment> assignments,
+        CancellationToken cancellationToken)
+    {
+        var result = await _bracketResolutionService.ApplyAsync(competitionId, assignments, cancellationToken);
+
+        return FromResult(result);
     }
 
     /// <summary>

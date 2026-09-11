@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link as RouterLink } from "react-router";
 import {
-    Button, Center, Checkbox, Dialog, Field, HStack, Input, NativeSelect,
+    Button, Center, Checkbox, Dialog, Field, HStack, Input, Link, NativeSelect,
     Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
 import { useCompetition } from "../../../../hooks/useCompetition";
@@ -267,7 +268,9 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                             <>
                                 {/* Said here rather than left to be inferred from the knockout view not
                                     appearing, which is all an admin used to get. A bracket numbered
-                                    wrongly still draws as a tree, so the eye is no check on it. */}
+                                    wrongly still draws as a tree, so the eye is no check on it. The
+                                    fixing is done in this page's own rows, which is why the list stays
+                                    here as well as on the bracket page. */}
                                 <Text fontSize="sm" color="fg.muted">
                                     The knockout view stays hidden from players until these are fixed.
                                 </Text>
@@ -278,6 +281,9 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                                 </VStack>
                             </>
                         )}
+                        <Link asChild color="fg.link" fontSize="sm" alignSelf="flex-start">
+                            <RouterLink to="/admin/bracket">Fill in the draw from the group tables</RouterLink>
+                        </Link>
                     </VStack>
                 </Panel>
             )}
