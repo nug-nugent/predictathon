@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link as RouterLink } from "react-router";
 import {
-    Button, Center, Checkbox, Dialog, Field, HStack, Input, Link, NativeSelect,
+    Button, Center, Checkbox, Dialog, Field, HStack, Input, NativeSelect,
     Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
 import { useCompetition } from "../../../../hooks/useCompetition";
@@ -259,7 +259,12 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
             {hasBracketMatches && data.bracket !== null && (
                 <Panel>
                     <VStack align="stretch" gap={2}>
-                        <Text fontWeight="bold">Knockout bracket</Text>
+                        <HStack justify="space-between" wrap="wrap" gap={2}>
+                            <Text fontWeight="bold">Knockout bracket</Text>
+                            <Button asChild size="xs" variant="outline">
+                                <RouterLink to="/admin/bracket">Manage Bracket</RouterLink>
+                            </Button>
+                        </HStack>
                         {data.bracket.problems.length === 0 ? (
                             <Text fontSize="sm" color="fg.muted">
                                 Complete - the knockout view is on offer to players.
@@ -281,9 +286,6 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                                 </VStack>
                             </>
                         )}
-                        <Link asChild color="fg.link" fontSize="sm" alignSelf="flex-start">
-                            <RouterLink to="/admin/bracket">Fill in the draw from the group tables</RouterLink>
-                        </Link>
                     </VStack>
                 </Panel>
             )}
