@@ -202,6 +202,11 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
                 </Checkbox.Root>
                 <HStack gap={2}>
                     {hasBracketMatches && (
+                        <Button asChild size="sm" variant="outline">
+                            <RouterLink to="/admin/bracket">Manage Bracket</RouterLink>
+                        </Button>
+                    )}
+                    {hasBracketMatches && (
                         <Button size="sm" variant="outline" loading={numberingBracket} disabled={numberingBracket}
                             onClick={() => setConfirmingNumbering(true)}>
                             Number Bracket By Kick-off
@@ -259,12 +264,7 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
             {hasBracketMatches && data.bracket !== null && (
                 <Panel>
                     <VStack align="stretch" gap={2}>
-                        <HStack justify="space-between" wrap="wrap" gap={2}>
-                            <Text fontWeight="bold">Knockout bracket</Text>
-                            <Button asChild size="xs" variant="outline">
-                                <RouterLink to="/admin/bracket">Manage Bracket</RouterLink>
-                            </Button>
-                        </HStack>
+                        <Text fontWeight="bold">Knockout bracket</Text>
                         {data.bracket.problems.length === 0 ? (
                             <Text fontSize="sm" color="fg.muted">
                                 Complete - the knockout view is on offer to players.
