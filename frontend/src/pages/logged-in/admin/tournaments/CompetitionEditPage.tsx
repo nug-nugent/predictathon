@@ -492,6 +492,18 @@ function FixtureImportSection({
                         </Text>
                     )}
 
+                    {/* Said separately and in plainer colours than the success line: these matches
+                        imported fine, but they aren't finished, and the number is the size of the
+                        job waiting on the Knockout Bracket page once the groups are done. */}
+                    {summary && summary.matchesAwaitingTeams > 0 && (
+                        <Text fontSize="sm" color="fg.muted">
+                            {summary.matchesAwaitingTeams} of them {summary.matchesAwaitingTeams === 1 ? "has a side" : "have sides"} the
+                            draw hasn't decided yet. Fill {summary.matchesAwaitingTeams === 1 ? "it" : "them"} in from{" "}
+                            <Link asChild color="fg.link"><RouterLink to="/admin/bracket">Knockout Bracket</RouterLink></Link>
+                            {" "}once the groups have finished.
+                        </Text>
+                    )}
+
                     <HStack justify="flex-end">
                         <Button
                             colorPalette="action" loading={importing}

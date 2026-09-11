@@ -51,8 +51,13 @@ public class FixtureImportService : IFixtureImportService
                 "The external data source returned no fixtures for this competition and season."));
         }
 
+        // Undecided sides are dropped from both the lookup and the mapping check below. A
+        // tournament publishes its knockout schedule long before the draw, so those fixtures arrive
+        // with no team on either side - and the check refused the whole season over them, naming a
+        // blank team as unmapped. Nothing could import a bracket until its last group game was done.
         var externalTeamCodes = fixtures
             .SelectMany(f => new[] { f.HomeTeamExternalCode, f.AwayTeamExternalCode })
+            .Where(code => !string.IsNullOrWhiteSpace(code))
             .Distinct()
             .ToList();
 
@@ -60,9 +65,11 @@ public class FixtureImportService : IFixtureImportService
             .Where(t => t.ExternalApiCode != null && externalTeamCodes.Contains(t.ExternalApiCode))
             .ToDictionaryAsync(t => t.ExternalApiCode!, cancellationToken);
 
+        // A named team we can't match is still a hard stop: it means our Team catalogue is missing
+        // an ExternalApiCode, and importing around it would silently leave that team's fixtures out.
         var unmappedTeamNames = fixtures
             .SelectMany(f => new[] { (Code: f.HomeTeamExternalCode, Name: f.HomeTeamName), (Code: f.AwayTeamExternalCode, Name: f.AwayTeamName) })
-            .Where(t => !teamsByExternalCode.ContainsKey(t.Code))
+            .Where(t => !string.IsNullOrWhiteSpace(t.Code) && !teamsByExternalCode.ContainsKey(t.Code))
             .Select(t => t.Name)
             .Distinct()
             .ToList();
@@ -128,6 +135,7 @@ public class FixtureImportService : IFixtureImportService
             .ToListAsync(cancellationToken);
 
         var matchesImported = 0;
+        var matchesAwaitingTeams = 0;
         foreach (var fixture in fixtures)
         {
             if (existingExternalMatchIds.Contains(fixture.ExternalMatchID))
@@ -135,13 +143,21 @@ public class FixtureImportService : IFixtureImportService
                 continue;
             }
 
+            var homeTeam = TeamOrNull(teamsByExternalCode, fixture.HomeTeamExternalCode);
+            var awayTeam = TeamOrNull(teamsByExternalCode, fixture.AwayTeamExternalCode);
+
             await _dbContext.AddAsync(new Match
             {
                 MatchID = Guid.NewGuid(),
                 CompetitionID = competitionId,
                 MatchDateTime = UkClock.ToUkLocal(fixture.KickoffUtc),
-                HomeTeamID = teamsByExternalCode[fixture.HomeTeamExternalCode].TeamID,
-                AwayTeamID = teamsByExternalCode[fixture.AwayTeamExternalCode].TeamID,
+                HomeTeamID = homeTeam?.TeamID,
+                AwayTeamID = awayTeam?.TeamID,
+                // Where the provider names an undecided side ("Winner Group A"), that name is the
+                // placeholder. Where it says nothing, the slot stays blank for an admin to fill in -
+                // better an empty slot than a made-up one, since only the draw knows what feeds it.
+                HomeTeamTBC = homeTeam is null ? NullIfBlank(fixture.HomeTeamName) : null,
+                AwayTeamTBC = awayTeam is null ? NullIfBlank(fixture.AwayTeamName) : null,
                 ExternalMatchID = fixture.ExternalMatchID,
                 Description = fixture.Description,
                 Knockout = fixture.IsKnockout,
@@ -149,6 +165,11 @@ public class FixtureImportService : IFixtureImportService
             }, cancellationToken);
 
             matchesImported++;
+
+            if (homeTeam is null || awayTeam is null)
+            {
+                matchesAwaitingTeams++;
+            }
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -166,12 +187,23 @@ public class FixtureImportService : IFixtureImportService
         return Result.Ok(new FixtureImportSummary
         {
             MatchesImported = matchesImported,
+            MatchesAwaitingTeams = matchesAwaitingTeams,
             TeamsAdded = teamsAdded,
             GroupsAssigned = groupsAssigned,
             StartDate = competition.StartDate,
             EndDate = competition.EndDate,
         });
     }
+
+    /// <summary>The team a provider code maps to, or null where the code is blank or unknown.</summary>
+    /// <param name="teamsByExternalCode">The site's teams, keyed by the provider's team code.</param>
+    /// <param name="externalCode">The provider's team code, possibly empty.</param>
+    private static Team? TeamOrNull(Dictionary<string, Team> teamsByExternalCode, string externalCode)
+        => string.IsNullOrWhiteSpace(externalCode) ? null : teamsByExternalCode.GetValueOrDefault(externalCode);
+
+    /// <summary>The text, or null where it is blank - the shape the TBC columns want.</summary>
+    /// <param name="text">The text to normalise.</param>
+    private static string? NullIfBlank(string text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
     /// <summary>
     /// Works out which group each team is drawn into, from the groups its fixtures are played in.

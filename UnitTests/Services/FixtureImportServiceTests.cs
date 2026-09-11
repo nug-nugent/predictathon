@@ -102,6 +102,90 @@ public class FixtureImportServiceTests
     }
 
     [Fact]
+    public async Task ImportSeasonAsync_UndecidedKnockoutTie_ImportsItWithNoTeamsRatherThanRefusingTheSeason()
+    {
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var competition = MakeCompetition();
+        var arsenal = MakeTeam("Arsenal", "57");
+        var chelsea = MakeTeam("Chelsea", "61");
+        dbContext.Competition.Add(competition);
+        dbContext.Team.Add(arsenal);
+        dbContext.Team.Add(chelsea);
+        await dbContext.SaveChangesAsync();
+
+        // What a tournament looks like before its draw: the group games have teams, the knockout
+        // ties are scheduled with neither side settled. The provider reports those with no team id
+        // at all, which used to count as an unmapped team and fail the whole import.
+        var undecided = MakeFixture(200, new DateTime(2026, 9, 1, 19, 0, 0, DateTimeKind.Utc), "", "");
+        undecided.HomeTeamName = "Winner Group A";
+        undecided.AwayTeamName = "Runner-up Group B";
+        undecided.IsKnockout = true;
+        undecided.KnockoutRound = 16;
+        undecided.Description = "Round of 16 1";
+
+        externalMatchDataService.Fixtures =
+        [
+            MakeFixture(100, new DateTime(2026, 8, 15, 14, 0, 0, DateTimeKind.Utc), "57", "61"),
+            undecided,
+        ];
+
+        var result = await service.ImportSeasonAsync(competition.CompetitionID);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.MatchesImported.Should().Be(2);
+        result.Value.MatchesAwaitingTeams.Should().Be(1, "the admin's next job is to fill that tie in");
+
+        var tie = dbContext.Match.Single(m => m.ExternalMatchID == 200);
+        tie.HomeTeamID.Should().BeNull();
+        tie.AwayTeamID.Should().BeNull();
+        tie.KnockoutRound.Should().Be(16);
+        tie.HomeTeamTBC.Should().Be("Winner Group A", "a provider that names where a side comes from is naming the placeholder");
+        tie.AwayTeamTBC.Should().Be("Runner-up Group B");
+    }
+
+    [Fact]
+    public async Task ImportSeasonAsync_UndecidedTieTheProviderDoesNotName_LeavesThePlaceholderForAnAdmin()
+    {
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var competition = MakeCompetition();
+        dbContext.Competition.Add(competition);
+        await dbContext.SaveChangesAsync();
+
+        // Most providers say nothing at all about an undecided side. Inventing a placeholder from
+        // the round would be a guess at the draw, which is the one thing we don't know.
+        var undecided = MakeFixture(200, new DateTime(2026, 9, 1, 19, 0, 0, DateTimeKind.Utc), "", "");
+        undecided.HomeTeamName = "";
+        undecided.AwayTeamName = "";
+        externalMatchDataService.Fixtures = [undecided];
+
+        var result = await service.ImportSeasonAsync(competition.CompetitionID);
+
+        result.IsSuccess.Should().BeTrue();
+        var tie = dbContext.Match.Single(m => m.ExternalMatchID == 200);
+        tie.HomeTeamTBC.Should().BeNull();
+        tie.AwayTeamTBC.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ImportSeasonAsync_NamedTeamWithNoExternalCode_StillRefusesTheWholeSeason()
+    {
+        var (dbContext, externalMatchDataService, service) = MakeService();
+        var competition = MakeCompetition();
+        dbContext.Competition.Add(competition);
+        await dbContext.SaveChangesAsync();
+
+        // The undecided case must not have opened a door for this one: a team the provider names but
+        // we can't match means our catalogue is missing a code, and importing around it would leave
+        // that team's fixtures out without saying so.
+        externalMatchDataService.Fixtures = [MakeFixture(100, new DateTime(2026, 8, 15, 14, 0, 0, DateTimeKind.Utc), "57", "")];
+
+        var result = await service.ImportSeasonAsync(competition.CompetitionID);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle(e => e is ConflictError);
+    }
+
+    [Fact]
     public async Task ImportSeasonAsync_Success_CreatesMatchesAndTeamCompetitionsAndRefinesCompetitionDates()
     {
         var (dbContext, externalMatchDataService, service) = MakeService();

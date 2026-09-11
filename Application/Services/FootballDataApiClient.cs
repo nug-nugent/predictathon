@@ -44,10 +44,13 @@ public class FootballDataApiClient : IExternalMatchDataService
                 ExternalMatchID = m.Id,
                 KickoffUtc = m.UtcDate,
                 IsKickoffConfirmed = m.Status != ScheduledStatus,
-                HomeTeamExternalCode = m.HomeTeam.Id.ToString(),
-                AwayTeamExternalCode = m.AwayTeam.Id.ToString(),
-                HomeTeamName = m.HomeTeam.Name,
-                AwayTeamName = m.AwayTeam.Name,
+                // Null rather than absent for a knockout tie whose teams aren't settled, which the
+                // provider reports from the moment the schedule is published. Mapped to an empty
+                // code, the shape ExternalFixture defines for "not decided yet".
+                HomeTeamExternalCode = m.HomeTeam.Id?.ToString() ?? "",
+                AwayTeamExternalCode = m.AwayTeam.Id?.ToString() ?? "",
+                HomeTeamName = m.HomeTeam.Name ?? "",
+                AwayTeamName = m.AwayTeam.Name ?? "",
                 GroupName = ToGroupName(m.Group),
                 IsKnockout = KnockoutStageNames.ContainsKey(m.Stage ?? ""),
                 Description = ToStageDescription(m.Stage, m.Group),
@@ -244,10 +247,10 @@ public class FootballDataApiClient : IExternalMatchDataService
     private class TeamDto
     {
         [JsonPropertyName("id")]
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         [JsonPropertyName("name")]
-        public string Name { get; set; } = "";
+        public string? Name { get; set; }
     }
 
     private class ScoreDto
