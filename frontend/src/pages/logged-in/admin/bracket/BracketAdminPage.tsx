@@ -321,7 +321,7 @@ function SlotTable({ slots, teams, selections, onSelect }: {
             <Table.Header>
                 <Table.Row>
                     <Table.ColumnHeader>Tie</Table.ColumnHeader>
-                    <Table.ColumnHeader>Comes from</Table.ColumnHeader>
+                    <Table.ColumnHeader>Placeholder</Table.ColumnHeader>
                     <Table.ColumnHeader>Team</Table.ColumnHeader>
                     <Table.ColumnHeader>Status</Table.ColumnHeader>
                 </Table.Row>
