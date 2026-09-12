@@ -44,6 +44,17 @@ public interface ITeamService
     /// <paramref name="userId"/> is used to populate each result's "your prediction" and
     /// "your score" columns.
     /// </summary>
+    /// <summary>
+    /// Every group's table in a competition, with whether the group has finished playing.
+    ///
+    /// Separate from <see cref="GetTeamDetailAsync"/>, which builds one team's group table for that
+    /// team's page: the bracket needs all of them at once, and needs to know which are final before
+    /// it will read a winner off one.
+    /// </summary>
+    /// <param name="competitionId">The competition whose groups are wanted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IReadOnlyList<GroupStandingsModel>> GetGroupStandingsAsync(Guid competitionId, CancellationToken cancellationToken = default);
+
     Task<TeamDetailModel?> GetTeamDetailAsync(Guid competitionId, Guid teamId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>

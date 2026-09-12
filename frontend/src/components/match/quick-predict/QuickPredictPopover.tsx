@@ -38,8 +38,8 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
     // all the room in the world for "Belgium goals".
     const homeName = teamName(match.homeTeamAcronym, match.homeTeamShortName, match.homeTeam);
     const awayName = teamName(match.awayTeamAcronym, match.awayTeamShortName, match.awayTeam);
-    const homeSpokenName = teamName(null, match.homeTeamShortName, match.homeTeam);
-    const awaySpokenName = teamName(null, match.awayTeamShortName, match.awayTeam);
+    const homeSpokenName = spokenName(match.homeTeamShortName, match.homeTeam, "Home");
+    const awaySpokenName = spokenName(match.awayTeamShortName, match.awayTeam, "Away");
 
     const [open, setOpen] = useState(false);
     const [homeInput, setHomeInput] = useState(match.homeTeamGoals !== null ? String(match.homeTeamGoals) : "");
@@ -118,7 +118,7 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
             </Popover.Trigger>
             <Portal>
                 <Popover.Positioner>
-                    <Popover.Content width="auto" minW="260px" maxW="340px">
+                    <Popover.Content width="auto" minW="300px" maxW="340px">
                         <Popover.Arrow />
                         <Popover.Body p={3}>
                             <Stack gap={2}>
@@ -169,13 +169,29 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
     );
 }
 
+// What a side is called when there is nothing to call it.
+const UNNAMED = "TBC";
+
 // The three-letter code at every width, falling back through the longer names for a team that has
 // none. Deliberately not TeamLabel's screen-width-driven naming: this popover is the same narrow
 // box whatever it opens on, so keying the name off the *screen* would pick the longest name for
 // the narrowest container it appears in. The crest beside it and the row it opened from both name
 // the team in full, so an acronym here is read in plenty of context.
 function teamName(acronym: string | null, shortName: string | null, name: string | null): string {
-    return acronym || shortName || name || "TBC";
+    return acronym || shortName || name || UNNAMED;
+}
+
+/// What a screen reader is told a score box is for, which is not what the eye is shown: the visible
+/// name is an acronym, and "BEL goals" is no use spoken where "Belgium goals" costs nothing.
+///
+/// Falls back to the side rather than to "TBC". A knockout tie drawn before its groups finish has
+/// neither a team nor a placeholder on either side, and the list procedure names both of them TBC -
+/// so both boxes announced themselves as "TBC goals", which is worse than saying nothing, because
+/// it sounds like it has told you something. The side is then the only thing that tells them apart.
+function spokenName(shortName: string | null, name: string | null, side: "Home" | "Away"): string {
+    const spoken = (shortName ?? name ?? "").trim();
+
+    return spoken !== "" && spoken !== UNNAMED ? spoken : side;
 }
 
 /// One side of the popover's scoreline: crest and name, facing the score. Plain text rather than
@@ -191,7 +207,14 @@ function TeamSide({ name, image, crestPosition }: {
     return (
         <HStack gap={1.5} minW="0" flex="1" justify={justify}>
             {crestPosition === "before" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
-            <Text fontSize="sm" truncate minW="0" textAlign={crestPosition === "after" ? "right" : "left"}>{name}</Text>
+            {/* Wraps rather than truncating. A truncated name is only ever a guess at which team is
+                meant, and here it was a bad one: "Winner SF1" and "Winner SF2" both cut to
+                "Winner S...", naming the two halves of the draw identically. The popover is a box
+                and can afford a second line; the row it opened from could not, which is why the
+                bracket card itself still trims. Decided teams show a three-letter acronym and never
+                reach either behaviour. */}
+            <Text fontSize="sm" minW="0" whiteSpace="normal" wordBreak="break-word"
+                textAlign={crestPosition === "after" ? "right" : "left"}>{name}</Text>
             {crestPosition === "after" && crest && <Image src={crest} boxSize="20px" objectFit="contain" alt="" flexShrink={0} />}
         </HStack>
     );

@@ -47,6 +47,9 @@ export async function getCompetitionSeries(): Promise<CompetitionSeries[]> {
 // Matches Application/Models/FixtureImportSummary.cs.
 export type FixtureImportSummary = {
     matchesImported: number;
+    /// How many of those came in with a side still undecided - a tournament's knockout ties before
+    /// its draw. Not a fault: they're filled in from the group tables once the groups finish.
+    matchesAwaitingTeams: number;
     teamsAdded: number;
     /// Already-assigned teams whose group was filled in from the imported fixtures; teams added by
     /// the same import are counted under teamsAdded instead.

@@ -56,6 +56,21 @@ public class TeamController : ApiControllerBase
     /// Get a team's played-match stats, results, upcoming fixtures and the table it sits in - its
     /// group's where it has a group, the whole competition's otherwise - for the Team Detail page.
     /// </summary>
+    /// <summary>
+    /// Every group's table in a competition, with whether the group has finished playing. The
+    /// evidence behind the bracket admin page's proposals - "Winner Group A" is only worth anything
+    /// beside the table it was read from.
+    /// </summary>
+    /// <param name="competitionId">The competition whose groups are wanted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/GroupStandings")]
+    public async Task<ActionResult<IReadOnlyList<GroupStandingsModel>>> GetGroupStandings(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var standings = await _teamService.GetGroupStandingsAsync(competitionId, cancellationToken);
+
+        return Ok(standings);
+    }
+
     [HttpGet("{competitionId:guid}/{teamId:guid}/Detail")]
     public async Task<ActionResult<TeamDetailModel?>> GetDetail(Guid competitionId, Guid teamId, CancellationToken cancellationToken)
     {

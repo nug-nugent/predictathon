@@ -114,6 +114,21 @@ export type TeamDetail = {
 
 /// A team's played-match stats, results, upcoming fixtures and the table it sits in - its group's
 /// where it has a group, the whole competition's otherwise - for the Team Detail page.
+// Matches Application/Models/GroupStandingsModel.cs.
+export type GroupStandings = {
+    groupName: string;
+    standings: TeamStanding[];
+    /// How many of the group's matches are still to be played.
+    matchesRemaining: number;
+    /// Whether every match in the group has been played, so the table is final.
+    isComplete: boolean;
+};
+
+/// Every group's table in a competition, with whether each group has finished.
+export async function getGroupStandings(competitionId: string): Promise<GroupStandings[]> {
+    return getJsonAuthenticated<GroupStandings[]>(`/Team/${competitionId}/GroupStandings`);
+}
+
 export async function getTeamDetail(competitionId: string, teamId: string): Promise<TeamDetail> {
     return getJsonAuthenticated<TeamDetail>(`/Team/${competitionId}/${teamId}/Detail`);
 }

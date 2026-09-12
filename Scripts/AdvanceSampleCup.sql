@@ -303,14 +303,14 @@ WHERE m.[CompetitionID] = @CompetitionID
        AND LastSixteen.[Description] = REPLACE(s.[Placeholder], 'Winner R16 ', 'Round of 16 ')
     LEFT JOIN #TieOutcomes AS QuarterFinal
         ON s.[Placeholder] LIKE 'Winner QF%'
-       AND QuarterFinal.[Description] = REPLACE(s.[Placeholder], 'Winner QF', 'Quarter-final ')
+       AND QuarterFinal.[Description] = REPLACE(REPLACE(s.[Placeholder], 'Winner QF', 'Quarter-final '), '  ', ' ')
     LEFT JOIN #TieOutcomes AS SemiFinal
         ON s.[Placeholder] LIKE 'Winner SF%'
-       AND SemiFinal.[Description] = REPLACE(s.[Placeholder], 'Winner SF', 'Semi-final ')
+       AND SemiFinal.[Description] = REPLACE(REPLACE(s.[Placeholder], 'Winner SF', 'Semi-final '), '  ', ' ')
     -- The play-off is the one slot fed by losing rather than winning.
     LEFT JOIN #TieOutcomes AS SemiFinalLoser
         ON s.[Placeholder] LIKE 'Loser SF%'
-       AND SemiFinalLoser.[Description] = REPLACE(s.[Placeholder], 'Loser SF', 'Semi-final ')
+       AND SemiFinalLoser.[Description] = REPLACE(REPLACE(s.[Placeholder], 'Loser SF', 'Semi-final '), '  ', ' ')
 )
 SELECT * INTO #ResolvedSlots FROM Resolved WHERE [TeamID] IS NOT NULL;
 

@@ -20,16 +20,25 @@ public class ExternalFixture
     /// </summary>
     public bool IsKickoffConfirmed { get; set; } = true;
 
-    /// <summary>The provider's identifier for the home team.</summary>
+    /// <summary>
+    /// The provider's identifier for the home team, or empty where the provider hasn't decided this
+    /// side yet. A tournament publishes its knockout schedule long before its draw, so a fixture
+    /// whose teams are still to be settled is a normal thing to be told about, not a fault - see
+    /// <see cref="Services.FixtureImportService"/> for what the import makes of one.
+    /// </summary>
     public string HomeTeamExternalCode { get; set; } = "";
 
-    /// <summary>The provider's identifier for the away team.</summary>
+    /// <summary>The provider's identifier for the away team, or empty - see <see cref="HomeTeamExternalCode"/>.</summary>
     public string AwayTeamExternalCode { get; set; } = "";
 
-    /// <summary>The home team's name, as reported by the provider.</summary>
+    /// <summary>
+    /// The home team's name, as reported by the provider. Some providers name an undecided side by
+    /// where it comes from ("Winner Group A"), which is exactly the placeholder the bracket wants;
+    /// others report nothing at all, and then it's for an admin to say.
+    /// </summary>
     public string HomeTeamName { get; set; } = "";
 
-    /// <summary>The away team's name, as reported by the provider.</summary>
+    /// <summary>The away team's name, as reported by the provider - see <see cref="HomeTeamName"/>.</summary>
     public string AwayTeamName { get; set; } = "";
 
     /// <summary>

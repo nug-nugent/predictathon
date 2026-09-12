@@ -85,14 +85,153 @@ public class MatchService : CrudService<Guid, CreateMatchModel, MatchModel, Matc
             })
             .ToList();
 
+        var problems = KnockoutRounds.DescribeProblems(
+            [.. rounds.Select(r => new BracketRoundShape(r.KnockoutRound, [.. r.Matches.Select(m => m.BracketSlot)]))]);
+
         return new KnockoutBracketModel
         {
             Rounds = rounds,
             ThirdPlacePlayOff = thirdPlacePlayOff,
-            IsWellFormed = rounds.Count > 0
-                && rounds.All(r => r.Matches.All(m => m.BracketSlot.HasValue))
-                && KnockoutRounds.IsWellFormedTree([.. rounds.Select(r => (r.KnockoutRound, r.Matches.Count))]),
+            IsWellFormed = problems.Count == 0,
+            Problems = problems,
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<BracketSetupSummary> SetKnockoutRoundsFromDescriptionsAsync(Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        // Every knockout match, not just the unnumbered ones, so the summary can say how many were
+        // left alone - an admin pressing this wants to know it didn't quietly undo their work.
+        var knockoutMatches = await _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId && m.Knockout)
+            .ToListAsync(cancellationToken);
+
+        var summary = new BracketSetupSummary();
+
+        foreach (var match in knockoutMatches)
+        {
+            if (match.KnockoutRound.HasValue)
+            {
+                summary.LeftAlone++;
+                continue;
+            }
+
+            var round = KnockoutRounds.RoundFromDescription(match.Description);
+            if (round is null)
+            {
+                summary.NotDerivable++;
+                continue;
+            }
+
+            match.KnockoutRound = round;
+            _appDbContext.Update(match);
+            summary.Changed++;
+        }
+
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        return summary;
+    }
+
+    /// <inheritdoc />
+    public async Task<BracketSetupSummary> GenerateBracketPlaceholdersAsync(Guid competitionId, CancellationToken cancellationToken = default)
+    {
+        var bracketMatches = await _appDbContext.Match
+            .Where(m => m.CompetitionID == competitionId && m.KnockoutRound != null && m.BracketSlot != null)
+            .ToListAsync(cancellationToken);
+
+        var rounds = bracketMatches.Select(m => m.KnockoutRound!.Value).Distinct().ToHashSet();
+
+        // The largest round of the tree opens the bracket, and what feeds it is the group stage -
+        // "Winner Group A" - which is the draw's business and not derivable from anything here.
+        var firstRound = rounds.Where(round => !KnockoutRounds.IsThirdPlacePlayOff(round)).DefaultIfEmpty(0).Max();
+
+        var summary = new BracketSetupSummary();
+
+        foreach (var match in bracketMatches)
+        {
+            var round = match.KnockoutRound!.Value;
+            var slot = match.BracketSlot!.Value;
+
+            // The play-off hangs off the semi-finals rather than sitting in the tree, and it takes
+            // the two teams that lost them rather than the two that won.
+            var isPlayOff = KnockoutRounds.IsThirdPlacePlayOff(round);
+            var feedingRound = isPlayOff ? 4 : round * 2;
+            var wantWinner = !isPlayOff;
+
+            if ((!isPlayOff && round == firstRound) || !rounds.Contains(feedingRound))
+            {
+                summary.NotDerivable += CountUnfilledSides(match);
+                continue;
+            }
+
+            // Slots 1 and 2 of a round feed slot 1 of the next, 3 and 4 feed slot 2, and so on -
+            // which is the whole of a bracket's connectivity. The play-off is the exception again:
+            // its two sides are the two semi-finals themselves, in order.
+            var homeFeedingSlot = isPlayOff ? 1 : (slot * 2) - 1;
+            var awayFeedingSlot = isPlayOff ? 2 : slot * 2;
+
+            summary.Changed += FillPlaceholder(match, isHome: true, feedingRound, homeFeedingSlot, wantWinner, summary);
+            summary.Changed += FillPlaceholder(match, isHome: false, feedingRound, awayFeedingSlot, wantWinner, summary);
+
+            _appDbContext.Update(match);
+        }
+
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+
+        return summary;
+    }
+
+    /// <summary>How many of a tie's two sides have neither a team nor a placeholder.</summary>
+    /// <param name="match">The tie.</param>
+    private static int CountUnfilledSides(Match match)
+        => (match.HomeTeamID is null && string.IsNullOrWhiteSpace(match.HomeTeamTBC) ? 1 : 0)
+         + (match.AwayTeamID is null && string.IsNullOrWhiteSpace(match.AwayTeamTBC) ? 1 : 0);
+
+    /// <summary>
+    /// Writes one side's placeholder, unless that side already has a team or a placeholder of its
+    /// own - in which case it is counted as left alone and not touched.
+    /// </summary>
+    /// <param name="match">The tie.</param>
+    /// <param name="isHome">Which side of it.</param>
+    /// <param name="feedingRound">The round of the tie that settles this side.</param>
+    /// <param name="feedingSlot">The slot of that tie.</param>
+    /// <param name="wantWinner">Whether this side takes that tie's winner rather than its loser.</param>
+    /// <param name="summary">The running summary, for counting what was left alone.</param>
+    private static int FillPlaceholder(
+        Match match,
+        bool isHome,
+        int feedingRound,
+        int feedingSlot,
+        bool wantWinner,
+        BracketSetupSummary summary)
+    {
+        var teamId = isHome ? match.HomeTeamID : match.AwayTeamID;
+        var existing = isHome ? match.HomeTeamTBC : match.AwayTeamTBC;
+
+        if (teamId is not null || !string.IsNullOrWhiteSpace(existing))
+        {
+            summary.LeftAlone++;
+            return 0;
+        }
+
+        var placeholder = BracketPlaceholders.Describe(feedingRound, feedingSlot, wantWinner);
+        if (placeholder is null)
+        {
+            summary.NotDerivable++;
+            return 0;
+        }
+
+        if (isHome)
+        {
+            match.HomeTeamTBC = placeholder;
+        }
+        else
+        {
+            match.AwayTeamTBC = placeholder;
+        }
+
+        return 1;
     }
 
     /// <inheritdoc />

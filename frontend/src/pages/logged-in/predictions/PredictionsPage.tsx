@@ -203,8 +203,11 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
     setSearchParams(updated);
   };
 
-  // A bracket the API says is incomplete - a round half-numbered, a match missing - is shown as the
-  // ordinary list rather than as a tree with holes in it.
+  // A bracket the API says is incomplete - a round half-numbered, two ties sharing a draw slot - is
+  // not offered at all. It used to be offered and then quietly ignored: the button appeared as soon
+  // as any match had a knockout round, so between importing a tournament's fixtures and finishing
+  // its draw - weeks, for a real one - every player got a toggle that flipped its own label and
+  // changed nothing else. An admin looking for the reason now finds it on the Matches admin page.
   const bracketIsDrawable = hasBracket && bracket !== null && bracket.isWellFormed;
 
   return (
@@ -214,7 +217,7 @@ function PredictionsWeekLoader({ competitionId }: { competitionId: string }) {
           to itself, and on mobile the two sit level instead of stacking. */}
       <HStack justify="space-between" align="center" mb={4} gap={3}>
         <PageHeading mb={0}>Predictions</PageHeading>
-        {hasBracket && (
+        {bracketIsDrawable && (
           <Button size="sm" variant="outline" flexShrink={0} ml="auto"
             onClick={() => setView(showingBracket ? "list" : "knockout")}>
             {showingBracket ? "Show Match List" : "Show Knockout View"}

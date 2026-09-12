@@ -12,11 +12,16 @@ public class MatchController : ApiControllerBase
 {
     private readonly IMatchService _matchService;
     private readonly ILiveScoreService _liveScoreService;
+    private readonly IBracketResolutionService _bracketResolutionService;
 
-    public MatchController(IMatchService matchService, ILiveScoreService liveScoreService)
+    public MatchController(
+        IMatchService matchService,
+        ILiveScoreService liveScoreService,
+        IBracketResolutionService bracketResolutionService)
     {
         _matchService = matchService;
         _liveScoreService = liveScoreService;
+        _bracketResolutionService = bracketResolutionService;
     }
 
     /// <summary>
@@ -50,6 +55,70 @@ public class MatchController : ApiControllerBase
         var bracket = await _matchService.GetKnockoutBracketAsync(CurrentUserId, competitionId, cancellationToken);
 
         return Ok(bracket);
+    }
+
+    /// <summary>
+    /// Every slot in a competition's bracket, with what it is waiting on and the team its
+    /// placeholder now resolves to. Read-only - see <see cref="ResolveBracket"/> to act on it.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket is wanted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("{competitionId:guid}/Bracket/Resolution")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<BracketResolutionModel>> GetBracketResolution(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var resolution = await _bracketResolutionService.GetAsync(competitionId, cancellationToken);
+
+        return Ok(resolution);
+    }
+
+    /// <summary>
+    /// Fill in the bracket slots an admin has picked, from the proposals in
+    /// <see cref="GetBracketResolution"/>. Slots that already hold a team are left alone.
+    /// </summary>
+    /// <param name="competitionId">The competition whose bracket is being filled in.</param>
+    /// <param name="assignments">The slots to fill, and the team for each.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/Resolution")]
+    [Authorize(Roles = RoleConstants.MatchAdministrator)]
+    public async Task<ActionResult<BracketResolutionSummary>> ResolveBracket(
+        Guid competitionId,
+        [FromBody] IReadOnlyList<BracketSlotAssignment> assignments,
+        CancellationToken cancellationToken)
+    {
+        var result = await _bracketResolutionService.ApplyAsync(competitionId, assignments, cancellationToken);
+
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Fill in each knockout match's round from its description, where it has none. A competition
+    /// set up before KnockoutRound existed has the round written only in free text.
+    /// </summary>
+    /// <param name="competitionId">The competition whose rounds should be set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/SetRounds")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<BracketSetupSummary>> SetBracketRounds(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var summary = await _matchService.SetKnockoutRoundsFromDescriptionsAsync(competitionId, cancellationToken);
+
+        return Ok(summary);
+    }
+
+    /// <summary>
+    /// Write the placeholder for every bracket slot whose feeder the tree already implies, leaving
+    /// alone anything that has a team or a placeholder of its own.
+    /// </summary>
+    /// <param name="competitionId">The competition whose placeholders should be written.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/GeneratePlaceholders")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<BracketSetupSummary>> GenerateBracketPlaceholders(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var summary = await _matchService.GenerateBracketPlaceholdersAsync(competitionId, cancellationToken);
+
+        return Ok(summary);
     }
 
     /// <summary>

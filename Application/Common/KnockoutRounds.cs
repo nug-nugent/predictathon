@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Predictathon.Application.Common;
 
 /// <summary>
@@ -13,7 +15,7 @@ namespace Predictathon.Application.Common;
 /// two to count a round's matches. Everything the bracket layout needs comes from a round's
 /// position in the sorted sequence and from how many matches are actually in it.
 /// </summary>
-public static class KnockoutRounds
+public static partial class KnockoutRounds
 {
     /// <summary>
     /// The value <c>KnockoutRound</c> carries for a third-place play-off. Sits between the
@@ -48,39 +50,166 @@ public static class KnockoutRounds
         => knockoutRound == ThirdPlacePlayOffRound;
 
     /// <summary>
-    /// Whether a sequence of tree rounds, largest first, is a well-formed single-elimination
-    /// bracket: each round exactly half the size of the one before it, ending at the final, and
-    /// every round holding the number of matches its size implies.
+    /// Which knockout round a match's <c>Description</c> says it is in, or null where the
+    /// description names no round this recognises.
     ///
-    /// The bracket view's geometry assumes all of that, so a competition whose rounds don't line up
-    /// - a half-numbered bracket, a round nobody finished filling in - is better shown as a plain
-    /// list than as a tree with holes in it.
+    /// Competitions arrive with their rounds written into free text and nowhere else - a real
+    /// World Cup here reads "Last 16,  Atlanta", "Quarter final,  Boston", "Third place play-off,
+    /// Miami" - while this site's own fixtures read "Round of 16 1" and "Quarter-final 1". Both
+    /// forms say the same thing, and neither was ever going to be typed the same way twice, so the
+    /// patterns are anchored at the start and forgiving about spacing, hyphens and what follows.
+    ///
+    /// Anchoring is what keeps "Quarter final" from reading as "Final": every alternative has to
+    /// match from the first character, so the longer names cannot be swallowed by the shorter one.
     /// </summary>
-    /// <param name="rounds">The tree rounds, largest first, paired with how many matches each holds.</param>
-    public static bool IsWellFormedTree(IReadOnlyList<(int KnockoutRound, int MatchCount)> rounds)
+    /// <param name="description">The match's description, possibly null.</param>
+    public static int? RoundFromDescription(string? description)
     {
-        if (rounds.Count == 0 || rounds[^1].KnockoutRound != 2)
+        if (string.IsNullOrWhiteSpace(description))
         {
-            return false;
+            return null;
+        }
+
+        var trimmed = description.TrimStart();
+
+        var sized = SizedRoundPattern().Match(trimmed);
+        if (sized.Success && int.TryParse(sized.Groups["size"].Value, out var size) && RoundNames.ContainsKey(size))
+        {
+            return size;
+        }
+
+        if (QuarterFinalPattern().IsMatch(trimmed))
+        {
+            return 8;
+        }
+
+        if (SemiFinalPattern().IsMatch(trimmed))
+        {
+            return 4;
+        }
+
+        if (ThirdPlacePattern().IsMatch(trimmed))
+        {
+            return ThirdPlacePlayOffRound;
+        }
+
+        return FinalPattern().IsMatch(trimmed) ? 2 : null;
+    }
+
+    [GeneratedRegex(@"^(?:round\s*of|last)\s*(?<size>\d+)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex SizedRoundPattern();
+
+    [GeneratedRegex(@"^quarter[\s-]*finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex QuarterFinalPattern();
+
+    [GeneratedRegex(@"^semi[\s-]*finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex SemiFinalPattern();
+
+    [GeneratedRegex(@"^(?:third|3rd)\s*place\b", RegexOptions.IgnoreCase)]
+    private static partial Regex ThirdPlacePattern();
+
+    [GeneratedRegex(@"^finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex FinalPattern();
+
+    /// <summary>
+    /// Everything wrong with a bracket, said plainly enough for an admin to act on, or an empty
+    /// list where there is nothing wrong.
+    ///
+    /// A single-elimination bracket has to hold together in two ways at once. Its rounds have to
+    /// halve - each one exactly half the size of the one before it, ending at the final, every
+    /// round holding the number of matches its size implies. And within a round the draw positions
+    /// have to be a complete set: 1 to n, each used once. The view's geometry assumes both, and
+    /// neither is something a competition arrives with - an importer can work out a match's round
+    /// from the provider's stage but nothing reports its position in the draw, so the slots are
+    /// numbered by an admin and are exactly the sort of thing that ends up with two 4s and no 5.
+    ///
+    /// Reported rather than merely detected because both failures look plausible from the outside.
+    /// A bracket numbered wrongly still draws as a tree - just with the wrong ties in the wrong
+    /// halves - and nothing downstream can tell. Left to a boolean, the only symptom an admin ever
+    /// saw was the knockout view quietly declining to appear.
+    /// </summary>
+    /// <param name="rounds">
+    /// The rounds of the bracket tree, largest first, with the slot each of their matches carries.
+    /// The third-place play-off is no part of the tree and must not be included.
+    /// </param>
+    public static IReadOnlyList<string> DescribeProblems(IReadOnlyList<BracketRoundShape> rounds)
+    {
+        var problems = new List<string>();
+
+        if (rounds.Count == 0)
+        {
+            problems.Add("No match has been given a bracket round yet.");
+            return problems;
+        }
+
+        if (rounds[^1].KnockoutRound != 2)
+        {
+            problems.Add($"The bracket has no final - it stops at the {NameOf(rounds[^1].KnockoutRound)}.");
         }
 
         for (var index = 0; index < rounds.Count; index++)
         {
-            var (knockoutRound, matchCount) = rounds[index];
+            var (knockoutRound, slots) = rounds[index];
+            var name = NameOf(knockoutRound);
 
-            // A round of n teams is n/2 matches, all of which have to be there.
-            if (knockoutRound != matchCount * 2)
-            {
-                return false;
-            }
+            // A round contested by n teams is n/2 matches. Safe as arithmetic here only because the
+            // play-off's sentinel round is excluded by contract - see the parameter's remarks.
+            var expectedMatches = knockoutRound / 2;
 
-            // And each round halves the one before it - no gaps, no repeats.
+            // Each round halves the one before it, so a round whose predecessor is not twice its
+            // size has one missing between them.
             if (index > 0 && rounds[index - 1].KnockoutRound != knockoutRound * 2)
             {
-                return false;
+                problems.Add($"{NameOf(knockoutRound * 2)} is missing - {NameOf(rounds[index - 1].KnockoutRound)} is followed straight by {name}.");
+            }
+
+            if (slots.Count != expectedMatches)
+            {
+                problems.Add($"{name}: {slots.Count} {Matches(slots.Count)}, where this round needs {expectedMatches}.");
+            }
+
+            var unnumbered = slots.Count(slot => slot is null);
+            if (unnumbered > 0)
+            {
+                problems.Add($"{name}: {unnumbered} {Matches(unnumbered)} with no bracket slot.");
+            }
+
+            var numbered = slots.Where(slot => slot.HasValue).Select(slot => slot!.Value).ToList();
+
+            foreach (var duplicate in numbered.GroupBy(slot => slot).Where(group => group.Count() > 1).OrderBy(group => group.Key))
+            {
+                problems.Add($"{name}: slot {duplicate.Key} is used by {duplicate.Count()} matches.");
+            }
+
+            foreach (var outOfRange in numbered.Where(slot => slot < 1 || slot > expectedMatches).Distinct().Order())
+            {
+                problems.Add($"{name}: slot {outOfRange} is outside the range 1 to {expectedMatches}.");
+            }
+
+            // Which slots are absent is only worth naming once the round is the right size and every
+            // match in it has been numbered. Before that it restates a count already reported above,
+            // and a half-filled round would list every slot nobody has reached yet as a fault.
+            if (unnumbered == 0 && slots.Count == expectedMatches)
+            {
+                foreach (var absent in Enumerable.Range(1, expectedMatches).Where(slot => !numbered.Contains(slot)))
+                {
+                    problems.Add($"{name}: no match is in slot {absent}.");
+                }
             }
         }
 
-        return true;
+        return problems;
     }
+
+    private static string Matches(int count) => count == 1 ? "match" : "matches";
 }
+
+/// <summary>
+/// One round of a bracket as <see cref="KnockoutRounds.DescribeProblems"/> reads it.
+/// </summary>
+/// <param name="KnockoutRound">The round's <c>KnockoutRound</c> value.</param>
+/// <param name="Slots">
+/// Each of the round's matches by its <c>BracketSlot</c>, in any order, null where a match has not
+/// been given one.
+/// </param>
+public readonly record struct BracketRoundShape(int KnockoutRound, IReadOnlyList<int?> Slots);

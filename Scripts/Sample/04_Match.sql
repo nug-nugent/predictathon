@@ -5,7 +5,7 @@ deterministically generated (not random), and the schedule sits part-way through
 matchdays 1 and 2 are complete (MatchPlayed = 1), and matchday 3 is in progress - its first day is
 today, its second tomorrow. Everything from the Round of 16 on uses HomeTeamTBC/AwayTeamTBC
 placeholders ('Winner Group A', 'Winner R16 1'), since with the groups unfinished those teams aren't
-decided yet - the same convention Scripts/WorldCup2026FixtureImport.sql uses for unresolved fixtures.
+decided yet - the convention Application/Common/BracketPlaceholders.cs defines and reads back.
 
 Stopping here rather than nearer the end is deliberate. The earlier arrangement had 56 of the 64
 matches played, which left only eight open for prediction - four of them TBC placeholders - so the

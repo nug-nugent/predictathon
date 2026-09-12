@@ -89,9 +89,11 @@ export type KnockoutBracket = {
     rounds: KnockoutRound[];
     /// Separate from the rounds: a knockout match, but no part of the tree.
     thirdPlacePlayOff: MatchPrediction | null;
-    /// False where the bracket is incomplete - the view falls back to the plain list rather than
-    /// drawing a tree with holes in it.
+    /// False where the bracket is incomplete - the knockout view isn't offered at all rather than
+    /// drawing a tree with holes in it. Always the inverse of `problems` being empty.
     isWellFormed: boolean;
+    /// What's wrong with the bracket, in words, for the admin screens. Empty where it's sound.
+    problems: string[];
 };
 
 /// A competition's knockout bracket with the current user's predictions. Comes back with no rounds

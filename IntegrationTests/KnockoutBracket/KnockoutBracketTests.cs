@@ -136,7 +136,41 @@ public class KnockoutBracketTests
             var bracket = await MakeService(dbContext).GetKnockoutBracketAsync(world.UserId, world.CompetitionId);
 
             bracket.Rounds.Should().NotBeEmpty("the view still needs to know there is a bracket to offer");
-            bracket.IsWellFormed.Should().BeFalse("a tree with a hole in it is shown as the plain match list instead");
+            bracket.IsWellFormed.Should().BeFalse("a tree with a hole in it isn't offered as a knockout view at all");
+            bracket.Problems.Should().Contain(problem => problem.Contains("Quarter-final"),
+                "an admin has to be told which round is short, not just that something is");
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, world);
+        }
+    }
+
+    [Fact]
+    public async Task GetKnockoutBracketAsync_ReportsTwoTiesSharingADrawSlot()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var world = await SeedBracketAsync(dbContext, wholeBracket: true);
+
+        try
+        {
+            // The mistake that reads as correct from the outside: a quarter-final typed into slot 1
+            // when it belongs in slot 2. The round is still the right size and every match still has
+            // a slot, so the count-based checks are all satisfied and the tree draws happily - with
+            // one tie in the wrong half of the draw and nothing anywhere to say so.
+            var duplicated = dbContext.Match
+                .Single(m => m.CompetitionID == world.CompetitionId && m.KnockoutRound == 8 && m.BracketSlot == 2);
+            duplicated.BracketSlot = 1;
+            await dbContext.SaveChangesAsync();
+
+            var bracket = await MakeService(dbContext).GetKnockoutBracketAsync(world.UserId, world.CompetitionId);
+
+            bracket.IsWellFormed.Should().BeFalse();
+            bracket.Problems.Should().BeEquivalentTo([
+                "Quarter-final: slot 1 is used by 2 matches.",
+                "Quarter-final: no match is in slot 2.",
+            ]);
         }
         finally
         {

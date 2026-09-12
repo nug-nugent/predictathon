@@ -32,7 +32,8 @@ BEGIN
 	FROM
 		[Identity].[Users] AS [User]
 		INNER JOIN [dbo].[UserCompetition] AS uc ON [User].Id = uc.UserID
-		INNER JOIN [dbo].[Match] AS m ON m.CompetitionID = uc.CompetitionID AND m.MatchPlayed = 1
+		INNER JOIN [dbo].[Competition] AS c ON c.CompetitionID = uc.CompetitionID
+		INNER JOIN [dbo].[Match] AS m ON m.CompetitionID = c.CompetitionID AND m.MatchPlayed = 1
 		LEFT JOIN [dbo].[Prediction] AS p ON m.MatchID = p.MatchID AND [User].Id = p.UserID
 	GROUP BY
 		[User].UserName

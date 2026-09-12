@@ -25,13 +25,13 @@ BEGIN
 		, Prediction.PredictionID
 		, m.MatchDateTime
 		, m.HomeTeamID
-		, HomeTeam = ISNULL(HomeTeam.TeamName, m.HomeTeamTBC)
-		, HomeTeamShortName = ISNULL(HomeTeam.ShortName, 'TBC')
+		, HomeTeam = COALESCE(HomeTeam.TeamName, NULLIF(m.HomeTeamTBC, ''), 'TBC')
+		, HomeTeamShortName = COALESCE(HomeTeam.ShortName, NULLIF(m.HomeTeamTBC, ''), 'TBC')
 		, HomeTeamAcronym = HomeTeam.Acronym
 		, HomeTeamImage = HomeTeam.ImageName
 		, m.AwayTeamID
-		, AwayTeam = ISNULL(AwayTeam.TeamName, m.AwayTeamTBC)
-		, AwayTeamShortName = ISNULL(AwayTeam.ShortName, 'TBC')
+		, AwayTeam = COALESCE(AwayTeam.TeamName, NULLIF(m.AwayTeamTBC, ''), 'TBC')
+		, AwayTeamShortName = COALESCE(AwayTeam.ShortName, NULLIF(m.AwayTeamTBC, ''), 'TBC')
 		, AwayTeamAcronym = AwayTeam.Acronym
 		, AwayTeamImage = AwayTeam.ImageName
 		, Prediction.HomeTeamGoals

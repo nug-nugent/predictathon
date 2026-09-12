@@ -44,6 +44,7 @@ const CompetitionRegistrationPage = lazy(() => import("../pages/logged-in/regist
 const CompetitionsAdminPage = lazy(() => import("../pages/logged-in/admin/tournaments/CompetitionsAdminPage").then((m) => ({ default: m.CompetitionsAdminPage })));
 const CompetitionEditPage = lazy(() => import("../pages/logged-in/admin/tournaments/CompetitionEditPage").then((m) => ({ default: m.CompetitionEditPage })));
 const MatchesAdminPage = lazy(() => import("../pages/logged-in/admin/matches/MatchesAdminPage").then((m) => ({ default: m.MatchesAdminPage })));
+const BracketAdminPage = lazy(() => import("../pages/logged-in/admin/bracket/BracketAdminPage").then((m) => ({ default: m.BracketAdminPage })));
 const ProcessResultsPage = lazy(() => import("../pages/logged-in/admin/process/ProcessResultsPage").then((m) => ({ default: m.ProcessResultsPage })));
 const FixtureChangesAdminPage = lazy(() => import("../pages/logged-in/admin/fixture-changes/FixtureChangesAdminPage").then((m) => ({ default: m.FixtureChangesAdminPage })));
 const UsersPage = lazy(() => import("../pages/logged-in/admin/users/Users").then((m) => ({ default: m.UsersPage })));
@@ -107,6 +108,7 @@ export function SiteRoutes() {
                         </Route>
                         <Route element={<ProtectedRoute allowedRoles={[Role.MatchAdministrator]} />}>
                             <Route path="matches" element={<MatchesAdminPage />} />
+                            <Route path="bracket" element={<BracketAdminPage />} />
                             <Route path="process" element={<ProcessResultsPage />} />
                             <Route path="fixture-changes" element={<FixtureChangesAdminPage />} />
                         </Route>
