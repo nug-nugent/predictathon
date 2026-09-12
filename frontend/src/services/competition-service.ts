@@ -33,6 +33,9 @@ export async function setDefaultCompetition(competitionId: string): Promise<void
 export type CompetitionDetails = {
     competitionID: string;
     competitionName: string;
+    /// Whether the name only reads properly behind a definite article ("the FA Cup" rather than
+    /// "Premier League"). Callers supply the article themselves, cased to fit where it lands.
+    prependNameWithThe: boolean;
     duplicateFixturesAllowed: boolean;
     allowTwoPointers: boolean;
 };

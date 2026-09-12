@@ -227,7 +227,7 @@ function AddPaymentCreditDialog({ competitions, onClose, onCreated }: {
                                         >
                                             {competitions.map((c) => (
                                                 <option key={c.competitionID} value={c.competitionID}>
-                                                    {c.prependNameWithThe ? "The " : ""}{c.competitionName}
+                                                    {c.competitionName}
                                                 </option>
                                             ))}
                                         </NativeSelect.Field>
