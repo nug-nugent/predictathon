@@ -146,7 +146,19 @@ function matchWeekStartDate(date: Date): Date {
 /// that match's week. A mismatch is harmless: PredictionsPage only honours a ?week= it can find in
 /// the weeks the API returned, and falls back to its usual landing week otherwise.
 export function matchWeekStart(matchDateTime: string): string {
-    const start = matchWeekStartDate(new Date(matchDateTime));
+    return formatWeekStart(matchWeekStartDate(new Date(matchDateTime)));
+}
+
+/// The week start a given moment falls in, in the same shape - what the Home page's week card
+/// tests the week it is showing against, to know whether "this week" is what to call it.
+export function currentMatchWeekStart(now: Date): string {
+    return formatWeekStart(matchWeekStartDate(now));
+}
+
+// A bucketed week start written the way the API writes one ("yyyy-MM-ddT00:00:00"), from the local
+// date parts rather than toISOString - which would convert to UTC and, for anywhere east of
+// Greenwich in summer, name the day before.
+function formatWeekStart(start: Date): string {
     const pad = (value: number) => String(value).padStart(2, "0");
 
     return `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}T00:00:00`;
@@ -186,4 +198,15 @@ export function computePredictionsLandingWeek(summaries: CompetitionWeekSummary[
     );
 
     return open?.weekStart ?? computeDefaultWeek(summaries.map((s) => s.weekStart));
+}
+
+/// Picks the week the Home page's This Week's Matches card covers: the earliest week that still has
+/// a match to come. Usually that is simply the week today falls in, which is what the card is for -
+/// but a competition week runs Friday to Thursday, so by midweek the current one is often played
+/// out, and a card of nothing but results is a card with nothing to do. Rolling on to the next week
+/// with fixtures in it keeps the card worth its place (and the heading says which week it landed
+/// on). Null once the competition has no matches left at all, which is how the card knows to stand
+/// down rather than show a finished season back to itself.
+export function computeUpcomingWeek(summaries: CompetitionWeekSummary[], now: Date): string | null {
+    return summaries.find((s) => new Date(s.lastMatchDateTime) > now)?.weekStart ?? null;
 }

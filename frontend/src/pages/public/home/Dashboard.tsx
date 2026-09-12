@@ -1,7 +1,7 @@
 import { Box, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { useAsyncData } from "../../../hooks/useAsyncData";
-import { TodaysMatchesCard } from "../../../components/home/TodaysMatchesCard";
+import { HomeMatchesCard } from "../../../components/home/HomeMatchesCard";
 import { UserStatisticsCard } from "../../../components/home/UserStatisticsCard";
 import { CompetitionRegistrationsCard } from "../../../components/home/CompetitionRegistrationsCard";
 import { CompetitionSpotlightCard } from "../../../components/home/CompetitionSpotlightCard";
@@ -30,9 +30,10 @@ export function Dashboard() {
     return (
         <>
             <AnnouncementFeed audience="all" />
-            {/* Full width above the two-column grid, and only present on days the competition
-                actually has matches - see TodaysMatchesCard. */}
-            <TodaysMatchesCard key={`live-${currentCompetitionId}`} competitionId={currentCompetitionId} />
+            {/* Full width above the two-column grid: today's matches on a matchday, this week's on
+                the days in between, and nothing at all once a competition has finished playing -
+                see HomeMatchesCard. */}
+            <HomeMatchesCard key={`live-${currentCompetitionId}`} competitionId={currentCompetitionId} />
             {/* Two stacked columns at lg and up. Below that the grid collapses to one column, and
                 the columns would otherwise interleave as "all of the left, then all of the right",
                 burying the league table below the competition list. display:contents dissolves the
