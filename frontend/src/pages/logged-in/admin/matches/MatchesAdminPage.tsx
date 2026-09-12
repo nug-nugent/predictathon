@@ -128,7 +128,10 @@ function MatchesAdminTable({ competitionId }: { competitionId: string }) {
     const pageMatches = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     // Only worth offering where there is a bracket to number - a league season has none.
-    const hasBracketMatches = data.matches.some((m) => m.knockoutRound !== null);
+    // Deliberately the Knockout flag rather than knockoutRound. A competition whose knockout ties
+    // are flagged but unnumbered is exactly the one that needs the bracket tools most, and keying
+    // this off the round would hide them behind the very state they exist to create.
+    const hasBracketMatches = data.matches.some((m) => m.knockout || m.knockoutRound !== null);
 
     return (
         <VStack align="stretch" gap={4}>
