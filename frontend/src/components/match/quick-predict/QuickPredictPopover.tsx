@@ -38,8 +38,8 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
     // all the room in the world for "Belgium goals".
     const homeName = teamName(match.homeTeamAcronym, match.homeTeamShortName, match.homeTeam);
     const awayName = teamName(match.awayTeamAcronym, match.awayTeamShortName, match.awayTeam);
-    const homeSpokenName = teamName(null, match.homeTeamShortName, match.homeTeam);
-    const awaySpokenName = teamName(null, match.awayTeamShortName, match.awayTeam);
+    const homeSpokenName = spokenName(match.homeTeamShortName, match.homeTeam, "Home");
+    const awaySpokenName = spokenName(match.awayTeamShortName, match.awayTeam, "Away");
 
     const [open, setOpen] = useState(false);
     const [homeInput, setHomeInput] = useState(match.homeTeamGoals !== null ? String(match.homeTeamGoals) : "");
@@ -169,13 +169,29 @@ export function QuickPredictPopover({ match, minutesToPredict, onSaved, showWeek
     );
 }
 
+// What a side is called when there is nothing to call it.
+const UNNAMED = "TBC";
+
 // The three-letter code at every width, falling back through the longer names for a team that has
 // none. Deliberately not TeamLabel's screen-width-driven naming: this popover is the same narrow
 // box whatever it opens on, so keying the name off the *screen* would pick the longest name for
 // the narrowest container it appears in. The crest beside it and the row it opened from both name
 // the team in full, so an acronym here is read in plenty of context.
 function teamName(acronym: string | null, shortName: string | null, name: string | null): string {
-    return acronym || shortName || name || "TBC";
+    return acronym || shortName || name || UNNAMED;
+}
+
+/// What a screen reader is told a score box is for, which is not what the eye is shown: the visible
+/// name is an acronym, and "BEL goals" is no use spoken where "Belgium goals" costs nothing.
+///
+/// Falls back to the side rather than to "TBC". A knockout tie drawn before its groups finish has
+/// neither a team nor a placeholder on either side, and the list procedure names both of them TBC -
+/// so both boxes announced themselves as "TBC goals", which is worse than saying nothing, because
+/// it sounds like it has told you something. The side is then the only thing that tells them apart.
+function spokenName(shortName: string | null, name: string | null, side: "Home" | "Away"): string {
+    const spoken = (shortName ?? name ?? "").trim();
+
+    return spoken !== "" && spoken !== UNNAMED ? spoken : side;
 }
 
 /// One side of the popover's scoreline: crest and name, facing the score. Plain text rather than
