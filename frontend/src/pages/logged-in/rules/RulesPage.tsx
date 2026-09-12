@@ -15,20 +15,31 @@ function Points({ value, children }: { value: 0 | 1 | 2 | 3; children: React.Rea
 
 export function RulesPage() {
     const { competitions, currentCompetitionId } = useCompetition();
-    const competitionName = competitions.find((c) => c.competitionID === currentCompetitionId)?.competitionName ?? "the competition";
+    const currentName = competitions.find((c) => c.competitionID === currentCompetitionId)?.competitionName;
 
     // Whether this competition awards the 2-point tier (correct winner + their exact goal tally).
     // Defaults to true while loading (or with no competition selected) - it's the standard scheme;
     // the rare no-two-pointers competition swaps the bullets in once details arrive.
     const [allowTwoPointers, setAllowTwoPointers] = useState(true);
 
+    // Competitions named "FA Cup" or "World Cup" need a definite article to read as prose; ones
+    // named "Premier League" don't. Lower case, because the name only appears mid-sentence here.
+    const [prependNameWithThe, setPrependNameWithThe] = useState(false);
+
     useEffect(() => {
         if (!currentCompetitionId) return;
 
         getCompetitionDetails(currentCompetitionId)
-            .then((details) => setAllowTwoPointers(details.allowTwoPointers))
+            .then((details) => {
+                setAllowTwoPointers(details.allowTwoPointers);
+                setPrependNameWithThe(details.prependNameWithThe);
+            })
             .catch(() => { /* best-effort - fall back to describing the standard scheme */ });
     }, [currentCompetitionId]);
+
+    const competitionName = currentName === undefined
+        ? "the competition"
+        : `${prependNameWithThe ? "the " : ""}${currentName}`;
 
     return (
         <VStack align="stretch" gap={6} maxW="container.md">
