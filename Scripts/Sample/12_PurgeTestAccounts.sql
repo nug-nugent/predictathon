@@ -7,11 +7,17 @@ Cup's league table on nought points. Harmless one at a time, and steadily less s
 
 Scoped to the two prefixes those specs use, which nothing else in the sample data goes near.
 
-Only the tables a self-registered account can actually reach are cleared. The others that reference
+Only the tables a self-registered account can end up in are cleared. The others that reference
 Identity.Users need either an admin role or message-board activity that neither spec performs, so a
 test account should never appear in one - and if that ever changes, the delete below fails on the
 foreign key and says so, which is what we want. Quietly removing a real live score or a Hall of Fame
 row to get a test account out of the way would be far worse than a noisy seed.
+
+"Can end up in" rather than "can reach": dbo.UserCompetitionLeagueHistory is written *for* an account
+rather than by it - the snapshot task ranks every registrant of a competition whether they have done
+anything or not - so registering was on its own enough to put these accounts in a table the first
+version of this file reasoned they could never touch. The foreign key did exactly what the paragraph
+above says it would, and said so loudly on every re-seed until it was cleared below.
 
 Left uncounted deliberately - that list grows (dbo.Match's ProcessedByUserID audit column is the
 newest to join it) and a number written down here only goes stale.
@@ -42,6 +48,13 @@ DELETE p FROM [dbo].[Prediction] AS p INNER JOIN @Purge AS x ON x.[UserID] = p.[
 DELETE t FROM [dbo].[Transaction] AS t INNER JOIN @Purge AS x ON x.[UserID] = t.[UserID];
 DELETE c FROM [dbo].[PaymentCredit] AS c INNER JOIN @Purge AS x ON x.[UserID] = c.[UsedByUserID];
 DELETE c FROM [dbo].[PaymentCredit] AS c INNER JOIN @Purge AS x ON x.[UserID] = c.[IssuedByUserID];
+-- League history knows an account only by its registration, so unlike the rest this one is reached
+-- through UserCompetition rather than by UserID - and has to go before it.
+DELETE h
+FROM [dbo].[UserCompetitionLeagueHistory] AS h
+INNER JOIN [dbo].[UserCompetition] AS u ON u.[UserCompetitionID] = h.[UserCompetitionID]
+INNER JOIN @Purge AS x ON x.[UserID] = u.[UserID];
+
 DELETE u FROM [dbo].[UserCompetition] AS u INNER JOIN @Purge AS x ON x.[UserID] = u.[UserID];
 
 DELETE r FROM [Identity].[RefreshTokens] AS r INNER JOIN @Purge AS x ON x.[UserID] = r.[UserId];

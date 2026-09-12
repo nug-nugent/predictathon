@@ -18,6 +18,10 @@ import type { Page } from "@playwright/test";
 export const DEMO_PREDICTOR = { username: "DemoPredictor", password: "DemoPass123!" };
 export const DEMO_QUICK_PREDICT = { username: "DemoQuickPredict", password: "DemoPass123!" };
 export const DEMO_BRACKET = { username: "DemoBracket", password: "DemoPass123!" };
+// Defaulted into Week Ahead Cup (Scripts/Sample/13_WeekAheadCup.sql), which has no fixtures today -
+// the only way to reach the Home page's This Week's Matches card, since every other seeded
+// competition pins matches into today on purpose.
+export const DEMO_WEEK_AHEAD = { username: "DemoWeekAhead", password: "DemoPass123!" };
 export const DEMO_ADMIN = { username: "DemoAdmin", password: "DemoAdmin!2026" };
 
 export async function login(page: Page, username: string, password: string): Promise<void> {

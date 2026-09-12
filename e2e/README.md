@@ -44,9 +44,10 @@ at a real deployment with these tests.
 | `DemoPredictor` | `predictions.spec.ts`, and every read-only player spec | Sample Cup |
 | `DemoQuickPredict` | `quick-predict.spec.ts` | Sample Cup |
 | `DemoBracket` | `knockout-bracket.spec.ts` | Sample Cup |
+| `DemoWeekAhead` | `this-weeks-matches.spec.ts` | **Week Ahead Cup** |
 | `DemoAdmin` | `process-results.spec.ts`, `live-score.spec.ts`, `error-log.spec.ts` | **Admin Cup** |
 
-All four share the passwords in the root `README.md`; the two extra players use `DemoPredictor`'s.
+All five share the passwords in the root `README.md`; the three extra players use `DemoPredictor`'s.
 
 They're named for the spec that owns them rather than numbered, because Playwright matches an
 accessible name by substring: `DemoPredictor2` answered to a locator asking for `DemoPredictor`,
@@ -55,11 +56,15 @@ which made `league.spec.ts`'s search for its own row in the table ambiguous.
 The split is what lets the suite run its files in parallel. Two things get contended for, and each
 is isolated on the axis it's keyed by:
 
-- **Predictions** are keyed on `(UserID, MatchID)`, so the three specs that enter them have a player
-  each. Sharing one account meant each spec's saved score surfaced in another's assertions.
+- **Predictions** are keyed on `(UserID, MatchID)`, so the specs that enter them have a player each.
+  Sharing one account meant each spec's saved score surfaced in another's assertions.
 - **Match state** is keyed on `CompetitionID`, so the admin specs - which confirm results and set
   live scores - work in `Admin Cup`, seeded by `Scripts/Sample/11_AdminCup.sql`. Confirming a result
   takes a match out of play permanently, and `live.spec.ts` asserts matches *are* in play.
+- **What day it is** is a property of a competition's fixture list, so `Week Ahead Cup`
+  (`Scripts/Sample/13_WeekAheadCup.sql`) has none today at all. Sample Cup and Admin Cup both pin
+  fixtures into today deliberately, which leaves the Home page's This Week's Matches card - the one
+  that only appears when nothing is on - with nowhere to be seen.
 
 No spec selects a competition; `CompetitionProvider` resolves it from the signed-in account's own
 registrations, so being defaulted into `Admin Cup` is all it takes. `DemoAdmin` is still registered

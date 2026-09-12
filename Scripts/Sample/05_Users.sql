@@ -8,14 +8,18 @@ Deliberately NOT sourced via sp_generate_merge against a live table, unlike 01_T
 Identity.Users table has ~50 other rows with genuine personal data (real emails, real password
 hashes) that must never end up in this repo. These two rows were selected and copied by hand.
 
-DemoQuickPredict and DemoBracket are synthetic, and exist so that the three e2e specs which enter
-predictions have a player each - the names say which spec owns which. A prediction row is keyed on (UserID, MatchID), so specs sharing one
+DemoQuickPredict, DemoBracket and DemoWeekAhead are synthetic, and exist so that the e2e specs which
+enter predictions have a player each - the names say which spec owns which. A prediction row is keyed on (UserID, MatchID), so specs sharing one
 account contend for the same rows and each one's saved score turns up in another's assertions -
 predictions.spec used to work around that by deliberately taking the LAST open fixture, leaving the
 first to quick-predict.spec. A user apiece removes the contention rather than choreographing around
 it. They share DemoPredictor's password (DemoPass123!) by sharing its PasswordHash verbatim, which
 works because an ASP.NET Identity hash carries its own salt and is not bound to the account it sits
 on. Their SecurityStamp/ConcurrencyStamp are their own.
+
+DemoWeekAhead is the odd one out among those three: what its spec needs isn't a fixture of its own but
+a competition that isn't playing today, which is Week Ahead Cup (13_WeekAheadCup.sql). That file
+registers them, and it's the only competition they belong to.
 
 Deliberately not "DemoPredictor2" and "DemoPredictor3". Playwright matches an accessible name by
 substring unless a locator says exact, so a table row asking for "DemoPredictor" would answer with
@@ -63,6 +67,16 @@ USING (VALUES (
     'AQAAAAIAAYagAAAAEGDqw0HkR+FSDBhLl5X43m9iqPDEaSSUmbJS0Wbwlsh6eV87t0nAUhGUroT7kEP1EQ==',
     'M9TZC5XWQK4RJNVB2HDPY7SGFA6LU3EO',
     '7a3e9b41-08cd-4f26-b5d9-2e6417ca0f83',
+    0, 1, 0,
+    0, 0, 1
+), (
+    'DB000000-0000-0000-0000-000000000004',
+    'DemoWeekAhead', 'DEMOWEEKAHEAD',
+    'demo.weekahead@example.com', 'DEMO.WEEKAHEAD@EXAMPLE.COM',
+    0,
+    'AQAAAAIAAYagAAAAEGDqw0HkR+FSDBhLl5X43m9iqPDEaSSUmbJS0Wbwlsh6eV87t0nAUhGUroT7kEP1EQ==',
+    'K2WPX8VDR6NLQZTC4HJMY9SBFA7GU5EO',
+    'b6d24f80-1c93-4a57-8ef2-30ab7c95d1e6',
     0, 1, 0,
     0, 0, 1
 )) AS [Source] (

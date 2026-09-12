@@ -32,6 +32,11 @@ GO
 :r 09_Predictions.sql
 :r 10_HallOfFame.sql
 :r 11_AdminCup.sql
+-- Out of numeric order deliberately: 12 is a cleanup pass and belongs last, after everything that
+-- puts data in. It is also the one script here that can fail on data it doesn't own (an account it
+-- is deleting having picked up a row some other table holds), and a failure there shouldn't take
+-- the seeding of a competition down with it.
+:r 13_WeekAheadCup.sql
 :r 12_PurgeTestAccounts.sql
 
 PRINT 'Sample data seeded.';
