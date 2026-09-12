@@ -117,7 +117,7 @@ public class LeagueTableServiceTests
     }
 
     [Fact]
-    public async Task GetLeagueTableAsync_PopulatesPreviousLeaguePosition_FromHistorySnapshotBeforeComparisonDate()
+    public async Task GetLeagueTableAsync_PopulatesPreviousLeaguePosition_FromStandingsBeforeTheCurrentMatchWeek()
     {
         await using var dbContext = _fixture.CreateDbContext();
 
@@ -134,15 +134,174 @@ public class LeagueTableServiceTests
         var runnerUp = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"runner-up-{Guid.NewGuid():N}" };
         dbContext.Users.AddRange(leader, runnerUp);
 
-        var leaderRegistration = new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = leader.Id, CompetitionID = competition.CompetitionID };
-        var runnerUpRegistration = new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = runnerUp.Id, CompetitionID = competition.CompetitionID };
-        dbContext.UserCompetition.AddRange(leaderRegistration, runnerUpRegistration);
+        dbContext.UserCompetition.AddRange(
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = leader.Id, CompetitionID = competition.CompetitionID },
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = runnerUp.Id, CompetitionID = competition.CompetitionID });
 
-        // UserCompetitionLeagueHistory.UserCompetitionID is a plain FK column with no modelled EF
-        // navigation back to UserCompetition, so EF's change tracker has no dependency graph edge
-        // telling it to insert UserCompetition rows first - saving here guarantees that ordering
-        // instead of relying on SaveChangesAsync to infer it later.
+        var home = new Team { TeamID = Guid.NewGuid(), TeamName = $"Home {Guid.NewGuid():N}", ShortName = "HOM" };
+        var away = new Team { TeamID = Guid.NewGuid(), TeamName = $"Away {Guid.NewGuid():N}", ShortName = "AWY" };
+        dbContext.Team.AddRange(home, away);
+
+        // Two weeks apart, so they fall in different Friday-starting match weeks whichever day of
+        // the week the test happens to run on.
+        var earlierMatch = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competition.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-15),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 2,
+            AwayTeamGoals = 0,
+        };
+        var thisWeeksMatch = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competition.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-1),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 2,
+            AwayTeamGoals = 0,
+        };
+        dbContext.Match.AddRange(earlierMatch, thisWeeksMatch);
+
+        dbContext.Prediction.AddRange(
+            // Going into this week, runnerUp led 3 points to 1.
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = earlierMatch.MatchID, UserID = leader.Id, HomeTeamGoals = 1, AwayTeamGoals = 0, Score = 1, GoalDifference = -1 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = earlierMatch.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
+            // This week's result puts leader ahead on 4 to runnerUp's 3, so the two swap.
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = thisWeeksMatch.MatchID, UserID = leader.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = thisWeeksMatch.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 0, AwayTeamGoals = 2, Score = 0, GoalDifference = -4 });
+
         await dbContext.SaveChangesAsync();
+
+        try
+        {
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
+
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID, includePositionChange: true);
+
+            var leaderRow = table.Single(r => r.UserID == leader.Id);
+            var runnerUpRow = table.Single(r => r.UserID == runnerUp.Id);
+
+            leaderRow.LeaguePosition.Should().Be(1);
+            leaderRow.PreviousLeaguePosition.Should().Be(2);
+
+            runnerUpRow.LeaguePosition.Should().Be(2);
+            runnerUpRow.PreviousLeaguePosition.Should().Be(1);
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, competition.CompetitionID,
+                [earlierMatch.MatchID, thisWeeksMatch.MatchID],
+                [leader.Id, runnerUp.Id],
+                [home.TeamID, away.TeamID]);
+        }
+    }
+
+    /// <summary>
+    /// The comparison is against the match week of the most recently played match, not the calendar
+    /// week - so the arrows still report the last round of results weeks after it finished, rather
+    /// than going all-square as soon as the week rolls over.
+    /// </summary>
+    [Fact]
+    public async Task GetLeagueTableAsync_ComparesAgainstTheLastPlayedMatchWeek_NotTheCurrentCalendarWeek()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var competition = new Competition
+        {
+            CompetitionID = Guid.NewGuid(),
+            CompetitionName = $"Integration Test {Guid.NewGuid():N}",
+            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-90)),
+            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+        };
+        dbContext.Competition.Add(competition);
+
+        var leader = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"leader-{Guid.NewGuid():N}" };
+        var runnerUp = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"runner-up-{Guid.NewGuid():N}" };
+        dbContext.Users.AddRange(leader, runnerUp);
+
+        dbContext.UserCompetition.AddRange(
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = leader.Id, CompetitionID = competition.CompetitionID },
+            new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = runnerUp.Id, CompetitionID = competition.CompetitionID });
+
+        var home = new Team { TeamID = Guid.NewGuid(), TeamName = $"Home {Guid.NewGuid():N}", ShortName = "HOM" };
+        var away = new Team { TeamID = Guid.NewGuid(), TeamName = $"Away {Guid.NewGuid():N}", ShortName = "AWY" };
+        dbContext.Team.AddRange(home, away);
+
+        // The most recent football was a month ago: comparing against yesterday would find the two
+        // tables identical and report no movement at all.
+        var earlierMatch = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competition.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-60),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 2,
+            AwayTeamGoals = 0,
+        };
+        var lastPlayedMatch = new Match
+        {
+            MatchID = Guid.NewGuid(),
+            CompetitionID = competition.CompetitionID,
+            MatchDateTime = DateTime.UtcNow.AddDays(-30),
+            HomeTeamID = home.TeamID,
+            AwayTeamID = away.TeamID,
+            MatchPlayed = true,
+            HomeTeamGoals = 2,
+            AwayTeamGoals = 0,
+        };
+        dbContext.Match.AddRange(earlierMatch, lastPlayedMatch);
+
+        dbContext.Prediction.AddRange(
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = earlierMatch.MatchID, UserID = leader.Id, HomeTeamGoals = 1, AwayTeamGoals = 0, Score = 1, GoalDifference = -1 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = earlierMatch.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = lastPlayedMatch.MatchID, UserID = leader.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
+            new Prediction { PredictionID = Guid.NewGuid(), MatchID = lastPlayedMatch.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 0, AwayTeamGoals = 2, Score = 0, GoalDifference = -4 });
+
+        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
+
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID, includePositionChange: true);
+
+            table.Single(r => r.UserID == leader.Id).PreviousLeaguePosition.Should().Be(2);
+            table.Single(r => r.UserID == runnerUp.Id).PreviousLeaguePosition.Should().Be(1);
+        }
+        finally
+        {
+            await CleanUpAsync(dbContext, competition.CompetitionID,
+                [earlierMatch.MatchID, lastPlayedMatch.MatchID],
+                [leader.Id, runnerUp.Id],
+                [home.TeamID, away.TeamID]);
+        }
+    }
+
+    [Fact]
+    public async Task GetLeagueTableAsync_LeavesPreviousLeaguePositionNull_InTheFirstMatchWeek()
+    {
+        await using var dbContext = _fixture.CreateDbContext();
+
+        var competition = new Competition
+        {
+            CompetitionID = Guid.NewGuid(),
+            CompetitionName = $"Integration Test {Guid.NewGuid():N}",
+            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30)),
+            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+        };
+        dbContext.Competition.Add(competition);
+
+        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = $"user-{Guid.NewGuid():N}" };
+        dbContext.Users.Add(user);
+        dbContext.UserCompetition.Add(new UserCompetition { UserCompetitionID = Guid.NewGuid(), UserID = user.Id, CompetitionID = competition.CompetitionID });
 
         var home = new Team { TeamID = Guid.NewGuid(), TeamName = $"Home {Guid.NewGuid():N}", ShortName = "HOM" };
         var away = new Team { TeamID = Guid.NewGuid(), TeamName = $"Away {Guid.NewGuid():N}", ShortName = "AWY" };
@@ -161,46 +320,28 @@ public class LeagueTableServiceTests
         };
         dbContext.Match.Add(match);
 
-        // Leader is ahead today (a 3-pointer vs a 1-pointer), so should rank 1st.
-        dbContext.Prediction.AddRange(
-            new Prediction { PredictionID = Guid.NewGuid(), MatchID = match.MatchID, UserID = leader.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 },
-            new Prediction { PredictionID = Guid.NewGuid(), MatchID = match.MatchID, UserID = runnerUp.Id, HomeTeamGoals = 1, AwayTeamGoals = 0, Score = 1, GoalDifference = -1 });
-
-        // But yesterday's snapshot had the two swapped - runnerUp was 1st, leader was 2nd.
-        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
-        dbContext.UserCompetitionLeagueHistory.AddRange(
-            new UserCompetitionLeagueHistory { UserCompetitionLeagueHistoryID = Guid.NewGuid(), UserCompetitionID = leaderRegistration.UserCompetitionID, Date = yesterday, LeaguePosition = 2, Score = 1, AverageGoalDifference = 0, TotalGoalDifference = 0 },
-            new UserCompetitionLeagueHistory { UserCompetitionLeagueHistoryID = Guid.NewGuid(), UserCompetitionID = runnerUpRegistration.UserCompetitionID, Date = yesterday, LeaguePosition = 1, Score = 3, AverageGoalDifference = 0, TotalGoalDifference = 0 });
+        dbContext.Prediction.Add(new Prediction { PredictionID = Guid.NewGuid(), MatchID = match.MatchID, UserID = user.Id, HomeTeamGoals = 2, AwayTeamGoals = 0, Score = 3, GoalDifference = 0 });
 
         await dbContext.SaveChangesAsync();
 
         try
         {
             var service = new LeagueTableService(dbContext, new StubAvatarService(), new LeagueDataCache());
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            var table = await service.GetLeagueTableAsync(competition.CompetitionID, dateForComparison: today);
+            var table = await service.GetLeagueTableAsync(competition.CompetitionID, includePositionChange: true);
 
-            var leaderRow = table.Single(r => r.UserID == leader.Id);
-            var runnerUpRow = table.Single(r => r.UserID == runnerUp.Id);
-
-            leaderRow.LeaguePosition.Should().Be(1);
-            leaderRow.PreviousLeaguePosition.Should().Be(2);
-
-            runnerUpRow.LeaguePosition.Should().Be(2);
-            runnerUpRow.PreviousLeaguePosition.Should().Be(1);
+            // Nothing was played before the competition's only match week, so there's no earlier
+            // table to have moved from - clients render no arrow rather than a meaningless one.
+            table.Single(r => r.UserID == user.Id).PreviousLeaguePosition.Should().BeNull();
         }
         finally
         {
-            await CleanUpAsync(dbContext, competition.CompetitionID,
-                [match.MatchID],
-                [leader.Id, runnerUp.Id],
-                [home.TeamID, away.TeamID]);
+            await CleanUpAsync(dbContext, competition.CompetitionID, [match.MatchID], [user.Id], [home.TeamID, away.TeamID]);
         }
     }
 
     [Fact]
-    public async Task GetLeagueTableAsync_LeavesPreviousLeaguePositionNull_WhenNoComparisonDateSupplied()
+    public async Task GetLeagueTableAsync_LeavesPreviousLeaguePositionNull_WhenPositionChangeNotRequested()
     {
         await using var dbContext = _fixture.CreateDbContext();
 
@@ -232,6 +373,7 @@ public class LeagueTableServiceTests
             await CleanUpAsync(dbContext, competition.CompetitionID, [], [user.Id], []);
         }
     }
+
 
     [Fact]
     public async Task GetLeagueTableAsync_PopulatesAvatarUrl_OnlyForUsersWithAnUploadedImage()
@@ -286,9 +428,9 @@ public class LeagueTableServiceTests
             .Select(uc => uc.UserCompetitionID)
             .ToListAsync();
 
-        // UserCompetitionLeagueHistory has no modelled EF navigation to UserCompetition (see the
-        // matching comment in the arrange step above), so it has to be deleted - and saved - before
-        // UserCompetition, or EF's unaware-of-the-FK ordering can send the DELETEs the wrong way round.
+        // UserCompetitionLeagueHistory has no modelled EF navigation back to UserCompetition, so it
+        // has to be deleted - and saved - before UserCompetition, or EF's unaware-of-the-FK ordering
+        // can send the DELETEs the wrong way round.
         dbContext.UserCompetitionLeagueHistory.RemoveRange(dbContext.UserCompetitionLeagueHistory.Where(h => userCompetitionIds.Contains(h.UserCompetitionID)));
         await dbContext.SaveChangesAsync();
 

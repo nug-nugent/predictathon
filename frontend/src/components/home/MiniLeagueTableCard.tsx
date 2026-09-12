@@ -3,7 +3,6 @@ import { TableProperties } from "lucide-react";
 import { Link as RouterLink } from "react-router";
 import { getLeagueTable, type LeagueTableItem } from "../../services/league-service";
 import { useUser } from "../../hooks/useUser";
-import { toDateOnly } from "../../utils/toDateOnly";
 import { Panel } from "../ui/panel";
 import { IconChip } from "../ui/icon-chip";
 import { useAsyncData } from "../../hooks/useAsyncData";
@@ -17,7 +16,7 @@ export function MiniLeagueTableCard({ competitionId }: { competitionId: string }
     const { user } = useUser();
 
     const { data: table, error } = useAsyncData(
-        () => getLeagueTable(competitionId, undefined, undefined, toDateOnly(new Date())),
+        () => getLeagueTable(competitionId, undefined, undefined, true),
         [competitionId],
     );
 

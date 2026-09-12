@@ -1,7 +1,6 @@
 import { getJsonAuthenticated } from "./api";
 import { getCompetitionWeeks, computeDefaultWeek, getMatchesForWeek } from "./prediction-service";
 import { weekEnd, weekOver } from "../utils/matchWeek";
-import { toDateOnly } from "../utils/toDateOnly";
 
 // Matches Application/Models/LeagueTableItem.cs, as returned by the LeagueTableGet stored procedure.
 export type LeagueTableItem = {
@@ -10,6 +9,9 @@ export type LeagueTableItem = {
     // Null when the user hasn't uploaded an avatar - callers fall back to their initial.
     avatarUrl: string | null;
     leaguePosition: number;
+    // Where the user stood before the current match week - the week of the most recently played
+    // match. Null unless the caller asked for the position change, and null in a competition's
+    // first match week, when there's no earlier table to compare against.
     previousLeaguePosition: number | null;
     score: number;
     averageGoalDifference: number;
@@ -20,11 +22,11 @@ export type LeagueTableItem = {
     noPredictions: number;
 };
 
-export async function getLeagueTable(competitionId: string, dateFrom?: string, dateTo?: string, dateForComparison?: string): Promise<LeagueTableItem[]> {
+export async function getLeagueTable(competitionId: string, dateFrom?: string, dateTo?: string, includePositionChange?: boolean): Promise<LeagueTableItem[]> {
     const params = new URLSearchParams();
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
-    if (dateForComparison) params.set("dateForComparison", dateForComparison);
+    if (includePositionChange) params.set("includePositionChange", "true");
     const query = params.toString();
 
     return getJsonAuthenticated<LeagueTableItem[]>(`/League/${competitionId}${query ? `?${query}` : ""}`);
@@ -56,8 +58,8 @@ export type UserLeagueStats = {
     currentWeek: string;
 };
 
-async function findUserRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string, dateForComparison?: string): Promise<UserWeekStat | null> {
-    const table = await getLeagueTable(competitionId, dateFrom, dateTo, dateForComparison);
+async function findUserRow(competitionId: string, userId: string, dateFrom?: string, dateTo?: string, includePositionChange?: boolean): Promise<UserWeekStat | null> {
+    const table = await getLeagueTable(competitionId, dateFrom, dateTo, includePositionChange);
     const mine = table.find((r) => r.userID === userId);
     return mine ? { points: mine.score, position: mine.leaguePosition, previousPosition: mine.previousLeaguePosition } : null;
 }
@@ -108,8 +110,8 @@ export async function getUserLeagueStats(competitionId: string, userId: string):
     const [weeks, overall] = await Promise.all([
         getCompetitionWeeks(competitionId),
         // Position-change arrows only make sense against the full, unfiltered table - see
-        // LeaguePage's dateForComparison usage for the same rule.
-        findUserRow(competitionId, userId, undefined, undefined, toDateOnly(new Date())),
+        // LeaguePage's includePositionChange usage for the same rule.
+        findUserRow(competitionId, userId, undefined, undefined, true),
     ]);
 
     const currentWeek = computeDefaultWeek(weeks);

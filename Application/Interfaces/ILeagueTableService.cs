@@ -6,18 +6,21 @@ public interface ILeagueTableService
 {
     /// <summary>
     /// Gets the league table for a competition, optionally restricted to matches within a date
-    /// range, and optionally including each user's previous position as of a comparison date.
+    /// range, and optionally carrying each user's position before the current match week.
     /// </summary>
     /// <param name="competitionId">The competition to get the table for.</param>
     /// <param name="dateFrom">Only include matches played on or after this date, if supplied.</param>
     /// <param name="dateTo">Only include matches played on or before this date, if supplied.</param>
-    /// <param name="dateForComparison">If supplied, populates <see cref="LeagueTableItem.PreviousLeaguePosition"/>.</param>
+    /// <param name="includePositionChange">
+    /// Populates <see cref="LeagueTableItem.PreviousLeaguePosition"/> with where each user stood
+    /// before the current match week - the week of the most recently played match.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<IReadOnlyList<LeagueTableItem>> GetLeagueTableAsync(
         Guid competitionId,
         DateOnly? dateFrom = null,
         DateOnly? dateTo = null,
-        DateOnly? dateForComparison = null,
+        bool includePositionChange = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>
