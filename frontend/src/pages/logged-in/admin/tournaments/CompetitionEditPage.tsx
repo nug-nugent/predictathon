@@ -111,7 +111,7 @@ function CompetitionEditForm({ competition, onReload }: { competition: Competiti
                             <Checkbox.Root checked={form.prependNameWithThe} onCheckedChange={(e) => update({ prependNameWithThe: !!e.checked })}>
                                 <Checkbox.HiddenInput />
                                 <Checkbox.Control />
-                                <Checkbox.Label>Prepend "The"</Checkbox.Label>
+                                <Checkbox.Label>Prepend "the" in prose</Checkbox.Label>
                             </Checkbox.Root>
                         </Field.Root>
                     </HStack>

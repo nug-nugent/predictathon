@@ -59,7 +59,7 @@ export function CompetitionsAdminPage() {
                                 key={c.competitionID}
                                 onActivate={() => { void navigate(`/admin/tournaments/${c.competitionID}`); }}
                             >
-                                <Table.Cell>{c.prependNameWithThe ? "The " : ""}{c.competitionName}</Table.Cell>
+                                <Table.Cell>{c.competitionName}</Table.Cell>
                                 <Table.Cell>{formatDateOnly(c.startDate)}</Table.Cell>
                                 <Table.Cell>{formatDateOnly(c.endDate)}</Table.Cell>
                                 <Table.Cell textAlign="right">{currencyFormatter.format(c.entranceFee)}</Table.Cell>
