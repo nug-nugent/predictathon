@@ -30,7 +30,10 @@ public class LeagueTableItem
     public int LeaguePosition { get; set; }
 
     /// <summary>
-    /// Only populated when a comparison date was supplied to the procedure; null otherwise.
+    /// Where the user stood before the current match week - the week of the most recently played
+    /// match - so clients can show how they've moved. Only populated when the caller asked for the
+    /// position change, and null even then in a competition's first match week, when there's no
+    /// earlier table to compare against.
     /// </summary>
     public int? PreviousLeaguePosition { get; set; }
 

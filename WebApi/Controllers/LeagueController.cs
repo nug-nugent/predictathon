@@ -22,7 +22,7 @@ public class LeagueController : ApiControllerBase
     /// <param name="competitionId"></param>
     /// <param name="dateFrom">Only include matches played on or after this date.</param>
     /// <param name="dateTo">Only include matches played on or before this date.</param>
-    /// <param name="dateForComparison">If supplied, each row's previous position as of this date is included.</param>
+    /// <param name="includePositionChange">Include each row's position before the current match week, so callers can show a movement arrow.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     [HttpGet("{competitionId:guid}")]
@@ -30,10 +30,10 @@ public class LeagueController : ApiControllerBase
         Guid competitionId,
         [FromQuery] DateOnly? dateFrom,
         [FromQuery] DateOnly? dateTo,
-        [FromQuery] DateOnly? dateForComparison,
+        [FromQuery] bool includePositionChange,
         CancellationToken cancellationToken)
     {
-        var results = await _leagueTableService.GetLeagueTableAsync(competitionId, dateFrom, dateTo, dateForComparison, cancellationToken);
+        var results = await _leagueTableService.GetLeagueTableAsync(competitionId, dateFrom, dateTo, includePositionChange, cancellationToken);
 
         return Ok(results);
     }

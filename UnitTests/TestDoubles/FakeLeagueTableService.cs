@@ -16,7 +16,7 @@ public class FakeLeagueTableService : ILeagueTableService
         Guid competitionId,
         DateOnly? dateFrom = null,
         DateOnly? dateTo = null,
-        DateOnly? dateForComparison = null,
+        bool includePositionChange = false,
         CancellationToken cancellationToken = default)
         => Task.FromResult(Table);
 

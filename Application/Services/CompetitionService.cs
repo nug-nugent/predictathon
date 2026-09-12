@@ -114,7 +114,7 @@ public class CompetitionService : CrudService<Guid, CreateCompetitionModel, Comp
         {
             var parameters = new List<SqlParameter>
             {
-                new SqlParameter("@Date", SqlDbType.Date) { Value = DateTime.Today },
+                new SqlParameter("@Date", SqlDbType.Date) { Value = UkClock.Now.Date },
                 new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = comp.CompetitionID }
             };
 

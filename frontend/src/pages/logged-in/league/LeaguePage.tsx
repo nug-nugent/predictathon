@@ -5,7 +5,6 @@ import { useCompetition } from "../../../hooks/useCompetition";
 import { Link } from "react-router";
 import { useSearchParams } from "react-router";
 import { weekEnd } from "../../../utils/matchWeek";
-import { toDateOnly } from "../../../utils/toDateOnly";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { useAsyncData } from "../../../hooks/useAsyncData";
 import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
@@ -58,8 +57,7 @@ function LeagueTable({ competitionId, dateFilter }: { competitionId: string; dat
     const range = dateFilter ? await resolveFilterRange(competitionId, dateFilter) : null;
     // Position-change arrows only make sense against the full, unfiltered table - a date-filtered
     // view (?date=ThisWeek/LastWeek) already only covers a single match week.
-    const dateForComparison = dateFilter ? undefined : toDateOnly(new Date());
-    const items = await getLeagueTable(competitionId, range?.dateFrom, range?.dateTo, dateForComparison);
+    const items = await getLeagueTable(competitionId, range?.dateFrom, range?.dateTo, !dateFilter);
     return { items, filterApplied: range !== null };
   }, [competitionId, dateFilter]);
 

@@ -43,24 +43,24 @@ public class LeagueTableService : ILeagueTableService
     /// <inheritdoc />
     /// <remarks>
     /// Cached per competition and date range. Nothing about the caller reaches this query, so every
-    /// viewer of a competition's League page - and every Home page's mini table, which asks with
-    /// today's date as the comparison - is asking the identical question. Results going in is
-    /// exactly when everyone looks at once, and that's also the moment the entry is thrown away, so
-    /// the burst that follows a processed result is served from one computation rather than fifty.
+    /// viewer of a competition's League page - and every Home page's mini table - is asking the
+    /// identical question. Results going in is exactly when everyone looks at once, and that's also
+    /// the moment the entry is thrown away, so the burst that follows a processed result is served
+    /// from one computation rather than fifty.
     /// </remarks>
     public async Task<IReadOnlyList<LeagueTableItem>> GetLeagueTableAsync(
         Guid competitionId,
         DateOnly? dateFrom = null,
         DateOnly? dateTo = null,
-        DateOnly? dateForComparison = null,
+        bool includePositionChange = false,
         CancellationToken cancellationToken = default)
     {
-        var key = $"table:{competitionId}:{Stamp(dateFrom)}:{Stamp(dateTo)}:{Stamp(dateForComparison)}";
+        var key = $"table:{competitionId}:{Stamp(dateFrom)}:{Stamp(dateTo)}:{includePositionChange}";
 
         return await _cache.GetOrCreateAsync(
             competitionId,
             key,
-            () => LoadLeagueTableAsync(competitionId, dateFrom, dateTo, dateForComparison, cancellationToken),
+            () => LoadLeagueTableAsync(competitionId, dateFrom, dateTo, includePositionChange, cancellationToken),
             TableLifetime,
             cancellationToken);
     }
@@ -70,7 +70,7 @@ public class LeagueTableService : ILeagueTableService
         Guid competitionId,
         CancellationToken cancellationToken = default)
     {
-        return await LoadLeagueTableAsync(competitionId, dateFrom: null, dateTo: null, dateForComparison: null, cancellationToken);
+        return await LoadLeagueTableAsync(competitionId, dateFrom: null, dateTo: null, includePositionChange: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -102,13 +102,13 @@ public class LeagueTableService : ILeagueTableService
     /// <param name="competitionId">The competition whose table to compute.</param>
     /// <param name="dateFrom">Only include matches played on or after this date.</param>
     /// <param name="dateTo">Only include matches played on or before this date.</param>
-    /// <param name="dateForComparison">If supplied, each row's previous position as of this date.</param>
+    /// <param name="includePositionChange">Whether to include each row's position before the current match week.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     private async Task<IReadOnlyList<LeagueTableItem>> LoadLeagueTableAsync(
         Guid competitionId,
         DateOnly? dateFrom,
         DateOnly? dateTo,
-        DateOnly? dateForComparison,
+        bool includePositionChange,
         CancellationToken cancellationToken)
     {
         var parameters = new List<SqlParameter>
@@ -116,7 +116,7 @@ public class LeagueTableService : ILeagueTableService
             new SqlParameter("@CompetitionID", SqlDbType.UniqueIdentifier) { Value = competitionId },
             new SqlParameter("@DateFrom", SqlDbType.Date) { Value = ToSqlValue(dateFrom) },
             new SqlParameter("@DateTo", SqlDbType.Date) { Value = ToSqlValue(dateTo) },
-            new SqlParameter("@DateForComparison", SqlDbType.Date) { Value = ToSqlValue(dateForComparison) },
+            new SqlParameter("@IncludePositionChange", SqlDbType.Bit) { Value = includePositionChange },
         };
 
         var table = await _dbContext.CallStoredProcedureAsync<LeagueTableItem>("LeagueTableGet", parameters, cancellationToken);
