@@ -52,6 +52,52 @@ public class KnockoutRoundsTests
         KnockoutRounds.IsThirdPlacePlayOff(2).Should().BeFalse();
     }
 
+    [Theory]
+    // How a real World Cup's fixtures read in this database: the round in free text, the venue
+    // after it, and no other record of which round a tie belongs to anywhere on the row.
+    [InlineData("Last 32,  Dallas", 32)]
+    [InlineData("Last 16,  Atlanta", 16)]
+    [InlineData("Quarter final,  Boston", 8)]
+    [InlineData("Semi final,  Dallas", 4)]
+    [InlineData("Third place play-off,  Miami", 3)]
+    [InlineData("Final,  New York/New Jersey", 2)]
+    // A description that got typed twice over, which is the sort of thing real data does.
+    [InlineData("Semi final,  Semi final, Dallas", 4)]
+    // And how this site writes its own, which the same reader has to cope with.
+    [InlineData("Round of 16 1", 16)]
+    [InlineData("Quarter-final 1", 8)]
+    [InlineData("Semi-final 2", 4)]
+    [InlineData("3rd place playoff", 3)]
+    [InlineData("Final", 2)]
+    public void RoundFromDescription_ReadsTheRoundOutOfFreeText(string description, int expected)
+    {
+        KnockoutRounds.RoundFromDescription(description).Should().Be(expected);
+    }
+
+    [Fact]
+    public void RoundFromDescription_DoesNotLetQuarterOrSemiFinalsReadAsTheFinal()
+    {
+        // The whole reason the patterns are anchored. "Quarter final" contains "final", and a
+        // careless match would quietly file every quarter-final as the final itself - a bracket
+        // that then looks well-formed and is completely wrong.
+        KnockoutRounds.RoundFromDescription("Quarter final,  Boston").Should().Be(8);
+        KnockoutRounds.RoundFromDescription("Semi final,  Dallas").Should().Be(4);
+        KnockoutRounds.RoundFromDescription("Third place play-off,  Miami").Should().Be(3);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("Group A")]
+    [InlineData("Matchday 3")]
+    // A size this site has no round for - better to say nothing than to invent "Round of 12".
+    [InlineData("Last 12, Nowhere")]
+    public void RoundFromDescription_ReturnsNullWhenTheDescriptionNamesNoRound(string? description)
+    {
+        KnockoutRounds.RoundFromDescription(description).Should().BeNull();
+    }
+
     /// A round of the right size with its slots numbered 1..n, which is what a sound bracket is
     /// made of. Kept as a helper so each test below reads as the one thing it is breaking.
     private static BracketRoundShape Round(int knockoutRound)

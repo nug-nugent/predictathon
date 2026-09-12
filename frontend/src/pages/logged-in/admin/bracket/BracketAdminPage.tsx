@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
-    Badge, Box, Button, Center, Checkbox, HStack, NativeSelect, Table, Text, VStack,
+    Badge, Box, Button, Center, Checkbox, Dialog, HStack, NativeSelect, Portal, Table, Text, VStack,
 } from "@chakra-ui/react";
 import { useCompetition } from "../../../../hooks/useCompetition";
 import {
-    getBracketResolution, resolveBracketSlots,
-    type BracketResolutionSlot, type BracketSlotAssignment,
+    getBracketResolution, resolveBracketSlots, setBracketRounds, generateBracketPlaceholders,
+    type BracketResolutionSlot, type BracketSlotAssignment, type BracketSetupSummary,
 } from "../../../../services/bracket-admin-service";
+import { numberBracketByKickOff } from "../../../../services/match-admin-service";
 import { getKnockoutBracket } from "../../../../services/prediction-service";
 import { getTeamsForCompetition, getGroupStandings, type GroupStandings } from "../../../../services/team-service";
 import { ApiError } from "../../../../services/api";
@@ -47,6 +48,9 @@ function BracketAdmin({ competitionId }: { competitionId: string }) {
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [showGroups, setShowGroups] = useState(false);
+    // Which setup action is in flight, by name, so only its own button shows a spinner.
+    const [runningSetup, setRunningSetup] = useState<string | null>(null);
+    const [confirmingNumbering, setConfirmingNumbering] = useState(false);
 
     const { data, error: loadError, reload } = useAsyncData(async () => {
         const [resolution, bracket, teams, groups] = await Promise.all([
@@ -109,9 +113,80 @@ function BracketAdmin({ competitionId }: { competitionId: string }) {
     };
 
     const hasBracket = resolution.rounds.length > 0;
+    const unrounded = resolution.knockoutMatchesWithoutRound;
+    // The setup actions have to be reachable before the bracket exists, or they are hidden behind
+    // the state they create - which is the trap the Matches page's own gate fell into.
+    const hasAnythingKnockout = hasBracket || unrounded > 0;
+
+    /// Runs one setup action, reporting what it changed in the same words for all three.
+    const runSetup = async (name: string, action: () => Promise<BracketSetupSummary>, noun: string) => {
+        setError(null);
+        setResult(null);
+        setRunningSetup(name);
+
+        try {
+            const summary = await action();
+            const parts = [`Set ${summary.changed} ${summary.changed === 1 ? noun : `${noun}s`}`];
+            if (summary.leftAlone > 0) {
+                parts.push(`left ${summary.leftAlone} already set alone`);
+            }
+            if (summary.notDerivable > 0) {
+                parts.push(`couldn't work out ${summary.notDerivable}`);
+            }
+            setResult(`${parts.join(", ")}.`);
+            setPicked(null);
+            reload();
+        } catch (e) {
+            setError(e instanceof ApiError ? e.messages.join(" ") : "Something went wrong.");
+        } finally {
+            setRunningSetup(null);
+        }
+    };
+
+    const numberBracket = async () => {
+        setConfirmingNumbering(false);
+        await runSetup("slots", async () => {
+            const summary = await numberBracketByKickOff(competitionId);
+            // Numbering replaces rather than fills in, so everything it touched counts as changed.
+            return { changed: summary.matchesNumbered, leftAlone: 0, notDerivable: 0 };
+        }, "draw position");
+    };
 
     return (
         <VStack align="stretch" gap={4}>
+            <Dialog.Root role="alertdialog" open={confirmingNumbering} onOpenChange={(e) => { if (!e.open) setConfirmingNumbering(false); }}>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header><Dialog.Title>Number Bracket By Kick-off</Dialog.Title></Dialog.Header>
+                            <Dialog.Body>
+                                <VStack align="stretch" gap={3}>
+                                    <Text>
+                                        This gives every match that already has a bracket round a slot, numbering each
+                                        round's matches in kick-off order and replacing any slots already set.
+                                    </Text>
+                                    {/* Said plainly because the result looks plausible either way: a bracket numbered
+                                        from the wrong order still draws as a tree, just with the wrong ties in the
+                                        wrong halves, and nothing downstream can tell. */}
+                                    <Text fontWeight="bold">
+                                        A competition's schedule is not its draw, so expect to correct this by hand.
+                                    </Text>
+                                    <Text>
+                                        Check the bracket afterwards, particularly that each tie is in the half of the
+                                        draw it belongs to: slots 1 and 2 of a round feed slot 1 of the next.
+                                    </Text>
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" onClick={() => setConfirmingNumbering(false)}>Cancel</Button>
+                                <Button colorPalette="action" onClick={() => { void numberBracket(); }}>Number Bracket</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+
             <HStack justify="space-between" align="center" wrap="wrap" gap={3}>
                 <PageHeading mb={0}>Knockout Bracket</PageHeading>
                 {selections.size > 0 && (
@@ -125,11 +200,46 @@ function BracketAdmin({ competitionId }: { competitionId: string }) {
             {result && <Text fontSize="sm" color="fg.success">{result}</Text>}
             {error && <Text fontSize="sm" color="fg.error">{error}</Text>}
 
+            {hasAnythingKnockout && (
+                <Panel>
+                    <VStack align="stretch" gap={2}>
+                        <Text fontWeight="bold">Set the bracket up</Text>
+                        {/* In the order they want doing: a tie needs a round before it can have a
+                            slot, and it needs both before anything can say what feeds it. */}
+                        <Text fontSize="sm" color="fg.muted">
+                            Rounds first, then the draw positions, then the placeholders that say what feeds each
+                            tie. None of them overwrites anything already set.
+                        </Text>
+                        <HStack wrap="wrap" gap={2} pt={1}>
+                            <Button size="sm" variant="outline" loading={runningSetup === "rounds"} disabled={runningSetup !== null}
+                                onClick={() => { void runSetup("rounds", () => setBracketRounds(competitionId), "round"); }}>
+                                Set Rounds From Descriptions
+                            </Button>
+                            <Button size="sm" variant="outline" loading={runningSetup === "slots"} disabled={runningSetup !== null}
+                                onClick={() => setConfirmingNumbering(true)}>
+                                Number Bracket By Kick-off
+                            </Button>
+                            <Button size="sm" variant="outline" loading={runningSetup === "placeholders"} disabled={runningSetup !== null}
+                                onClick={() => { void runSetup("placeholders", () => generateBracketPlaceholders(competitionId), "placeholder"); }}>
+                                Generate Placeholders
+                            </Button>
+                        </HStack>
+                        {unrounded > 0 && (
+                            <Text fontSize="sm" color="fg.muted" pt={1}>
+                                {unrounded} knockout {unrounded === 1 ? "match has" : "matches have"} no round yet, so
+                                {unrounded === 1 ? " it is" : " they are"} no part of the bracket below.
+                            </Text>
+                        )}
+                    </VStack>
+                </Panel>
+            )}
+
             {!hasBracket ? (
                 <Panel>
                     <Text fontSize="sm" color="fg.muted">
-                        No match in this competition has a knockout round yet. Set one on the Matches page and
-                        the bracket appears here.
+                        {unrounded > 0
+                            ? "Nothing here has a bracket round yet - start with Set Rounds From Descriptions above."
+                            : "No match in this competition is flagged as a knockout match. Flag one on the Matches page and the bracket appears here."}
                     </Text>
                 </Panel>
             ) : (
@@ -211,7 +321,7 @@ function SlotTable({ slots, teams, selections, onSelect }: {
             <Table.Header>
                 <Table.Row>
                     <Table.ColumnHeader>Tie</Table.ColumnHeader>
-                    <Table.ColumnHeader>Slot</Table.ColumnHeader>
+                    <Table.ColumnHeader>Comes from</Table.ColumnHeader>
                     <Table.ColumnHeader>Team</Table.ColumnHeader>
                     <Table.ColumnHeader>Status</Table.ColumnHeader>
                 </Table.Row>

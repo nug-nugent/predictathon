@@ -35,6 +35,9 @@ export type BracketResolution = {
     readyCount: number;
     /// How many slots still have nobody in them, ready or not.
     unsettledCount: number;
+    /// Matches flagged knockout but carrying no round, so not in `rounds` yet - a competition whose
+    /// rounds live only in its descriptions.
+    knockoutMatchesWithoutRound: number;
 };
 
 export type BracketSlotAssignment = {
@@ -46,6 +49,23 @@ export type BracketSlotAssignment = {
 export type BracketResolutionSummary = {
     slotsFilled: number;
 };
+
+/// What one of the setup actions changed, left alone, and couldn't work out.
+export type BracketSetupSummary = {
+    changed: number;
+    leftAlone: number;
+    notDerivable: number;
+};
+
+/// Fills in each knockout match's round from its description, where it has none.
+export async function setBracketRounds(competitionId: string): Promise<BracketSetupSummary> {
+    return postJsonAuthenticated<BracketSetupSummary>(`/Match/${competitionId}/Bracket/SetRounds`, {});
+}
+
+/// Writes the placeholder for every slot the tree already implies a feeder for.
+export async function generateBracketPlaceholders(competitionId: string): Promise<BracketSetupSummary> {
+    return postJsonAuthenticated<BracketSetupSummary>(`/Match/${competitionId}/Bracket/GeneratePlaceholders`, {});
+}
 
 /// Every slot in a competition's bracket and what each is waiting on. Changes nothing.
 export async function getBracketResolution(competitionId: string): Promise<BracketResolution> {

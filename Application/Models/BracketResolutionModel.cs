@@ -46,6 +46,17 @@ public class BracketResolutionModel
 
     /// <summary>How many slots still have nobody in them, ready or not.</summary>
     public int UnsettledCount { get; set; }
+
+    /// <summary>
+    /// How many matches are flagged as knockout but carry no <c>KnockoutRound</c>, so are no part
+    /// of <see cref="Rounds"/> yet.
+    ///
+    /// Reported because otherwise the bracket screen has the same blind spot the Matches page had:
+    /// a competition set up before that column existed has its rounds written only into free text,
+    /// which leaves the bracket looking empty and the one action that would populate it hidden
+    /// behind the state it creates.
+    /// </summary>
+    public int KnockoutMatchesWithoutRound { get; set; }
 }
 
 /// <summary>One round of the bracket, for the resolution screen.</summary>
@@ -106,6 +117,25 @@ public class BracketSlotAssignment
     public bool IsHome { get; set; }
 
     public Guid TeamID { get; set; }
+}
+
+/// <summary>What one of the bracket setup actions changed, and what it left alone.</summary>
+public class BracketSetupSummary
+{
+    /// <summary>How many matches or slots the action filled in.</summary>
+    public int Changed { get; set; }
+
+    /// <summary>
+    /// How many it deliberately left as they were - already set, so not this action's to overwrite.
+    /// </summary>
+    public int LeftAlone { get; set; }
+
+    /// <summary>
+    /// How many it could not work out at all, and so an admin has to. For rounds that is a
+    /// description naming no round; for placeholders it is the bracket's own first round, whose
+    /// teams come from the group stage and not from any earlier tie.
+    /// </summary>
+    public int NotDerivable { get; set; }
 }
 
 /// <summary>What filling a batch of slots actually did.</summary>

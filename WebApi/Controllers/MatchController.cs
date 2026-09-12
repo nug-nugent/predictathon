@@ -92,6 +92,36 @@ public class MatchController : ApiControllerBase
     }
 
     /// <summary>
+    /// Fill in each knockout match's round from its description, where it has none. A competition
+    /// set up before KnockoutRound existed has the round written only in free text.
+    /// </summary>
+    /// <param name="competitionId">The competition whose rounds should be set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/SetRounds")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<BracketSetupSummary>> SetBracketRounds(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var summary = await _matchService.SetKnockoutRoundsFromDescriptionsAsync(competitionId, cancellationToken);
+
+        return Ok(summary);
+    }
+
+    /// <summary>
+    /// Write the placeholder for every bracket slot whose feeder the tree already implies, leaving
+    /// alone anything that has a team or a placeholder of its own.
+    /// </summary>
+    /// <param name="competitionId">The competition whose placeholders should be written.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("{competitionId:guid}/Bracket/GeneratePlaceholders")]
+    [Authorize(Roles = RoleConstants.CompetitionAdministrator)]
+    public async Task<ActionResult<BracketSetupSummary>> GenerateBracketPlaceholders(Guid competitionId, CancellationToken cancellationToken)
+    {
+        var summary = await _matchService.GenerateBracketPlaceholdersAsync(competitionId, cancellationToken);
+
+        return Ok(summary);
+    }
+
+    /// <summary>
     /// Number a competition's bracket slots from its kick-off times, round by round, replacing any
     /// already set. A starting point for numbering a draw by hand, not a substitute for it - see
     /// IMatchService.NumberBracketByKickOffAsync.

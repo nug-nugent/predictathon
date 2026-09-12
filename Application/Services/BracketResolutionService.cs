@@ -51,14 +51,20 @@ public class BracketResolutionService : IBracketResolutionService
         var groups = await _teamService.GetGroupStandingsAsync(competitionId, cancellationToken);
         var groupsByName = groups.ToDictionary(g => g.GroupName, StringComparer.OrdinalIgnoreCase);
 
-        // Matches are found by their Description because that is what a placeholder names them by -
-        // "Winner QF1" points at the tie described "Quarter-final 1". Two ties sharing a description
-        // would make that ambiguous, so neither is offered rather than the wrong one being picked.
-        var matchesByDescription = matches
-            .Where(m => !string.IsNullOrWhiteSpace(m.Description))
-            .GroupBy(m => m.Description!.Trim(), StringComparer.OrdinalIgnoreCase)
+        // Ties are found by where they sit in the bracket, not by what they are called. A
+        // placeholder names its feeder by round and slot ("Winner QF1" is round 8, slot 1), and that
+        // is structure the bracket already holds. Descriptions are free text and a real competition
+        // writes them for people: a World Cup's read "Last 16,  Atlanta", which no amount of string
+        // matching was going to line up with "Round of 16 1".
+        //
+        // Two ties in one slot of one round would make the feeder ambiguous, so neither is offered
+        // rather than the wrong one being picked - and the bracket's own health check reports the
+        // duplicate, which is where an admin should be reading about it.
+        var matchesByPosition = matches
+            .Where(m => m.KnockoutRound.HasValue && m.BracketSlot.HasValue)
+            .GroupBy(m => (Round: m.KnockoutRound!.Value, Slot: m.BracketSlot!.Value))
             .Where(g => g.Count() == 1)
-            .ToDictionary(g => g.Key, g => g.Single(), StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(g => g.Key, g => g.Single());
 
         var rounds = matches
             .Where(m => m.KnockoutRound.HasValue)
@@ -73,8 +79,8 @@ public class BracketResolutionService : IBracketResolutionService
                     .ThenBy(m => m.MatchDateTime)
                     .SelectMany(match => new[]
                     {
-                        DescribeSlot(match, isHome: true, teamsById, groupsByName, matchesByDescription),
-                        DescribeSlot(match, isHome: false, teamsById, groupsByName, matchesByDescription),
+                        DescribeSlot(match, isHome: true, teamsById, groupsByName, matchesByPosition),
+                        DescribeSlot(match, isHome: false, teamsById, groupsByName, matchesByPosition),
                     })
                     .ToList(),
             })
@@ -87,6 +93,7 @@ public class BracketResolutionService : IBracketResolutionService
             Rounds = rounds,
             ReadyCount = allSlots.Count(s => s.Status == BracketSlotStatus.Ready),
             UnsettledCount = allSlots.Count(s => s.Status != BracketSlotStatus.Settled),
+            KnockoutMatchesWithoutRound = matches.Count(m => m.Knockout && m.KnockoutRound is null),
         };
     }
 
@@ -166,13 +173,13 @@ public class BracketResolutionService : IBracketResolutionService
     /// <param name="isHome">Which side of it.</param>
     /// <param name="teamsById">Every team, for naming.</param>
     /// <param name="groupsByName">The competition's group tables, by group name.</param>
-    /// <param name="matchesByDescription">The competition's matches, by their unique descriptions.</param>
+    /// <param name="matchesByPosition">The competition's ties, by their (round, slot) position.</param>
     private static BracketResolutionSlot DescribeSlot(
         Match match,
         bool isHome,
         Dictionary<Guid, Team> teamsById,
         Dictionary<string, GroupStandingsModel> groupsByName,
-        Dictionary<string, Match> matchesByDescription)
+        Dictionary<(int Round, int Slot), Match> matchesByPosition)
     {
         var currentTeamId = isHome ? match.HomeTeamID : match.AwayTeamID;
         var placeholder = isHome ? match.HomeTeamTBC : match.AwayTeamTBC;
@@ -207,7 +214,7 @@ public class BracketResolutionService : IBracketResolutionService
 
         return source.Value.Kind == BracketSourceKind.GroupPosition
             ? FromGroup(slot, source.Value, groupsByName, teamsById)
-            : FromEarlierTie(slot, source.Value, matchesByDescription, teamsById);
+            : FromEarlierTie(slot, source.Value, matchesByPosition, teamsById);
     }
 
     /// <summary>Fills a slot from a group table, once that group has finished playing.</summary>
@@ -221,10 +228,10 @@ public class BracketResolutionService : IBracketResolutionService
         Dictionary<string, GroupStandingsModel> groupsByName,
         Dictionary<Guid, Team> teamsById)
     {
-        if (!groupsByName.TryGetValue(source.Reference, out var group))
+        if (!groupsByName.TryGetValue(source.GroupName, out var group))
         {
             slot.Status = BracketSlotStatus.Manual;
-            slot.Reason = $"{source.Reference} isn't a group in this competition.";
+            slot.Reason = $"{source.GroupName} isn't a group in this competition.";
             return slot;
         }
 
@@ -252,25 +259,27 @@ public class BracketResolutionService : IBracketResolutionService
     /// <summary>Fills a slot from an earlier tie, once that tie has been played and settled.</summary>
     /// <param name="slot">The slot being described.</param>
     /// <param name="source">Which tie, and whether the winner or the loser is wanted.</param>
-    /// <param name="matchesByDescription">The competition's matches, by their unique descriptions.</param>
+    /// <param name="matchesByPosition">The competition's ties, by their (round, slot) position.</param>
     /// <param name="teamsById">Every team, for naming.</param>
     private static BracketResolutionSlot FromEarlierTie(
         BracketResolutionSlot slot,
         BracketSource source,
-        Dictionary<string, Match> matchesByDescription,
+        Dictionary<(int Round, int Slot), Match> matchesByPosition,
         Dictionary<Guid, Team> teamsById)
     {
-        if (!matchesByDescription.TryGetValue(source.Reference, out var feeder))
+        var feederName = $"{KnockoutRounds.NameOf(source.FeedingRound)} {source.FeedingSlot}";
+
+        if (!matchesByPosition.TryGetValue((source.FeedingRound, source.FeedingSlot), out var feeder))
         {
             slot.Status = BracketSlotStatus.Manual;
-            slot.Reason = $"No single match here is described \"{source.Reference}\".";
+            slot.Reason = $"Nothing sits in slot {source.FeedingSlot} of the {KnockoutRounds.NameOf(source.FeedingRound)}.";
             return slot;
         }
 
         if (!feeder.MatchPlayed)
         {
             slot.Status = BracketSlotStatus.Waiting;
-            slot.Reason = $"{source.Reference} hasn't been played.";
+            slot.Reason = $"{feederName} hasn't been played.";
             return slot;
         }
 
@@ -283,7 +292,7 @@ public class BracketResolutionService : IBracketResolutionService
         if (homeGoals == awayGoals)
         {
             slot.Status = BracketSlotStatus.Manual;
-            slot.Reason = $"{source.Reference} finished {homeGoals} - {awayGoals}. Who went through?";
+            slot.Reason = $"{feederName} finished {homeGoals} - {awayGoals}. Who went through?";
             return slot;
         }
 
@@ -294,7 +303,7 @@ public class BracketResolutionService : IBracketResolutionService
         if (teamId is null)
         {
             slot.Status = BracketSlotStatus.Manual;
-            slot.Reason = $"{source.Reference} has been played but its own teams aren't filled in.";
+            slot.Reason = $"{feederName} has been played but its own teams aren't filled in.";
             return slot;
         }
 

@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Predictathon.Application.Common;
 
 /// <summary>
@@ -13,7 +15,7 @@ namespace Predictathon.Application.Common;
 /// two to count a round's matches. Everything the bracket layout needs comes from a round's
 /// position in the sorted sequence and from how many matches are actually in it.
 /// </summary>
-public static class KnockoutRounds
+public static partial class KnockoutRounds
 {
     /// <summary>
     /// The value <c>KnockoutRound</c> carries for a third-place play-off. Sits between the
@@ -46,6 +48,68 @@ public static class KnockoutRounds
     /// <param name="knockoutRound">The round's <c>KnockoutRound</c> value.</param>
     public static bool IsThirdPlacePlayOff(int knockoutRound)
         => knockoutRound == ThirdPlacePlayOffRound;
+
+    /// <summary>
+    /// Which knockout round a match's <c>Description</c> says it is in, or null where the
+    /// description names no round this recognises.
+    ///
+    /// Competitions arrive with their rounds written into free text and nowhere else - a real
+    /// World Cup here reads "Last 16,  Atlanta", "Quarter final,  Boston", "Third place play-off,
+    /// Miami" - while this site's own fixtures read "Round of 16 1" and "Quarter-final 1". Both
+    /// forms say the same thing, and neither was ever going to be typed the same way twice, so the
+    /// patterns are anchored at the start and forgiving about spacing, hyphens and what follows.
+    ///
+    /// Anchoring is what keeps "Quarter final" from reading as "Final": every alternative has to
+    /// match from the first character, so the longer names cannot be swallowed by the shorter one.
+    /// </summary>
+    /// <param name="description">The match's description, possibly null.</param>
+    public static int? RoundFromDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        var trimmed = description.TrimStart();
+
+        var sized = SizedRoundPattern().Match(trimmed);
+        if (sized.Success && int.TryParse(sized.Groups["size"].Value, out var size) && RoundNames.ContainsKey(size))
+        {
+            return size;
+        }
+
+        if (QuarterFinalPattern().IsMatch(trimmed))
+        {
+            return 8;
+        }
+
+        if (SemiFinalPattern().IsMatch(trimmed))
+        {
+            return 4;
+        }
+
+        if (ThirdPlacePattern().IsMatch(trimmed))
+        {
+            return ThirdPlacePlayOffRound;
+        }
+
+        return FinalPattern().IsMatch(trimmed) ? 2 : null;
+    }
+
+    [GeneratedRegex(@"^(?:round\s*of|last)\s*(?<size>\d+)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex SizedRoundPattern();
+
+    [GeneratedRegex(@"^quarter[\s-]*finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex QuarterFinalPattern();
+
+    [GeneratedRegex(@"^semi[\s-]*finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex SemiFinalPattern();
+
+    [GeneratedRegex(@"^(?:third|3rd)\s*place\b", RegexOptions.IgnoreCase)]
+    private static partial Regex ThirdPlacePattern();
+
+    [GeneratedRegex(@"^finals?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex FinalPattern();
 
     /// <summary>
     /// Everything wrong with a bracket, said plainly enough for an admin to act on, or an empty

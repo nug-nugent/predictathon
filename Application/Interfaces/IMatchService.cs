@@ -43,6 +43,25 @@ public interface IMatchService : ICrudService<Guid, CreateMatchModel, MatchModel
     /// the schedule is not the draw - so the result has to be checked against the actual bracket and
     /// corrected, particularly for which half of the draw each tie falls in.
     /// </summary>
+    /// <summary>
+    /// Reads each knockout match's round out of its description and fills in <c>KnockoutRound</c>
+    /// where it is missing. Matches that already carry a round are left alone, so an admin's
+    /// correction survives a second press.
+    /// </summary>
+    /// <param name="competitionId">The competition whose rounds should be set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<BracketSetupSummary> SetKnockoutRoundsFromDescriptionsAsync(Guid competitionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Writes the placeholder for every bracket slot whose feeder is known from the shape of the
+    /// tree - "Winner QF 1" and so on - leaving alone any slot that already has a team or a
+    /// placeholder of its own. The bracket's first round is not derivable this way: its teams come
+    /// from the group stage, which only the draw knows.
+    /// </summary>
+    /// <param name="competitionId">The competition whose placeholders should be written.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<BracketSetupSummary> GenerateBracketPlaceholdersAsync(Guid competitionId, CancellationToken cancellationToken = default);
+
     Task<BracketNumberingSummary> NumberBracketByKickOffAsync(Guid competitionId, CancellationToken cancellationToken = default);
 
     /// <summary>
