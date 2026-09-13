@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router";
 import { Link as RouterLink } from "react-router";
-import { Center, Heading, HStack, Image, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
+import { Box, Center, Heading, HStack, Image, Link as ChakraLink, SimpleGrid, Table, Text, VStack } from "@chakra-ui/react";
 import { useCompetition } from "../../../hooks/useCompetition";
 import { getMatchDetail } from "../../../services/match-service";
 import { getMatchPredictions, type MatchPredictionListItem } from "../../../services/prediction-service";
@@ -10,6 +10,7 @@ import { ErrorState, LoadingSpinner } from "../../../components/ui/async-state";
 import { PageHeading } from "../../../components/ui/page-heading";
 import { Panel } from "../../../components/ui/panel";
 import { TablePagination } from "../../../components/ui/table-pagination";
+import { TeamLabel, type TeamNames } from "../../../components/team/TeamLabel";
 import { crestUrl } from "../../../utils/crestUrl";
 
 const NO_PREDICTION_ID = "00000000-0000-0000-0000-000000000000";
@@ -75,10 +76,17 @@ function MatchDetailContent({ match, predictions }: {
                         {match.knockout && <Text color="fg.muted" fontSize="xs">*After 90 minutes</Text>}
                     </VStack>
 
+                    {/* A scoreline reads as one word but breaks like three, so a squeezed
+                        "0 - 5" lands as "0 -" above a lonely "5". The score keeps its own width
+                        here and the names either side give way instead - stepping down to the
+                        short name and then the acronym as the screen narrows, the way they do in
+                        every other fixture list on the site. */}
                     <HStack justify="space-around" mb={4}>
-                        <TeamHeader teamId={match.homeTeamID} name={match.homeTeam} crest={crestUrl(match.homeTeamImage)} />
-                        <Heading size="2xl">{match.homeTeamGoals ?? "?"} - {match.awayTeamGoals ?? "?"}</Heading>
-                        <TeamHeader teamId={match.awayTeamID} name={match.awayTeam} crest={crestUrl(match.awayTeamImage)} />
+                        <TeamHeader teamId={match.homeTeamID} name={match.homeTeam} shortName={match.homeTeamShortName}
+                            acronym={match.homeTeamAcronym} crest={crestUrl(match.homeTeamImage)} />
+                        <Heading size="2xl" whiteSpace="nowrap">{match.homeTeamGoals ?? "?"} - {match.awayTeamGoals ?? "?"}</Heading>
+                        <TeamHeader teamId={match.awayTeamID} name={match.awayTeam} shortName={match.awayTeamShortName}
+                            acronym={match.awayTeamAcronym} crest={crestUrl(match.awayTeamImage)} />
                     </HStack>
 
                     {match.description && <Text textAlign="center" mb={4} color="fg.muted">{match.description}</Text>}
@@ -87,7 +95,7 @@ function MatchDetailContent({ match, predictions }: {
                         <Table.Body>
                             <Table.Row>
                                 <Table.Cell>Your prediction</Table.Cell>
-                                <Table.Cell textAlign="end">{match.predictionHomeTeamGoals ?? "?"} - {match.predictionAwayTeamGoals ?? "?"}</Table.Cell>
+                                <Table.Cell textAlign="end" whiteSpace="nowrap">{match.predictionHomeTeamGoals ?? "?"} - {match.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                             </Table.Row>
                             <Table.Row>
                                 <Table.Cell>Your score</Table.Cell>
@@ -128,20 +136,23 @@ function MatchDetailContent({ match, predictions }: {
     );
 }
 
-function TeamHeader({ teamId, name, crest }: { teamId: string | null; name: string | null; crest: string | undefined }) {
+function TeamHeader({ teamId, crest, ...names }: TeamNames & { teamId: string | null; crest: string | undefined }) {
     const content = (
-        <VStack gap={2} flex={1}>
+        <VStack gap={2}>
             {crest && <Image src={crest} boxSize="48px" objectFit="contain" alt="" />}
-            <Heading size="sm" textAlign="center">{name}</Heading>
+            <Heading size="sm" textAlign="center"><TeamLabel {...names} /></Heading>
         </VStack>
     );
 
+    // `flex`/`minW` belong on the flex item itself - the link, where there is one - rather than on
+    // the stack inside it. The two sides share the space left over by the score, so the header stays
+    // symmetrical whichever pair of names it is holding.
     if (!teamId) {
-        return content;
+        return <Box flex="1" minW="0">{content}</Box>;
     }
 
     return (
-        <ChakraLink asChild variant="plain" _hover={{ opacity: 0.75 }}>
+        <ChakraLink asChild variant="plain" flex="1" minW="0" justifyContent="center" _hover={{ opacity: 0.75 }}>
             <RouterLink to={`/team/${teamId}`}>{content}</RouterLink>
         </ChakraLink>
     );
@@ -153,7 +164,7 @@ function PredictionRow({ prediction }: { prediction: MatchPredictionListItem }) 
     return (
         <Table.Row>
             <Table.Cell><ChakraLink asChild variant="underline"><RouterLink to={`/profile/${prediction.userID}`}>{prediction.username}</RouterLink></ChakraLink></Table.Cell>
-            <Table.Cell textAlign="center">{madePrediction ? `${prediction.homeTeamGoals} - ${prediction.awayTeamGoals}` : "? - ?"}</Table.Cell>
+            <Table.Cell textAlign="center" whiteSpace="nowrap">{madePrediction ? `${prediction.homeTeamGoals} - ${prediction.awayTeamGoals}` : "? - ?"}</Table.Cell>
             <Table.Cell textAlign="center" color={prediction.score !== null ? `points.${prediction.score}` : undefined} fontWeight="bold">{prediction.score ?? "-"}</Table.Cell>
         </Table.Row>
     );

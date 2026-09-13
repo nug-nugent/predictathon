@@ -65,7 +65,7 @@ export function PredictableMatchesTable({ title, matches, onRowClick, pageSize =
                                         {` ${m.homeTeamGoals ?? "?"} - ${m.awayTeamGoals ?? "?"} `}
                                         <TeamLabel name={m.awayTeam} shortName={m.awayTeamShortName} acronym={m.awayTeamAcronym} />
                                     </Table.Cell>
-                                    <Table.Cell textAlign="center">{m.predictionHomeTeamGoals ?? "?"}-{m.predictionAwayTeamGoals ?? "?"}</Table.Cell>
+                                    <Table.Cell textAlign="center" whiteSpace="nowrap">{m.predictionHomeTeamGoals ?? "?"}-{m.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                     <Table.Cell textAlign="center" color={`points.${m.yourPredictionScore}`} fontWeight="bold">{m.yourPredictionScore}</Table.Cell>
                                     <Table.Cell textAlign="center" display={COMPARISON_DISPLAY}>{m.averagePredictionScore.toFixed(2)}</Table.Cell>
                                     <Table.Cell textAlign="center" display={COMPARISON_DISPLAY}><ScoreComparisonIcon yours={m.yourPredictionScore} average={m.averagePredictionScore} /></Table.Cell>

@@ -55,7 +55,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
             align={{ base: "center", md: "flex-end" }} justify="center" width={{ base: "full", md: "140px" }} flexShrink={0} pt={{ base: 1, md: 0 }}>
             {status === "Post" ? (
                 <VStack gap={0} width="full" fontSize="0.85em">
-                    <Text textAlign={{ base: "center", md: "right" }} width="full">Result: {actualHomeGoals} - {actualAwayGoals}</Text>
+                    <Text textAlign={{ base: "center", md: "right" }} width="full" whiteSpace="nowrap">Result: {actualHomeGoals} - {actualAwayGoals}</Text>
                     <Text textAlign={{ base: "center", md: "right" }} width="full" color={`points.${score ?? 0}`} fontWeight="bold">Points: {score ?? 0}</Text>
                 </VStack>
             ) : (
@@ -107,7 +107,7 @@ export function MatchStatus({ matchId, myUserId, status, minutesToPredict, saveS
                                                 {predictions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((p) => (
                                                     <Table.Row key={p.userID}>
                                                         <Table.Cell fontSize="0.8em" fontWeight={p.userID === myUserId ? "bold" : "normal"}>{p.username}</Table.Cell>
-                                                        <Table.Cell fontSize="0.8em" textAlign="center">
+                                                        <Table.Cell fontSize="0.8em" textAlign="center" whiteSpace="nowrap">
                                                             {p.homeTeamGoals ?? "L"} - {p.awayTeamGoals ?? "L"}
                                                         </Table.Cell>
                                                         {status === "Post" && (

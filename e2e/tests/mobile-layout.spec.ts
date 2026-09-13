@@ -73,6 +73,77 @@ for (const { path, readyHeading } of PAGES) {
     });
 }
 
+// A real pair of Premier League names, supplied by the route rather than waited for: every seeded
+// competition is internationals, whose names are short enough that the match header is never tight.
+const LONG_HOME = { homeTeam: "Wolverhampton Wanderers", homeTeamShortName: "Wolves", homeTeamAcronym: "WOL" };
+const LONG_AWAY = { awayTeam: "Brighton & Hove Albion", awayTeamShortName: "Brighton", awayTeamAcronym: "BHA" };
+
+/**
+ * Serves the match detail page with a chosen pair of team names, leaving the rest of the response -
+ * the real result, prediction and averages - as the API sent it.
+ *
+ * @param page The page to intercept requests from.
+ * @param names The team-name fields to override on the response.
+ */
+async function withTeamNames(page: Page, names: Record<string, string | null>): Promise<void> {
+    await page.route(`**/Match/*/${MATCH_ID}/Detail`, async (route) => {
+        const response = await route.fetch();
+        const detail = await response.json();
+
+        // Fulfilled from the real response so its CORS headers survive - the API is a different
+        // origin from the frontend in both the Docker and the host workflow.
+        await route.fulfill({ response, json: { ...detail, ...names } });
+    });
+}
+
+/**
+ * How many lines the match header's scoreline occupies. Counts distinct tops rather than rects: the
+ * scoreline is three text nodes, and each contributes a rect of its own on every line it sits on.
+ *
+ * @param page The page showing a match.
+ */
+async function scorelineLineCount(page: Page): Promise<number> {
+    return page.getByRole("heading", { name: /^\d+ - \d+$/ }).evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+
+        return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+    });
+}
+
+test("the match header shows the acronym on a phone and the full name to a screen reader", async ({ page }) => {
+    await withTeamNames(page, { ...LONG_HOME, ...LONG_AWAY });
+    await page.goto(`/match/${MATCH_ID}`);
+
+    // Found by its accessible name, which is the full name at every width - so this locator passing
+    // is half the assertion: the abbreviation is for the eye, not for assistive technology.
+    const homeHeading = page.getByRole("heading", { name: LONG_HOME.homeTeam });
+    await expect(homeHeading).toBeVisible();
+
+    const onScreen = await homeHeading.evaluate((element) => [...element.querySelectorAll("[aria-hidden='true']")]
+        .filter((span) => getComputedStyle(span).display !== "none")
+        .map((span) => span.textContent));
+
+    expect(onScreen).toEqual([LONG_HOME.homeTeamAcronym]);
+    expect(await scorelineLineCount(page)).toBe(1);
+});
+
+test("a team with no acronym or short name still doesn't split the scoreline", async ({ page }) => {
+    // The fallback TeamLabel documents - a team added in a hurry with neither shorter name filled
+    // in - which puts two full club names either side of the score at a phone width. This is the
+    // case that used to leave "0 -" above a lonely "5".
+    await withTeamNames(page, {
+        ...LONG_HOME, homeTeamShortName: null, homeTeamAcronym: null,
+        ...LONG_AWAY, awayTeamShortName: null, awayTeamAcronym: null,
+    });
+    await page.goto(`/match/${MATCH_ID}`);
+
+    await expect(page.getByRole("heading", { name: LONG_AWAY.awayTeam })).toBeVisible();
+
+    expect(await scorelineLineCount(page)).toBe(1);
+    expect(await findOverflow(page)).toEqual([]);
+});
+
 test("every statistics tab fits a phone screen", async ({ page }) => {
     await page.goto("/stats");
 

@@ -99,11 +99,11 @@ export function PredictionOfTheWeekCard({ competitionId }: { competitionId: stri
                             </Popover.Root>
                         )}
                         {" "}predicted{" "}
-                        <Text as="span" fontWeight="bold">{entry.predictionHomeTeamGoals}-{entry.predictionAwayTeamGoals}</Text>
+                        <Text as="span" fontWeight="bold" whiteSpace="nowrap">{entry.predictionHomeTeamGoals}-{entry.predictionAwayTeamGoals}</Text>
                         {" "}for {entry.homeTeamShortName} v {entry.awayTeamShortName}
                     </Text>
                     <Text fontSize="sm" color="fg.muted">
-                        Final score {entry.homeTeamGoals}-{entry.awayTeamGoals} &middot; scored {entry.predictionScore} pts &middot; beat the average by {entry.scoreDifference.toFixed(2)}
+                        Final score <Text as="span" whiteSpace="nowrap">{entry.homeTeamGoals}-{entry.awayTeamGoals}</Text> &middot; scored {entry.predictionScore} pts &middot; beat the average by {entry.scoreDifference.toFixed(2)}
                     </Text>
                 </VStack>
             )}
