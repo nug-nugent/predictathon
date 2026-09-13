@@ -31,6 +31,13 @@
 	<SuppressedFile FilePath="dbo\Stored Procedures\UserCompetitionLeagueHistorySet.sql">
 		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0063" />
 	</SuppressedFile>
+	<!-- SRD0063 (IF containing a query): both IF blocks work out which match week the position-change
+	     arrows should measure from - one reads the latest played match date, the other checks whether
+	     any match was played before that week at all. Both are lookups whose answer decides whether
+	     the comparison ranking happens, so there is nothing to hoist them out into. -->
+	<SuppressedFile FilePath="dbo\Stored Procedures\LeagueTableGet.sql">
+		<SuppressedRule Category="SqlServer.Rules" RuleId="SRD0063" />
+	</SuppressedFile>
 	<!-- SRD0020 (join with no backing FK): UserCompetition and Match are only related via their
 	     shared parent Competition, not directly - there's no FK to add between them, the rule just
 	     can't model a join mediated through a third table. -->

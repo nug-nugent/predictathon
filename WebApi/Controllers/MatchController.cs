@@ -81,7 +81,7 @@ public class MatchController : ApiControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{competitionId:guid}/Bracket/Resolution")]
     [Authorize(Roles = RoleConstants.MatchAdministrator)]
-    public async Task<ActionResult<BracketResolutionSummary>> ResolveBracket(
+    public async Task<ActionResult<BracketResolutionSummary?>> ResolveBracket(
         Guid competitionId,
         [FromBody] IReadOnlyList<BracketSlotAssignment> assignments,
         CancellationToken cancellationToken)
