@@ -1,0 +1,106 @@
+Predictathon
+Copyright (c) 1998-2026 David Huggett. All rights reserved.
+
+This software is proprietary. It is published on GitHub so that it can be read,
+not so that it can be reused. It is NOT open source, and no open-source licence
+is granted or implied by its public availability.
+
+
+1. RESERVATION OF RIGHTS IN THE SOFTWARE
+
+All right, title and interest in and to this software, including the source
+code, database schema, deployment scripts, design assets and documentation
+(together, "the Software"), are and remain the property of David Huggett.
+
+
+2. THE COMPETITION, ITS NAME AND ITS FORMAT
+
+The Predictathon competition has been run continuously since 1998. Separately
+from, and in addition to, the rights in the Software, the copyright holder
+asserts rights in:
+
+  (a) the name "Predictathon" and the goodwill built up in it through
+      continuous use since 1998;
+  (b) the text of the rules of the game, the scoring tables, and all other
+      written and visual material describing the competition, as original
+      literary and artistic works;
+  (c) the visual design, layout, branding, terminology and presentation of
+      the competition and of this website; and
+  (d) the accumulated competition data - fixtures, predictions, results,
+      league tables, statistics and historical records - including any
+      database right subsisting in it.
+
+No licence is granted to operate, host, advertise or promote any prediction
+competition under the name "Predictathon", or under any name or branding
+confusingly similar to it, nor to reproduce the rules text, scoring tables or
+presentation described above.
+
+For the avoidance of doubt, and so that the scope of this Licence is not
+overstated: the copyright holder does not claim a monopoly over the general
+idea of a football score-prediction competition, or over any method of awarding
+points for predictions. What is asserted above is the particular expression of
+this competition - its name, its rules as written, its presentation and its
+data - not the underlying concept.
+
+
+3. WHAT YOU MAY DO
+
+You may view the Software's source code, and fork this repository within
+GitHub, solely to the extent permitted by the GitHub Terms of Service. You may
+read the Software and the material described in section 2 for the purposes of
+private study, comment, criticism and review.
+
+
+4. WHAT YOU MAY NOT DO
+
+Except as set out in section 3, or with the prior written permission of the
+copyright holder, you may not:
+
+  (a) copy, reproduce or store the Software outside GitHub;
+  (b) modify the Software or create derivative works from it;
+  (c) publish, distribute, sublicense, sell, rent or otherwise make the
+      Software available to any third party;
+  (d) compile, deploy, host or otherwise run the Software, in whole or in
+      part, whether publicly or privately;
+  (e) incorporate any part of the Software into another work or project;
+  (f) use the Software, in whole or in part, to train, fine-tune or evaluate
+      any machine-learning model; or
+  (g) do anything prohibited by section 2 in relation to the name, rules,
+      presentation or data of the competition.
+
+Permission to do any of the above may be requested from the copyright holder,
+and is granted only in writing.
+
+
+5. THIRD-PARTY COMPONENTS
+
+The Software depends on third-party packages and libraries that are not covered
+by this Licence. Those components remain subject to their own licence terms,
+which are unaffected by this Licence.
+
+
+6. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+
+
+7. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Nothing in this Licence excludes or limits liability for death or personal
+injury caused by negligence, for fraud, or for any other liability that cannot
+lawfully be excluded or limited.
+
+
+8. GOVERNING LAW
+
+This Licence is governed by the laws of England and Wales.
+
+
+Enquiries: https://github.com/nug-nugent/predictathon

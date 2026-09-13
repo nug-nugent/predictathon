@@ -138,3 +138,7 @@ The frontend build uses `npm run build:systest` (Vite's `systest` mode, reading 
 The script also publishes the database schema to a `Predictathon.Systest` database on `(local)` (override with `-DatabaseConnectionString`), via `sqlpackage` and the same `Database/Predictathon.publish.xml` profile the production deploy workflow uses — while both apps are offline, so nothing is ever briefly live against a mismatched schema. Requires `sqlpackage` on `PATH` (`dotnet tool install -g microsoft.sqlpackage` if you don't already have it); pass `-SkipDatabaseDeploy` to skip it when iterating on app code only.
 
 If you ever find yourself hand-editing the *deployed* `web.config` to get Systest working, that's a sign the app-pool variables above aren't actually set (or the pool hasn't been recycled since) — fix that instead of patching `web.config`, since the next `Publish-Local.ps1` run silently discards the edit.
+
+## Licence
+
+Proprietary — copyright (c) 1998-2026 David Huggett, all rights reserved. The source is public to be read, not reused, and the competition's name, rules and data are reserved separately from the code; see [LICENSE](LICENSE) for what that does and doesn't permit.
