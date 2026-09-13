@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, IconButton, NativeSelect, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, IconButton, NativeSelect, Text, useMediaQuery } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 type WeekPickerProps = {
@@ -9,9 +9,9 @@ type WeekPickerProps = {
     outstanding?: Set<string>;
 };
 
-function formatWeek(week: string, hasOutstanding: boolean): string {
+function formatWeek(week: string, hasOutstanding: boolean, longMonth: boolean): string {
     // Browser locale (not a hardcoded one) - matches every other date in the app.
-    const formatted = new Date(week).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+    const formatted = new Date(week).toLocaleDateString(undefined, { month: longMonth ? "long" : "short", day: "numeric", year: "numeric" });
 
     // A native <option> can't carry a badge element, so the marker has to be part of its text. A
     // bare star keeps it to a few pixels - the count lives in a real, styleable element alongside.
@@ -29,6 +29,13 @@ function addMonths(date: Date, months: number): Date {
 }
 
 export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: WeekPickerProps) {
+    // A native <select> is as wide as its longest option, so a spelled-out "September 11, 2026"
+    // alongside four nav buttons is wider than a phone - which used to push the month buttons onto
+    // a second row. Below md the month is abbreviated and the Month/Week captions stay hidden,
+    // which keeps the picker on one line. ssr:false so the very first render already knows which
+    // of the two it is, rather than rendering the long form and then swapping it.
+    const [isWideScreen] = useMediaQuery(["(min-width: 48em)"], { ssr: false });
+
     const weekDates = weeks.map((w) => new Date(w));
     const index = weeks.indexOf(selectedWeek);
 
@@ -59,8 +66,11 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: W
     const nextMonthWeek = findNextMonthWeek();
 
     return (
-        <Flex justify="center" align="center" gap={{ base: 0, md: 4 }} wrap="wrap">
-            <HStack justify="center" gap={{ base: 1, md: 3 }} py={2} wrap="wrap">
+        <Flex justify="center" align="center" gap={{ base: 0, md: 4 }}>
+            {/* No wrapping anywhere in this row: the abbreviated dates above keep it inside a phone
+                already, and a stray nav button on its own second line is worse than a date that
+                has to give up a few pixels to the ellipsis on the very narrowest screens. */}
+            <HStack justify="center" gap={{ base: 1, md: 3 }} py={2} minW={0}>
                 <NavButton enabled={!!prevMonthWeek} label="Month" onClick={() => prevMonthWeek && onWeekChange(prevMonthWeek)}>
                     <ChevronsLeft size={16} />
                 </NavButton>
@@ -68,9 +78,9 @@ export function WeekPicker({ weeks, selectedWeek, onWeekChange, outstanding }: W
                     <ChevronLeft size={16} />
                 </NavButton>
 
-                <NativeSelect.Root width="auto" size="sm">
-                    <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)}>
-                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.has(w) ?? false)}</option>)}
+                <NativeSelect.Root width="auto" minW={0} size="sm">
+                    <NativeSelect.Field value={selectedWeek} onChange={(e) => onWeekChange(e.target.value)} textOverflow="ellipsis">
+                        {weeks.map((w) => <option key={w} value={w}>{formatWeek(w, outstanding?.has(w) ?? false, isWideScreen)}</option>)}
                     </NativeSelect.Field>
                     <NativeSelect.Indicator />
                 </NativeSelect.Root>
@@ -99,12 +109,12 @@ function NavButton({ enabled, label, onClick, isRight, children }: {
     children: React.ReactNode;
 }) {
     return (
-        <HStack gap={1} opacity={enabled ? 1 : 0.3} cursor={enabled ? "pointer" : "default"}
+        <HStack gap={1} flexShrink={0} opacity={enabled ? 1 : 0.3} cursor={enabled ? "pointer" : "default"}
             onClick={onClick} flexDirection={isRight ? "row-reverse" : "row"}>
             <IconButton size="xs" variant="ghost" disabled={!enabled} aria-label={label}>
                 {children}
             </IconButton>
-            <Text fontSize="xs" display={{ base: "none", sm: "block" }}>{label}</Text>
+            <Text fontSize="xs" display={{ base: "none", md: "block" }}>{label}</Text>
         </HStack>
     );
 }
