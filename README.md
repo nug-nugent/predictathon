@@ -141,4 +141,4 @@ If you ever find yourself hand-editing the *deployed* `web.config` to get Systes
 
 ## Licence
 
-Proprietary — copyright (c) 2022-2026 David Huggett, all rights reserved. The source is public to be read, not reused; see [LICENSE](LICENSE) for what that does and doesn't permit.
+Proprietary — copyright (c) 1998-2026 David Huggett, all rights reserved. The source is public to be read, not reused, and the competition's name, rules and data are reserved separately from the code; see [LICENSE](LICENSE) for what that does and doesn't permit.
