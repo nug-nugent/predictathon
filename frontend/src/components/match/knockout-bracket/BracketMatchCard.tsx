@@ -108,7 +108,7 @@ function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
                 columnGap={2} rowGap={0.5}>
                 {predicted
                     ? (
-                        <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                        <Text fontSize="xs" fontWeight="bold" color="fg.muted" whiteSpace="nowrap">
                             You: {match.homeTeamGoals} - {match.awayTeamGoals}
                         </Text>
                     )
@@ -135,7 +135,7 @@ function BracketCardFooter({ match, predicted, isOpen, isSettled }: {
                         looking at and they read on the functional points scale, so colouring the
                         scoreline too left two greens competing. Bold rather than plain because a
                         bracket card has no other line of its own to anchor on. */}
-                    <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                    <Text fontSize="xs" fontWeight="bold" color="fg.muted" whiteSpace="nowrap">
                         You: {match.homeTeamGoals} - {match.awayTeamGoals}
                     </Text>
                     {/* Kept even though the design has no room for it: the points scale is functional,

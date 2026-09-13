@@ -18,7 +18,7 @@ export function YourPrediction({ match, status }: { match: MatchPrediction; stat
 
     return (
         <VStack gap={0} align="flex-end">
-            <Text fontSize="xs" color="fg.muted">You: {match.homeTeamGoals} - {match.awayTeamGoals}</Text>
+            <Text fontSize="xs" color="fg.muted" whiteSpace="nowrap">You: {match.homeTeamGoals} - {match.awayTeamGoals}</Text>
             {status === "Post" && (
                 <Text fontSize="xs" fontWeight="bold" color={`points.${match.score ?? 0}`}>
                     {match.score ?? 0} {match.score === 1 ? "point" : "points"}

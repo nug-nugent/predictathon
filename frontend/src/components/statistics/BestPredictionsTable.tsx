@@ -57,7 +57,7 @@ export function BestPredictionsTable({ predictions }: { predictions: BestPredict
                                     {` ${p.homeTeamGoals ?? "?"} - ${p.awayTeamGoals ?? "?"} `}
                                     <TeamLabel name={p.awayTeam} shortName={p.awayTeamShortName} acronym={p.awayTeamAcronym} />
                                 </Table.Cell>
-                                <Table.Cell textAlign="center">{p.predictionHomeTeamGoals ?? "?"}-{p.predictionAwayTeamGoals ?? "?"}</Table.Cell>
+                                <Table.Cell textAlign="center" whiteSpace="nowrap">{p.predictionHomeTeamGoals ?? "?"}-{p.predictionAwayTeamGoals ?? "?"}</Table.Cell>
                                 <Table.Cell textAlign="center" color={`points.${p.predictionScore}`} fontWeight="bold">{p.predictionScore}</Table.Cell>
                                 <Table.Cell textAlign="center" display={WORKINGS_DISPLAY}>{p.averagePredictionScore.toFixed(2)}</Table.Cell>
                                 <Table.Cell textAlign="center" display={WORKINGS_DISPLAY}>{p.scoreDifference.toFixed(2)}</Table.Cell>
