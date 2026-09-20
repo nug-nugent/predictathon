@@ -12,9 +12,11 @@
 -- something else to keep in step. NULL when the row was only ever written by an admin.
 --
 -- UpdatedDateTime moves only when the scoreline actually changes, so it's the honest "as at" to show
--- a reader. LastPolledDateTime moves on every successful fetch whether the score changed or not, and
--- exists so a second worker process (IIS overlaps them briefly during a recycle) can see that
--- someone else has just polled and skip its turn.
+-- a reader. It doubles as the clock on an Admin-sourced score's brief precedence over the provider's
+-- (LiveScoreService.ShouldAccept), so moving it earlier or later than a real change would either
+-- extend that precedence or cut it short. LastPolledDateTime moves on every successful fetch whether
+-- the score changed or not, and exists so a second worker process (IIS overlaps them briefly during
+-- a recycle) can see that someone else has just polled and skip its turn.
 CREATE TABLE [dbo].[MatchLiveScore] (
     [MatchID]            UNIQUEIDENTIFIER NOT NULL,
     [HomeTeamGoals]      INT              NOT NULL,

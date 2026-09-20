@@ -106,11 +106,47 @@ public class LiveScoreServiceTests
     }
 
     [Fact]
-    public async Task RefreshAsync_IgnoresALowerScore_SoTheScoreNeverGoesBackwards()
+    public async Task RefreshAsync_TakesALowerScore_WhenAGoalIsDisallowed()
     {
         var (dbContext, provider, service) = MakeService();
         var match = GivenMatch(dbContext);
-        var stored = GivenStoredScore(dbContext, match.MatchID, 2, 1, source: LiveScoreSource.Admin);
+        var stored = GivenStoredScore(dbContext, match.MatchID, 0, 1);
+        await dbContext.SaveChangesAsync();
+
+        // A goal given on the pitch and then ruled out by VAR: the provider reported it, then took
+        // it back. Refusing the decrease would leave a goalless match showing 0-1 until full time.
+        provider.Scores = [Reported(match.ExternalMatchID!.Value, 0, 0)];
+
+        var summary = await service.RefreshAsync();
+
+        summary.ScoresChanged.Should().Be(1);
+        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((0, 0));
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TakesAReportWhereOnlyOneSideIsLower()
+    {
+        var (dbContext, provider, service) = MakeService();
+        var match = GivenMatch(dbContext);
+        var stored = GivenStoredScore(dbContext, match.MatchID, 2, 1);
+        await dbContext.SaveChangesAsync();
+
+        // One side up and the other down in the same poll - a goal at one end and a disallowed one
+        // at the other. The report is taken whole, never half of it mixed with what we held.
+        provider.Scores = [Reported(match.ExternalMatchID!.Value, 3, 0)];
+
+        await service.RefreshAsync();
+
+        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((3, 0));
+    }
+
+    [Fact]
+    public async Task RefreshAsync_HoldsAnAdminScore_WhileTheFeedCatchesUp()
+    {
+        var (dbContext, provider, service) = MakeService();
+        var match = GivenMatch(dbContext);
+        var stored = GivenStoredScore(
+            dbContext, match.MatchID, 2, 1, source: LiveScoreSource.Admin, updatedMinutesAgo: 1);
         await dbContext.SaveChangesAsync();
 
         // The free tier's feed runs behind, so it can still be reporting the score as it was before
@@ -126,38 +162,42 @@ public class LiveScoreServiceTests
     }
 
     [Fact]
-    public async Task RefreshAsync_IgnoresAReportWhereOnlyOneSideIsLower()
+    public async Task RefreshAsync_HandsBackToTheProvider_OnceAnAdminScoreHasHadItsHold()
     {
         var (dbContext, provider, service) = MakeService();
         var match = GivenMatch(dbContext);
-        var stored = GivenStoredScore(dbContext, match.MatchID, 2, 1);
+        var stored = GivenStoredScore(
+            dbContext, match.MatchID, 2, 1, source: LiveScoreSource.Admin, updatedMinutesAgo: 6);
         await dbContext.SaveChangesAsync();
 
-        // Taking the higher half and keeping our own lower half would invent a 3-1 that nobody ever
-        // reported, so the whole report is dropped.
-        provider.Scores = [Reported(match.ExternalMatchID!.Value, 3, 0)];
-
-        await service.RefreshAsync();
-
-        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((2, 1));
-    }
-
-    [Fact]
-    public async Task RefreshAsync_TakesALowerScore_OnceTheProviderCallsTheMatchFinished()
-    {
-        var (dbContext, provider, service) = MakeService();
-        var match = GivenMatch(dbContext);
-        var stored = GivenStoredScore(dbContext, match.MatchID, 3, 1, source: LiveScoreSource.Admin);
-        await dbContext.SaveChangesAsync();
-
-        // A settled full-time score is authoritative - this is how a VAR-disallowed goal gets undone.
-        provider.Scores = [Reported(match.ExternalMatchID!.Value, 2, 1, ExternalMatchScore.FinishedStatus)];
+        // Well past the hold, so the feed has had its chance to catch up and drives again - without
+        // this, one hand-entered goal would leave an admin entering every goal after it.
+        provider.Scores = [Reported(match.ExternalMatchID!.Value, 1, 1)];
 
         var summary = await service.RefreshAsync();
 
         summary.ScoresChanged.Should().Be(1);
-        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((2, 1));
+        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((1, 1));
         stored.Source.Should().Be(LiveScoreSource.Api);
+        stored.UpdatedByUserID.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TakesTheFinalScore_OverAnAdminScoreStillInsideItsHold()
+    {
+        var (dbContext, provider, service) = MakeService();
+        var match = GivenMatch(dbContext);
+        var stored = GivenStoredScore(
+            dbContext, match.MatchID, 2, 1, source: LiveScoreSource.Admin, updatedMinutesAgo: 1);
+        await dbContext.SaveChangesAsync();
+
+        provider.Scores = [Reported(match.ExternalMatchID!.Value, 1, 1, ExternalMatchScore.FinishedStatus)];
+
+        var summary = await service.RefreshAsync();
+
+        summary.ScoresChanged.Should().Be(1);
+        (stored.HomeTeamGoals, stored.AwayTeamGoals).Should().Be((1, 1),
+            "a settled full-time score outranks a hold meant only to cover a lagging feed");
     }
 
     [Fact]
@@ -315,7 +355,7 @@ public class LiveScoreServiceTests
     }
 
     [Fact]
-    public async Task SaveAdminScoreAsync_MayLowerAScore_UnlikeTheProvider()
+    public async Task SaveAdminScoreAsync_MayLowerAScore()
     {
         var (dbContext, _, service) = MakeService();
         var match = GivenMatch(dbContext);
@@ -324,7 +364,6 @@ public class LiveScoreServiceTests
 
         var userId = Guid.NewGuid();
 
-        // The only way to take back a goal the feed reported and VAR then chalked off.
         var result = await service.SaveAdminScoreAsync(match.MatchID, 1, 1, userId);
 
         result.IsSuccess.Should().BeTrue();
@@ -389,7 +428,8 @@ public class LiveScoreServiceTests
         int home,
         int away,
         string source = LiveScoreSource.Api,
-        string? status = "IN_PLAY")
+        string? status = "IN_PLAY",
+        int updatedMinutesAgo = 10)
     {
         var liveScore = new DomainEntities.MatchLiveScore
         {
@@ -398,7 +438,9 @@ public class LiveScoreServiceTests
             AwayTeamGoals = away,
             Status = status,
             Source = source,
-            UpdatedDateTime = UkClock.Now.AddMinutes(-10),
+            // Ten minutes ago by default, which is outside the admin hold - a test that cares about
+            // the hold says so, rather than every other test depending on where the line sits.
+            UpdatedDateTime = UkClock.Now.AddMinutes(-updatedMinutesAgo),
         };
 
         dbContext.MatchLiveScore.Add(liveScore);
