@@ -38,6 +38,13 @@ public class LiveScoreService : ILiveScoreService
     /// </summary>
     private static readonly TimeSpan MinDelay = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    /// How long an admin's own score outranks the provider's. Long enough for the feed to catch up
+    /// with someone watching the match, short enough that one hand-entered goal doesn't leave them
+    /// hand-entering every goal after it - see <see cref="ShouldAccept"/>.
+    /// </summary>
+    private static readonly TimeSpan AdminScoreHold = TimeSpan.FromMinutes(5);
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IExternalMatchDataService _externalMatchDataService;
     private readonly IOptions<FootballDataApiOptions> _options;
@@ -185,7 +192,9 @@ public class LiveScoreService : ILiveScoreService
         }
         else if (liveScore.HomeTeamGoals == homeTeamGoals && liveScore.AwayTeamGoals == awayTeamGoals)
         {
-            // Re-saving the same scoreline shouldn't make it look freshly confirmed.
+            // Re-saving the same scoreline shouldn't make it look freshly confirmed. It doesn't
+            // extend the admin hold either (see ShouldAccept) - UpdatedDateTime is what measures it,
+            // and re-typing a score the site is already showing isn't taking control of anything.
             return Result.Ok(ToModel(liveScore));
         }
 
@@ -251,17 +260,27 @@ public class LiveScoreService : ILiveScoreService
             liveScore.LastPolledDateTime = now;
             liveScore.Status = reported.Status;
 
-            if (!ShouldAccept(reported, liveScore))
+            if (!ShouldAccept(reported, liveScore, now))
             {
                 _logger.LogInformation(
-                    "Ignored a lower live score for match {MatchID}: provider reported {ReportedHome}-{ReportedAway}, holding {StoredHome}-{StoredAway}",
-                    match.MatchID, reported.HomeTeamGoals, reported.AwayTeamGoals, liveScore.HomeTeamGoals, liveScore.AwayTeamGoals);
+                    "Held match {MatchID}'s admin score {StoredHome}-{StoredAway} over the provider's {ReportedHome}-{ReportedAway}",
+                    match.MatchID, liveScore.HomeTeamGoals, liveScore.AwayTeamGoals, reported.HomeTeamGoals, reported.AwayTeamGoals);
                 continue;
             }
 
             if (liveScore.HomeTeamGoals == reported.HomeTeamGoals && liveScore.AwayTeamGoals == reported.AwayTeamGoals)
             {
                 continue;
+            }
+
+            // A scoreline going backwards means a goal has been disallowed, or the feed has wobbled.
+            // Worth a line either way: it's the only trace left of a score the site showed and then
+            // withdrew, and the first thing worth looking at when someone queries a result.
+            if (reported.HomeTeamGoals < liveScore.HomeTeamGoals || reported.AwayTeamGoals < liveScore.AwayTeamGoals)
+            {
+                _logger.LogInformation(
+                    "Match {MatchID}'s score went down: {StoredHome}-{StoredAway} to {ReportedHome}-{ReportedAway} ({Status})",
+                    match.MatchID, liveScore.HomeTeamGoals, liveScore.AwayTeamGoals, reported.HomeTeamGoals, reported.AwayTeamGoals, reported.Status);
             }
 
             liveScore.HomeTeamGoals = reported.HomeTeamGoals.Value;
@@ -278,24 +297,33 @@ public class LiveScoreService : ILiveScoreService
     /// <summary>
     /// Whether a reported score should replace the one already held.
     ///
-    /// Goals only go up while a match is being played, so a provider score below the stored one means
-    /// the free tier's feed is running behind us - either behind its own updates, or behind an admin
-    /// who entered the goal first. Taking it would make the score visibly go backwards, so it's
-    /// dropped. Once the provider calls the match FINISHED its score has settled and is taken as
-    /// authoritative, which is also the only way a genuine decrease (a VAR-disallowed goal) gets
-    /// corrected without an admin.
+    /// The provider is believed in both directions. A score going down mid-match is a real thing
+    /// rather than a stale feed - VAR disallows a goal that was given on the pitch - and refusing a
+    /// decrease leaves a withdrawn goal standing for the rest of the match, which is far worse than
+    /// the one-poll flicker that refusing it avoids.
+    ///
+    /// The one thing that outranks the feed is an admin who has just entered a score, on the
+    /// assumption they are watching the match and the feed is behind. That holds for
+    /// <see cref="AdminScoreHold"/> only, after which the feed is assumed to have caught up and
+    /// takes over again. A settled full-time score is taken whatever the source: an admin correcting
+    /// that is doing so on a match polling has already retired.
     /// </summary>
     /// <param name="reported">The score the provider reported.</param>
     /// <param name="stored">The score currently held.</param>
-    private static bool ShouldAccept(ExternalMatchScore reported, MatchLiveScore stored)
+    /// <param name="now">The current time, to measure the admin hold against.</param>
+    private static bool ShouldAccept(ExternalMatchScore reported, MatchLiveScore stored, DateTime now)
     {
         if (reported.IsFinished)
         {
             return true;
         }
 
-        return reported.HomeTeamGoals >= stored.HomeTeamGoals
-            && reported.AwayTeamGoals >= stored.AwayTeamGoals;
+        if (!string.Equals(stored.Source, LiveScoreSource.Admin, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return now - stored.UpdatedDateTime >= AdminScoreHold;
     }
 
     /// <summary>
