@@ -176,6 +176,51 @@ jobs:
       # nothing else in this job previously needed the repo checked out.
       - uses: actions/checkout@v7
 
+      # Both the app (via web.config below) and sqlpackage need a full connection string, but
+      # holding one as a single opaque secret means retyping the whole thing - server, database,
+      # login, password - to change any one part of it. It's composed here from four separate
+      # pieces instead, of which only DB_PASSWORD is a secret; DB_SERVER, DB_NAME and DB_USER are
+      # plain environment variables, readable and editable in the GitHub UI without having to
+      # know the rest.
+      - name: Compose the database connection string
+        shell: pwsh
+        env:
+          DB_SERVER: ${{ vars.DB_SERVER }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          foreach ($name in @("DB_SERVER", "DB_NAME", "DB_USER", "DB_PASSWORD")) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "$name is not set on the 'production' environment. DB_SERVER/DB_NAME/DB_USER are environment variables (Settings -> Environments -> production -> Environment variables); DB_PASSWORD is an environment secret."
+            }
+          }
+
+          # A connection-string value containing ; ' or " - or with leading/trailing spaces - must
+          # be wrapped in single quotes with any embedded single quote doubled, otherwise
+          # everything after it is parsed as further keywords. Passwords are the realistic case,
+          # but the same rule is applied to all four so none of them can quietly break the string.
+          function Format-ConnectionStringValue([string]$Value) {
+            if ($Value -match '[;''"]' -or $Value -ne $Value.Trim()) {
+              return "'" + $Value.Replace("'", "''") + "'"
+            }
+            return $Value
+          }
+
+          $connectionString = "Server={0};Database={1};User Id={2};Password={3};TrustServerCertificate=true;MultipleActiveResultSets=true" -f `
+            (Format-ConnectionStringValue $env:DB_SERVER), `
+            (Format-ConnectionStringValue $env:DB_NAME), `
+            (Format-ConnectionStringValue $env:DB_USER), `
+            (Format-ConnectionStringValue $env:DB_PASSWORD)
+
+          # The runner masks DB_PASSWORD's raw value in logs on its own, but not the quote-escaped
+          # form Format-ConnectionStringValue may produce - mask the assembled string as a whole so
+          # neither can surface in step output.
+          Write-Host "::add-mask::$connectionString"
+
+          "CONNECTION_STRING=$connectionString" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Composed the connection string for $env:DB_NAME on $env:DB_SERVER."
+
       # For the "dotnet tool install microsoft.sqlpackage" step below. windows-latest ships a
       # preinstalled SDK, but pinning the same version as the rest of the pipeline avoids relying
       # on whatever happens to be preinstalled.
@@ -220,7 +265,6 @@ jobs:
         shell: pwsh
         env:
           JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
-          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
@@ -380,9 +424,10 @@ jobs:
 
       # Schema deploy, now automated (previously a deliberate manual step - see project memory).
       # Runs while both apps are offline, so nothing is ever live against a mismatched schema.
-      # CONNECTION_STRING is the same production connection string the app itself uses - if that
-      # SQL login lacks DDL rights this step fails cleanly here, before either app comes back
-      # online, rather than corrupting anything silently.
+      # The target is the same connection string composed at the top of this job and injected
+      # into the app's own web.config above - if that SQL login lacks DDL rights this step fails
+      # cleanly here, before either app comes back online, rather than corrupting anything
+      # silently.
       - name: Install SqlPackage
         shell: pwsh
         run: |
@@ -394,8 +439,6 @@ jobs:
 
       - name: Script database migration (audit trail)
         shell: pwsh
-        env:
-          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
         run: |
           sqlpackage /Action:Script `
             /SourceFile:"database-dacpac\Predictathon.Database.dacpac" `
@@ -413,8 +456,6 @@ jobs:
 
       - name: Publish database migration
         shell: pwsh
-        env:
-          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
         run: |
           sqlpackage /Action:Publish `
             /SourceFile:"database-dacpac\Predictathon.Database.dacpac" `
@@ -463,8 +504,16 @@ jobs:
 # Required GitHub Environment secrets on "production":
 # WEBDEPLOY_SERVICE_URL, WEBDEPLOY_SITE, WEBDEPLOY_USERNAME, WEBDEPLOY_PASSWORD (from the
 # .publishsettings file's <publishProfile> attributes: publishUrl, msdeploySite, userName,
-# userPWD respectively), plus JWT_SIGNING_KEY, CONNECTION_STRING, SMTP_*, PAYPAL_*,
+# userPWD respectively), plus JWT_SIGNING_KEY, DB_PASSWORD, SMTP_*, PAYPAL_*,
 # FOOTBALLDATA_API_KEY, HEALTH_DETAILED_API_KEY, SCHEDULED_TASKS_API_KEY.
+#
+# Required GitHub Environment *variables* (same "production" environment, but the Environment
+# variables section rather than Environment secrets - these aren't secret, and are kept separate
+# so any one of them can be read and edited without knowing the others): DB_SERVER, DB_NAME,
+# DB_USER. Together with the DB_PASSWORD secret they're composed into the connection string by
+# the "Compose the database connection string" step, which both the app's web.config and
+# sqlpackage then use. DB_SERVER is the whole Server= value, so a port or named instance goes
+# here too (e.g. "sql.example.com,1433" or "SQLHOST\INSTANCE").
 #
 # Required plain repository secret (NOT scoped to the "production" environment - the
 # build-and-test job that uses it has no environment: set): RELEASE_PUSH_TOKEN, a fine-grained
@@ -477,6 +526,6 @@ jobs:
 # Database schema deploy is now part of this workflow (sqlpackage, using the checked-in
 # Database/Predictathon.publish.xml profile - BlockOnPossibleDataLoss=True and
 # DropObjectsNotInSource=True, already vetted against real production data on 2026-08-10).
-# It reuses the CONNECTION_STRING secret as the sqlpackage target - that SQL login needs DDL
-# rights (CREATE/ALTER/DROP), not just the DML the app itself needs at runtime; confirm that
+# It reuses the same composed connection string as the sqlpackage target - that SQL login needs
+# DDL rights (CREATE/ALTER/DROP), not just the DML the app itself needs at runtime; confirm that
 # before the first real trigger.

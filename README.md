@@ -63,6 +63,8 @@ see that file's header comment for the exact `sp_generate_merge` command.
 
 The production host is Plesk on Windows/IIS shared hosting. `.github/workflows/deploy.yml` (`workflow_dispatch`-only) automates the API, frontend, and database schema deploy via Web Deploy/`msdeploy.exe` and `sqlpackage`. What follows describes the one-time Plesk setup and the manual fallback if you ever need to do it by hand.
 
+The credentials it needs live on the repo's `production` GitHub environment, and the comment block at the bottom of `deploy.yml` is the authoritative list. Note the database connection is stored as four separate values rather than one connection string — `DB_SERVER`, `DB_NAME` and `DB_USER` as environment *variables* (not secret, so any one of them can be read and changed without knowing the rest) and `DB_PASSWORD` as an environment *secret*. The workflow's first step composes them into the connection string that both the API's `web.config` and `sqlpackage` then use.
+
 ### One-time Plesk setup
 
 1. In Plesk, under the domain's **Websites & Domains → ASP.NET Settings**, disable classic ASP.NET — this auto-enables .NET Core for the domain (Plesk can't run both at once).
@@ -114,7 +116,7 @@ Both are safe to call more than once a day (idempotent). Point either an UptimeR
 
 ### Database schema
 
-`deploy.yml` runs `sqlpackage /Action:Publish` against the production connection string, using the checked-in `Database/Predictathon.publish.xml` profile (`BlockOnPossibleDataLoss=True`, `DropObjectsNotInSource=True`), with both the API and frontend already offline (see below) so nothing is ever live against a mismatched schema. It also runs `/Action:Script` first purely to upload the generated T-SQL as a build artifact — an audit trail of what actually ran, not a manual-approval gate. The SQL login behind `CONNECTION_STRING` needs DDL rights (`CREATE`/`ALTER`/`DROP`), not just the DML the app needs at runtime.
+`deploy.yml` runs `sqlpackage /Action:Publish` against the production connection string, using the checked-in `Database/Predictathon.publish.xml` profile (`BlockOnPossibleDataLoss=True`, `DropObjectsNotInSource=True`), with both the API and frontend already offline (see below) so nothing is ever live against a mismatched schema. It also runs `/Action:Script` first purely to upload the generated T-SQL as a build artifact — an audit trail of what actually ran, not a manual-approval gate. The SQL login behind `DB_USER` needs DDL rights (`CREATE`/`ALTER`/`DROP`), not just the DML the app needs at runtime.
 
 To run it by hand instead: `sqlpackage /Action:Publish /SourceFile:"Database\bin\Release\Predictathon.Database.dacpac" /TargetConnectionString:"..." /Profile:"Database\Predictathon.publish.xml" /p:ExcludeObjectTypes="Users;RoleMembership;DatabaseRoles;Permissions"` (the `/p:` flag is needed in addition to the profile — passing `ExcludeObjectTypes` via `/Profile:` alone was unreliable in practice).
 
